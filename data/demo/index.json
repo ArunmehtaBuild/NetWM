@@ -1,0 +1,83 @@
+[
+  {
+    "id": "thursday_infiltration",
+    "day": "thursday",
+    "start": "2017-07-06 16:40",
+    "end": "2017-07-06 18:50",
+    "description": "39 min of ordinary traffic, then the Meterpreter session at 17:19 and the internal sweep",
+    "flows": 169135,
+    "size_mb": 33.31,
+    "labels": {
+      "BENIGN": 97288,
+      "Infiltration - Portscan": 71767,
+      "Infiltration - Attempted": 44,
+      "Infiltration": 36
+    },
+    "file": "thursday_infiltration.csv"
+  },
+  {
+    "id": "friday_botnet_c2",
+    "day": "friday",
+    "start": "2017-07-07 12:30",
+    "end": "2017-07-07 14:30",
+    "description": "an hour of quiet, then the ARES botnet C2 channel at 13:03",
+    "flows": 100486,
+    "size_mb": 20.97,
+    "labels": {
+      "BENIGN": 99414,
+      "Botnet": 736,
+      "Botnet - Attempted": 336
+    },
+    "file": "friday_botnet_c2.csv"
+  },
+  {
+    "id": "friday_scan_to_ddos",
+    "day": "friday",
+    "start": "2017-07-07 16:30",
+    "end": "2017-07-07 19:30",
+    "description": "external port scan from 16:55 escalating to the LOIC DDoS at 18:56",
+    "flows": 378514,
+    "size_mb": 73.06,
+    "labels": {
+      "Portscan": 159066,
+      "BENIGN": 122191,
+      "DDoS": 95144,
+      "Botnet - Attempted": 2113
+    },
+    "file": "friday_scan_to_ddos.csv"
+  },
+  {
+    "id": "monday_benign",
+    "day": "monday",
+    "start": "2017-07-03 13:00",
+    "end": "2017-07-03 15:00",
+    "description": "two quiet hours - the false-positive test",
+    "flows": 115283,
+    "size_mb": 24.73,
+    "labels": {
+      "BENIGN": 115283
+    },
+    "file": "monday_benign.csv"
+  },
+  {
+    "id": "wednesday_dos",
+    "day": "wednesday",
+    "start": "2017-07-05 12:30",
+    "end": "2017-07-05 14:40",
+    "description": "four DoS tools in sequence - Impact, never a compromise",
+    "flows": 269890,
+    "size_mb": 60.57,
+    "labels": {
+      "DoS Hulk": 158468,
+      "BENIGN": 92380,
+      "DoS GoldenEye": 7567,
+      "DoS Slowloris": 3859,
+      "DoS Slowhttptest - Attempted": 3368,
+      "DoS Slowloris - Attempted": 1847,
+      "DoS Slowhttptest": 1740,
+      "DoS Hulk - Attempted": 581,
+      "DoS GoldenEye - Attempted": 80
+    },
+    "file": "wednesday_dos.csv"
+  }
+]

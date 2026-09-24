@@ -21,29 +21,29 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] E1 dataset audit -> results (label counts, onsets, window counts, per-day timelines)
 
 ### P2. Features and state
-- [ ] `features/flow_features.py` - per-window flow aggregates (flags, ports, IAT, bidirectional)
+- [x] `features/flow_features.py` - 70 per-window features (flags, ports, IAT, direction, beaconing, scan signatures)
 - [ ] `features/pcap_features.py` - TTL variance, window size, fragments, payload histogram,
       retransmissions, scan signatures (streaming Scapy reader)
 - [ ] `features/flow_aggregator.py` - PCAP -> flows, so the demo accepts a raw PCAP
-- [~] `features/windowing.py` done (windows, multi-label stages, hazard targets, onsets); `scaler.py` pending
+- [x] `features/windowing.py` + `scaler.py` (log1p + z-score, train-only fit)
 - [x] `labels/mitre_map.py` - label -> stage, ordered scale, scan-direction refinement
-- [ ] `scripts/build_features.py` -> parquet feature matrix + flow index
+- [x] `scripts/build_features.py` -> parquet feature matrix + meta.json
 
 ### P3. Models
-- [ ] `models/baseline.py` - logistic regression (PS-mandated) + persistence baseline
-- [ ] `models/world_model.py` - encoder, RSSM transition, decoder, stage head, hazard head
-- [ ] `train.py` - losses (NLL + KL free bits + multi-step rollout + CE + BCE), AMP, checkpoints
-- [ ] E2-E5: persistence floor, one-step NLL, K-step rollout fidelity
+- [x] `models/baseline.py` - logistic regression (PS-mandated) + persistence baseline (E2, E3)
+- [x] `models/world_model.py` - encoder, causal attention, RSSM, decoder, stage + compromise heads
+- [x] `train.py` - losses (NLL + KL free bits + imagination + CE + BCE), checkpoints
+- [~] E2-E3 done; E4-E5 (one-step NLL, rollout fidelity) running
 
 ### P4. Forecasting, evaluation, explainability
-- [ ] `engine/rollout.py` - K-step MC rollout -> cumulative infiltration curve + bands + stage path
-- [ ] `metrics.py` - F1 / precision / recall / FPR / PR-AUC / lead time / per-stage confusion
+- [x] K-step MC rollout in `models/world_model.forecast` -> cumulative curve + bands + stage path
+- [x] `metrics.py` - F1 / precision / recall / FPR / PR-AUC / lead time
 - [ ] `evaluate.py` + `scripts/benchmark.py` - leave-one-day-out, leave-one-family-out (E6-E9)
-- [ ] `engine/explain.py` - attention weights + Integrated Gradients; SHAP for the LR baseline (E11)
+- [x] `engine/explain.py` - attention weights + Integrated Gradients (SHAP for the LR baseline pending)
 - [ ] E10 ablations
 
 ### P5. Demo + deliverables
-- [ ] `engine/predict.py` - one entry point shared by CLI and web
+- [x] `engine/predict.py` + `scripts/predict.py` - one entry point shared by CLI and the Flask API
 - [ ] Flask app: upload CSV/PCAP, probability timeline, stage ribbon, flagged flows, explanations
 - [ ] Demo sample files (small CSV + PCAP clipped from a test day)
 - [ ] README setup instructions, architecture document (2 pages), 5 slides, 2-minute demo video
