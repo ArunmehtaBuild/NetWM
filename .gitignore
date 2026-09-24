@@ -1,0 +1,27 @@
+# data & models (large, reproducible via scripts/)
+data/raw/
+data/interim/
+data/processed/
+*.pcap
+*.pcapng
+*.zip
+models/*.pt
+models/*.pkl
+models/*.joblib
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# keep results tracked (figures + CSVs are deliverables), but not scratch
+results/scratch/

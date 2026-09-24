@@ -1,0 +1,45 @@
+# Research index
+
+Deep notes live in `research/`. This file is the index + the short version of what we learned and
+how it changed the build.
+
+| Note | Covers |
+|---|---|
+| [research/cicids2017.md](research/cicids2017.md) | CIC-IDS2017: capture setup, attack schedule, IPs, documented dataset flaws, corrected release |
+| [research/world-models.md](research/world-models.md) | What a world model is (PlaNet/Dreamer RSSM), why it differs from a sequence classifier, how it maps onto network telemetry |
+| [research/mitre-mapping.md](research/mitre-mapping.md) | CIC-IDS2017 attack labels → MITRE ATT&CK tactics/techniques, and the ordered stage scale |
+| [research/related-work.md](research/related-work.md) | Prior art in attack forecasting / prediction, and how NetWM differs |
+
+## The five findings that shaped the design
+
+1. **The dataset most IDS papers use is wrong in ways that matter to us.** CICFlowMeter
+   mis-terminates TCP flows and the original labelling is purely time-window based, so attack
+   *onset times* — the thing a forecaster must get right — are off, and some attack traffic is
+   unlabelled entirely. We use the corrected re-extraction instead (→ D-001).
+2. **A world model is defined by imagination, not by architecture.** RSSM's contribution is a
+   latent state you can roll forward *without* decoding observations; the LSTM/Transformer is just
+   the encoder. Our deliverable must therefore be judged on multi-step open-loop rollout quality,
+   not one-step accuracy (→ D-004).
+3. **Random splits on CIC-IDS2017 are leakage.** Near-duplicate flows from the same attack burst
+   land in both train and test, which is why ~0.99 F1 is the norm in the literature and why it
+   means nothing. Day-level and attack-family-level holdouts are the only honest evaluation
+   (→ D-006).
+4. **Lead time is the missing metric.** The published baselines report F1 on the *current* window;
+   none of them report how early an alarm arrives. That is the axis on which a world model should
+   beat a classifier, so it is a first-class metric in our benchmark (→ D-006).
+5. **CIC-IDS2017 has no real exfiltration stage.** The infiltration day ends in an internal NMAP
+   portscan from the compromised host — i.e. lateral movement/discovery — so the exfiltration stage
+   is heuristic in M1 and gets real ground truth from CTU-13 in M2 (→ D-003).
+
+## Sources
+
+- Engelen, Rimmer, Joosen — *Troubleshooting an Intrusion Detection Dataset: the CICIDS2017 Case Study*, WTMC 2021. [PDF](https://intrusion-detection.distrinet-research.be/WTMC2021/Resources/wtmc2021_Engelen_Troubleshooting.pdf)
+- Liu, Engelen, et al. — *Error Prevalence in NIDS datasets* (CNS 2022), per-attack error catalogue + corrected dataset. [Page](https://intrusion-detection.distrinet-research.be/CNS2022/CICIDS2017.html)
+- Sharafaldin, Lashkari, Ghorbani — *Toward Generating a New Intrusion Detection Dataset and Intrusion Traffic Characterization*, ICISSP 2018. [Dataset page](https://www.unb.ca/cic/datasets/ids-2017.html)
+- Rocher et al. — *From CIC-IDS2017 to LYCOS-IDS2017: a corrected dataset*. [ACM](https://dl.acm.org/doi/fullHtml/10.1145/3486622.3493973)
+- Hafner et al. — *Learning Latent Dynamics for Planning from Pixels* (PlaNet, RSSM), 2018. [arXiv:1811.04551](https://arxiv.org/abs/1811.04551)
+- Hafner et al. — *Dream to Control* (Dreamer), 2019. [arXiv:1912.01603](https://arxiv.org/abs/1912.01603)
+- Ha & Schmidhuber — *World Models*, 2018. [arXiv:1803.10122](https://arxiv.org/abs/1803.10122)
+- *Multi-Stage Attack Detection via Kill Chain State Machines*. [arXiv:2103.14628](https://arxiv.org/pdf/2103.14628)
+- *ProAPT: Projection of APT Threats with Deep Reinforcement Learning*. [arXiv:2209.07215](https://arxiv.org/pdf/2209.07215)
+- MITRE ATT&CK Enterprise matrix. [attack.mitre.org](https://attack.mitre.org/)

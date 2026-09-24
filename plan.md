@@ -1,0 +1,66 @@
+# Build plan
+
+Milestones follow the dataset ladder: **M1 CIC-IDS2017 -> M2 CTU-13 -> M3 CIC-IDS2018 -> M4 UNSW-NB15**.
+M1 delivers the complete PS-153 system end to end; M2-M4 are evaluation/generalisation milestones on
+top of the same code, reached through dataset adapters.
+
+Legend: `[ ]` todo · `[~]` in progress · `[x]` done
+
+## M1 - CIC-IDS2017: flows + packets -> state -> world model -> K-step rollout
+
+### P0. Repo + research foundation
+- [x] Repo skeleton, README, requirements, .gitignore
+- [x] Research notes: dataset flaws, world models, MITRE mapping, related work
+- [x] decisions.md D-001..D-008, results.md experiment plan
+- [ ] Python venv + torch (cu121) verified on the GTX 1650
+
+### P1. Data
+- [ ] Download corrected CIC-IDS2017 (`CICIDS2017_improved.zip`, 328 MB) - needs approval
+- [ ] Locate a working source for the day PCAPs (Thursday = infiltration day is the priority)
+- [ ] `DatasetAdapter` interface + `cicids2017.py`: schema check, UTC normalisation, per-day loading
+- [ ] E1 dataset audit -> results (label counts per day, attack onset times, window counts)
+
+### P2. Features and state
+- [ ] `features/flow_features.py` - per-window flow aggregates (flags, ports, IAT, bidirectional)
+- [ ] `features/pcap_features.py` - TTL variance, window size, fragments, payload histogram,
+      retransmissions, scan signatures (streaming Scapy reader)
+- [ ] `features/flow_aggregator.py` - PCAP -> flows, so the demo accepts a raw PCAP
+- [ ] `features/windowing.py` + `scaler.py` - 60 s / 30 s windows, train-only scaler fit
+- [ ] `labels/mitre_map.py` - label -> stage, ordered scale, hazard target construction
+- [ ] `scripts/build_features.py` -> parquet feature matrix + flow index
+
+### P3. Models
+- [ ] `models/baseline.py` - logistic regression (PS-mandated) + persistence baseline
+- [ ] `models/world_model.py` - encoder, RSSM transition, decoder, stage head, hazard head
+- [ ] `train.py` - losses (NLL + KL free bits + multi-step rollout + CE + BCE), AMP, checkpoints
+- [ ] E2-E5: persistence floor, one-step NLL, K-step rollout fidelity
+
+### P4. Forecasting, evaluation, explainability
+- [ ] `engine/rollout.py` - K-step MC rollout -> cumulative infiltration curve + bands + stage path
+- [ ] `metrics.py` - F1 / precision / recall / FPR / PR-AUC / lead time / per-stage confusion
+- [ ] `evaluate.py` + `scripts/benchmark.py` - leave-one-day-out, leave-one-family-out (E6-E9)
+- [ ] `engine/explain.py` - attention weights + Integrated Gradients; SHAP for the LR baseline (E11)
+- [ ] E10 ablations
+
+### P5. Demo + deliverables
+- [ ] `engine/predict.py` - one entry point shared by CLI and web
+- [ ] Flask app: upload CSV/PCAP, probability timeline, stage ribbon, flagged flows, explanations
+- [ ] Demo sample files (small CSV + PCAP clipped from a test day)
+- [ ] README setup instructions, architecture document (2 pages), 5 slides, 2-minute demo video
+
+## M2 - CTU-13: scenario-held-out temporal evaluation
+- [ ] `data/ctu13.py` adapter (bidirectional NetFlow, botnet scenarios)
+- [ ] Real C2 + exfiltration ground truth replaces the M1 exfil heuristic (revisits D-003)
+- [ ] Train on a subset of scenarios, test on held-out scenarios; report the same metric set
+
+## M3 - CIC-IDS2018: enterprise-scale validation
+- [ ] `data/cicids2018.py` adapter (corrected release, ~10 GB)
+- [ ] Scaling: chunked feature building, multi-day training, runtime/memory numbers
+
+## M4 - UNSW-NB15: cross-domain generalisation
+- [ ] `data/unswnb15.py` adapter, feature harmonisation across schemas
+- [ ] Zero-shot transfer (train 2017 -> test NB15) and fine-tune; report the drop honestly
+
+## Working rules
+See [CLAUDE.md](CLAUDE.md). Short version: decisions -> decisions.md, numbers -> results.md +
+results/, findings -> research/.
