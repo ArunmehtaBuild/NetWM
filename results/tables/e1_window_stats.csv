@@ -1,0 +1,36 @@
+day,stage,stage_name,windows_dominant,windows_present
+monday,0,Benign,974,974
+monday,1,Reconnaissance,0,0
+monday,2,Initial Access,0,0
+monday,3,Lateral Movement,0,0
+monday,4,Command & Control,0,0
+monday,5,Exfiltration,0,0
+monday,6,Impact,0,0
+tuesday,0,Benign,724,724
+tuesday,1,Reconnaissance,0,0
+tuesday,2,Initial Access,252,252
+tuesday,3,Lateral Movement,0,0
+tuesday,4,Command & Control,0,0
+tuesday,5,Exfiltration,0,0
+tuesday,6,Impact,0,0
+wednesday,0,Benign,860,860
+wednesday,1,Reconnaissance,0,0
+wednesday,2,Initial Access,22,22
+wednesday,3,Lateral Movement,0,0
+wednesday,4,Command & Control,0,0
+wednesday,5,Exfiltration,0,0
+wednesday,6,Impact,135,135
+thursday,0,Benign,736,736
+thursday,1,Reconnaissance,0,0
+thursday,2,Initial Access,126,126
+thursday,3,Lateral Movement,110,110
+thursday,4,Command & Control,0,0
+thursday,5,Exfiltration,0,0
+thursday,6,Impact,0,0
+friday,0,Benign,759,759
+friday,1,Reconnaissance,52,52
+friday,2,Initial Access,0,0
+friday,3,Lateral Movement,0,0
+friday,4,Command & Control,116,116
+friday,5,Exfiltration,0,0
+friday,6,Impact,41,41

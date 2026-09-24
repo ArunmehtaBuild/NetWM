@@ -1,0 +1,32 @@
+label,flows,stage,attempted,stage_name,technique,day,share_pct
+BENIGN,371624,0,False,Benign,,monday,100.0
+BENIGN,315106,0,False,Benign,,tuesday,97.835
+FTP-Patator,3972,2,False,Initial Access,T1110.001,tuesday,1.233
+FTP-Patator - Attempted,12,2,True,Initial Access,T1110.001,tuesday,0.004
+SSH-Patator,2961,2,False,Initial Access,T1110.001,tuesday,0.919
+SSH-Patator - Attempted,27,2,True,Initial Access,T1110.001,tuesday,0.008
+BENIGN,319120,0,False,Benign,,wednesday,64.256
+DoS GoldenEye,7567,6,False,Impact,T1499,wednesday,1.524
+DoS GoldenEye - Attempted,80,6,True,Impact,T1499,wednesday,0.016
+DoS Hulk,158468,6,False,Impact,T1499,wednesday,31.908
+DoS Hulk - Attempted,581,6,True,Impact,T1499,wednesday,0.117
+DoS Slowhttptest,1740,6,False,Impact,T1499,wednesday,0.35
+DoS Slowhttptest - Attempted,3368,6,True,Impact,T1499,wednesday,0.678
+DoS Slowloris,3859,6,False,Impact,T1499,wednesday,0.777
+DoS Slowloris - Attempted,1847,6,True,Impact,T1499,wednesday,0.372
+Heartbleed,11,2,False,Initial Access,T1190,wednesday,0.002
+BENIGN,288172,0,False,Benign,,thursday,79.589
+Infiltration,36,3,False,Lateral Movement,T1204,thursday,0.01
+Infiltration - Attempted,45,3,True,Lateral Movement,T1204,thursday,0.012
+Infiltration - Portscan,71767,3,False,Lateral Movement,T1046,thursday,19.821
+Web Attack - Brute Force,73,2,False,Initial Access,T1110.001,thursday,0.02
+Web Attack - Brute Force - Attempted,1292,2,True,Initial Access,T1110.001,thursday,0.357
+Web Attack - SQL Injection,13,2,False,Initial Access,T1190,thursday,0.004
+Web Attack - SQL Injection - Attempted,5,2,True,Initial Access,T1190,thursday,0.001
+Web Attack - XSS,18,2,False,Initial Access,T1189,thursday,0.005
+Web Attack - XSS - Attempted,655,2,True,Initial Access,T1189,thursday,0.181
+BENIGN,288544,0,False,Benign,,friday,52.697
+Botnet,736,4,False,Command & Control,T1071.001,friday,0.134
+Botnet - Attempted,4067,4,True,Command & Control,T1071.001,friday,0.743
+DDoS,95144,6,False,Impact,T1498,friday,17.376
+Portscan,159066,1,False,Reconnaissance,T1595.001,friday,29.05

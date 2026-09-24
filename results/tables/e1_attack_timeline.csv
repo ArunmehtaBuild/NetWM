@@ -1,0 +1,34 @@
+label,observed_first,observed_last,flows,day,scheduled_start,scheduled_end,attack
+FTP-Patator,2017-07-04 12:19:20.152476,2017-07-04 13:20:13.627945,3972.0,tuesday,2017-07-04 12:20,2017-07-04 13:20,FTP-Patator
+FTP-Patator - Attempted,2017-07-04 12:17:52.838272,2017-07-04 12:24:34.048803,12.0,tuesday,,,
+SSH-Patator,2017-07-04 17:09:01.049616,2017-07-04 19:04:15.353690,2961.0,tuesday,2017-07-04 17:00,2017-07-04 18:00,SSH-Patator
+SSH-Patator - Attempted,2017-07-04 17:30:10.220179,2017-07-04 18:09:06.297231,27.0,tuesday,,,
+DoS GoldenEye,2017-07-05 14:10:03.231753,2017-07-05 14:19:49.515445,7567.0,wednesday,2017-07-05 14:10,2017-07-05 14:23,DoS GoldenEye
+DoS GoldenEye - Attempted,2017-07-05 14:10:03.272375,2017-07-05 14:11:34.247394,80.0,wednesday,,,
+DoS Hulk,2017-07-05 13:43:23.194704,2017-07-05 14:01:34.512067,158468.0,wednesday,2017-07-05 13:43,2017-07-05 14:00,DoS Hulk
+DoS Hulk - Attempted,2017-07-05 13:44:26.848472,2017-07-05 14:07:21.326171,581.0,wednesday,,,
+DoS Slowhttptest,2017-07-05 13:15:37.936810,2017-07-05 13:35:18.764958,1740.0,wednesday,2017-07-05 13:14,2017-07-05 13:35,DoS Slowhttptest
+DoS Slowhttptest - Attempted,2017-07-05 13:15:38.709208,2017-07-05 13:37:49.330190,3368.0,wednesday,,,
+DoS Slowloris,2017-07-05 12:48:54.539220,2017-07-05 13:10:11.354291,3859.0,wednesday,2017-07-05 12:47,2017-07-05 13:10,DoS Slowloris
+DoS Slowloris - Attempted,2017-07-05 12:48:46.211817,2017-07-05 13:10:34.560235,1847.0,wednesday,,,
+Heartbleed,2017-07-05 18:12:15.650811,2017-07-05 18:32:18.242051,11.0,wednesday,2017-07-05 18:12,2017-07-05 18:32,Heartbleed
+Infiltration,2017-07-06 17:19:02.547210,2017-07-06 18:44:24.375292,36.0,thursday,,,
+Infiltration (2nd stage),,,,,2017-07-06 17:33,2017-07-06 17:35,Infiltration (2nd stage)
+Infiltration (Dropbox/Meterpreter),,,,,2017-07-06 17:19,2017-07-06 17:21,Infiltration (Dropbox/Meterpreter)
+Infiltration - Attempted,2017-07-06 17:13:48.830533,2017-07-06 20:02:18.410785,45.0,thursday,,,
+Infiltration - Cool Disk (MAC),,,,,2017-07-06 17:53,2017-07-06 18:00,Infiltration - Cool Disk (MAC)
+Infiltration - Portscan,2017-07-06 17:00:31.706755,2017-07-06 18:46:04.331747,71767.0,thursday,,,
+Infiltration - internal NMAP portscan,,,,,2017-07-06 18:04,2017-07-06 18:45,Infiltration - internal NMAP portscan
+Web Attack - Brute Force,2017-07-06 12:19:27.660566,2017-07-06 12:59:41.197757,73.0,thursday,2017-07-06 12:20,2017-07-06 13:00,Web Attack - Brute Force
+Web Attack - Brute Force - Attempted,2017-07-06 12:15:54.880049,2017-07-06 13:00:10.400480,1292.0,thursday,,,
+Web Attack - SQL Injection,2017-07-06 13:35:45.732950,2017-07-06 13:42:50.310628,13.0,thursday,2017-07-06 13:40,2017-07-06 13:42,Web Attack - SQL Injection
+Web Attack - SQL Injection - Attempted,2017-07-06 13:35:27.852814,2017-07-06 13:35:45.720612,5.0,thursday,,,
+Web Attack - XSS,2017-07-06 13:16:16.603214,2017-07-06 13:34:28.136241,18.0,thursday,2017-07-06 13:15,2017-07-06 13:35,Web Attack - XSS
+Web Attack - XSS - Attempted,2017-07-06 13:15:35.283859,2017-07-06 13:35:21.109336,655.0,thursday,,,
+Botnet,2017-07-07 13:04:13.990571,2017-07-07 14:02:02.808963,736.0,friday,,,
+Botnet - Attempted,2017-07-07 14:03:14.356593,2017-07-07 20:01:12.727507,4067.0,friday,,,
+Botnet ARES,,,,,2017-07-07 13:02,2017-07-07 14:02,Botnet ARES
+DDoS,2017-07-07 18:56:31.796937,2017-07-07 19:16:10.645771,95144.0,friday,,,
+DDoS LOIC,,,,,2017-07-07 18:56,2017-07-07 19:16,DDoS LOIC
+PortScan,,,,,2017-07-07 16:55,2017-07-07 18:27,PortScan
+Portscan,2017-07-07 16:55:32.117090,2017-07-07 18:23:53.256235,159066.0,friday,,,

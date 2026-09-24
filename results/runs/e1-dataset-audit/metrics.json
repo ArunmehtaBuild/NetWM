@@ -1,0 +1,95 @@
+{
+  "run_id": "e1-dataset-audit",
+  "timestamp_utc": "2026-09-24T15:31:24+00:00",
+  "git_sha": "2a640b0",
+  "config": {
+    "data": "data/raw/cicids2017_improved",
+    "window_s": 60.0,
+    "stride_s": 30.0,
+    "nrows": null
+  },
+  "metrics": {
+    "days": {
+      "monday": {
+        "flows": 371624,
+        "attack_flows": 0,
+        "attack_share_pct": 0.0,
+        "attempted_flows": 0,
+        "first_ts": "2017-07-03 11:55:58.598308",
+        "last_ts": "2017-07-03 20:01:34.352593",
+        "windows": 974,
+        "benign_windows": 974,
+        "compromise_onsets": [],
+        "onset_times": []
+      },
+      "tuesday": {
+        "flows": 322078,
+        "attack_flows": 6972,
+        "attack_share_pct": 2.165,
+        "attempted_flows": 39,
+        "first_ts": "2017-07-04 11:53:44.398274",
+        "last_ts": "2017-07-04 20:00:30.041663",
+        "windows": 976,
+        "benign_windows": 724,
+        "compromise_onsets": [],
+        "onset_times": []
+      },
+      "wednesday": {
+        "flows": 496641,
+        "attack_flows": 177521,
+        "attack_share_pct": 35.744,
+        "attempted_flows": 5876,
+        "first_ts": "2017-07-05 11:42:42.084372",
+        "last_ts": "2017-07-05 20:10:14.557249",
+        "windows": 1017,
+        "benign_windows": 860,
+        "compromise_onsets": [],
+        "onset_times": []
+      },
+      "thursday": {
+        "flows": 362076,
+        "attack_flows": 73904,
+        "attack_share_pct": 20.411,
+        "attempted_flows": 1997,
+        "first_ts": "2017-07-06 11:59:00.490140",
+        "last_ts": "2017-07-06 20:04:36.513760",
+        "windows": 972,
+        "benign_windows": 736,
+        "compromise_onsets": [
+          602,
+          639,
+          658,
+          708,
+          729
+        ],
+        "onset_times": [
+          "2017-07-06 17:00:00",
+          "2017-07-06 17:18:30",
+          "2017-07-06 17:28:00",
+          "2017-07-06 17:53:00",
+          "2017-07-06 18:03:30"
+        ]
+      },
+      "friday": {
+        "flows": 547557,
+        "attack_flows": 259013,
+        "attack_share_pct": 47.303,
+        "attempted_flows": 4067,
+        "first_ts": "2017-07-07 11:59:50.315195",
+        "last_ts": "2017-07-07 20:02:40.977798",
+        "windows": 968,
+        "benign_windows": 759,
+        "compromise_onsets": [
+          129
+        ],
+        "onset_times": [
+          "2017-07-07 13:03:30"
+        ]
+      }
+    },
+    "window_spec": {
+      "length_s": 60.0,
+      "stride_s": 30.0
+    }
+  }
+}

@@ -106,3 +106,42 @@ directly corrupts the headline metric → **D-001**.
 - PCAP access: `cicresearch.ca` direct links now redirect to the UNB dataset index; need a working
   mirror or the UNB download form for packet-level features. Fallback: derive packet-level-style
   features from our own flow aggregator over any PCAP the user supplies, and synthesise demo PCAPs.
+
+---
+
+## Audit findings from our own copy (E1, 2026-09-24)
+
+The corrected release ships **5 per-day CSVs** (`monday.csv` ... `friday.csv`, 1.1 GB extracted,
+2.10 M flows) with 90 columns: `Flow ID`, `Src/Dst IP`, `Src/Dst Port`, `Protocol`, `Timestamp`,
+the CICFlowMeter feature set, plus `FWD/Bwd Init Win Bytes`, `Fwd Seg Size Min`, `ICMP Code/Type`,
+`Total TCP Flow Time`, `Label` and `Attempted Category`.
+
+**Timestamps are UTC** in this release: each day runs 11:5x - 20:0x UTC, i.e. the documented
+09:00-17:00 local (UTC-3). The original CIC CSVs are local time - do not mix them.
+
+**Labels present** (after the corrected relabelling):
+
+- Tuesday: `FTP-Patator` (3 972), `SSH-Patator` (2 961) + 39 attempted
+- Wednesday: `DoS Hulk` (158 468), `DoS GoldenEye` (7 567), `DoS Slowloris` (3 859),
+  `DoS Slowhttptest` (1 740), `Heartbleed` (11) + 5 876 attempted
+- Thursday: `Infiltration - Portscan` (71 767), `Web Attack - Brute Force` (73), `Web Attack - XSS`
+  (18), `Web Attack - SQL Injection` (13), **`Infiltration` (36)** + 1 997 attempted
+- Friday: `Portscan` (159 066), `DDoS` (95 144), `Botnet` (736) + 4 067 `Botnet - Attempted`
+
+**Three things that changed the design:**
+
+1. `Botnet - Attempted` runs 14:03 - 20:01 UTC - six hours of post-shutdown C2 retries, 5.5x more
+   flows than the real botnet window. Treating attempted traffic as a real stage swamped Friday
+   (727/968 windows labelled C2) and hid the port scan and the DDoS. -> decisions.md **D-009**
+2. `Infiltration - Portscan` begins **17:00:31 UTC**, ~19 min before the officially documented
+   infiltration start (17:19). Our onsets come from the labels, with the schedule used only as a
+   visual overlay. -> **D-011**
+3. The compromise itself is **36 flows**; everything else on Thursday is aftermath. Flow-level
+   averages are therefore a bad headline metric for this problem.
+
+### Open question
+
+Is the 17:00 portscan the *unscripted* scan Engelen et al. mention (in which case episode 1 is not a
+post-compromise event and its lead time is meaningless), or genuine post-compromise discovery? To
+resolve: check whether those flows originate from the victim `192.168.10.8` (post-compromise) or
+from the attacker `205.174.165.73` (external, unscripted).

@@ -155,3 +155,54 @@ worried".
 
 **Why.** The PS requires the interface to run offline with no cloud API dependency; a CDN
 `<script>` tag would break that on an air-gapped evaluation machine.
+
+---
+
+### D-009 — `- Attempted` traffic does not set the ground-truth stage
+*Date: 2026-09-24 · Status: accepted · Evidence: E1*
+
+**Decision.** Flows whose corrected label ends in `- Attempted` keep an `attempted=True` flag but are
+treated as stage 0 when building window stage labels, hazard targets and onsets. They remain
+available as an auxiliary target.
+
+**Why.** The audit (E1) showed `Botnet - Attempted` spans **14:03 → 20:01 UTC on Friday** (307
+minutes of post-shutdown C2 retries) versus 59 minutes for the real `Botnet` traffic. Counting it as
+Command & Control labelled **727 of 968 Friday windows** as C2 and, because the window label is the
+most advanced stage present, *masked the PortScan and DDoS entirely* (11 and 5 windows). Excluding
+attempted traffic gives 116 C2 / 52 Recon / 41 Impact windows, which matches the published schedule.
+
+**Revisit if.** We want a "connection attempt" early-warning signal — attempted traffic is exactly
+the weak precursor a forecaster might exploit, so it may return as a *feature* or as an auxiliary
+head, never as the stage ground truth.
+
+---
+
+### D-010 — Windows carry a multi-label stage vector alongside the dominant stage
+*Date: 2026-09-24 · Status: accepted*
+
+**Decision.** `window_stage_matrix()` produces a binary column per stage per window; the ordinal
+"most advanced stage" is derived from it.
+
+**Why.** Attacks overlap in real traffic (C2 beaconing while a scan runs), and collapsing to a single
+stage discards the rest. On CIC-IDS2017 *after* D-009 the two views happen to agree — no window
+contains two different stages — which is itself a finding: this dataset serialises its attacks. The
+multi-label view costs nothing here and is what CTU-13 (M2), where botnet C2 and scanning genuinely
+run concurrently, will need.
+
+---
+
+### D-011 — Compromise onset = first window with a non-attempted stage ≥ Lateral Movement
+*Date: 2026-09-24 · Status: provisional · Evidence: E1*
+
+**Decision.** Lead time is measured against episode onsets computed this way, with episodes split by
+≥ 4 quiet windows (2 minutes).
+
+**Why.** We need one unambiguous "the attacker got in" instant per episode. The audit puts Thursday's
+onsets at **17:00:00, 17:18:30, 17:28:00, 17:53:00, 18:03:30 UTC**, against an official infiltration
+schedule starting 17:19 — because the corrected labels mark internal portscan traffic from the
+victim host starting **17:00:31**, ~19 minutes before the documented Meterpreter session. We take the
+data over the schedule, and treat the official times only as a sanity overlay in plots.
+
+**Provisional because.** If that 17:00 portscan turns out to be the unscripted scan Engelen et al.
+mention rather than post-compromise activity, the first onset is spurious and lead-time numbers for
+episode 1 must be reported separately. Open item in `research/cicids2017.md`.
