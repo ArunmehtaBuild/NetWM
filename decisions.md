@@ -228,3 +228,47 @@ lead-time number we report.
 
 **Revisit if.** A dataset has no reliable notion of "inside" (CTU-13 mixes routed subnets) — then the
 rule needs the adapter to declare its monitored prefixes explicitly.
+
+---
+
+### D-013 — Forecast horizon K = 10 windows (5 minutes)
+*Date: 2026-09-24 · Status: provisional*
+
+**Decision.** The hazard head and the `y_within_K` target look 10 windows ahead: 10 × 30 s stride =
+5 minutes of look-ahead.
+
+**Why.** The gap between the pre-compromise signal and the compromise itself on the infiltration day
+is minutes, not hours: the Dropbox download, the reverse shell at 17:19 and the internal sweep at
+18:04 are tens of minutes apart, and the individual episodes are 2-10 minutes long. A horizon far
+longer than the causal gap just labels benign windows as positive and inflates the base rate; far
+shorter and the forecast is a detection.
+
+**Revisit if.** Lead-time results saturate at K (the model wants to warn earlier than we allow), or
+the positive rate at K = 10 (17 % on Thursday) proves too permissive.
+
+---
+
+### D-014 — Log-compress heavy-tailed features, then standardise, fitted on training splits only
+*Date: 2026-09-24 · Status: accepted*
+
+**Decision.** `StateScaler` applies `log1p` to non-negative columns with skew > 2, then z-scores.
+Fitted on the training days of each fold, never on the test day.
+
+**Why.** Byte, packet and flow counts span five orders of magnitude between an idle window and a DDoS
+window. Plain standardisation compresses 99 % of windows into a sliver of the range and lets one
+attack dominate the gradients; a scaler fitted across all days leaks test-day statistics
+(the 71 k-flow portscan changes the mean of half the columns).
+
+---
+
+### D-015 — Every threshold-dependent metric is reported twice: train-tuned and oracle
+*Date: 2026-09-24 · Status: accepted*
+
+**Decision.** For each model and fold we report metrics at the threshold that maximises F1 on the
+*training* days (the deployable setting) **and** at the threshold that maximises F1 on the *test*
+day (an oracle upper bound that no deployed system could pick).
+
+**Why.** The baseline's numbers swing enormously with the threshold — on Thursday, logistic
+regression goes from F1 0.011 (train-tuned) to 0.193 (oracle). Publishing only the first invites the
+accusation that we handicapped the baseline; publishing only the second is leakage. Both, always,
+for our model too.

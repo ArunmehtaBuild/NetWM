@@ -1,0 +1,632 @@
+{
+  "run_id": "e2e3-baselines-lags0",
+  "timestamp_utc": "2026-09-24T15:51:08+00:00",
+  "git_sha": "d42a191",
+  "config": {
+    "data": "data/processed/cicids2017",
+    "lags": 0,
+    "seed": 42
+  },
+  "metrics": {
+    "rows": [
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "monday",
+        "nll_mean": 1.0127,
+        "nll_median": 0.8468,
+        "nll_p95": 1.5505
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "tuesday",
+        "nll_mean": 1.0916,
+        "nll_median": 0.8852,
+        "nll_p95": 1.9638
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "wednesday",
+        "nll_mean": 1.1465,
+        "nll_median": 0.9064,
+        "nll_p95": 2.1769
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "thursday",
+        "nll_mean": 152010.125,
+        "nll_median": 0.8513,
+        "nll_p95": 18.837
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "detect",
+        "threshold_mode": "train-tuned",
+        "test_day": "thursday",
+        "base_rate": 0.1111,
+        "threshold": 0.9312,
+        "precision": 0.5455,
+        "recall": 0.0556,
+        "f1": 0.1008,
+        "fpr": 0.0058,
+        "pr_auc": 0.1576,
+        "roc_auc": 0.4374,
+        "positives": 108,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "detect",
+        "threshold_mode": "oracle",
+        "test_day": "thursday",
+        "base_rate": 0.1111,
+        "threshold": 0.157,
+        "precision": 0.1546,
+        "recall": 0.2963,
+        "f1": 0.2032,
+        "fpr": 0.2025,
+        "pr_auc": 0.1576,
+        "roc_auc": 0.4374,
+        "positives": 108,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 1,
+        "mean_lead_windows": 6.0,
+        "mean_lead_seconds": 180.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "forecast",
+        "threshold_mode": "train-tuned",
+        "test_day": "thursday",
+        "base_rate": 0.1708,
+        "threshold": 0.843,
+        "precision": 0.0714,
+        "recall": 0.006,
+        "f1": 0.0111,
+        "fpr": 0.0161,
+        "pr_auc": 0.1386,
+        "roc_auc": 0.3789,
+        "positives": 166,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "forecast",
+        "threshold_mode": "oracle",
+        "test_day": "thursday",
+        "base_rate": 0.1708,
+        "threshold": 0.01,
+        "precision": 0.125,
+        "recall": 0.4217,
+        "f1": 0.1928,
+        "fpr": 0.6079,
+        "pr_auc": 0.1386,
+        "roc_auc": 0.3789,
+        "positives": 166,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 4,
+        "mean_lead_windows": 9.0,
+        "mean_lead_seconds": 270.0
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "friday",
+        "nll_mean": 1.412,
+        "nll_median": 0.9354,
+        "nll_p95": 2.7481
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "detect",
+        "threshold_mode": "train-tuned",
+        "test_day": "friday",
+        "base_rate": 0.1198,
+        "threshold": 0.9802,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0106,
+        "pr_auc": 0.2096,
+        "roc_auc": 0.7301,
+        "positives": 116,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "detect",
+        "threshold_mode": "oracle",
+        "test_day": "friday",
+        "base_rate": 0.1198,
+        "threshold": 0.0296,
+        "precision": 0.2391,
+        "recall": 0.6121,
+        "f1": 0.3438,
+        "fpr": 0.2653,
+        "pr_auc": 0.2096,
+        "roc_auc": 0.7301,
+        "positives": 116,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 1,
+        "mean_lead_windows": 6.0,
+        "mean_lead_seconds": 180.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "forecast",
+        "threshold_mode": "train-tuned",
+        "test_day": "friday",
+        "base_rate": 0.1312,
+        "threshold": 0.843,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.044,
+        "pr_auc": 0.1556,
+        "roc_auc": 0.6149,
+        "positives": 127,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=0)",
+        "target": "forecast",
+        "threshold_mode": "oracle",
+        "test_day": "friday",
+        "base_rate": 0.1312,
+        "threshold": 0.1276,
+        "precision": 0.1873,
+        "recall": 0.6063,
+        "f1": 0.2862,
+        "fpr": 0.3971,
+        "pr_auc": 0.1556,
+        "roc_auc": 0.6149,
+        "positives": 127,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 1,
+        "mean_lead_windows": 10.0,
+        "mean_lead_seconds": 300.0
+      }
+    ],
+    "per_day": {
+      "monday": {
+        "test_day": "monday",
+        "train_days": [
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "tuesday": {
+        "test_day": "tuesday",
+        "train_days": [
+          "monday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "wednesday": {
+        "test_day": "wednesday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "thursday": {
+        "test_day": "thursday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "friday"
+        ],
+        "detect_lead": {
+          "episodes": 4,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 639,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.06689318776663257
+            },
+            {
+              "onset": 658,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.04650325189788046
+            },
+            {
+              "onset": 708,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.013436302058749216
+            },
+            {
+              "onset": 729,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.5873979952896928
+            }
+          ]
+        },
+        "detect_threshold": 0.9312,
+        "detect_top_features": [
+          [
+            "one_way_rate",
+            -5.501276308677241
+          ],
+          [
+            "svc_smb_rate",
+            -4.629231023998815
+          ],
+          [
+            "dst_port_entropy",
+            3.7338757426278217
+          ],
+          [
+            "proto_udp_rate",
+            3.716562599930923
+          ],
+          [
+            "has_fin_rate",
+            3.673122959812901
+          ],
+          [
+            "is_inbound_rate",
+            -3.345452217898507
+          ],
+          [
+            "priv_port_rate",
+            -3.3266502316358073
+          ],
+          [
+            "proto_tcp_rate",
+            -3.1776109668314194
+          ],
+          [
+            "proto_icmp_rate",
+            -2.994052442192394
+          ],
+          [
+            "is_outbound_rate",
+            2.987461514500192
+          ],
+          [
+            "svc_ftp_rate",
+            -2.2420071785318174
+          ],
+          [
+            "svc_dns_rate",
+            1.9927296273343238
+          ],
+          [
+            "idle_mean_mean",
+            -1.9338975445311652
+          ],
+          [
+            "active_mean_mean",
+            1.883932349146027
+          ],
+          [
+            "uniq_src_ip",
+            1.468052806915583
+          ]
+        ],
+        "forecast_lead": {
+          "episodes": 4,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 639,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.13161013198183522
+            },
+            {
+              "onset": 658,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.09025669677069657
+            },
+            {
+              "onset": 708,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.04201126358396385
+            },
+            {
+              "onset": 729,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.713668806997243
+            }
+          ]
+        },
+        "forecast_threshold": 0.843,
+        "forecast_top_features": [
+          [
+            "one_way_rate",
+            -4.82264817932699
+          ],
+          [
+            "is_outbound_rate",
+            3.9224796096417767
+          ],
+          [
+            "dst_port_entropy",
+            3.8050192752754555
+          ],
+          [
+            "proto_udp_rate",
+            3.797472133030155
+          ],
+          [
+            "is_inbound_rate",
+            -3.5986298625733832
+          ],
+          [
+            "has_fin_rate",
+            3.3112777521490164
+          ],
+          [
+            "svc_smb_rate",
+            -3.1886818153586556
+          ],
+          [
+            "proto_tcp_rate",
+            -3.109754691139722
+          ],
+          [
+            "svc_dns_rate",
+            3.049209126784844
+          ],
+          [
+            "priv_port_rate",
+            -2.9546619951410267
+          ],
+          [
+            "proto_icmp_rate",
+            -2.867116352763249
+          ],
+          [
+            "svc_ftp_rate",
+            -2.4122412879255255
+          ],
+          [
+            "bytes_max",
+            1.7942523598384785
+          ],
+          [
+            "idle_mean_mean",
+            -1.7540793719096768
+          ],
+          [
+            "fwd_init_win_mean",
+            -1.7493196387817085
+          ]
+        ]
+      },
+      "friday": {
+        "test_day": "friday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday"
+        ],
+        "detect_lead": {
+          "episodes": 1,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 129,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.09601758436774277
+            }
+          ]
+        },
+        "detect_threshold": 0.9802,
+        "detect_top_features": [
+          [
+            "outbound_bytes",
+            5.192005393424176
+          ],
+          [
+            "syn_cnt_sum",
+            -3.621090261809392
+          ],
+          [
+            "fin_cnt_sum",
+            -3.0217443234703056
+          ],
+          [
+            "port_fanout_max",
+            2.72411033726908
+          ],
+          [
+            "svc_dns_rate",
+            2.6123502052488505
+          ],
+          [
+            "one_way_rate",
+            -2.560035936171992
+          ],
+          [
+            "fwd_init_win_mean",
+            -2.551218355247197
+          ],
+          [
+            "idle_mean_mean",
+            -2.275153702518991
+          ],
+          [
+            "is_inbound_rate",
+            -2.0796631591232333
+          ],
+          [
+            "byte_asymmetry",
+            -1.886956160476327
+          ],
+          [
+            "dst_ip_entropy",
+            -1.8266426133130276
+          ],
+          [
+            "svc_https_rate",
+            1.6530248623841681
+          ],
+          [
+            "proto_tcp_rate",
+            1.6343193078478901
+          ],
+          [
+            "has_rst_rate",
+            -1.5922301981175384
+          ],
+          [
+            "fwd_init_win_std",
+            1.5875518654370493
+          ]
+        ],
+        "forecast_lead": {
+          "episodes": 1,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 129,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.18457711471999463
+            }
+          ]
+        },
+        "forecast_threshold": 0.843,
+        "forecast_top_features": [
+          [
+            "is_inbound_rate",
+            -4.4892242157712605
+          ],
+          [
+            "svc_dns_rate",
+            3.72883314964945
+          ],
+          [
+            "ephemeral_dst_rate",
+            3.644511582757732
+          ],
+          [
+            "svc_https_rate",
+            3.111708889429438
+          ],
+          [
+            "fin_cnt_sum",
+            -2.772729051565424
+          ],
+          [
+            "priv_port_rate",
+            2.668961261560267
+          ],
+          [
+            "is_internal_rate",
+            2.5009392314559578
+          ],
+          [
+            "uniq_src_port",
+            2.1522885684915543
+          ],
+          [
+            "ack_cnt_sum",
+            1.9709646025270857
+          ],
+          [
+            "fwd_init_win_mean",
+            -1.93610106109876
+          ],
+          [
+            "duration_s_max",
+            1.85397817479026
+          ],
+          [
+            "svc_http_rate",
+            1.769122133713657
+          ],
+          [
+            "dst_port_entropy",
+            1.7408549824890054
+          ],
+          [
+            "outbound_bytes",
+            1.6844265079290472
+          ],
+          [
+            "is_outbound_rate",
+            1.466864972094374
+          ]
+        ]
+      }
+    }
+  }
+}

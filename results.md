@@ -9,6 +9,9 @@ the commentary column.
 | # | experiment | dataset / split | command | artefacts | headline |
 |---|---|---|---|---|---|
 | E1 | dataset audit | CIC-IDS2017 corrected, all 5 days | `python scripts/audit_dataset.py` | `results/tables/e1_*.csv`, `results/figures/e1_*_timeline.png`, `results/runs/e1-dataset-audit/` | 2.10 M flows, 4 907 windows; attack share 0-47 % per day; only 5 compromise onsets all week |
+| F1 | feature build | same, 70 features/window | `python scripts/build_features.py --config configs/cicids2017.yaml` | `data/processed/cicids2017/*.parquet` (not committed), `meta.json` | S_t = 70 features; positives 17.1 % (Thu), 13.1 % (Fri), 0 elsewhere |
+| E2 | persistence floor | leave-one-day-out | `python scripts/benchmark_baselines.py` | `results/tables/e2e3_baselines_lags0.csv` | median next-state NLL 0.85-0.94; Thursday mean 152 010 (distribution shift) |
+| E3 | logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py` | same + `results/figures/e3_*_logreg_forecast.png`, `results/tables/e3_lead_times_lags0.csv` | **0 of 5 episodes warned early**; F1 0.011 (Thu) / 0.000 (Fri) at a deployable threshold |
 
 ## Planned experiment set (M1)
 
@@ -82,3 +85,86 @@ Window stage distribution (after excluding `- Attempted`, D-009) - `results/tabl
 - `results/tables/e1_attack_timeline.csv` - observed first/last flow per label vs official schedule
 - `results/tables/e1_window_stats.csv` - dominant vs present stage counts per window
 - `results/figures/e1_{monday..friday}_timeline.png` - attack flows/min (symlog), official schedule shaded
+
+---
+
+## F1 - feature build
+
+`python scripts/build_features.py --config configs/cicids2017.yaml` · 2026-09-24
+
+**70 features per window**, grouped as: volume/rate (6), flag behaviour (`syn_no_ack_rate`,
+`has_rst_rate`, `has_fin_rate`, flag sums), port/host spread (`uniq_dst_port`, `dst_port_entropy`,
+`fanout_max`, `port_fanout_max`, `top_talker_share`), service mix (9 well-known port ratios),
+protocol mix, timing (`flow_iat_*`, `active_mean`, `idle_mean`, `beacon_score`), direction
+(`is_outbound_rate`, `byte_asymmetry`, `outbound_bytes`), TCP shape (`fwd_init_win_mean/std`,
+`fwd_seg_size_min_mean`) and scan signatures (`seq_port_ratio`, `ports_per_pair_max`).
+
+| day | windows | positives (`y_within_K`) | onsets |
+|---|---:|---:|---:|
+| Monday | 974 | 0.000 % | 0 |
+| Tuesday | 976 | 0.000 % | 0 |
+| Wednesday | 1 017 | 0.000 % | 0 |
+| Thursday | 972 | 17.078 % | 4 |
+| Friday | 968 | 13.120 % | 1 |
+
+Only Thursday and Friday can serve as test days for the forecasting target - Tuesday (brute force)
+and Wednesday (DoS) never reach Lateral Movement. Feature extraction runs in ~0.6 s per day after
+vectorising the entropy and beaconing computations (a groupby-apply version took 16 s per 60 k flows).
+
+---
+
+## E2 + E3 - the baselines (leave-one-day-out)
+
+`python scripts/benchmark_baselines.py` · run: `results/runs/e2e3-baselines-lags0/`
+
+### E2 - persistence (`S_hat_{t+1} = S_t`)
+
+| test day | NLL mean | NLL median | NLL p95 |
+|---|---:|---:|---:|
+| Monday | 1.01 | 0.85 | 1.55 |
+| Tuesday | 1.09 | 0.89 | 1.96 |
+| Wednesday | 1.15 | 0.91 | 2.18 |
+| Thursday | **152 010** | 0.85 | 18.84 |
+| Friday | 1.41 | 0.94 | 2.75 |
+
+The Thursday mean is not a typo: a handful of internal-portscan windows sit so far outside the
+training distribution (the scaler is fitted without Thursday) that they dominate the average. The
+median is unremarkable. This is the first quantitative sign of what the world model has to handle -
+**distribution shift, not just class imbalance** - and it is why we report median and p95 alongside.
+
+### E3 - logistic regression on the same features
+
+| test day | target | threshold | F1 | precision | recall | FPR | PR-AUC | base rate | ROC-AUC | episodes warned early |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Thursday | detect | train-tuned | 0.101 | 0.545 | 0.056 | 0.006 | 0.158 | 0.111 | 0.437 | 0 / 4 |
+| Thursday | detect | oracle | 0.203 | 0.155 | 0.296 | 0.203 | 0.158 | 0.111 | 0.437 | 1 / 4 |
+| Thursday | forecast | train-tuned | **0.011** | 0.071 | 0.006 | 0.016 | 0.139 | 0.171 | 0.379 | **0 / 4** |
+| Thursday | forecast | oracle | 0.193 | 0.125 | 0.422 | 0.608 | 0.139 | 0.171 | 0.379 | 4 / 4 |
+| Friday | detect | train-tuned | 0.000 | 0.000 | 0.000 | 0.011 | 0.210 | 0.120 | 0.730 | 0 / 1 |
+| Friday | detect | oracle | 0.344 | 0.239 | 0.612 | 0.265 | 0.210 | 0.120 | 0.730 | 1 / 1 |
+| Friday | forecast | train-tuned | **0.000** | 0.000 | 0.000 | 0.044 | 0.156 | 0.131 | 0.615 | **0 / 1** |
+| Friday | forecast | oracle | 0.286 | 0.187 | 0.606 | 0.397 | 0.156 | 0.131 | 0.615 | 1 / 1 |
+
+### Findings
+
+1. **A static classifier gives no early warning here.** At a threshold chosen the only way a deployed
+   system could choose it - on training data - logistic regression warned early on **0 of the 5
+   compromise episodes** in the week. Per-episode detail: `results/tables/e3_lead_times_lags0.csv`.
+2. **Its ranking is near chance, and on Thursday it is worse than chance.** Thursday forecast
+   PR-AUC 0.139 against a base rate of 0.171, ROC-AUC 0.379. Trained on the other days - whose
+   attacks are brute force, DoS, botnet C2 and external scanning - the weights it learns are
+   *anti-correlated* with what an infiltration looks like. Friday is better (ROC-AUC 0.615) because
+   Thursday's internal-scan traffic is in its training set.
+3. **The oracle threshold flatters it enormously** (F1 0.011 -> 0.193 on Thursday), which is exactly
+   why both numbers are reported (D-015). Even then, the FPR is 0.61: to catch the infiltration it
+   has to flag two thirds of the benign day.
+4. **The top weights are plausible but unstable across folds** - Thursday leans on `one_way_rate`
+   (-4.8), `is_outbound_rate` (+3.9), `dst_port_entropy` (+3.8); Friday on `is_inbound_rate` (-4.5),
+   `svc_dns_rate` (+3.7), `ephemeral_dst_rate` (+3.6). Different folds, different story: no stable
+   mechanism is being learned.
+5. `results/figures/e3_thursday_logreg_forecast.png` is the picture worth putting in the deck: the
+   baseline's probability oscillates between 0 and 1 all day long, with no structure around the
+   actual compromise onsets.
+
+**Bar for the world model:** beat median NLL 0.85-0.94 (E2), and warn early on more than 0 of 5
+episodes at a train-tuned threshold (E3).

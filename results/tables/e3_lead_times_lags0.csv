@@ -1,0 +1,11 @@
+test_day,mode,onset,first_alarm,lead_windows,detected_early,score_at_onset
+thursday,detect,639,,0,False,0.06689318776663257
+thursday,detect,658,,0,False,0.04650325189788046
+thursday,detect,708,,0,False,0.013436302058749216
+thursday,detect,729,,0,False,0.5873979952896928
+thursday,forecast,639,,0,False,0.13161013198183522
+thursday,forecast,658,,0,False,0.09025669677069657
+thursday,forecast,708,,0,False,0.04201126358396385
+thursday,forecast,729,,0,False,0.713668806997243
+friday,detect,129,,0,False,0.09601758436774277
+friday,forecast,129,,0,False,0.18457711471999463

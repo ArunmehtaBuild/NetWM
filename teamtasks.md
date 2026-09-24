@@ -1,53 +1,88 @@
-# Team tasks
+# Team tasks - NetWM (SIH 2026, PS-153)
 
-Six-person SIH team. Owners are placeholders - put real names in the `owner` column. Status:
-`todo` / `doing` / `review` / `done`. Keep this file in sync with [plan.md](plan.md); plan.md is the
-technical breakdown, this is who does what and by when.
+Six people, six tracks, four sprints. The tracks are built around **what has to exist**, not around
+job titles - a couple of people are working outside their usual lane on purpose, because the
+critical path needs it.
 
-## Roles
-
-| role | owner | scope |
+| person | track | owns |
 |---|---|---|
-| R1 Data / features | TBD | dataset download + audit, flow & packet feature extraction, windowing |
-| R2 Modelling | TBD | world model, training loop, baselines, ablations |
-| R3 Evaluation / explainability | TBD | metrics, benchmark harness, attention + IG/SHAP outputs |
-| R4 Backend | TBD | Flask API, inference service, sample generation, packaging |
-| R5 Frontend | TBD | dashboard, timeline, stage ribbon, flow table, explanation panels |
-| R6 Docs / demo | TBD | architecture doc, slides, demo video, README, submission hygiene |
+| **Sanchi** | A - State & features | flow features, windowing, the `S_t` matrix everything trains on |
+| **Yash** | B - World model | RSSM model, training loop, K-step rollout engine |
+| **Atharv** | C - Evaluation & explainability | metrics (incl. lead time), benchmark harness, IG/SHAP outputs, decisions log |
+| **Alok** | D - Packet pipeline & baselines | PCAP parsing, PCAP->flows, logistic-regression + persistence baselines, packaging |
+| **Arun** | E - Backend | Flask API, job runner, inference service, mock server, offline packaging |
+| **Harshit** | F - Frontend | the SOC dashboard: timeline, forecast cone, kill-chain ribbon, flows table, explain panels |
 
-## Now (this sprint)
+> **Swap freely.** If a name fits a different track better, swap the *names*, not the track
+> definitions - the dependency graph below assumes the tracks, not the people.
+> Frontend is one person by design: the second frontend pair works better split as
+> **Harshit builds, Atharv reviews + owns the evaluation charts that feed it**. If you would rather
+> have two on the UI, move Alok's baseline tasks to Yash after Sprint 1 and put Alok on F.
 
-| # | task | role | status | notes |
-|---|---|---|---|---|
-| T1 | Approve + run the corrected CIC-IDS2017 download (328 MB) | R1 | todo | blocks everything downstream |
-| T2 | venv + torch cu121 smoke test on the GTX 1650 | R2 | todo | confirm CUDA is actually used |
-| T3 | Dataset audit E1 (labels per day, onset times, window counts) | R1 | todo | first entry in results.md |
-| T4 | Flow feature extractor + windowing | R1 | todo | see plan.md P2 |
-| T5 | MITRE stage mapping + hazard targets | R3 | todo | research/mitre-mapping.md is the spec |
-| T6 | Logistic regression + persistence baselines | R2 | todo | E2, E3 - must land before the world model |
-| T7 | Find a working source for Thursday PCAP | R1 | todo | packet-level features are a PS requirement |
-| T8 | Fill in real names + a target date per row | R6 | todo | |
+## What we are building (so everyone codes against the same picture)
 
-## Next
+**Backend (Arun)** - Flask, no cloud, no build step:
+`POST /api/analyze` (CSV or PCAP upload) -> `job_id` -> background worker runs
+feature extraction -> world-model inference -> K-step rollout -> explanation, writing progress to a
+job store. `GET /api/jobs/<id>/result` returns the whole analysis as one JSON document;
+`GET /api/jobs/<id>/stream` replays it window-by-window over SSE so the dashboard can *play* an
+attack unfolding. Contract: [`app/api_contract.md`](app/api_contract.md) - **frozen on day 1**.
 
-| # | task | role | depends on |
-|---|---|---|---|
-| T9 | World model implementation + training loop | R2 | T4, T6 |
-| T10 | Packet-level feature extractor (Scapy streaming) | R1 | T7 |
-| T11 | K-step rollout engine + metric suite (incl. lead time) | R3 | T9 |
-| T12 | Flask API + inference entry point | R4 | T9 |
-| T13 | Dashboard UI | R5 | T12 |
-| T14 | Explainability outputs (attention + IG, SHAP for baseline) | R3 | T9 |
-| T15 | Benchmark table: world model vs LR, both splits | R3 | T11 |
-| T16 | Architecture doc (2 pages) + 5 slides + 2-min video | R6 | T15, T13 |
+**Frontend (Harshit)** - vanilla JS + vendored Chart.js, single page, dark SOC theme:
+1. **Upload / demo bar** - drop a CSV or PCAP, or pick a preloaded scenario.
+2. **Forecast timeline** - observed infiltration probability, plus the K-step forecast cone
+   (Monte-Carlo band), alarm threshold line, and ground-truth attack spans shaded when known.
+3. **Kill-chain ribbon** - predicted MITRE stage per window as a colour band + a "current stage"
+   card with the ATT&CK tactic/technique id.
+4. **Why panel** - top driving features as an attribution bar chart, plus the attention heatmap over
+   the last L windows ("which earlier moment made the model worried").
+5. **Flagged flows table** - sortable, filterable, per-flow score, src/dst/port/flags.
+6. **Alarm log** - each alarm with its lead time: *"fired 6 windows (3 min) before onset"*. This is
+   the money shot of the demo video.
+7. **Replay control** - play / pause / scrub, driven by the SSE stream.
 
-## Submission checklist (PS-153)
+**The parallelism trick:** Arun ships a **mock backend** on day 2 that serves hand-built JSON from
+`app/mock/` matching the contract. Harshit then builds the entire UI without waiting for a model,
+and swapping in the real model is a one-line change.
 
-- [ ] Public GitHub repo link
-- [ ] README with setup instructions that a fresh machine can follow
-- [ ] Architecture document, max 2 pages
-- [ ] Demo video, max 2 minutes, showing a CSV *and* a PCAP upload
-- [ ] Technical presentation, max 5 slides
-- [ ] Benchmark table vs logistic regression (F1, precision, recall, FPR)
-- [ ] Model weights + reproducible training config committed
-- [ ] Everything runs offline, no cloud API calls
+## File ownership (merge-conflict prevention)
+
+| area | files | owner |
+|---|---|---|
+| features & state | `src/netwm/features/*`, `scripts/build_features.py`, `configs/features.yaml` | Sanchi |
+| model & training | `src/netwm/models/world_model.py`, `src/netwm/train.py`, `src/netwm/engine/rollout.py`, `configs/model_*.yaml` | Yash |
+| metrics & explain | `src/netwm/metrics.py`, `src/netwm/evaluate.py`, `src/netwm/engine/explain.py`, `scripts/benchmark.py` | Atharv |
+| packets & baselines | `src/netwm/features/pcap_features.py`, `flow_aggregator.py`, `src/netwm/models/baseline.py`, `scripts/make_demo_samples.py` | Alok |
+| backend | `app/server.py`, `app/jobs.py`, `app/mock/*`, `src/netwm/engine/predict.py` | Arun |
+| frontend | `app/templates/*`, `app/static/*` | Harshit |
+| shared (PR + a heads-up in chat) | `src/netwm/labels/*`, `src/netwm/data/*`, `src/netwm/utils.py`, `app/api_contract.md` | anyone |
+
+Docs are shared but have rules (see [CLAUDE.md](CLAUDE.md)): decisions -> `decisions.md`,
+numbers -> `results.md` + `results/`, findings -> `research/`.
+
+## Sprint plan
+
+Days are working days from kickoff; put real dates in when the deadline is fixed. Each sprint ends
+with something runnable - **there is never a week where nothing is demo-able**.
+
+### Sprint 0 - Day 1-2: everyone unblocked
+
+| who | task | done when |
+|---|---|---|
+| Sanchi | **A1** venv + repo setup; read `decisions.md` D-001..D-012 and `results.md` E1 | audit reruns on your machine |
+| Yash | **B1** torch cu121 installed, GPU smoke test; skim `research/world-models.md` | a 3-layer GRU trains on random tensors on the 1650 |
+| Atharv | **C1** freeze the metric definitions (F1/precision/recall/FPR/PR-AUC/lead time) in `metrics.py` stubs + docstrings | signatures agreed, tests written first (they fail) |
+| Alok | **D1** find a working CIC-IDS2017 Thursday PCAP mirror; report source + size before downloading | link posted, or fallback agreed |
+| Arun | **E1** Flask skeleton + **mock backend** serving `app/mock/*.json` per `app/api_contract.md` | `curl /api/jobs/demo/result` returns the sample payload |
+| Harshit | **F1** page shell, dark theme, layout grid, vendored Chart.js (no CDN) | page loads offline and renders the mock timeline |
+
+### Sprint 1 - Day 3-6: the pipeline and the shell
+
+| who | task | done when |
+|---|---|---|
+| Sanchi | **A2** flow feature extractor (flags, ports, entropy, IAT, bidirectional, host fan-out) + **A3** `scaler.py` (train-only fit) + **A4** `scripts/build_features.py` -> parquet | `S_t` matrix for all 5 days, documented feature dictionary in `research/features.md` |
+| Yash | **B2** world model skeleton: encoder -> latent -> transition -> decoder/stage/hazard heads, forward pass on random data | shapes right, param count under 3 M |
+| Atharv | **C2** metrics implemented + tested on synthetic cases; **C3** the split harness (leave-one-day-out, leave-one-family-out) | `pytest` green, splits print their day/label composition |
+| Alok | **D2** logistic-regression + persistence baselines (E2, E3) on Sanchi's features | baseline numbers in `results.md` - the bar the model must clear |
+| Arun | **E2** real job runner (upload -> background thread -> progress -> result), CSV path wired to the feature pipeline | uploading a real day CSV returns real window counts |
+| Harshit | **F2** forecast timeline + cone + threshold line; **F3** kill-chain ribbon | both render from mock data, resize cleanly, colours come from `/api/model` |
