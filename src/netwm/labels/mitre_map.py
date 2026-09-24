@@ -194,3 +194,27 @@ def window_stage(labels: "list[str] | tuple[str, ...]") -> Stage:
 def is_compromise(stage: Stage) -> bool:
     """Whether a stage counts as 'infiltration completed' for the hazard target (D-005)."""
     return stage in PROGRESSION_STAGES and stage >= COMPROMISE_THRESHOLD
+
+
+_SCAN_LABEL = re.compile(r"scan|nmap|probe")
+
+
+def refine_scan_direction(
+    labels: "pd.Series", stages: "pd.Series", src_ips: "pd.Series", internal_prefixes: tuple[str, ...]
+) -> "pd.Series":
+    """Split scan traffic by direction: outside-in is Reconnaissance, inside-out is discovery.
+
+    The corrected CIC-IDS2017 release labels *both* the external attacker's unscripted port scan and
+    the compromised host's internal NMAP sweep as ``Infiltration - Portscan``. They are different
+    kill-chain stages: a scan from outside the monitored network is reconnaissance, while the same
+    scan launched from a victim host is post-compromise discovery / lateral movement. Getting this
+    wrong shifts the compromise onset ~19 minutes earlier and inflates lead time (D-012).
+    """
+    import pandas as pd  # local import: keeps this module importable without pandas
+
+    is_scan = labels.astype(str).str.lower().str.contains(_SCAN_LABEL, regex=True, na=False)
+    internal = src_ips.astype(str).str.startswith(internal_prefixes)
+    demote = is_scan & ~internal & (stages == int(Stage.LATERAL_MOVEMENT))
+    out = stages.copy()
+    out[demote] = int(Stage.RECONNAISSANCE)
+    return out

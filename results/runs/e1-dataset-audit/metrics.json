@@ -1,7 +1,7 @@
 {
   "run_id": "e1-dataset-audit",
-  "timestamp_utc": "2026-09-24T15:31:24+00:00",
-  "git_sha": "2a640b0",
+  "timestamp_utc": "2026-09-24T15:34:03+00:00",
+  "git_sha": "2495ecd",
   "config": {
     "data": "data/raw/cicids2017_improved",
     "window_s": 60.0,
@@ -56,14 +56,12 @@
         "windows": 972,
         "benign_windows": 736,
         "compromise_onsets": [
-          602,
           639,
           658,
           708,
           729
         ],
         "onset_times": [
-          "2017-07-06 17:00:00",
           "2017-07-06 17:18:30",
           "2017-07-06 17:28:00",
           "2017-07-06 17:53:00",

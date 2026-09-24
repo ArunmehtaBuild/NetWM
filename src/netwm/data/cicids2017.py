@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 from netwm.data.base import CANONICAL_COLUMNS, DatasetAdapter
-from netwm.labels.mitre_map import is_attempted, stage_of
+from netwm.labels.mitre_map import is_attempted, refine_scan_direction, stage_of
 
 #: raw CSV column -> canonical name
 COLUMN_MAP: dict[str, str] = {
@@ -117,6 +117,11 @@ class CICIDS2017Adapter(DatasetAdapter):
         stage_lut = {lbl: int(stage_of(lbl)) for lbl in uniq}
         attempt_lut = {lbl: bool(is_attempted(lbl)) for lbl in uniq}
         df["stage"] = labels.map(stage_lut).astype("int8")
+        # An external scan and a scan from a compromised host share the label in this release;
+        # separate them by source address (D-012).
+        df["stage"] = refine_scan_direction(
+            labels, df["stage"], df["src_ip"], (VICTIM_SUBNET,)
+        ).astype("int8")
         df["attempted"] = labels.map(attempt_lut).astype(bool)
         df["day"] = split
 

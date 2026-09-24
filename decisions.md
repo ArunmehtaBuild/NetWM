@@ -192,7 +192,7 @@ run concurrently, will need.
 ---
 
 ### D-011 — Compromise onset = first window with a non-attempted stage ≥ Lateral Movement
-*Date: 2026-09-24 · Status: provisional · Evidence: E1*
+*Date: 2026-09-24 · Status: accepted (open item closed by D-012) · Evidence: E1*
 
 **Decision.** Lead time is measured against episode onsets computed this way, with episodes split by
 ≥ 4 quiet windows (2 minutes).
@@ -203,6 +203,28 @@ schedule starting 17:19 — because the corrected labels mark internal portscan 
 victim host starting **17:00:31**, ~19 minutes before the documented Meterpreter session. We take the
 data over the schedule, and treat the official times only as a sanity overlay in plots.
 
-**Provisional because.** If that 17:00 portscan turns out to be the unscripted scan Engelen et al.
-mention rather than post-compromise activity, the first onset is spurious and lead-time numbers for
-episode 1 must be reported separately. Open item in `research/cicids2017.md`.
+**Resolved.** That 17:00 portscan turned out to be external (see D-012), so it is no longer an
+onset; Thursday's first onset is now 17:18:30 UTC, matching the documented infiltration at 17:19.
+
+---
+
+### D-012 — Scan traffic is split by direction before it becomes a stage label
+*Date: 2026-09-24 · Status: accepted · Evidence: E1*
+
+**Decision.** A scan-type label whose source address is outside the monitored subnet is
+Reconnaissance; the same label from an inside host is post-compromise discovery (Lateral Movement).
+Implemented in `refine_scan_direction()` and applied by the CIC-IDS2017 adapter.
+
+**Why.** The corrected release gives both events the single label `Infiltration - Portscan`. The
+audit separated them: 955 flows at 17:00:31-17:00:45 UTC from **172.16.0.1** (external attacker NAT)
+sweeping 954 ports on one host, then 70 812 flows from **192.168.10.8** — the Meterpreter victim —
+sweeping the internal network. Treating the external burst as lateral movement invented a compromise
+onset 18 minutes before the attacker actually got in, which would have silently inflated every
+lead-time number we report.
+
+**Side note worth keeping.** The infiltration C2 flows show three infected hosts, not one:
+`192.168.10.8` (48 flows), `192.168.10.25` (30) and `192.168.10.9` (3), all dialling out to
+`205.174.165.73`.
+
+**Revisit if.** A dataset has no reliable notion of "inside" (CTU-13 mixes routed subnets) — then the
+rule needs the adapter to declare its monitored prefixes explicitly.

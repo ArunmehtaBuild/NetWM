@@ -18,7 +18,7 @@ Heartbleed,11,2,False,Initial Access,T1190,wednesday,0.002
 BENIGN,288172,0,False,Benign,,thursday,79.589
 Infiltration,36,3,False,Lateral Movement,T1204,thursday,0.01
 Infiltration - Attempted,45,3,True,Lateral Movement,T1204,thursday,0.012
-Infiltration - Portscan,71767,3,False,Lateral Movement,T1046,thursday,19.821
+Infiltration - Portscan,71767,1,False,Reconnaissance,T1046,thursday,19.821
 Web Attack - Brute Force,73,2,False,Initial Access,T1110.001,thursday,0.02
 Web Attack - Brute Force - Attempted,1292,2,True,Initial Access,T1110.001,thursday,0.357
 Web Attack - SQL Injection,13,2,False,Initial Access,T1190,thursday,0.004

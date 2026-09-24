@@ -21,9 +21,9 @@ wednesday,4,Command & Control,0,0
 wednesday,5,Exfiltration,0,0
 wednesday,6,Impact,135,135
 thursday,0,Benign,736,736
-thursday,1,Reconnaissance,0,0
+thursday,1,Reconnaissance,2,2
 thursday,2,Initial Access,126,126
-thursday,3,Lateral Movement,110,110
+thursday,3,Lateral Movement,108,108
 thursday,4,Command & Control,0,0
 thursday,5,Exfiltration,0,0
 thursday,6,Impact,0,0

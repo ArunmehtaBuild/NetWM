@@ -8,7 +8,7 @@ the commentary column.
 
 | # | experiment | dataset / split | command | artefacts | headline |
 |---|---|---|---|---|---|
-| E1 | dataset audit | CIC-IDS2017 corrected, all 5 days | `python scripts/audit_dataset.py` | `results/tables/e1_*.csv`, `results/figures/e1_*_timeline.png`, `results/runs/e1-dataset-audit/` | 2.10 M flows, 4 907 windows; attack share 0-47 % per day; 6 compromise onsets total |
+| E1 | dataset audit | CIC-IDS2017 corrected, all 5 days | `python scripts/audit_dataset.py` | `results/tables/e1_*.csv`, `results/figures/e1_*_timeline.png`, `results/runs/e1-dataset-audit/` | 2.10 M flows, 4 907 windows; attack share 0-47 % per day; only 5 compromise onsets all week |
 
 ## Planned experiment set (M1)
 
@@ -39,7 +39,7 @@ the commentary column.
 | Monday | 371 624 | 0.00 % | 0 | 974 | 0 |
 | Tuesday | 322 078 | 2.17 % | 39 | 976 | 0 |
 | Wednesday | 496 641 | 35.74 % | 5 876 | 1 017 | 0 |
-| Thursday | 362 076 | 20.41 % | 1 997 | 972 | 5 |
+| Thursday | 362 076 | 20.41 % | 1 997 | 972 | 4 |
 | Friday | 547 557 | 47.30 % | 4 067 | 968 | 1 |
 
 Window stage distribution (after excluding `- Attempted`, D-009) - `results/tables/e1_window_stats.csv`:
@@ -49,7 +49,7 @@ Window stage distribution (after excluding `- Attempted`, D-009) - `results/tabl
 | Monday | 974 | - | - | - | - | - |
 | Tuesday | 724 | - | 252 | - | - | - |
 | Wednesday | 860 | - | 22 | - | - | 135 |
-| Thursday | 736 | - | 126 | 110 | - | - |
+| Thursday | 736 | 2 | 126 | 108 | - | - |
 | Friday | 759 | 52 | - | - | 116 | 41 |
 
 ### Findings
@@ -58,10 +58,13 @@ Window stage distribution (after excluding `- Attempted`, D-009) - `results/tabl
    14:03-20:01 UTC (307 min) vs 59 min of real botnet traffic. Counting it as C2 labelled 727/968
    Friday windows as Command & Control and masked the PortScan (11 windows) and DDoS (5 windows)
    completely. Excluding it gives 116 / 52 / 41 - which matches the published schedule. -> **D-009**
-2. **Lateral movement starts ~19 minutes before the documented infiltration.** The corrected labels
-   put `Infiltration - Portscan` at 17:00:31 UTC while the official schedule starts the infiltration
-   at 17:19. Onsets used for lead time are therefore taken from the data, not the schedule.
-   -> **D-011**
+2. **One label, two kill-chain stages.** `Infiltration - Portscan` starts at 17:00:31 UTC, ~19 min
+   before the documented infiltration - but those 955 early flows come from **172.16.0.1**
+   (the external attacker NAT) hitting 954 ports on a single host, while the remaining 70 812 come
+   from **192.168.10.8**, the compromised victim. External scan = Reconnaissance, victim scan =
+   post-compromise discovery. Splitting them by source moved Thursday's first compromise onset from
+   17:00:00 to **17:18:30**, matching the documented 17:19 infiltration, and removed one spurious
+   episode (5 onsets -> 4). -> **D-012**
 3. **The compromise event itself is 36 flows.** `Infiltration` (the Meterpreter session) is 36 flows
    out of 362 076 on Thursday (0.01 %); the loud part is the 71 767-flow internal portscan that
    follows. Any metric averaged over flows will be dominated by the aftermath, not the compromise -
@@ -69,7 +72,7 @@ Window stage distribution (after excluding `- Attempted`, D-009) - `results/tabl
 4. **This dataset serialises its attacks.** After D-009, no window contains two different stages, so
    the multi-label view (D-010) is currently identical to the dominant-stage view. Concurrency has to
    come from CTU-13 in M2.
-5. **Only 6 compromise onsets exist in the whole week** (5 Thursday + 1 Friday). Lead time will have
+5. **Only 5 compromise onsets exist in the whole week** (4 Thursday + 1 Friday). Lead time will have
    a tiny sample size, so it must be reported per episode with the individual values, never as a
    single mean with an implied confidence.
 
