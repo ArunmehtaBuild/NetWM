@@ -1,0 +1,108 @@
+{
+  "run_id": "e12-precursor-analysis",
+  "timestamp_utc": "2026-09-24T16:17:47+00:00",
+  "git_sha": "13e8c17",
+  "config": {
+    "data": "data/processed/cicids2017",
+    "quiet_gap": 30,
+    "seed": 42
+  },
+  "metrics": {
+    "thursday": {
+      "pre_onset_windows": 38,
+      "background_windows": 472,
+      "probe_roc_auc_mean": 0.8826,
+      "probe_roc_auc_std": 0.044,
+      "top_features": [
+        {
+          "feature": "uniq_dst_port",
+          "cohens_d": 1.262
+        },
+        {
+          "feature": "ports_per_pair_max",
+          "cohens_d": 1.191
+        },
+        {
+          "feature": "urg_cnt_sum",
+          "cohens_d": -0.984
+        },
+        {
+          "feature": "port_fanout_max",
+          "cohens_d": 0.923
+        },
+        {
+          "feature": "svc_db_rate",
+          "cohens_d": -0.864
+        },
+        {
+          "feature": "svc_rdp_rate",
+          "cohens_d": -0.8
+        },
+        {
+          "feature": "syn_cnt_sum",
+          "cohens_d": 0.69
+        },
+        {
+          "feature": "pkts_per_s",
+          "cohens_d": 0.689
+        },
+        {
+          "feature": "pkts_total",
+          "cohens_d": 0.675
+        },
+        {
+          "feature": "fin_cnt_sum",
+          "cohens_d": 0.673
+        }
+      ]
+    },
+    "friday": {
+      "pre_onset_windows": 10,
+      "background_windows": 464,
+      "probe_roc_auc_mean": 0.9548,
+      "probe_roc_auc_std": 0.0506,
+      "top_features": [
+        {
+          "feature": "uniq_dst_ip",
+          "cohens_d": 1.509
+        },
+        {
+          "feature": "fanout_mean",
+          "cohens_d": 1.393
+        },
+        {
+          "feature": "flows_per_s",
+          "cohens_d": 1.232
+        },
+        {
+          "feature": "psh_cnt_sum",
+          "cohens_d": 1.208
+        },
+        {
+          "feature": "fanout_max",
+          "cohens_d": 1.18
+        },
+        {
+          "feature": "n_flows",
+          "cohens_d": 1.133
+        },
+        {
+          "feature": "uniq_src_port",
+          "cohens_d": 1.099
+        },
+        {
+          "feature": "syn_cnt_sum",
+          "cohens_d": 1.022
+        },
+        {
+          "feature": "fin_cnt_sum",
+          "cohens_d": 1.017
+        },
+        {
+          "feature": "svc_rdp_rate",
+          "cohens_d": 1.009
+        }
+      ]
+    }
+  }
+}

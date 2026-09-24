@@ -12,6 +12,8 @@ the commentary column.
 | F1 | feature build | same, 70 features/window | `python scripts/build_features.py --config configs/cicids2017.yaml` | `data/processed/cicids2017/*.parquet` (not committed), `meta.json` | S_t = 70 features; positives 17.1 % (Thu), 13.1 % (Fri), 0 elsewhere |
 | E2 | persistence floor | leave-one-day-out | `python scripts/benchmark_baselines.py` | `results/tables/e2e3_baselines_lags0.csv` | median next-state NLL 0.85-0.94; Thursday mean 152 010 (distribution shift) |
 | E3 | logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py` | same + `results/figures/e3_*_logreg_forecast.png`, `results/tables/e3_lead_times_lags0.csv` | **0 of 5 episodes warned early**; F1 0.011 (Thu) / 0.000 (Fri) at a deployable threshold |
+| E4-E7 r1 | world model, round 1 | leave-one-day-out | `python scripts/train.py --epochs 25` | `results/tables/e4e7-worldmodel_*.csv`, `results/figures/e5_*`, `e6_*` | Thursday PR-AUC 0.139 -> **0.473**, ROC-AUC 0.379 -> **0.753**; still 0 / 5 warned early; Friday worse than chance |
+| E12 | precursor analysis | within-day probe | `python scripts/precursor_analysis.py` | `results/tables/e12_precursor_effect_sizes.csv`, `results/figures/e12_precursors.png` | pre-onset windows separable at ROC-AUC **0.88 / 0.96** - the early signal exists |
 
 ## Planned experiment set (M1)
 
@@ -216,3 +218,42 @@ Friday PR-AUC 0.156 / ROC-AUC 0.615.
    average. The curve is also noisy: it is computed from ~119 start points at stride 8.
 
 **Consequence:** round 2 changes the supervision, not the architecture - see decisions **D-016**.
+
+---
+
+## E12 - is there a precursor signal at all?
+
+`python scripts/precursor_analysis.py` · run: `results/runs/e12-precursor-analysis/`
+
+Before blaming the model for zero lead time, we asked whether the windows *before* a compromise are
+distinguishable from ordinary benign traffic. For each onset we took the 10 preceding windows that
+are not themselves attack windows, and compared them with benign windows at least 30 windows away
+from any attack.
+
+| day | pre-onset windows | background windows | within-day probe ROC-AUC |
+|---|---:|---:|---:|
+| Thursday | 38 | 472 | **0.883 ± 0.044** |
+| Friday | 10 | 464 | **0.955 ± 0.051** |
+
+Largest effect sizes (Cohen's d, pre-onset vs background):
+
+| Thursday (before infiltration) | d | Friday (before botnet C2) | d |
+|---|---:|---|---:|
+| `uniq_dst_port` | +1.26 | `uniq_dst_ip` | +1.51 |
+| `ports_per_pair_max` | +1.19 | `fanout_mean` | +1.39 |
+| `urg_cnt_sum` | −0.98 | `flows_per_s` | +1.23 |
+| `port_fanout_max` | +0.92 | `psh_cnt_sum` | +1.21 |
+| `svc_db_rate` | −0.86 | `fanout_max` | +1.18 |
+
+### Findings
+
+1. **The signal exists.** Pre-compromise windows are separable from background with a plain logistic
+   probe: ROC-AUC 0.88-0.96. Round 1's zero lead time is therefore a *supervision* failure, not a
+   property of the data - which is what D-016 acts on.
+2. **It is the shape a defender would expect**: before the infiltration, more distinct destination
+   ports and wider per-pair port sweeps (the attacker looking around); before the botnet C2, more
+   distinct destination hosts, higher fan-out and more flows per second.
+3. **Read with the caveats.** The probe is cross-validated *within the same day*, with a scaler fitted
+   on that day, and n = 38 and n = 10 pre-onset windows. It proves separability, not that a model
+   trained on other days will find the same boundary - that is exactly what the leave-one-day-out
+   benchmark measures, and where round 1 failed.
