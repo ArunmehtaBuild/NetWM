@@ -257,3 +257,65 @@ Largest effect sizes (Cohen's d, pre-onset vs background):
    on that day, and n = 38 and n = 10 pre-onset windows. It proves separability, not that a model
    trained on other days will find the same boundary - that is exactly what the leave-one-day-out
    benchmark measures, and where round 1 failed.
+
+---
+
+## E4-E7 (round 2) - multi-target supervision (D-016)
+
+`python scripts/train.py --epochs 25 --samples 16 --run e4e7-worldmodel-r2`
+run: `results/runs/e4e7-worldmodel-r2/` · same architecture, three risk targets instead of one.
+
+| fold | target | threshold | base rate | F1 | FPR | PR-AUC | ROC-AUC | warned early |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| Thursday | forecast | train-tuned (0.990) | 0.171 | 0.000 | 0.000 | **0.675** | **0.814** | 0 / 4 |
+| Thursday | forecast | alert budget 5 % (0.977) | 0.171 | 0.000 | 0.000 | 0.675 | 0.814 | 0 / 4 |
+| Thursday | forecast | oracle (0.108) | 0.171 | **0.592** | 0.042 | 0.675 | 0.814 | 0 / 4 |
+| Thursday | escalation | oracle | 0.204 | 0.369 | 0.561 | 0.332 | 0.624 | - |
+| Friday | forecast | oracle (0.039) | 0.131 | 0.237 | 0.893 | 0.114 | 0.465 | 1 / 1 |
+| Friday | escalation | oracle | 0.101 | 0.203 | 0.761 | 0.107 | 0.500 | - |
+
+### Progress against round 1 and the baseline
+
+| Thursday fold | logistic regression (E3) | world model r1 | world model r2 |
+|---|---:|---:|---:|
+| PR-AUC (base rate 0.171) | 0.139 | 0.473 | **0.675** |
+| ROC-AUC | 0.379 | 0.753 | **0.814** |
+| F1 at oracle threshold | 0.193 | 0.509 | **0.592** |
+| FPR at that threshold | 0.608 | 0.045 | **0.042** |
+| episodes warned early | 0 / 4 | 0 / 4 | 0 / 4 |
+
+Friday (the unseen-C2-family fold) improved from *worse than chance* to chance: ROC-AUC
+0.245 -> 0.465, PR-AUC 0.082 -> 0.114.
+
+### E13 - which rollout statistic should raise the alarm?
+
+`python scripts/scoring_rules.py --run e4e7-worldmodel-r2` · `results/tables/e13_scoring_rules_*.csv`
+
+The compromise head predicts a *state property*, not a first-occurrence hazard, so the usual union
+`1 - prod(1 - p)` over-counts a compromise that merely persists. Six candidate rules on the same
+checkpoints (oracle thresholds):
+
+| rule | Thursday PR-AUC | Thursday ROC | Thursday early | Friday PR-AUC |
+|---|---:|---:|---:|---:|
+| cumulative union | 0.670 | 0.812 | 0 / 4 | 0.114 |
+| **max over horizon** | 0.641 | **0.827** | **2 / 4** | 0.109 |
+| mean over horizon | 0.672 | 0.812 | 0 / 4 | 0.114 |
+| step 1 only | 0.674 | 0.819 | 0 / 4 | 0.105 |
+| step K only | 0.611 | 0.798 | 0 / 4 | 0.118 |
+| escalation union | 0.670 | 0.809 | 0 / 4 | 0.117 |
+
+Ranking is insensitive to the rule (PR-AUC 0.61-0.67); only the *max over the horizon* produces early
+warnings, and only at an oracle threshold. So the saturation of the union formula was not the
+blocker - the blocker is that the score before an onset is not high enough relative to the rest of
+the day.
+
+### Honest state of play
+
+- **Detection:** the world model is clearly better than the mandated baseline on the infiltration
+  day - PR-AUC 4.8x the logistic regression, at a tenth of its false-positive rate.
+- **Forecasting:** not yet. Lead time is 0 at any threshold a deployment could actually set, even
+  though E12 shows the pre-onset windows are separable at ROC-AUC 0.88 within the day.
+- **Unseen families:** Friday remains at chance. Four days of training contain exactly one kind of
+  compromise; that is the core data limitation and it is what M2 (CTU-13) is for.
+- **Thresholds still do not transfer.** Train-tuned 0.990 vs oracle 0.108, and the 5 % alert budget
+  lands at 0.977 because the score saturates on training days. Calibration is now the top open item.

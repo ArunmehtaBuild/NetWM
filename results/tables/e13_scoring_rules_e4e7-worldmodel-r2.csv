@@ -1,0 +1,13 @@
+experiment,test_day,scoring_rule,base_rate,f1_oracle,pr_auc,roc_auc,fpr_at_oracle,warned_early,episodes,mean_lead_windows,score_spread
+E13,friday,cumulative_union,0.1312,0.2397,0.1143,0.4669,0.8882,1,1,10.0,0.9677
+E13,friday,max_over_horizon,0.1312,0.2181,0.1087,0.4369,0.4709,1,1,10.0,0.9879
+E13,friday,mean_over_horizon,0.1312,0.2265,0.1144,0.4672,0.5006,1,1,10.0,0.9854
+E13,friday,step_1,0.1312,0.2053,0.1046,0.4154,0.6076,1,1,10.0,0.9824
+E13,friday,step_K,0.1312,0.1522,0.1176,0.488,0.3543,0,1,0.0,0.9885
+E13,friday,escalation_union,0.1312,0.2615,0.1167,0.4868,0.6552,1,1,10.0,0.8984
+E13,thursday,cumulative_union,0.1708,0.5936,0.6698,0.8121,0.0409,0,4,0.0,0.841
+E13,thursday,max_over_horizon,0.1708,0.5916,0.6406,0.8274,0.0658,2,4,7.5,0.4082
+E13,thursday,mean_over_horizon,0.1708,0.5896,0.6715,0.8122,0.0285,0,4,0.0,0.1767
+E13,thursday,step_1,0.1708,0.6077,0.6736,0.8185,0.0186,0,4,0.0,0.2554
+E13,thursday,step_K,0.1708,0.6027,0.6107,0.7983,0.0471,0,4,0.0,0.4084
+E13,thursday,escalation_union,0.1708,0.6327,0.67,0.8086,0.0273,0,4,0.0,0.9606

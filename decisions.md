@@ -323,3 +323,26 @@ we can quote probabilities honestly and drop the budget.
 **Why.** IG costs ~32 forward passes through a 16-window context per explained window. Explaining
 all 972 windows of a day would add minutes to an interactive request for output nobody reads; the
 sampled windows keep the global attribution unbiased towards alarms.
+
+---
+
+### D-019 — Alarm score = max over the horizon, and lead time is measured per episode
+*Date: 2026-09-24 · Status: provisional · Evidence: E13*
+
+**Decision.** The alarm statistic is `max_k P(compromised at t+k)` over the K imagined steps rather
+than the cumulative union `1 - prod(1 - p_k)`.
+
+**Why.** The compromise head answers "is this state compromised", a property that *persists*, so the
+union formula multiplies the same event K times and saturates near 1 - which is why the training-day
+score distribution has no headroom and the 5 % alert budget landed at 0.977. Empirically (E13) the
+ranking is nearly identical across statistics, but only the max produces any early warning
+(2 of 4 Thursday episodes, at an oracle threshold).
+
+**Also decided.** Thursday's four onsets are 639, 658, 708 and 729 - separated by only 10-20 windows,
+with attack traffic in between. Only the **first onset of an episode chain** is a genuine
+"before the attacker got in" case; the rest are re-entries. Lead time is therefore reported per
+episode (never as a single mean) and the first-onset value is quoted separately.
+
+**Revisit when.** The proper fix is a first-occurrence hazard target (`1` only at the *first*
+compromise window after t, `0` afterwards), which would make the union formula correct. That is the
+first item of round 3.

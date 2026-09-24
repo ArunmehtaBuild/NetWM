@@ -351,6 +351,7 @@ class NetWorldModel(nn.Module):
         attention = self._history_attention(out["attention"][0], cfg.context_len)
 
         p_cum_samples = torch.zeros(n_samples, t, horizon)
+        p_raw_samples = torch.zeros(n_samples, t, horizon, cfg.n_risk)
         extra_cum = torch.zeros(cfg.n_risk - 1, t, horizon)
         stage_future = torch.zeros(t, horizon, cfg.n_stages)
         for begin in range(0, t, chunk):
@@ -366,6 +367,7 @@ class NetWorldModel(nn.Module):
             for s in range(n_samples):
                 img = self.imagine(state, history, horizon, sample=True)
                 risk = torch.sigmoid(img["risk_logits"])
+                p_raw_samples[s, begin:end] = risk.cpu()
                 p_cum_samples[s, begin:end] = (1 - torch.cumprod(1 - risk[..., 0], dim=1)).cpu()
                 if s == 0:
                     stage_future[begin:end] = F.softmax(img["stage_logits"], dim=-1).cpu()
@@ -375,8 +377,15 @@ class NetWorldModel(nn.Module):
                         ).cpu()
 
         p_cum = p_cum_samples.mean(0)
+        p_raw = p_raw_samples.mean(0)
         return {
             "p_cum": p_cum,
+            # Per-step P(state has this property at t+k), before any union formula. The compromise
+            # head predicts a *state property*, not a first-occurrence hazard, so the cumulative
+            # product over-counts a compromise that simply persists - keep both and let the
+            # evaluation pick (see decisions D-019).
+            "p_raw": p_raw,
+            "p_max": p_raw[..., 0].max(dim=1).values,
             "p_lo": torch.quantile(p_cum_samples, 0.05, dim=0),
             "p_hi": torch.quantile(p_cum_samples, 0.95, dim=0),
             "p_step": torch.cat([p_cum[:, :1], p_cum[:, 1:] - p_cum[:, :-1]], dim=1),
