@@ -25,7 +25,7 @@ class WindowSequences(Dataset):
     def __init__(self, days: dict[str, dict], seq_len: int, stride: int) -> None:
         self.items: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for day in days.values():
-            x, stage, comp = day["x"], day["stage"], day["compromise"]
+            x, stage, comp = day["x"], day["stage"], day["risk"]
             for start in range(0, max(1, len(x) - seq_len + 1), stride):
                 end = start + seq_len
                 if end > len(x):
@@ -36,11 +36,11 @@ class WindowSequences(Dataset):
         return len(self.items)
 
     def __getitem__(self, i: int):
-        x, stage, comp = self.items[i]
+        x, stage, risk = self.items[i]
         return (
             torch.from_numpy(x).float(),
             torch.from_numpy(stage).long(),
-            torch.from_numpy(comp).float(),
+            torch.from_numpy(risk).float(),
         )
 
 
@@ -76,7 +76,10 @@ def prepare_days(ds: ProcessedDataset, days: list[str], scaler: StateScaler) -> 
             "x": scaler.transform(frame[ds.feature_names]),
             "stage": frame["stage"].to_numpy().astype(np.int64),
             "compromise": frame["compromise"].to_numpy().astype(np.float32),
+            # what the risk head reads off a state: compromised / hostile / stepping up (D-016)
+            "risk": frame[["compromise", "attack_now", "escalate_step"]].to_numpy().astype(np.float32),
             "y_within_K": frame["y_within_K"].to_numpy().astype(np.int64),
+            "y_escalate_within_K": frame["y_escalate_within_K"].to_numpy().astype(np.int64),
             "ts": frame["ts"],
             "onsets": ds.onsets(day),
         }
@@ -94,12 +97,12 @@ def class_weights(days: dict[str, dict], n_stages: int) -> tuple[torch.Tensor, t
     weights = np.where(counts > 0, counts.sum() / np.maximum(counts, 1), 0.0)
     weights = weights / weights[weights > 0].mean()
 
-    comp = np.concatenate([d["compromise"] for d in days.values()])
-    pos = max(comp.sum(), 1.0)
-    pos_weight = float((len(comp) - pos) / pos)
+    risk = np.concatenate([d["risk"] for d in days.values()])
+    pos = np.maximum(risk.sum(axis=0), 1.0)
+    pos_weight = np.minimum((len(risk) - pos) / pos, 50.0)
     return (
         torch.tensor(weights, dtype=torch.float32),
-        torch.tensor(min(pos_weight, 50.0), dtype=torch.float32),
+        torch.tensor(pos_weight, dtype=torch.float32),
     )
 
 
@@ -128,12 +131,12 @@ def train_model(
     for epoch in range(cfg.epochs):
         model.train()
         totals: dict[str, float] = {}
-        for x, stage, comp in loader:
-            x, stage, comp = x.to(device), stage.to(device), comp.to(device)
+        for x, stage, risk in loader:
+            x, stage, risk = x.to(device), stage.to(device), risk.to(device)
             losses = model.losses(
                 x,
                 stage,
-                comp,
+                risk,
                 horizon=model_cfg.horizon_k,
                 imagine_every=cfg.imagine_every,
                 stage_weight=stage_w,

@@ -1,0 +1,3 @@
+test_day,epoch,total,recon,kl,kl_raw,stage,compromise,imagine_compromise,imagine_stage,imagine_recon
+thursday,0,10.4218,0.4439,1.0,0.3114,1.8813,1.1572,1.1473,1.8827,0.899
+thursday,1,9.8742,0.4483,1.0,0.5044,1.7471,1.0854,1.0772,1.7506,0.9009

@@ -168,3 +168,51 @@ median is unremarkable. This is the first quantitative sign of what the world mo
 
 **Bar for the world model:** beat median NLL 0.85-0.94 (E2), and warn early on more than 0 of 5
 episodes at a train-tuned threshold (E3).
+
+---
+
+## E4-E7 (round 1) - world model, leave-one-day-out
+
+`python scripts/train.py --epochs 25 --samples 16` · run: `results/runs/e4e7-worldmodel/`
+0.58 M params, ~5 min/fold on a GTX 1650.
+
+| fold | threshold | base rate | F1 | precision | recall | FPR | PR-AUC | ROC-AUC | warned early |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Thursday | train-tuned (0.843) | 0.171 | 0.000 | 0.000 | 0.000 | 0.000 | **0.473** | **0.753** | 0 / 4 |
+| Thursday | oracle (0.059) | 0.171 | **0.509** | 0.657 | 0.416 | 0.045 | 0.473 | 0.753 | 0 / 4 |
+| Thursday | 90th pct of own scores (0.062) | 0.171 | 0.508 | 0.684 | 0.404 | 0.038 | 0.473 | 0.753 | 0 / 4 |
+| Friday | train-tuned (0.990) | 0.131 | 0.000 | 0.000 | 0.000 | 0.180 | 0.082 | 0.245 | 0 / 1 |
+| Friday | oracle (0.010) | 0.131 | 0.055 | 0.037 | 0.102 | 0.401 | 0.082 | 0.245 | 0 / 1 |
+
+Comparison on the same folds (E3 logistic regression): Thursday PR-AUC 0.139 / ROC-AUC 0.379,
+Friday PR-AUC 0.156 / ROC-AUC 0.615.
+
+### What this round actually shows
+
+1. **Ranking improved a lot on the infiltration day.** Thursday PR-AUC 0.139 -> **0.473** (2.8x the
+   base rate) and ROC-AUC 0.379 -> **0.753** against the logistic-regression baseline. Oracle F1
+   0.193 -> 0.509. The dynamics model sees something the per-window classifier does not.
+2. **But it is still detecting, not forecasting.** Lead time is 0 on all 5 episodes at every
+   threshold we tried, including percentile thresholds on the model's own score distribution. The
+   score sits at ~0.02 in the ten windows *before* each onset and only climbs once the attack is
+   visible. Raw traces are in `results/runs/e4e7-worldmodel/metrics.json`.
+3. **Friday is worse than chance** (ROC-AUC 0.245). Friday's only compromise is the ARES botnet C2 -
+   a stage that appears *nowhere else in the week*, so in this fold the model is asked to forecast a
+   family it has never seen, from a training set whose only notion of "compromise" is Thursday's
+   loud internal port sweep. It confidently predicts the opposite. This is a genuine leave-one-family
+   -out result, and it belongs in E8 rather than being averaged away here.
+4. **Diagnosis: one compromise family per fold.** Leave-one-day-out gives the compromise head a
+   single positive family in training (Thursday's infiltration or Friday's C2). It cannot learn what
+   "an attacker advancing" looks like in general from n = 1 family, so it memorises the one it saw.
+5. **Probabilities do not transfer across days.** The F1-optimal threshold is 0.843 on the training
+   days and 0.059 on Thursday - a 14x gap. Any deployment story that depends on a fixed probability
+   threshold is fiction; the fix is either calibration or an alert-budget threshold, and both are
+   tracked in D-016.
+6. Training itself is healthy: KL sits at 0.50-0.67 nats (no posterior collapse), reconstruction
+   0.43, imagination-compromise loss 0.02-0.07. Open-loop rollout
+   (`results/figures/e5_thursday_rollout_fidelity.png`) **beats persistence from k = 2 onwards**
+   (2.21 vs 2.44 at k = 2, 2.05 vs 2.72 at k = 8) but **loses at k = 1** (2.03 vs 1.05) - one step
+   ahead, "nothing changes" is still the better guess, and we should say so rather than quoting an
+   average. The curve is also noisy: it is computed from ~119 start points at stride 8.
+
+**Consequence:** round 2 changes the supervision, not the architecture - see decisions **D-016**.

@@ -64,14 +64,23 @@ def evaluate_fold(
         out = forecast_day(model, day["x"], horizon, max(4, n_samples // 4), device)
         train_scores.append(out["p_cum"][:, -1])
         train_labels.append(day["y_within_K"])
-    thr_train = best_threshold(np.concatenate(train_labels), np.concatenate(train_scores))
+    train_score = np.concatenate(train_scores)
+    thr_train = best_threshold(np.concatenate(train_labels), train_score)
+    # Alert budget: the threshold that fires on 5 % of *training* windows. Absolute probabilities do
+    # not transfer across days (E4-E7 round 1: 0.843 on train vs 0.059 on test), but "the noisiest
+    # 5 % of windows" is a setting a SOC can actually live with (D-016).
+    thr_budget = float(np.quantile(train_score, 0.95))
 
     out = forecast_day(model, test_day["x"], horizon, n_samples, device)
     score = out["p_cum"][:, -1]
     y = test_day["y_within_K"]
 
     rows = []
-    for name, thr in (("train-tuned", thr_train), ("oracle", best_threshold(y, score))):
+    for name, thr in (
+        ("train-tuned", thr_train),
+        ("alert-budget-5pct", thr_budget),
+        ("oracle", best_threshold(y, score)),
+    ):
         m = forecast_metrics(y, score, thr)
         lead = summarise_lead(
             lead_times(score, test_day["onsets"], thr, horizon, persistence=2), stride_s
@@ -92,8 +101,27 @@ def evaluate_fold(
             }
         )
 
+    # secondary target: does the model see the attacker *advancing* (D-016)?
+    esc_score = out["p_cum_escalate"][:, -1]
+    esc_y = test_day.get("y_escalate_within_K")
+    if esc_y is not None and esc_y.sum() > 0:
+        m_esc = forecast_metrics(esc_y, esc_score, best_threshold(esc_y, esc_score))
+        rows.append(
+            {
+                "experiment": "E6",
+                "model": "world-model",
+                "target": "escalation",
+                "threshold_mode": "oracle",
+                "test_day": test_day_name,
+                "base_rate": round(float(esc_y.mean()), 4),
+                **{k: round(v, 4) if isinstance(v, float) else v for k, v in m_esc.as_dict().items()},
+            }
+        )
+
     extras = {
         "threshold_train": thr_train,
+        "threshold_budget": thr_budget,
+        "escalation_scores": esc_score.tolist(),
         "scores": score.tolist(),
         "p_cum": out["p_cum"].tolist(),
         "p_lo": out["p_lo"].tolist(),

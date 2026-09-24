@@ -32,6 +32,7 @@ import torch.nn.functional as F
 class WorldModelConfig:
     n_features: int = 70
     n_stages: int = 7
+    n_risk: int = 3                # [compromise, attack, escalation] read off a state (D-016)
     embed_dim: int = 128
     hidden_dim: int = 192          # deterministic GRU state
     latent_dim: int = 32           # stochastic state
@@ -155,8 +156,11 @@ class NetWorldModel(nn.Module):
         self.stage_head = nn.Sequential(
             nn.Linear(feat_dim, cfg.embed_dim), nn.SiLU(), nn.Linear(cfg.embed_dim, cfg.n_stages)
         )
-        self.compromise_head = nn.Sequential(
-            nn.Linear(feat_dim, cfg.embed_dim), nn.SiLU(), nn.Linear(cfg.embed_dim, 1)
+        # One head, three questions about a state: is it compromised, is anything hostile
+        # happening, and is it a step up the kill chain. Compromise alone gives the model a single
+        # positive family per fold (see results.md, E4-E7 round 1).
+        self.risk_head = nn.Sequential(
+            nn.Linear(feat_dim, cfg.embed_dim), nn.SiLU(), nn.Linear(cfg.embed_dim, cfg.n_risk)
         )
 
     # ---- state transitions ------------------------------------------------------------------
@@ -212,7 +216,7 @@ class NetWorldModel(nn.Module):
         the same representation it perceives in.
         """
         buf = history[:, -self.cfg.context_len :]
-        states, decoded, compromise, stage_logits = [], [], [], []
+        states, decoded, risk, stage_logits = [], [], [], []
         for _ in range(horizon):
             ctx, _ = self.context(buf)
             state = self._prior_step(state, ctx[:, -1], sample=sample)
@@ -220,13 +224,15 @@ class NetWorldModel(nn.Module):
             obs_hat = self.decoder(feat)
             states.append(state)
             decoded.append(obs_hat)
-            compromise.append(self.compromise_head(feat).squeeze(-1))
+            risk.append(self.risk_head(feat))
             stage_logits.append(self.stage_head(feat))
             buf = torch.cat([buf[:, 1:], self.encoder(obs_hat).unsqueeze(1)], dim=1)
+        risk_logits = torch.stack(risk, dim=1)                       # (B, K, n_risk)
         return {
             "states": states,
             "decoded": torch.stack(decoded, dim=1),
-            "compromise_logit": torch.stack(compromise, dim=1),
+            "risk_logits": risk_logits,
+            "compromise_logit": risk_logits[..., 0],
             "stage_logits": torch.stack(stage_logits, dim=1),
         }
 
@@ -239,13 +245,13 @@ class NetWorldModel(nn.Module):
         self,
         x: torch.Tensor,
         stage: torch.Tensor,
-        compromise: torch.Tensor,
+        risk: torch.Tensor,
         horizon: int | None = None,
         imagine_every: int = 4,
         stage_weight: torch.Tensor | None = None,
         pos_weight: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
-        """All training objectives. x: (B,T,F), stage: (B,T) long, compromise: (B,T) float."""
+        """All training objectives. x: (B,T,F), stage: (B,T) long, risk: (B,T,n_risk) float."""
         cfg = self.cfg
         horizon = horizon or cfg.horizon_k
         out = self.observe(x)
@@ -268,7 +274,7 @@ class NetWorldModel(nn.Module):
             self.stage_head(feats).reshape(-1, cfg.n_stages), stage.reshape(-1), weight=stage_weight
         )
         comp_loss = F.binary_cross_entropy_with_logits(
-            self.compromise_head(feats).squeeze(-1), compromise, pos_weight=pos_weight
+            self.risk_head(feats), risk, pos_weight=pos_weight
         )
 
         # open-loop: imagine from a subset of start points and supervise the imagined future
@@ -280,12 +286,12 @@ class NetWorldModel(nn.Module):
                 state = out["posts"][start]
                 img = self.imagine(state, out["embeds"][:, : start + 1], horizon)
                 target_slice = slice(start + 1, start + 1 + horizon)
-                tgt_comp = compromise[:, target_slice]
+                tgt_risk = risk[:, target_slice]
                 tgt_stage = stage[:, target_slice]
                 tgt_obs = x[:, target_slice]
-                k = tgt_comp.shape[1]
+                k = tgt_risk.shape[1]
                 img_comp = img_comp + F.binary_cross_entropy_with_logits(
-                    img["compromise_logit"][:, :k], tgt_comp, pos_weight=pos_weight
+                    img["risk_logits"][:, :k], tgt_risk, pos_weight=pos_weight
                 )
                 img_stage = img_stage + F.cross_entropy(
                     img["stage_logits"][:, :k].reshape(-1, cfg.n_stages),
@@ -342,9 +348,10 @@ class NetWorldModel(nn.Module):
         surprise = 0.5 * (self.obs_logvar + (pred_next - x[:, 1:]) ** 2 / var).mean(-1)[0]
         surprise = torch.cat([surprise.new_zeros(1), surprise])
 
-        attention = self._history_attention(out["attention"][0])
+        attention = self._history_attention(out["attention"][0], cfg.context_len)
 
         p_cum_samples = torch.zeros(n_samples, t, horizon)
+        extra_cum = torch.zeros(cfg.n_risk - 1, t, horizon)
         stage_future = torch.zeros(t, horizon, cfg.n_stages)
         for begin in range(0, t, chunk):
             end = min(begin + chunk, t)
@@ -358,10 +365,14 @@ class NetWorldModel(nn.Module):
             history = self._history_buffer(out["embeds"][0], idx)
             for s in range(n_samples):
                 img = self.imagine(state, history, horizon, sample=True)
-                hazard = torch.sigmoid(img["compromise_logit"])
-                p_cum_samples[s, begin:end] = (1 - torch.cumprod(1 - hazard, dim=1)).cpu()
+                risk = torch.sigmoid(img["risk_logits"])
+                p_cum_samples[s, begin:end] = (1 - torch.cumprod(1 - risk[..., 0], dim=1)).cpu()
                 if s == 0:
                     stage_future[begin:end] = F.softmax(img["stage_logits"], dim=-1).cpu()
+                    for r in range(1, cfg.n_risk):
+                        extra_cum[r - 1, begin:end] = (
+                            1 - torch.cumprod(1 - risk[..., r], dim=1)
+                        ).cpu()
 
         p_cum = p_cum_samples.mean(0)
         return {
@@ -369,6 +380,8 @@ class NetWorldModel(nn.Module):
             "p_lo": torch.quantile(p_cum_samples, 0.05, dim=0),
             "p_hi": torch.quantile(p_cum_samples, 0.95, dim=0),
             "p_step": torch.cat([p_cum[:, :1], p_cum[:, 1:] - p_cum[:, :-1]], dim=1),
+            "p_cum_attack": extra_cum[0],
+            "p_cum_escalate": extra_cum[1] if cfg.n_risk > 2 else extra_cum[0],
             "stage_now": stage_now.cpu(),
             "stage_future": stage_future,
             "surprise": surprise.cpu(),

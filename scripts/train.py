@@ -150,9 +150,9 @@ def main() -> None:
         plot_rollout(extras["rollout"], test_day, FIGURES / f"e5_{test_day}_rollout_fidelity.png")
 
         for row in fold_rows:
-            print("   " + json.dumps({k: row[k] for k in
-                  ("threshold_mode", "f1", "precision", "recall", "fpr", "pr_auc",
-                   "warned_early", "episodes", "mean_lead_windows")}))
+            keys = ("target", "threshold_mode", "f1", "precision", "recall", "fpr", "pr_auc",
+                    "roc_auc", "warned_early", "episodes", "mean_lead_windows")
+            print("   " + json.dumps({k: row[k] for k in keys if k in row}))
 
     table = pd.DataFrame(rows)
     table.to_csv(TABLES / f"{run_id}_forecast.csv", index=False)

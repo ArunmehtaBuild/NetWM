@@ -272,3 +272,54 @@ day (an oracle upper bound that no deployed system could pick).
 regression goes from F1 0.011 (train-tuned) to 0.193 (oracle). Publishing only the first invites the
 accusation that we handicapped the baseline; publishing only the second is leakage. Both, always,
 for our model too.
+
+---
+
+### D-016 — Supervise three questions about a state, not just "is it compromised"
+*Date: 2026-09-24 · Status: accepted · Evidence: E4-E7 round 1*
+
+**Decision.** The risk head outputs three logits read off any (real or imagined) state:
+`compromise` (at or past Lateral Movement), `attack` (anything non-benign, Impact included), and
+`escalate_step` (this window is a step up the progression scale from the previous one). The
+cumulative forecast is still `1 - prod(1 - p)` over imagined steps, per output.
+
+**Why.** Round 1 gave the compromise head exactly **one** positive family per fold — Thursday's
+infiltration or Friday's botnet C2 — because those are the only two compromises in the week. The
+model memorised the family it saw and scored ROC-AUC 0.245 on the other one (worse than chance).
+The two extra targets have positives on **every** attack day (attack: 23-34 % of windows;
+escalation: 3-20 %), so "an attacker advancing" becomes learnable from four days instead of one.
+Escalation is also the PS's own phrasing — *estimate the probability of attacker progression* — read
+literally.
+
+**Cost.** Two more heads' worth of parameters (negligible) and a slightly noisier compromise signal
+if the shared trunk over-fits the easier targets. Watched via the per-target metrics in the
+benchmark table.
+
+---
+
+### D-017 — Alarm threshold is an alert budget, not a probability
+*Date: 2026-09-24 · Status: accepted · Evidence: E4-E7 round 1*
+
+**Decision.** The deployable threshold is the 95th percentile of the model's scores on the training
+days — "alarm on the noisiest 5 % of windows" — reported alongside the train-tuned and oracle
+thresholds (D-015).
+
+**Why.** Round 1: the F1-optimal threshold was 0.843 on training days and 0.059 on the held-out day,
+a 14x gap, so a fixed probability threshold produced *zero* alarms on the test day. Absolute
+probabilities from a model trained on four days do not transfer to a fifth; a rank-based budget
+does, and it is how alert volume is actually managed in a SOC.
+
+**Revisit if.** Calibration (temperature scaling on a held-out training day) closes the gap - then
+we can quote probabilities honestly and drop the budget.
+
+---
+
+### D-018 — Explanations are computed for alarm windows plus a regular sample, not every window
+*Date: 2026-09-24 · Status: accepted*
+
+**Decision.** `engine/predict.py` runs Integrated Gradients on the top-24 alarm windows and every
+8th window; other windows carry attention weights only.
+
+**Why.** IG costs ~32 forward passes through a 16-window context per explained window. Explaining
+all 972 windows of a day would add minutes to an interactive request for output nobody reads; the
+sampled windows keep the global attribution unbiased towards alarms.

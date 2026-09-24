@@ -162,3 +162,44 @@ def window_stage_matrix(
         mat.iloc[grp["w"].to_numpy(), int(stage_value)] = 1
     mat["BENIGN"] = (mat.drop(columns=["BENIGN"]).sum(axis=1) == 0).astype("int8")
     return mat
+
+
+def attack_flags(stages: pd.Series) -> np.ndarray:
+    """Any non-benign stage, Impact included - 'something hostile is happening'."""
+    return stages.to_numpy() > 0
+
+
+def escalation_targets(stages: pd.Series, horizon: int) -> np.ndarray:
+    """``y[t, k-1] = 1`` if the network is at a *more advanced* progression stage at t + k than at t.
+
+    This is the PS's "probability of attacker progression" read literally, and unlike the compromise
+    target it has positive examples on every day of the week: brute force escalating out of benign
+    on Tuesday, scanning escalating to C2 on Friday, and so on. Impact is excluded because it is off
+    the progression axis (D-003) - a DoS is not the attacker getting further in.
+    """
+    s = stages.to_numpy()
+    prog = np.where(np.isin(s, [int(x) for x in PROGRESSION_STAGES]), s, 0)
+    n = len(prog)
+    y = np.zeros((n, horizon), dtype=np.float32)
+    for k in range(1, horizon + 1):
+        y[: n - k, k - 1] = (prog[k:] > prog[: n - k]).astype(np.float32)
+    return y
+
+
+def any_within(targets: np.ndarray) -> np.ndarray:
+    """Collapse a (T, K) per-step target into 'happens at least once within K'."""
+    return (targets.sum(axis=1) > 0).astype(np.int8)
+
+
+def escalation_steps(stages: pd.Series) -> np.ndarray:
+    """Per-window flag: this window is a *step up* the progression scale from the previous one.
+
+    A state property (unlike :func:`escalation_targets`, which compares against a fixed anchor), so
+    the model can read it off an imagined state and the cumulative probability of an escalation
+    within k steps is the usual 1 - prod(1 - p).
+    """
+    s = stages.to_numpy()
+    prog = np.where(np.isin(s, [int(x) for x in PROGRESSION_STAGES]), s, 0)
+    out = np.zeros(len(prog), dtype=np.float32)
+    out[1:] = (prog[1:] > prog[:-1]).astype(np.float32)
+    return out

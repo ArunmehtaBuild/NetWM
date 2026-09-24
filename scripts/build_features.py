@@ -20,6 +20,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -29,7 +30,11 @@ from netwm.data.cicids2017 import CICIDS2017Adapter
 from netwm.features.flow_features import window_features
 from netwm.features.windowing import (
     WindowSpec,
+    any_within,
+    attack_flags,
     compromise_flags,
+    escalation_steps,
+    escalation_targets,
     expand_to_windows,
     hazard_targets,
     onset_windows,
@@ -57,6 +62,15 @@ def build_split(adapter, split: str, cfg: dict) -> tuple[pd.DataFrame, dict]:
     comp = compromise_flags(stages, int(COMPROMISE_THRESHOLD))
     hazard = hazard_targets(stages, horizon, int(COMPROMISE_THRESHOLD))
 
+    # Two extra supervision signals (D-016): "anything hostile ahead" and "the attacker advances a
+    # stage". Unlike compromise, both have positive examples on every day of the week.
+    attack_now = attack_flags(stages)
+    attack_future = np.zeros((len(stages), horizon), dtype=np.float32)
+    for k in range(1, horizon + 1):
+        attack_future[: len(stages) - k, k - 1] = attack_now[k:]
+    escalate = escalation_targets(stages, horizon)
+    escalate_step = escalation_steps(stages)
+
     out = feats.copy()
     out.insert(0, "ts", spec.window_start(t0, out.index.to_numpy()))
     out["stage"] = stages.to_numpy()
@@ -66,6 +80,18 @@ def build_split(adapter, split: str, cfg: dict) -> tuple[pd.DataFrame, dict]:
     for k in range(1, horizon + 1):
         out[f"hazard_k{k}"] = hazard[:, k - 1].astype("int8")
     out["y_within_K"] = (hazard.sum(axis=1) > 0).astype("int8")
+    out["attack_now"] = attack_now.astype("int8")
+    out["y_attack_within_K"] = any_within(attack_future)
+    out["escalate_step"] = escalate_step.astype("int8")
+    # "an escalation happens at some point in the next K windows", defined from the per-window step
+    # flag so it matches the cumulative-product formula the rollout uses.
+    step_future = np.zeros((len(stages), horizon), dtype=np.float32)
+    for k in range(1, horizon + 1):
+        step_future[: len(stages) - k, k - 1] = escalate_step[k:]
+    out["y_escalate_within_K"] = any_within(step_future)
+    for k in range(1, horizon + 1):
+        out[f"attack_k{k}"] = attack_future[:, k - 1].astype("int8")
+        out[f"escalate_k{k}"] = escalate[:, k - 1].astype("int8")
     out["split"] = split
 
     onsets = onset_windows(stages, int(COMPROMISE_THRESHOLD))
@@ -76,6 +102,8 @@ def build_split(adapter, split: str, cfg: dict) -> tuple[pd.DataFrame, dict]:
         "windows": int(len(out)),
         "positive_windows": int(out["y_within_K"].sum()),
         "positive_rate": round(float(out["y_within_K"].mean()), 5),
+        "attack_rate": round(float(out["y_attack_within_K"].mean()), 5),
+        "escalate_rate": round(float(out["y_escalate_within_K"].mean()), 5),
         "onsets": onsets,
         "onset_times": [str(spec.window_start(t0, w)) for w in onsets],
         "stage_counts": {Stage(s).name: int((stages == s).sum()) for s in range(len(Stage))},
@@ -105,10 +133,12 @@ def main() -> None:
         feature_names = [
             c
             for c in frame.columns
-            if c not in {"w", "ts", "stage", "compromise", "y_within_K", "split"}
-            and not c.startswith(("stage_", "hazard_k"))
+            if c not in {"w", "ts", "stage", "compromise", "y_within_K", "split", "attack_now",
+                         "y_attack_within_K", "y_escalate_within_K", "escalate_step"}
+            and not c.startswith(("stage_", "hazard_k", "attack_k", "escalate_k"))
         ]
-        print(f"{split:10s} windows={meta['windows']:>5,} positives={meta['positive_rate']:.3%} "
+        print(f"{split:10s} windows={meta['windows']:>5,} compromise={meta['positive_rate']:.2%} "
+              f"attack={meta['attack_rate']:.2%} escalate={meta['escalate_rate']:.2%} "
               f"onsets={len(meta['onsets'])}")
 
     (out_dir / "meta.json").write_text(

@@ -29,6 +29,8 @@ def test_imagination_needs_no_observations_and_is_stochastic():
 def test_cumulative_forecast_is_monotone_and_bounded():
     model = NetWorldModel(CFG)
     out = model.forecast(torch.randn(1, 20, CFG.n_features), n_samples=4)
+    assert out["attention"].shape == (20, CFG.context_len)
+    assert out["p_cum_escalate"].shape == out["p_cum"].shape
     p = out["p_cum"]
     assert p.shape == (20, CFG.horizon_k)
     assert (p.diff(dim=1) >= -1e-6).all()                                # P(within k) cannot fall
@@ -39,7 +41,8 @@ def test_cumulative_forecast_is_monotone_and_bounded():
 def test_losses_are_finite_and_differentiable():
     model = NetWorldModel(CFG)
     x = torch.randn(2, 24, CFG.n_features)
-    losses = model.losses(x, torch.randint(0, 7, (2, 24)), torch.randint(0, 2, (2, 24)).float())
+    risk = torch.randint(0, 2, (2, 24, CFG.n_risk)).float()
+    losses = model.losses(x, torch.randint(0, 7, (2, 24)), risk)
     total = sum(v for k, v in losses.items() if k != "kl_raw")
     assert torch.isfinite(total)
     total.backward()
@@ -49,5 +52,5 @@ def test_losses_are_finite_and_differentiable():
 def test_free_bits_floor_applies_to_kl():
     model = NetWorldModel(CFG)
     losses = model.losses(torch.randn(1, 12, CFG.n_features), torch.zeros(1, 12, dtype=torch.long),
-                          torch.zeros(1, 12))
+                          torch.zeros(1, 12, CFG.n_risk))
     assert losses["kl"] >= CFG.free_nats - 1e-6
