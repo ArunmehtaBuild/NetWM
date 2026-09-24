@@ -12,21 +12,21 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Repo skeleton, README, requirements, .gitignore
 - [x] Research notes: dataset flaws, world models, MITRE mapping, related work
 - [x] decisions.md D-001..D-008, results.md experiment plan
-- [ ] Python venv + torch (cu121) verified on the GTX 1650
+- [~] Python venv created, core deps installed; torch (cu121) not installed yet
 
 ### P1. Data
-- [ ] Download corrected CIC-IDS2017 (`CICIDS2017_improved.zip`, 328 MB) - needs approval
+- [x] Download corrected CIC-IDS2017 (`CICIDS2017_improved.zip`, 328 MB) -> `data/raw/cicids2017_improved/`
 - [ ] Locate a working source for the day PCAPs (Thursday = infiltration day is the priority)
-- [ ] `DatasetAdapter` interface + `cicids2017.py`: schema check, UTC normalisation, per-day loading
-- [ ] E1 dataset audit -> results (label counts per day, attack onset times, window counts)
+- [x] `DatasetAdapter` interface + `cicids2017.py`: canonical schema, UTC, per-day loading, schedule
+- [x] E1 dataset audit -> results (label counts, onsets, window counts, per-day timelines)
 
 ### P2. Features and state
 - [ ] `features/flow_features.py` - per-window flow aggregates (flags, ports, IAT, bidirectional)
 - [ ] `features/pcap_features.py` - TTL variance, window size, fragments, payload histogram,
       retransmissions, scan signatures (streaming Scapy reader)
 - [ ] `features/flow_aggregator.py` - PCAP -> flows, so the demo accepts a raw PCAP
-- [ ] `features/windowing.py` + `scaler.py` - 60 s / 30 s windows, train-only scaler fit
-- [ ] `labels/mitre_map.py` - label -> stage, ordered scale, hazard target construction
+- [~] `features/windowing.py` done (windows, multi-label stages, hazard targets, onsets); `scaler.py` pending
+- [x] `labels/mitre_map.py` - label -> stage, ordered scale, scan-direction refinement
 - [ ] `scripts/build_features.py` -> parquet feature matrix + flow index
 
 ### P3. Models
