@@ -185,7 +185,9 @@ def window_stage(labels: "list[str] | tuple[str, ...]") -> Stage:
     a window containing both a DDoS and an infiltration is an infiltration window.
     """
     stages = [stage_of(lbl) for lbl in labels] or [Stage.BENIGN]
-    progression = [s for s in stages if s in PROGRESSION_STAGES]
+    # Only a progression stage *above benign* outranks Impact; otherwise a window holding a DDoS and
+    # ordinary traffic would come back Benign.
+    progression = [s for s in stages if s in PROGRESSION_STAGES and s > Stage.BENIGN]
     if progression:
         return max(progression)
     return max(stages)

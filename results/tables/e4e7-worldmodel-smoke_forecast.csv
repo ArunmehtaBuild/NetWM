@@ -1,0 +1,3 @@
+experiment,model,target,threshold_mode,test_day,base_rate,threshold,precision,recall,f1,fpr,pr_auc,roc_auc,positives,n,episodes,warned_early,mean_lead_windows,mean_lead_seconds
+E6,world-model,forecast,train-tuned,thursday,0.1708,0.01,0.1708,1.0,0.2917,1.0,0.3531,0.7727,166,972,4,4,10.0,300.0
+E6,world-model,forecast,oracle,thursday,0.1708,0.01,0.1708,1.0,0.2917,1.0,0.3531,0.7727,166,972,4,4,10.0,300.0
