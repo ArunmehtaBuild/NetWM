@@ -198,3 +198,28 @@ origin; the API is JSON only and renders nothing.
   (`python scripts/sync_fixtures.py`) so it runs with no backend at all.
 - **No cookies, no auth, no state on the server** beyond the job store, so the dashboard can be
   hosted anywhere without changing the API.
+
+### v1.1 addendum (2026-09-25, T-11) - reproducible alarm scores
+
+`alarm_statistic` now reads **`"p_max (mean path)"`**. The curves and their Monte-Carlo band are
+unchanged - still sampled rollouts - but the scalar that `alarm` and `threshold` compare against is
+read off the deterministic mean path, so the same checkpoint on the same file gives the same
+lead-time count every time (E14 saw 1 of 4 and then 2 of 4 at one threshold). Both fixtures and the
+API are reproducible end to end: `scripts/predict.py` seeds torch, so even the sampled band is
+byte-identical between runs.
+
+| field | where | meaning |
+|---|---|---|
+| `p_max_mc` | timeline entry | the same statistic from the sampled rollouts, for comparison; `null` when mean-path scoring is off (`--sampled-score`) |
+| `windows`, `sustained` | alarm row | run length in windows, and whether it met the persistence rule |
+| `persistence_windows` | `lead_time_summary` | how many consecutive windows above the threshold count as a warning (2) |
+
+**One rule change worth reading.** An alarm run shorter than `persistence_windows` is still reported -
+the operator saw it - but it no longer carries `lead_windows`/`onset_t`, because a single spike is not
+a warning. Before this, `alarms[]` and `lead_time_summary` could disagree about how many episodes were
+warned (the oracle fixture said 2 in one place and 1 in the other). They now share one rule.
+
+**Budget thresholds always fire.** `fixtures/api/` has no all-benign payload on purpose, but running
+the engine over `data/demo/monday_benign.csv` - a capture with no attack in it - still produces 24
+alarms, because a top-10 % budget flags the top 10 % of *something*. The UI must show the score and
+the threshold, not a bare alarm count (D-020).
