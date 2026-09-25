@@ -6,6 +6,7 @@ processed_dir: data/processed/cicids2017
 window:
   length_s: 60.0    # D-002
   stride_s: 30.0
+  use_trend_features: true
 
 # Forecast horizon in windows. 10 x 30 s stride = 5 minutes of look-ahead, which is the order of
 # magnitude of the gap between the Dropbox download and the internal scan on the infiltration day.

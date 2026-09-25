@@ -168,6 +168,7 @@ def window_features(
     window_length_s: float,
     internal_prefixes: tuple[str, ...] = ("192.168.", "10.", "172.16."),
     n_windows: int | None = None,
+    use_trend: bool = False,
 ) -> pd.DataFrame:
     """Aggregate an expanded (flow x window) frame into one feature row per window.
 
@@ -221,9 +222,21 @@ def window_features(
     feats["beacon_score"] = _beacon_score(df).reindex(feats.index)
 
     n = n_windows if n_windows is not None else int(feats.index.max()) + 1
-    feats = feats.reindex(pd.RangeIndex(n))
+    feats = feats.reindex(pd.RangeIndex(n)).fillna(0.0)
+
+    if use_trend:
+        # Calculate the difference from the previous window for key volume and spread metrics
+        trend_cols = [
+            "n_flows", "bytes_total", "pkts_total", 
+            "uniq_src_ip", "uniq_dst_ip", "dst_port_entropy",
+            "outbound_bytes", "inbound_bytes", "fanout_max"
+        ]
+        for col in trend_cols:
+            if col in feats.columns:
+                feats[f"{col}_trend"] = feats[col].diff().fillna(0.0)
+
     feats.index.name = "w"
-    return feats.fillna(0.0).astype(np.float32)
+    return feats.astype(np.float32)
 
 
 def _beacon_score(df: pd.DataFrame) -> pd.Series:

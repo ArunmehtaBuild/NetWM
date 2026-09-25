@@ -56,7 +56,8 @@ def build_split(adapter, split: str, cfg: dict) -> tuple[pd.DataFrame, dict]:
     expanded, t0 = expand_to_windows(flows, spec)
     n_windows = int(expanded["w"].max()) + 1
 
-    feats = window_features(expanded, spec.length_s, internal, n_windows=n_windows)
+    use_trend = cfg["window"].get("use_trend_features", False)
+    feats = window_features(expanded, spec.length_s, internal, n_windows=n_windows, use_trend=use_trend)
     stages = window_stages(expanded, n_windows=n_windows)
     stage_mat = window_stage_matrix(expanded, n_windows=n_windows)
     comp = compromise_flags(stages, int(COMPROMISE_THRESHOLD))
