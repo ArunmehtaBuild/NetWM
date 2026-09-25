@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>NetWM H-4 Alarm Log & Lead-Time Verification</title>
-  <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/app.css">
   <style>
     body { padding: 24px; font-family: var(--font-sans); }
     .test-box { margin-bottom: 30px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
@@ -47,14 +47,14 @@
   </div>
 
   <script type="module">
-    import { AlarmsPanel } from "./js/panels/alarms.js";
+    import { AlarmsPanel } from "../js/panels/alarms.js";
 
     async function runTests() {
       const results = [];
 
       // Test 1: Thursday
       try {
-        const res = await fetch("./mock/thursday.json");
+        const res = await fetch("../mock/thursday.json");
         const payload = await res.json();
         const panel = new AlarmsPanel("testThursdayContainer");
         panel.render({ payload, selectedWindow: 417 });
@@ -79,7 +79,7 @@
 
       // Test 2: Thursday Oracle
       try {
-        const res = await fetch("./mock/thursday_oracle.json");
+        const res = await fetch("../mock/thursday_oracle.json");
         const payload = await res.json();
         const panel = new AlarmsPanel("testOracleContainer");
         panel.render({ payload, selectedWindow: 634 });
@@ -104,7 +104,7 @@
 
       // Test 3: Friday
       try {
-        const res = await fetch("./mock/friday.json");
+        const res = await fetch("../mock/friday.json");
         const payload = await res.json();
         const panel = new AlarmsPanel("testFridayContainer");
         panel.render({ payload, selectedWindow: 0 });

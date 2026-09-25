@@ -6,6 +6,7 @@
  */
 
 import { API_BASE, USE_MOCK } from "./config.js";
+import { formatBytes } from "./format.js";
 
 export class ApiClient {
   constructor() {
@@ -17,44 +18,75 @@ export class ApiClient {
    * Load analysis payload for a scenario.
    * Priority:
    * 1. If USE_MOCK is true -> load ./mock/{scenario}.json
-   * 2. Otherwise try GET {API_BASE}/api/jobs/{scenario}/result (or /api/demos)
-   * 3. On network error / unreachable -> fall back to ./mock/{scenario}.json
+   * 2. Otherwise resolve the scenario to a backend demo id via GET /api/demos, then
+   *    POST /api/analyze/demo/<id> and poll the job to its result
+   * 3. Backend unreachable, or no live demo for this scenario -> ./mock/{scenario}.json
+   *
+   * The selector speaks in fixture names ("thursday"); the backend speaks in demo ids
+   * ("thursday_infiltration"). Posting the fixture name 400s and silently degrades a
+   * healthy backend to Mock Fixture (H-9), so the id always comes from /api/demos.
    */
-  async loadAnalysis(scenario = "thursday") {
-    // If mock is explicitly requested via query string ?mock
+  async loadAnalysis(scenario = "thursday", onProgress = null) {
     if (this.useMock) {
       return this._loadMock(scenario);
     }
 
-    // Attempt live backend fetch
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500); // Fast timeout for offline check
-
-      const res = await fetch(`${this.apiBase}/api/demos`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        // Backend is up; fetch the demo scenario result
-        const demoRes = await fetch(`${this.apiBase}/api/analyze/demo/${scenario}`, {
-          method: "POST",
-        });
-        if (demoRes.ok) {
-          const job = await demoRes.json();
-          const resultRes = await fetch(`${this.apiBase}/api/jobs/${job.job_id}/result`);
-          if (resultRes.ok) {
-            const data = await resultRes.json();
-            return { payload: data, isMock: false };
-          }
-        }
+    const demos = await this.listDemos();
+    const demoId = this.resolveDemoId(scenario, demos);
+    if (demoId) {
+      try {
+        return await this._startDemoJob(demoId, onProgress);
+      } catch (err) {
+        console.warn(`Live demo '${demoId}' failed, falling back to fixture:`, err);
       }
-    } catch {
-      // Backend not running / unreachable: fallback to mock fixture
     }
 
     return this._loadMock(scenario);
+  }
+
+  /**
+   * GET /api/demos, or null when the backend is unreachable. Short timeout so an
+   * offline dashboard falls through to fixtures without a visible stall.
+   */
+  async listDemos() {
+    if (this.useMock) return null;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
+      const res = await fetch(`${this.apiBase}/api/demos`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!res.ok) return null;
+      const demos = await res.json();
+      return Array.isArray(demos) ? demos : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Map a UI scenario name to a backend demo id: an exact id match wins, otherwise the
+   * first demo for that day. Returns null when there is no live equivalent (e.g. the
+   * dev-only thursday_oracle fixture), so the caller shows the fixture and says so.
+   */
+  resolveDemoId(scenario, demos) {
+    if (!Array.isArray(demos) || !scenario) return null;
+    const exact = demos.find((d) => d.id === scenario);
+    if (exact) return exact.id;
+    const byDay = demos.find((d) => d.day === scenario);
+    return byDay ? byDay.id : null;
+  }
+
+  /** POST /api/analyze/demo/<id> and poll that job to its result. Throws on failure. */
+  async _startDemoJob(demoId, onProgress = null) {
+    onProgress?.({ state: "running", progress: 0.05, stage_text: `Dispatching demo ${demoId}...` });
+    const res = await fetch(`${this.apiBase}/api/analyze/demo/${encodeURIComponent(demoId)}`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      throw new Error(`POST /api/analyze/demo/${demoId} returned ${res.status}`);
+    }
+    const { job_id } = await res.json();
+    return this._pollJob(job_id, onProgress);
   }
 
   /**
@@ -62,7 +94,8 @@ export class ApiClient {
    */
   async _loadMock(scenario = "thursday") {
     const filename = scenario.endsWith(".json") ? scenario : `${scenario}.json`;
-    const mockUrl = `./mock/${filename}`;
+    // Resolve against this module, not the page, so frontend/dev/ harnesses find fixtures too.
+    const mockUrl = new URL(`../mock/${filename}`, import.meta.url).href;
     
     const res = await fetch(mockUrl);
     if (!res.ok) {
@@ -71,6 +104,234 @@ export class ApiClient {
 
     const payload = await res.json();
     return { payload, isMock: true };
+  }
+
+  /**
+   * Validate capture file extension and size caps
+   * Supported: .csv (max 200MB), .pcap/.pcapng (max 2GB)
+   */
+  validateCaptureFile(file) {
+    if (!file) {
+      return { valid: false, code: "bad_file", message: "No file selected." };
+    }
+    const name = file.name || "";
+    const lowerName = name.toLowerCase();
+    const isCsv = lowerName.endsWith(".csv");
+    const isPcap = lowerName.endsWith(".pcap") || lowerName.endsWith(".pcapng");
+
+    if (!isCsv && !isPcap) {
+      return {
+        valid: false,
+        code: "unsupported_format",
+        message: "Unsupported file extension. Only .csv, .pcap, and .pcapng files are supported.",
+      };
+    }
+
+    if (file.size === 0) {
+      return {
+        valid: false,
+        code: "bad_file",
+        message: "The selected capture file is empty (0 bytes).",
+      };
+    }
+
+    const maxCsv = 200 * 1024 * 1024; // 200 MB
+    const maxPcap = 2 * 1024 * 1024 * 1024; // 2 GB
+
+    if (isCsv && file.size > maxCsv) {
+      return {
+        valid: false,
+        code: "too_large",
+        message: `CSV file exceeds the 200 MB limit (${formatBytes(file.size)}).`,
+      };
+    }
+
+    if (isPcap && file.size > maxPcap) {
+      return {
+        valid: false,
+        code: "too_large",
+        message: `PCAP file exceeds the 2 GB limit (${formatBytes(file.size)}).`,
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Upload and analyze capture file (.csv or .pcap)
+   * Real backend: POST /api/analyze -> poll GET /api/jobs/<id> -> GET /api/jobs/<id>/result
+   * Offline/Mock: Realistic simulated progress pipeline and fixture synthesis
+   */
+  async uploadCapture(file, onProgress = null) {
+    const val = this.validateCaptureFile(file);
+    if (!val.valid) {
+      const err = new Error(val.message);
+      err.code = val.code;
+      throw err;
+    }
+
+    // Try live API if not forced mock
+    if (!this.useMock) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        onProgress?.({
+          state: "uploading",
+          progress: 0.1,
+          stage_text: `Uploading ${file.name} (${formatBytes(file.size)})...`,
+        });
+
+        const res = await fetch(`${this.apiBase}/api/analyze`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          const { job_id } = await res.json();
+          return await this._pollJob(job_id, onProgress);
+        } else {
+          let errData;
+          try {
+            errData = await res.json();
+          } catch {
+            errData = null;
+          }
+          if (errData?.error) {
+            const err = new Error(errData.error.message || "Upload rejected");
+            err.code = errData.error.code || "bad_file";
+            throw err;
+          }
+        }
+      } catch (err) {
+        if (err.code && err.code !== "internal" && err.code !== "network") {
+          throw err;
+        }
+        // Network/backend unreachable: fall back to mock simulation
+      }
+    }
+
+    // Deterministic mock analysis simulation
+    return await this._simulateMockAnalysis(file, onProgress);
+  }
+
+  /**
+   * Trigger demo scenario analysis from the upload modal's preset chips. Chips carry
+   * fixture names, so they go through the same /api/demos resolution as the selector.
+   */
+  async runDemoAnalysis(demoId, onProgress = null) {
+    if (!this.useMock) {
+      const liveId = this.resolveDemoId(demoId, await this.listDemos());
+      if (liveId) {
+        try {
+          return await this._startDemoJob(liveId, onProgress);
+        } catch (err) {
+          console.warn(`Live demo '${liveId}' failed, falling back to fixture:`, err);
+        }
+      }
+    }
+
+    const mockFile = {
+      name: `${demoId}_demo_capture.csv`,
+      size: 42800000,
+    };
+    return await this._simulateMockAnalysis(mockFile, onProgress, demoId);
+  }
+
+  /**
+   * The job id to use for /flows and /stream, or null for fixture data. A fixture has no
+   * backend job, so asking the API about it only produces 404s (H-9: literal "demo").
+   */
+  liveJobId(state) {
+    if (!state || state.isMock) return null;
+    return state.payload?.job_id ?? null;
+  }
+
+  /**
+   * Poll backend job until done or error
+   * Spec: Poll GET /api/jobs/<id> every 750 ms (frontend/PLAN.md)
+   */
+  async _pollJob(jobId, onProgress = null) {
+    const pollInterval = 750;
+    while (true) {
+      const res = await fetch(`${this.apiBase}/api/jobs/${jobId}`);
+      if (!res.ok) {
+        throw new Error(`Job poll failed with status ${res.status}`);
+      }
+      const job = await res.json();
+      onProgress?.({
+        state: job.state,
+        progress: job.progress || 0,
+        stage_text: job.stage_text || "",
+      });
+
+      if (job.state === "done") {
+        const resultRes = await fetch(`${this.apiBase}/api/jobs/${jobId}/result`);
+        if (!resultRes.ok) {
+          throw new Error(`Failed to retrieve job results (${resultRes.status})`);
+        }
+        const payload = await resultRes.json();
+        // The result should echo job_id; guarantee it so /flows and /stream hit this job.
+        payload.job_id = payload.job_id || jobId;
+        return { payload, isMock: false };
+      } else if (job.state === "error") {
+        const err = new Error(job.error?.message || "Job analysis failed");
+        err.code = job.error?.code || "internal";
+        throw err;
+      }
+
+      await new Promise((r) => setTimeout(r, pollInterval));
+    }
+  }
+
+  /**
+   * High-fidelity offline simulation of the NetWM ML ingestion pipeline
+   */
+  async _simulateMockAnalysis(file, onProgress = null, explicitFixture = null) {
+    const stages = [
+      { progress: 0.12, text: `Reading ${file.name} (${formatBytes(file.size)})...` },
+      { progress: 0.28, text: "Validating capture format and network flow timestamps..." },
+      { progress: 0.48, text: "Extracting 70-dimensional flow features across 60s windows..." },
+      { progress: 0.72, text: "Rolling out RSSM world model forward dynamics (K=10 horizon)..." },
+      { progress: 0.88, text: "Evaluating risk heads (p_max, p_cum) and computing attribution..." },
+      { progress: 1.00, text: "Finalizing detection and forecasting payload..." },
+    ];
+
+    for (const step of stages) {
+      onProgress?.({ state: "running", progress: step.progress, stage_text: step.text });
+      await new Promise((r) => setTimeout(r, 420));
+    }
+
+    const lower = (file.name || "").toLowerCase();
+    let baseScenario = explicitFixture;
+    if (!baseScenario) {
+      if (lower.includes("friday") || lower.includes("botnet") || lower.includes("ddos") || lower.includes("portscan")) {
+        baseScenario = "friday";
+      } else if (lower.includes("oracle")) {
+        baseScenario = "thursday_oracle";
+      } else {
+        baseScenario = "thursday";
+      }
+    }
+
+    const { payload } = await this._loadMock(baseScenario);
+    const cloned = JSON.parse(JSON.stringify(payload));
+
+    const isPcap = lower.endsWith(".pcap") || lower.endsWith(".pcapng");
+    cloned.source = {
+      filename: file.name,
+      kind: isPcap ? "pcap" : "csv",
+      flows: cloned.source?.flows || 362076,
+      windows: cloned.timeline ? cloned.timeline.length : 972,
+      t0: cloned.source?.t0 || "2017-07-06T11:59:00Z",
+      window_s: 60,
+      stride_s: 30,
+      size_bytes: file.size,
+    };
+    cloned.job_id = `job_${Math.random().toString(36).substring(2, 8)}`;
+
+    onProgress?.({ state: "done", progress: 1.0, stage_text: "Ingestion and forecasting complete" });
+    return { payload: cloned, isMock: true };
   }
 
   /**

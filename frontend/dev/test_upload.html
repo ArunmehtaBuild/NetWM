@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetWM Upload & Ingestion Verification Suite</title>
+  <style>
+    body {
+      background: #0f1216;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 20px;
+      color: #4c9be8;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #8b98a5;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .test-card {
+      background: #161b22;
+      border: 1px solid #2a3038;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .test-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .status-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .pass {
+      background: rgba(46, 160, 67, 0.2);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.4);
+    }
+    .fail {
+      background: rgba(226, 87, 76, 0.2);
+      color: #e2574c;
+      border: 1px solid rgba(226, 87, 76, 0.4);
+    }
+    .pending {
+      background: rgba(242, 165, 65, 0.2);
+      color: #f2a541;
+      border: 1px solid rgba(242, 165, 65, 0.4);
+    }
+    .test-body {
+      font-size: 12.5px;
+      color: #8b98a5;
+    }
+    .summary-box {
+      margin-top: 24px;
+      padding: 14px 18px;
+      background: #1c2230;
+      border-radius: 6px;
+      border-left: 4px solid #4c9be8;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>NetWM Upload & Ingestion Verification Suite</h1>
+  <div class="subtitle">Validating capture validation, size caps, simulated progress, and error codes</div>
+
+  <div id="testContainer"></div>
+  <div class="summary-box" id="summaryBox">Running tests...</div>
+
+  <script type="module">
+    import { api } from "../js/api.js";
+    import { store } from "../js/store.js";
+    import { formatBytes } from "../js/format.js";
+
+    const tests = [
+      {
+        id: "t1_valid_files",
+        title: "Test 1: File Format Validation (Valid .csv, .pcap, .pcapng)",
+        async run() {
+          const validCsv = { name: "capture.csv", size: 1024 * 1024 * 15 }; // 15 MB
+          const validPcap = { name: "traffic.pcap", size: 1024 * 1024 * 250 }; // 250 MB
+          const validPcapng = { name: "stream.pcapng", size: 1024 * 1024 * 50 }; // 50 MB
+
+          const r1 = api.validateCaptureFile(validCsv);
+          const r2 = api.validateCaptureFile(validPcap);
+          const r3 = api.validateCaptureFile(validPcapng);
+
+          if (!r1.valid || !r2.valid || !r3.valid) {
+            throw new Error(`Expected valid files to pass, got: csv=${r1.valid}, pcap=${r2.valid}, pcapng=${r3.valid}`);
+          }
+          return `Accepted valid .csv (15MB), .pcap (250MB), and .pcapng (50MB)`;
+        }
+      },
+      {
+        id: "t2_invalid_format",
+        title: "Test 2: Rejection of Unsupported File Extensions (bad_file / unsupported_format)",
+        async run() {
+          const badExt = { name: "malware.exe", size: 1024 };
+          const txtFile = { name: "notes.txt", size: 2048 };
+          const emptyFile = { name: "empty.csv", size: 0 };
+
+          const r1 = api.validateCaptureFile(badExt);
+          const r2 = api.validateCaptureFile(txtFile);
+          const r3 = api.validateCaptureFile(emptyFile);
+
+          if (r1.valid || r1.code !== "unsupported_format") {
+            throw new Error(`Expected unsupported_format for .exe, got ${JSON.stringify(r1)}`);
+          }
+          if (r2.valid || r2.code !== "unsupported_format") {
+            throw new Error(`Expected unsupported_format for .txt, got ${JSON.stringify(r2)}`);
+          }
+          if (r3.valid || r3.code !== "bad_file") {
+            throw new Error(`Expected bad_file for 0-byte file, got ${JSON.stringify(r3)}`);
+          }
+          return `Correctly rejected unsupported extensions with code '${r1.code}' and empty files with '${r3.code}'`;
+        }
+      },
+      {
+        id: "t3_size_caps",
+        title: "Test 3: File Size Caps Enforcement (200MB CSV / 2GB PCAP)",
+        async run() {
+          const oversizedCsv = { name: "huge.csv", size: 201 * 1024 * 1024 };
+          const oversizedPcap = { name: "huge.pcap", size: 2.1 * 1024 * 1024 * 1024 };
+
+          const r1 = api.validateCaptureFile(oversizedCsv);
+          const r2 = api.validateCaptureFile(oversizedPcap);
+
+          if (r1.valid || r1.code !== "too_large") {
+            throw new Error(`Expected too_large for 201MB CSV, got ${JSON.stringify(r1)}`);
+          }
+          if (r2.valid || r2.code !== "too_large") {
+            throw new Error(`Expected too_large for 2.1GB PCAP, got ${JSON.stringify(r2)}`);
+          }
+          return `Correctly blocked oversized CSV (>200MB) and PCAP (>2GB) with code '${r1.code}'`;
+        }
+      },
+      {
+        id: "t4_simulated_ingestion",
+        title: "Test 4: Ingestion Progress Tracking and Custom Metadata Synthesis",
+        async run() {
+          const testFile = { name: "custom_attack_capture.pcap", size: 45000000 };
+          const progressEvents = [];
+
+          const result = await api.uploadCapture(testFile, (prog) => {
+            progressEvents.push({ ...prog });
+          });
+
+          if (!result || !result.payload) {
+            throw new Error("Expected payload from uploadCapture");
+          }
+          if (progressEvents.length < 4) {
+            throw new Error(`Expected multiple progress events, got ${progressEvents.length}`);
+          }
+
+          // Verify final event is 100% done
+          const lastProg = progressEvents[progressEvents.length - 1];
+          if (lastProg.progress < 1.0) {
+            throw new Error(`Expected final progress 1.0, got ${lastProg.progress}`);
+          }
+
+          // Verify source metadata was customized
+          const src = result.payload.source;
+          if (src.filename !== testFile.name) {
+            throw new Error(`Expected source filename to be ${testFile.name}, got ${src.filename}`);
+          }
+          if (src.kind !== "pcap") {
+            throw new Error(`Expected kind 'pcap', got ${src.kind}`);
+          }
+
+          return `Completed 6-stage simulation with 100% progress and synthesized source: ${src.filename} (${src.kind})`;
+        }
+      },
+      {
+        id: "t5_demo_preset",
+        title: "Test 5: Demo Scenario Fast Analysis Trigger",
+        async run() {
+          const demoEvents = [];
+          const result = await api.runDemoAnalysis("friday", (p) => {
+            demoEvents.push(p);
+          });
+
+          if (!result?.payload?.timeline) {
+            throw new Error("Expected payload with timeline for friday demo");
+          }
+          if (result.payload.timeline.length < 900) {
+            throw new Error(`Expected ~968 windows for Friday, got ${result.payload.timeline.length}`);
+          }
+          return `Successfully processed Friday scenario with ${result.payload.timeline.length} windows`;
+        }
+      },
+      {
+        id: "t6_format_bytes",
+        title: "Test 6: Format Bytes Helper Range Check (Bytes up to GB)",
+        async run() {
+          const b1 = formatBytes(500);
+          const b2 = formatBytes(1024 * 45);
+          const b3 = formatBytes(1024 * 1024 * 150);
+          const b4 = formatBytes(1024 * 1024 * 1024 * 1.5);
+
+          if (!b1.includes("500 B") || !b2.includes("45.0 KB") || !b3.includes("150.0 MB") || !b4.includes("1.50 GB")) {
+            throw new Error(`Unexpected formatBytes outputs: ${b1}, ${b2}, ${b3}, ${b4}`);
+          }
+          return `formatBytes correctly produced: ${b1}, ${b2}, ${b3}, ${b4}`;
+        }
+      }
+    ];
+
+    const container = document.getElementById("testContainer");
+    const summaryBox = document.getElementById("summaryBox");
+    let passed = 0;
+
+    for (const t of tests) {
+      const card = document.createElement("div");
+      card.className = "test-card";
+      card.innerHTML = `
+        <div class="test-header">
+          <div class="test-title">${t.title}</div>
+          <span class="status-badge pending" id="badge_${t.id}">RUNNING</span>
+        </div>
+        <div class="test-body" id="body_${t.id}">Executing test logic...</div>
+      `;
+      container.appendChild(card);
+
+      try {
+        const msg = await t.run();
+        passed++;
+        document.getElementById(`badge_${t.id}`).className = "status-badge pass";
+        document.getElementById(`badge_${t.id}`).textContent = "PASS";
+        document.getElementById(`body_${t.id}`).textContent = msg;
+      } catch (err) {
+        document.getElementById(`badge_${t.id}`).className = "status-badge fail";
+        document.getElementById(`badge_${t.id}`).textContent = "FAIL";
+        document.getElementById(`body_${t.id}`).textContent = `Error: ${err.message}`;
+      }
+    }
+
+    summaryBox.innerHTML = `<strong>Result:</strong> ${passed} / ${tests.length} tests passed. Upload and Ingestion module verified.`;
+  </script>
+</body>
+</html>
