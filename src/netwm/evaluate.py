@@ -59,10 +59,14 @@ def evaluate_fold(
     n_samples: int = 16,
 ) -> tuple[list[dict], dict]:
     """Metrics for one leave-one-day-out fold, with the threshold tuned on the training days."""
+    # The alarm statistic is max-over-horizon, not the cumulative union (D-019). Until 2026-09-25
+    # these in-training rows scored p_cum[:, -1] while E14 and the engine scored p_max, so the E6
+    # rows and the E14 table disagreed on the same checkpoints - any of those numbers reaching a
+    # slide would have been wrong.
     train_scores, train_labels = [], []
     for day in train_days.values():
         out = forecast_day(model, day["x"], horizon, max(4, n_samples // 4), device)
-        train_scores.append(out["p_cum"][:, -1])
+        train_scores.append(out["p_max"])
         train_labels.append(day["y_within_K"])
     train_score = np.concatenate(train_scores)
     thr_train = best_threshold(np.concatenate(train_labels), train_score)
@@ -72,7 +76,7 @@ def evaluate_fold(
     thr_budget = float(np.quantile(train_score, 0.95))
 
     out = forecast_day(model, test_day["x"], horizon, n_samples, device)
-    score = out["p_cum"][:, -1]
+    score = out["p_max"]
     y = test_day["y_within_K"]
 
     rows = []
@@ -101,8 +105,11 @@ def evaluate_fold(
             }
         )
 
-    # secondary target: does the model see the attacker *advancing* (D-016)?
-    esc_score = out["p_cum_escalate"][:, -1]
+    # secondary target: does the model see the attacker *advancing* (D-016)? Scored the same way as
+    # the primary one, so the two rows are comparable.
+    esc_score = (
+        out["p_raw"][:, :, 2].max(axis=1) if out["p_raw"].shape[2] > 2 else out["p_cum_escalate"][:, -1]
+    )
     esc_y = test_day.get("y_escalate_within_K")
     if esc_y is not None and esc_y.sum() > 0:
         m_esc = forecast_metrics(esc_y, esc_score, best_threshold(esc_y, esc_score))
@@ -119,6 +126,7 @@ def evaluate_fold(
         )
 
     extras = {
+        "alarm_statistic": "p_max",
         "threshold_train": thr_train,
         "threshold_budget": thr_budget,
         "escalation_scores": esc_score.tolist(),
