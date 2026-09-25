@@ -18,44 +18,75 @@ export class ApiClient {
    * Load analysis payload for a scenario.
    * Priority:
    * 1. If USE_MOCK is true -> load ./mock/{scenario}.json
-   * 2. Otherwise try GET {API_BASE}/api/jobs/{scenario}/result (or /api/demos)
-   * 3. On network error / unreachable -> fall back to ./mock/{scenario}.json
+   * 2. Otherwise resolve the scenario to a backend demo id via GET /api/demos, then
+   *    POST /api/analyze/demo/<id> and poll the job to its result
+   * 3. Backend unreachable, or no live demo for this scenario -> ./mock/{scenario}.json
+   *
+   * The selector speaks in fixture names ("thursday"); the backend speaks in demo ids
+   * ("thursday_infiltration"). Posting the fixture name 400s and silently degrades a
+   * healthy backend to Mock Fixture (H-9), so the id always comes from /api/demos.
    */
-  async loadAnalysis(scenario = "thursday") {
-    // If mock is explicitly requested via query string ?mock
+  async loadAnalysis(scenario = "thursday", onProgress = null) {
     if (this.useMock) {
       return this._loadMock(scenario);
     }
 
-    // Attempt live backend fetch
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500); // Fast timeout for offline check
-
-      const res = await fetch(`${this.apiBase}/api/demos`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        // Backend is up; fetch the demo scenario result
-        const demoRes = await fetch(`${this.apiBase}/api/analyze/demo/${scenario}`, {
-          method: "POST",
-        });
-        if (demoRes.ok) {
-          const job = await demoRes.json();
-          const resultRes = await fetch(`${this.apiBase}/api/jobs/${job.job_id}/result`);
-          if (resultRes.ok) {
-            const data = await resultRes.json();
-            return { payload: data, isMock: false };
-          }
-        }
+    const demos = await this.listDemos();
+    const demoId = this.resolveDemoId(scenario, demos);
+    if (demoId) {
+      try {
+        return await this._startDemoJob(demoId, onProgress);
+      } catch (err) {
+        console.warn(`Live demo '${demoId}' failed, falling back to fixture:`, err);
       }
-    } catch {
-      // Backend not running / unreachable: fallback to mock fixture
     }
 
     return this._loadMock(scenario);
+  }
+
+  /**
+   * GET /api/demos, or null when the backend is unreachable. Short timeout so an
+   * offline dashboard falls through to fixtures without a visible stall.
+   */
+  async listDemos() {
+    if (this.useMock) return null;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
+      const res = await fetch(`${this.apiBase}/api/demos`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!res.ok) return null;
+      const demos = await res.json();
+      return Array.isArray(demos) ? demos : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Map a UI scenario name to a backend demo id: an exact id match wins, otherwise the
+   * first demo for that day. Returns null when there is no live equivalent (e.g. the
+   * dev-only thursday_oracle fixture), so the caller shows the fixture and says so.
+   */
+  resolveDemoId(scenario, demos) {
+    if (!Array.isArray(demos) || !scenario) return null;
+    const exact = demos.find((d) => d.id === scenario);
+    if (exact) return exact.id;
+    const byDay = demos.find((d) => d.day === scenario);
+    return byDay ? byDay.id : null;
+  }
+
+  /** POST /api/analyze/demo/<id> and poll that job to its result. Throws on failure. */
+  async _startDemoJob(demoId, onProgress = null) {
+    onProgress?.({ state: "running", progress: 0.05, stage_text: `Dispatching demo ${demoId}...` });
+    const res = await fetch(`${this.apiBase}/api/analyze/demo/${encodeURIComponent(demoId)}`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      throw new Error(`POST /api/analyze/demo/${demoId} returned ${res.status}`);
+    }
+    const { job_id } = await res.json();
+    return this._pollJob(job_id, onProgress);
   }
 
   /**
@@ -63,7 +94,8 @@ export class ApiClient {
    */
   async _loadMock(scenario = "thursday") {
     const filename = scenario.endsWith(".json") ? scenario : `${scenario}.json`;
-    const mockUrl = `./mock/${filename}`;
+    // Resolve against this module, not the page, so frontend/dev/ harnesses find fixtures too.
+    const mockUrl = new URL(`../mock/${filename}`, import.meta.url).href;
     
     const res = await fetch(mockUrl);
     if (!res.ok) {
@@ -184,19 +216,18 @@ export class ApiClient {
   }
 
   /**
-   * Trigger demo scenario analysis
+   * Trigger demo scenario analysis from the upload modal's preset chips. Chips carry
+   * fixture names, so they go through the same /api/demos resolution as the selector.
    */
   async runDemoAnalysis(demoId, onProgress = null) {
     if (!this.useMock) {
-      try {
-        onProgress?.({ state: "running", progress: 0.2, stage_text: `Dispatching demo ${demoId}...` });
-        const res = await fetch(`${this.apiBase}/api/analyze/demo/${demoId}`, { method: "POST" });
-        if (res.ok) {
-          const { job_id } = await res.json();
-          return await this._pollJob(job_id, onProgress);
+      const liveId = this.resolveDemoId(demoId, await this.listDemos());
+      if (liveId) {
+        try {
+          return await this._startDemoJob(liveId, onProgress);
+        } catch (err) {
+          console.warn(`Live demo '${liveId}' failed, falling back to fixture:`, err);
         }
-      } catch {
-        // Fall back to mock
       }
     }
 
@@ -205,6 +236,15 @@ export class ApiClient {
       size: 42800000,
     };
     return await this._simulateMockAnalysis(mockFile, onProgress, demoId);
+  }
+
+  /**
+   * The job id to use for /flows and /stream, or null for fixture data. A fixture has no
+   * backend job, so asking the API about it only produces 404s (H-9: literal "demo").
+   */
+  liveJobId(state) {
+    if (!state || state.isMock) return null;
+    return state.payload?.job_id ?? null;
   }
 
   /**
@@ -231,6 +271,8 @@ export class ApiClient {
           throw new Error(`Failed to retrieve job results (${resultRes.status})`);
         }
         const payload = await resultRes.json();
+        // The result should echo job_id; guarantee it so /flows and /stream hit this job.
+        payload.job_id = payload.job_id || jobId;
         return { payload, isMock: false };
       } else if (job.state === "error") {
         const err = new Error(job.error?.message || "Job analysis failed");

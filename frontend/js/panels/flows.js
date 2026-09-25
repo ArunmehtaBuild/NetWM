@@ -61,7 +61,7 @@ export class FlowsPanel {
 
       try {
         const fetchWindow = selectedWindow;
-        const jobId = payload.job_id || "demo";
+        const jobId = api.liveJobId(state);
         const flowData = await api.getFlows(jobId, selectedWindow, payload);
         if (this.currentWindow !== fetchWindow) return; // Stale fetch from earlier window
         this.cachedFlows = flowData?.flows || [];

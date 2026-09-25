@@ -204,7 +204,7 @@ export class ReplayController {
       this.activeStream = null;
     }
 
-    const jobId = payload.job_id || "demo";
+    const jobId = api.liveJobId(store.getState());
     const maxT = payload.timeline.length - 1;
 
     this.activeStream = api.createReplayStream({
