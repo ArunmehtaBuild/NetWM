@@ -1,6 +1,6 @@
 # NetWM — AI Network Attack Forecasting with a World Model
 
-**SIH 2026 · PS-153 · NTRO · Theme: Blockchain & Cybersecurity**
+**SIH 2026 · PS 26153 · NTRO · Theme: Blockchain & Cybersecurity**
 
 NetWM learns the *dynamics* of a network — how its state evolves from one time window to the
 next — instead of classifying flows in isolation. From a stream of traffic telemetry it builds a

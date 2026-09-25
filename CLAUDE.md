@@ -1,6 +1,6 @@
 # CLAUDE.md - working agreement for this repo
 
-NetWM: a world model for network attack forecasting. SIH 2026, PS-153 (NTRO).
+NetWM: a world model for network attack forecasting. SIH 2026, PS 26153 (NTRO).
 Read [problemstatement.md](problemstatement.md) first - it is the spec everything is judged against.
 
 ## Non-negotiable repo habits

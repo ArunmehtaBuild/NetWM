@@ -36,7 +36,7 @@ train and test). Neither approach produces lead time, and neither models tempora
 ## 4. World models outside security
 
 The PlaNet / Dreamer line, see [world-models.md](world-models.md). Applications to security are, as
-of now, mostly position papers rather than implemented systems - which is exactly the gap PS-153
+of now, mostly position papers rather than implemented systems - which is exactly the gap PS 26153
 points at.
 
 ## Where NetWM sits

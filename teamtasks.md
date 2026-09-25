@@ -1,4 +1,4 @@
-# Team board - NetWM (SIH 2026, PS-153)
+# Team board - NetWM (SIH 2026, PS 26153)
 
 **This board is the single source of truth.** All work routes through the orchestrator session
 (Atharv). Nothing is "done" until its task id appears in a commit message and, where it produces
@@ -14,7 +14,7 @@ CLI, demo CSV slices, 33 passing tests, decisions D-001..D-019, experiments E1-E
 
 **The one number that matters and is still wrong:** lead time is **0 of 5 episodes** at any
 deployable threshold. Detection is strong (Thursday PR-AUC 0.675 vs 0.139 for logistic regression,
-FPR 0.042 vs 0.608) but the system is not yet forecasting, which is the entire premise of PS-153.
+FPR 0.042 vs 0.608) but the system is not yet forecasting, which is the entire premise of PS 26153.
 E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this is fixable.
 
 **Not started at all:** Flask backend, the whole frontend, packet-level features, PCAP ingestion.
@@ -126,7 +126,7 @@ Two sessions ran `git add -A` in this working tree on 2026-09-24 and one swept u
 uncommitted files into an unrelated commit. **Stage only your own paths** (`git add src/netwm/...`),
 or work in a separate git worktree. Never `git add -A` in a shared tree.
 
-## Submission checklist (PS-153)
+## Submission checklist (PS 26153)
 
 | deliverable | owner | status |
 |---|---|---|

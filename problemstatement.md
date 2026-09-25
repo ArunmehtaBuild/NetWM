@@ -1,12 +1,23 @@
-# SIH 2026 - Problem Statement 153
+# SIH 2026 - Problem Statement 26153
 
-- **Title:** AI based Network Attack Forecasting from Network Traffic Data
-- **Theme:** Blockchain & Cybersecurity
-- **Organisation:** National Technical Research Organisation (NTRO)
-- **PS number:** 153 (SIH 2026)
+| field | value |
+|---|---|
+| **Problem Statement ID** | **26153** |
+| **Title** | AI based Network Attack Forecasting from Network Traffic Data |
+| **Organisation** | National Technical Research Organisation (NTRO) |
+| **Department** | National Technical Research Organisation (NTRO) |
+| **Category** | Software |
+| **Theme** | Blockchain & Cybersecurity |
+| **YouTube link** | none provided |
+| **Contact info** | none provided |
+| **Dataset link** | Check nciipc.gov.in; helpdesk1@nciipc.gov.in |
 
-> Source: pasted by the team from the SIH portal. If the official wording differs, replace this file
-> with the verbatim text - everything in this repo is written against this document.
+**Datasets named by the organisation:** CIC-IDS2017/2018, UNSW-NB15, CTU-13, CICIoT2023, LANL
+Authentication Dataset, DARPA Intrusion Detection datasets, together with public knowledge bases
+such as MITRE ATT&CK, CAPEC, CVE/NVD and other open cybersecurity resources.
+
+> Verbatim from the SIH portal (2026-09-25), mojibake dashes normalised. Everything in this repo is
+> written against this document; `research/` and `decisions.md` explain where we go beyond it and why.
 
 ## Description
 
@@ -123,13 +134,6 @@ A software-based, fully open-source solution is expected. The solution may inclu
 - Architecture document (max 2 pages)
 - Demo video (max 2 minutes)
 - Technical presentation (max 5 slides)
-
-## Datasets suggested by the organisation
-
-Check nciipc.gov.in / helpdesk1@nciipc.gov.in. Use publicly available datasets such as
-CIC-IDS2017/2018, UNSW-NB15, CTU-13, CICIoT2023, LANL Authentication Dataset, DARPA Intrusion
-Detection datasets, together with public knowledge bases such as MITRE ATT&CK, CAPEC, CVE/NVD and
-other open cybersecurity resources.
 
 ## How this repo maps to the requirements
 

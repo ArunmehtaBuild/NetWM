@@ -1,7 +1,7 @@
 # Build plan
 
 Milestones follow the dataset ladder: **M1 CIC-IDS2017 -> M2 CTU-13 -> M3 CIC-IDS2018 -> M4 UNSW-NB15**.
-M1 delivers the complete PS-153 system end to end; M2-M4 are evaluation/generalisation milestones on
+M1 delivers the complete PS 26153 system end to end; M2-M4 are evaluation/generalisation milestones on
 top of the same code, reached through dataset adapters.
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done
