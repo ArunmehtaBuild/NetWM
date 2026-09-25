@@ -153,13 +153,14 @@ Full spec: [backend/PLAN.md](backend/PLAN.md).
 
 | id | task | done when |
 |---|---|---|
-| **R-1** | FastAPI app: `server.py` (routes + CORS allowlist), `schemas.py` (Pydantic models mirroring the contract), `jobs.py` (single worker thread - torch blocks, so no async inference), `inference.py` wrapping `netwm.engine.predict.analyze_file`. Serve `fixtures/api/*.json` with `"mock": true` when no checkpoint exists | `uvicorn backend.server:app` -> `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress; OpenAPI renders at `/docs` |
-| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `fixtures/api/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest backend/tests/test_contract.py` fails if engine, fixtures and contract disagree |
-| **R-5** | **BLOCKER - the upload path has never run.** `POST /api/analyze` returns 202, the job then fails with `Uploaded file not found: <name>` and `data/uploads/<job_id>/` is empty. Reproduced twice (long temp path and a plain `upload_test.csv`), so it is not a filename quirk: the server streams to `settings.uploads_dir / job.id / clean_name` and the worker resolves a different base. Fix, **and add a test that uploads a small CSV and asserts `state == done`, `mock` false, non-empty timeline** - the current 13 tests pass because they only assert the 202 | a real CSV upload produces a real forecast |
-| **R-6** | `POST /api/analyze/demo/<id>` reports "Loading precomputed demonstration fixture" and returns `mock: true` - and returns the **full-day 972-window** fixture for a demo advertised as a 2-hour 169k-flow slice. Either run real inference on `data/demo/*.csv`, or rename the endpoint so it is honestly a fixture preview. The PS requires an interface that *runs* inference on an accepted file | the demo in the video computes what it claims to compute |
-| **R-7** | `/api/model` returns all-zero metrics. Populate from `results/runs/`: F1 0.576, FPR 0.027, PR-AUC 0.675, baseline F1 0.011 (E14). `mean_lead_time_windows: 0.0` is correct and stays | the model card states what the model actually scored |
-| **R-3** | SSE replay `/api/jobs/<id>/stream` at `?speed=` windows/sec | the dashboard can play an attack unfolding |
-| **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
+| ~~R-1~~ | **Verified done** (PR #2): FastAPI app - `server.py` (routes + CORS allowlist), `schemas.py`, `jobs.py` (single worker thread), `inference.py` wrapping `analyze_file`; fixtures served with `"mock": true` when no checkpoint exists |
+| ~~R-2~~ | **Verified done**: `backend/tests/test_contract.py` validates fixtures *and* fresh engine output against the v1.1 models |
+| ~~R-3~~ | **Verified done**: SSE `/api/jobs/<id>/stream?speed=` from the disk cache, with heartbeats and disconnect handling |
+| ~~R-4~~ | **Verified done**: size caps, uniform error shape, `test_offline.py` socket lockdown, `run_demo.bat` |
+| ~~R-5~~ | **Verified fixed** - reviewed live: a 39 999-flow CSV upload returns `mock: false`, 514 windows, threshold 0.0036 under `self-budget-10pct`, 3 alarms. Root cause was a race, not a path bug: the job was enqueued before the upload finished streaming, so the worker saw `file_path=None`. Covered by `test_upload_e2e.py` |
+| ~~R-6~~ | **Verified fixed**: the demo endpoint runs the model - `mock: false`, 260 windows from 169 135 flows, the real 2-hour slice rather than the full-day fixture |
+| ~~R-7~~ | **Verified fixed**: `/api/model` reports F1 0.576, precision 0.775, FPR 0.027, PR-AUC 0.64, baseline F1 0.011, lead time 0.0 |
+| **R-8** | `test_contract.py` and `test_offline.py` fail on a clean checkout because they need the gitignored `data/demo/*.csv`. Add `skipif` on missing demo data so a fresh clone stays green - this is the same clean-machine criterion R-4 is judged on |
 
 ## Harshit - frontend
 
@@ -226,4 +227,4 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | Technical presentation (max 5 slides) | Sanchi | [ ] |
 | Benchmark table vs logistic regression | Atharv | [ ] |
 | Model weights + reproducible training config | Yash | [x] r2 checkpoints committed |
-| Everything runs offline, no cloud API calls | Arun | [ ] |
+| Everything runs offline, no cloud API calls | Arun | [x] |

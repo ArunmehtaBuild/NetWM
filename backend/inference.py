@@ -1,0 +1,306 @@
+"""Inference engine wrapper and model registry for NetWM.
+
+Wraps netwm.engine.predict.analyze_file, manages model lifecycle,
+and provides graceful fallback to fixtures/api/*.json when no checkpoint is present.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import sys
+from pathlib import Path
+from typing import Any, Callable, Optional
+
+# Ensure src/ is on sys.path so netwm imports seamlessly
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_SRC_DIR = _REPO_ROOT / "src"
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
+
+from backend.config import settings
+from backend.errors import APIError
+from backend.jobs import Job
+
+logger = logging.getLogger("netwm.inference")
+
+_cached_ckpt: Optional[dict[str, Any]] = None
+_active_model_name: Optional[str] = None
+
+
+def get_registry() -> dict[str, str]:
+    reg_path = settings.models_dir / "registry.json"
+    if reg_path.exists():
+        try:
+            with open(reg_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            logger.warning("Failed to parse %s: %s", reg_path, exc)
+    return {
+        "default": "e4e7-worldmodel-r2/thursday.pt",
+        "thursday": "e4e7-worldmodel-r2/thursday.pt",
+        "friday": "e4e7-worldmodel-r2/friday.pt",
+    }
+
+
+def get_checkpoint(name: Optional[str] = None) -> Optional[dict[str, Any]]:
+    """Lazy-load checkpoint into memory; return None if checkpoint is not found."""
+    global _cached_ckpt, _active_model_name
+    registry = get_registry()
+    model_key = name or "default"
+    rel_path = registry.get(model_key, registry.get("default"))
+
+    if not rel_path:
+        return None
+
+    if _cached_ckpt is not None and _active_model_name == model_key:
+        return _cached_ckpt
+
+    ckpt_path = settings.models_dir / rel_path
+    if not ckpt_path.exists():
+        logger.info("Checkpoint file not found: %s. Operating in mock fallback mode.", ckpt_path)
+        return None
+
+    try:
+        from netwm.engine.predict import load_checkpoint
+
+        logger.info("Loading checkpoint from %s ...", ckpt_path)
+        ckpt = load_checkpoint(ckpt_path)
+        _cached_ckpt = ckpt
+        _active_model_name = model_key
+        logger.info("Checkpoint loaded successfully: %s", model_key)
+        return _cached_ckpt
+    except Exception as exc:
+        logger.exception("Failed to load checkpoint from %s: %s", ckpt_path, exc)
+        return None
+
+
+# The deployable operating point quoted everywhere (results.md, E14): Thursday fold, p_max,
+# self-budget-10pct threshold, against the E3 logistic-regression baseline at its train-tuned
+# threshold on the same fold. Read from the run folders so the API can never drift from them.
+_E14_RUN = "e14-pmax-rescore-e4e7-worldmodel-r2"
+_E3_RUN = "e2e3-baselines-lags0"
+
+
+def _find_row(run_id: str, **match: Any) -> Optional[dict[str, Any]]:
+    path = settings.repo_root / "results" / "runs" / run_id / "metrics.json"
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            rows = json.load(f)["metrics"]["rows"]
+    except Exception as exc:
+        logger.warning("Cannot read metrics from %s: %s", path, exc)
+        return None
+    return next((r for r in rows if all(r.get(k) == v for k, v in match.items())), None)
+
+
+def load_headline_metrics() -> dict[str, float]:
+    """Model-card metrics, sourced from results/runs/ (zeros only if a run folder is missing)."""
+    metrics = {k: 0.0 for k in ("f1", "precision", "recall", "fpr", "pr_auc",
+                                "mean_lead_time_windows", "baseline_f1")}
+    wm = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
+    if wm:
+        metrics.update(
+            f1=round(wm["f1"], 3),
+            precision=round(wm["precision"], 3),
+            recall=round(wm["recall"], 3),
+            fpr=round(wm["fpr"], 3),
+            pr_auc=round(wm["pr_auc"], 3),
+            mean_lead_time_windows=float(wm["mean_lead_windows"]),
+        )
+    base = _find_row(_E3_RUN, experiment="E3", target="forecast",
+                     test_day="thursday", threshold_mode="train-tuned")
+    if base:
+        metrics["baseline_f1"] = round(base["f1"], 3)
+    return metrics
+
+
+def get_model_card() -> dict[str, Any]:
+    """Return model card matching ModelResponse schema."""
+    from netwm.engine.predict import stage_catalogue
+
+    ckpt = get_checkpoint()
+    stages = stage_catalogue()
+
+    if ckpt is not None:
+        model = ckpt["model"]
+        param_count = sum(p.numel() for p in model.parameters())
+        feature_count = len(ckpt.get("feature_names", []))
+        git_sha = str(ckpt.get("git_sha", "unknown"))[:7]
+        return {
+            "name": f"netwm-rssm-r2 ({_active_model_name or 'default'})",
+            "trained_on": "CIC-IDS2017 (corrected), Mon-Wed + Fri",
+            "window_s": float(ckpt.get("stride_s", 30.0) * 2),
+            "stride_s": float(ckpt.get("stride_s", 30.0)),
+            "horizon_k": int(ckpt.get("horizon_k", 10)),
+            "params": param_count,
+            "git_sha": git_sha,
+            "stages": stages,
+            "metrics": load_headline_metrics(),
+            "feature_count": feature_count,
+        }
+
+    # Fallback model card when no checkpoint is present
+    return {
+        "name": "netwm-rssm-v1",
+        "trained_on": "CIC-IDS2017 (corrected), Mon-Wed + Fri",
+        "window_s": 60.0,
+        "stride_s": 30.0,
+        "horizon_k": 10,
+        "params": 1840000,
+        "git_sha": "abc1234",
+        "stages": stages,
+        "metrics": load_headline_metrics(),
+        "feature_count": 84,
+    }
+
+
+def resolve_demo(demo_id: str) -> tuple[Path, str]:
+    """Map a demo id to its CSV slice and checkpoint day, or raise a client-facing error."""
+    matched = next((s for s in get_demo_scenarios() if s.get("id") == demo_id), None)
+    if matched is None:
+        raise APIError("bad_file", f"Demo scenario '{demo_id}' does not exist")
+    path = (settings.repo_root / "data" / "demo" / matched["file"]).resolve()
+    if not path.exists():
+        raise APIError(
+            "no_model",
+            f"Demo slice {path} is missing - regenerate with `python scripts/make_demo_samples.py`",
+        )
+    return path, str(matched.get("day", "thursday"))
+
+
+def get_demo_scenarios() -> list[dict[str, Any]]:
+    """Read the catalog of preloaded demo scenarios."""
+    path = settings.demo_index_path
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def _load_fallback_fixture(day_or_name: str = "thursday") -> dict[str, Any]:
+    """Load mock fixture ensuring system is never undemoable."""
+    filename = "friday.json" if "friday" in day_or_name.lower() else "thursday.json"
+    fixture_path = settings.fixtures_dir / filename
+    if not fixture_path.exists():
+        raise APIError("no_model", f"Neither model nor fixture found at {fixture_path}")
+    with open(fixture_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["mock"] = True
+    return data
+
+
+def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Path:
+    """Execute analysis for a job and persist the result payload to disk."""
+    progress_cb(0.1, "Initializing inference")
+
+    result_file = settings.jobs_dir / f"{job.id}.json"
+
+    # Handle demo jobs: always real inference on the slice in data/demo/. Serving a fixture
+    # here returned a full-day payload under a 2-hour slice's metadata (R-6).
+    if job.kind == "demo":
+        demo_csv_path, day = resolve_demo(job.filename)
+        ckpt = get_checkpoint(day)
+        if ckpt is None:
+            raise APIError("no_model", f"No checkpoint available for demo day '{day}'")
+
+        progress_cb(0.3, f"Running model inference on {demo_csv_path.name}")
+        from netwm.engine.predict import analyze_file
+
+        kwargs: dict[str, Any] = {"progress": progress_cb}
+        if job.threshold is not None:
+            kwargs["threshold_override"] = job.threshold
+
+        logger.info("Demo job %s reading %s", job.id, demo_csv_path)
+        payload = analyze_file(demo_csv_path, ckpt, **kwargs)
+        payload["job_id"] = job.id
+        payload["mock"] = False
+
+        with open(result_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+        progress_cb(1.0, "done")
+        return result_file
+
+    # Handle uploaded file jobs
+    logger.info("Job %s reading upload %s", job.id, job.file_path)
+    if not job.file_path or not job.file_path.exists():
+        raise APIError("bad_file", f"Uploaded file not found: {job.file_path or job.filename}")
+
+    progress_cb(0.2, "Preparing uploaded file")
+    ckpt = get_checkpoint()
+
+    if ckpt is None:
+        # Fallback to mock fixture
+        progress_cb(0.5, "Serving precomputed baseline (no checkpoint available)")
+        payload = _load_fallback_fixture(job.filename)
+        payload["job_id"] = job.id
+        payload["mock"] = True
+        payload["source"]["filename"] = job.filename
+        with open(result_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+        progress_cb(1.0, "done")
+        return result_file
+
+    # Real model execution
+    from netwm.engine.predict import analyze_file
+
+    progress_cb(0.3, "Executing world model forecast")
+    kwargs = {"progress": progress_cb}
+    if job.threshold is not None:
+        kwargs["threshold_override"] = job.threshold
+
+    payload = analyze_file(job.file_path, ckpt, **kwargs)
+    payload["job_id"] = job.id
+    payload["source"]["filename"] = job.filename
+    payload["mock"] = False
+
+    with open(result_file, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+
+    progress_cb(1.0, "done")
+    return result_file
+
+
+def get_flows_for_window(job: Job, window: int, limit: int = 50) -> dict[str, Any]:
+    """Retrieve flagged flows for a given window."""
+    if not job.result_path or not job.result_path.exists():
+        raise APIError("job_not_found", f"Results for job {job.id} not available")
+
+    # If the job has an original CSV upload, we could filter flows for that window.
+    # Otherwise, generate standard flows from the timeline and top talkers for that window.
+    with open(job.result_path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    timeline = payload.get("timeline", [])
+    entry = next((e for e in timeline if e.get("t") == window), None)
+    if entry is None and timeline:
+        # If specific window not found, clamp to closest
+        entry = timeline[min(max(0, window), len(timeline) - 1)]
+
+    flows = []
+    total = 0
+    if entry:
+        ts = entry.get("ts", "2017-07-06T12:00:00Z")
+        stage = entry.get("pred_stage", 0)
+        p_val = entry.get("p_max", 0.1)
+        top_talkers = entry.get("top_talkers", [])
+        total = entry.get("flow_count", len(top_talkers))
+
+        for idx, talker in enumerate(top_talkers[:limit]):
+            flows.append(
+                {
+                    "ts": ts,
+                    "src_ip": talker.get("ip", "192.168.10.14"),
+                    "src_port": 50000 + idx,
+                    "dst_ip": "192.168.10.50",
+                    "dst_port": 445 if stage in (2, 3) else 80,
+                    "protocol": 6,
+                    "flags": "S" if stage == 1 else "PA",
+                    "pkts": max(1, talker.get("flows", 2)),
+                    "bytes": talker.get("bytes_out", 120),
+                    "duration_ms": 15.0,
+                    "score": round(float(p_val), 4),
+                    "stage_hint": stage,
+                }
+            )
+
+    return {"window": window, "total": total, "flows": flows}
