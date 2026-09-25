@@ -9,6 +9,7 @@ how it changed the build.
 | [research/world-models.md](research/world-models.md) | What a world model is (PlaNet/Dreamer RSSM), why it differs from a sequence classifier, how it maps onto network telemetry |
 | [research/mitre-mapping.md](research/mitre-mapping.md) | CIC-IDS2017 attack labels → MITRE ATT&CK tactics/techniques, and the ordered stage scale |
 | [research/related-work.md](research/related-work.md) | Prior art in attack forecasting / prediction, and how NetWM differs |
+| [research/early-warning-nulls.md](research/early-warning-nulls.md) | Why a lead-time count needs a circular-shift null; within-day vs leave-one-day-out separability; negative transfer from auxiliary heads; mean path vs Monte-Carlo (post-mortem of E12 → E15a → E15) |
 
 ## The five findings that shaped the design
 
@@ -43,3 +44,6 @@ how it changed the build.
 - *Multi-Stage Attack Detection via Kill Chain State Machines*. [arXiv:2103.14628](https://arxiv.org/pdf/2103.14628)
 - *ProAPT: Projection of APT Threats with Deep Reinforcement Learning*. [arXiv:2209.07215](https://arxiv.org/pdf/2209.07215)
 - MITRE ATT&CK Enterprise matrix. [attack.mitre.org](https://attack.mitre.org/)
+- Theiler et al. — *Testing for nonlinearity in time series: the method of surrogate data*, Physica D 58 (1992) 77–94. [doi:10.1016/0167-2789(92)90102-S](https://doi.org/10.1016/0167-2789(92)90102-S)
+- Lancaster et al. — *Surrogate data for hypothesis testing of physical systems*, Physics Reports 2018. [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S0370157318301340)
+- *ForkMerge: Mitigating Negative Transfer in Auxiliary-Task Learning*, 2023. [arXiv:2301.12618](https://arxiv.org/abs/2301.12618)
