@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetWM H-4 Alarm Log & Lead-Time Verification</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 24px; font-family: var(--font-sans); }
+    .test-box { margin-bottom: 30px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .test-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+    .test-verdict { padding: 8px 12px; margin-top: 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+    .pass { background: rgba(47, 168, 122, 0.15); color: var(--success); border: 1px solid rgba(47, 168, 122, 0.4); }
+    .fail { background: rgba(226, 87, 76, 0.15); color: var(--danger); border: 1px solid rgba(226, 87, 76, 0.4); }
+  </style>
+</head>
+<body>
+  <h1>NetWM H-4 Alarm Log & Lead-Time Verification Suite</h1>
+  <div id="resultsSummary"></div>
+
+  <!-- Test 1: Real Thursday Fixture (State 3 alarms, honest 0/4 early outcome) -->
+  <div class="test-box">
+    <div class="test-title">1. Test Thursday (Real Deployable Fixture)</div>
+    <div id="testThursdayContainer"></div>
+    <div id="testThursdayResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 2: Thursday Oracle Fixture (Dev-only, State 1 early alarm at t=634) -->
+  <div class="test-box">
+    <div class="test-title">2. Test Thursday Oracle (UI Verification Fixture)</div>
+    <div id="testOracleContainer"></div>
+    <div id="testOracleResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 3: Friday Fixture (State 3 alarms, 0/1 early outcome) -->
+  <div class="test-box">
+    <div class="test-title">3. Test Friday Fixture</div>
+    <div id="testFridayContainer"></div>
+    <div id="testFridayResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 4: Deliberate 3-State Harness (State 1, State 2, State 3 side-by-side) -->
+  <div class="test-box">
+    <div class="test-title">4. Test All Three Deliberate States (State 1, State 2, State 3)</div>
+    <div id="testStatesContainer"></div>
+    <div id="testStatesResult" class="test-verdict"></div>
+  </div>
+
+  <script type="module">
+    import { AlarmsPanel } from "./js/panels/alarms.js";
+
+    async function runTests() {
+      const results = [];
+
+      // Test 1: Thursday
+      try {
+        const res = await fetch("./mock/thursday.json");
+        const payload = await res.json();
+        const panel = new AlarmsPanel("testThursdayContainer");
+        panel.render({ payload, selectedWindow: 417 });
+
+        const html = document.getElementById("testThursdayContainer").innerHTML;
+        const hasHonestBanner = html.includes("HONEST CURRENT OUTCOME:") && html.includes("0 of 4 episodes warned early");
+        const hasState3 = html.includes("No compromise followed within the horizon");
+        const hasNoDev = !html.includes("UI DEVELOPMENT FIXTURE ONLY");
+
+        if (hasHonestBanner && hasState3 && hasNoDev) {
+          document.getElementById("testThursdayResult").className = "test-verdict pass";
+          document.getElementById("testThursdayResult").textContent = "✓ PASS: Thursday fixture correctly renders honest 0 of 4 early warning outcome and State 3 alarm runs without dev banner.";
+          results.push({ name: "Thursday Fixture", pass: true });
+        } else {
+          throw new Error("Thursday checks failed");
+        }
+      } catch (e) {
+        document.getElementById("testThursdayResult").className = "test-verdict fail";
+        document.getElementById("testThursdayResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Thursday Fixture", pass: false });
+      }
+
+      // Test 2: Thursday Oracle
+      try {
+        const res = await fetch("./mock/thursday_oracle.json");
+        const payload = await res.json();
+        const panel = new AlarmsPanel("testOracleContainer");
+        panel.render({ payload, selectedWindow: 634 });
+
+        const html = document.getElementById("testOracleContainer").innerHTML;
+        const hasDevBanner = html.includes("UI DEVELOPMENT FIXTURE ONLY");
+        const hasState1 = html.includes("Fired 5 windows (150 seconds) before onset");
+        const has2Early = html.includes("2 of 4 episodes warned early");
+
+        if (hasDevBanner && hasState1 && has2Early) {
+          document.getElementById("testOracleResult").className = "test-verdict pass";
+          document.getElementById("testOracleResult").textContent = "✓ PASS: Thursday Oracle fixture correctly displays unmistakable UI development banner, State 1 early lead badge, and 2 of 4 early summary.";
+          results.push({ name: "Thursday Oracle", pass: true });
+        } else {
+          throw new Error("Oracle checks failed");
+        }
+      } catch (e) {
+        document.getElementById("testOracleResult").className = "test-verdict fail";
+        document.getElementById("testOracleResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Thursday Oracle", pass: false });
+      }
+
+      // Test 3: Friday
+      try {
+        const res = await fetch("./mock/friday.json");
+        const payload = await res.json();
+        const panel = new AlarmsPanel("testFridayContainer");
+        panel.render({ payload, selectedWindow: 0 });
+
+        const html = document.getElementById("testFridayContainer").innerHTML;
+        const hasHonestBanner = html.includes("HONEST CURRENT OUTCOME:") && html.includes("0 of 1 episodes warned early");
+        const has13Alarms = payload.alarms.length === 13;
+
+        if (hasHonestBanner && has13Alarms) {
+          document.getElementById("testFridayResult").className = "test-verdict pass";
+          document.getElementById("testFridayResult").textContent = "✓ PASS: Friday fixture correctly displays 0 of 1 episodes warned early and 13 alarm runs.";
+          results.push({ name: "Friday Fixture", pass: true });
+        } else {
+          throw new Error("Friday checks failed");
+        }
+      } catch (e) {
+        document.getElementById("testFridayResult").className = "test-verdict fail";
+        document.getElementById("testFridayResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Friday Fixture", pass: false });
+      }
+
+      // Test 4: All 3 States deliberately
+      try {
+        const syntheticPayload = {
+          threshold: 0.05,
+          threshold_policy: "self-budget-10pct",
+          horizon_k: 10,
+          window_seconds: 30,
+          dev_only: false,
+          lead_time_summary: {
+            episodes: 3,
+            warned_early: 1,
+            mean_lead_seconds: 150,
+            per_episode: [
+              { onset: 100, first_alarm: 95, lead_windows: 5, lead_seconds: 150, detected_early: true, score_at_onset: 0.06 },
+              { onset: 200, first_alarm: 200, lead_windows: 0, lead_seconds: 0, detected_early: false, score_at_onset: 0.08 },
+              { onset: 300, first_alarm: null, lead_windows: 0, lead_seconds: 0, detected_early: false, score_at_onset: 0.02 },
+            ]
+          },
+          stages: [
+            { id: 0, label: "Benign", color: "#8b98a5" },
+            { id: 1, label: "Reconnaissance", color: "#4c9be8" }
+          ],
+          timeline: [
+            { t: 95, p_max: 0.08, pred_stage: 1 },
+            { t: 200, p_max: 0.12, pred_stage: 1 },
+            { t: 400, p_max: 0.09, pred_stage: 0 },
+          ],
+          alarms: [
+            // STATE 1: lead_windows present and > 0
+            { t: 95, until_t: 95, p: 0.08, onset_t: 100, lead_windows: 5, lead_seconds: 150, ts: "2017-07-06T12:00:00Z" },
+            // STATE 2: onset_t is known but lead_windows is null or 0
+            { t: 200, until_t: 200, p: 0.12, onset_t: 200, lead_windows: 0, lead_seconds: 0, ts: "2017-07-06T12:30:00Z" },
+            // STATE 3: no future onset associated with the alarm
+            { t: 400, until_t: 400, p: 0.09, onset_t: null, lead_windows: null, lead_seconds: null, ts: "2017-07-06T13:00:00Z" },
+          ]
+        };
+
+        const panel = new AlarmsPanel("testStatesContainer");
+        panel.render({ payload: syntheticPayload, selectedWindow: 95 });
+
+        const html = document.getElementById("testStatesContainer").innerHTML;
+        const s1 = html.includes("Fired 5 windows (150 seconds) before onset");
+        const s2 = html.includes("Fired at onset - detection, not forecast");
+        const s3 = html.includes("No compromise followed within the horizon");
+
+        if (s1 && s2 && s3) {
+          document.getElementById("testStatesResult").className = "test-verdict pass";
+          document.getElementById("testStatesResult").textContent = "✓ PASS: All 3 deliberate states rendered precisely:\n- State 1: 'Fired 5 windows (150 seconds) before onset'\n- State 2: 'Fired at onset - detection, not forecast'\n- State 3: 'No compromise followed within the horizon'";
+          results.push({ name: "3 Deliberate States", pass: true });
+        } else {
+          throw new Error(`State rendering check failed: s1=${s1}, s2=${s2}, s3=${s3}`);
+        }
+      } catch (e) {
+        document.getElementById("testStatesResult").className = "test-verdict fail";
+        document.getElementById("testStatesResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "3 Deliberate States", pass: false });
+      }
+
+      const allPassed = results.every(r => r.pass);
+      const summaryEl = document.getElementById("resultsSummary");
+      summaryEl.innerHTML = `
+        <div style="margin-bottom: 20px; padding: 12px; border-radius: 6px; font-weight: bold; background: ${allPassed ? 'rgba(47, 168, 122, 0.2)' : 'rgba(226, 87, 76, 0.2)'}; color: ${allPassed ? 'var(--success)' : 'var(--danger)'}">
+          ${allPassed ? 'ALL H-4 TESTS PASSED (4 / 4)' : 'SOME H-4 TESTS FAILED'}
+        </div>
+      `;
+      window.__TEST_RESULTS__ = { allPassed, results };
+    }
+
+    runTests();
+  </script>
+</body>
+</html>
