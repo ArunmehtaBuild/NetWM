@@ -194,13 +194,47 @@ def forecast_all(
     return out
 
 
+def logreg_precursor_score(ds: ProcessedDataset, day: str, seed: int) -> np.ndarray:
+    """Logistic regression on S_t, trained leave-one-day-out on the *same* precursor label.
+
+    This is the baseline E12 does not provide. E12's 0.88-0.96 probe is cross-validated within a
+    single day with a scaler fitted on that day - it shows a signal exists, not that a model trained
+    on other days finds it. That is the entire question round 3 is asking, so it needs a baseline
+    measured the same way the world model is.
+    """
+    from sklearn.linear_model import LogisticRegression
+
+    from netwm.features.scaler import StateScaler
+
+    train_days = [d for d in ds.splits if d != day]
+    scaler = StateScaler().fit(ds.concat(train_days)[ds.feature_names])
+    x_train = np.vstack([scaler.transform(ds.states(d)) for d in train_days])
+    y_train = np.concatenate([
+        episode_labels(ds.frame(d)["stage"], ds.horizon, source="attack").precursor
+        for d in train_days
+    ])
+    if len(np.unique(y_train)) < 2:
+        return np.zeros(len(ds.frame(day)), dtype=float)
+    model = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=seed)
+    model.fit(x_train, y_train)
+    return model.predict_proba(scaler.transform(ds.states(day)))[:, 1]
+
+
 def floor_rows(
     day: str, ds: ProcessedDataset, sets: dict, experiment: str, run: str, n_shifts: int, seed: int
 ) -> list[dict]:
-    """Single unscaled features at a self-budget threshold - the floor the model must clear."""
+    """The floors the model must clear: single unscaled features, and LODO logistic regression."""
     frame = ds.frame(day)
     y = ds.target(day)
     rows: list[dict] = []
+
+    lr = logreg_precursor_score(ds, day, seed)
+    rows.extend(score_rows(
+        day, "logreg:precursor", lr,
+        {f"self-budget-{p}pct": float(np.quantile(lr, 1 - p / 100)) for p in (10, 5, 2)},
+        ds, sets, experiment, run, n_shifts, seed,
+    ))
+
     for name in FLOOR_FEATURES:
         if name not in frame.columns:
             continue
