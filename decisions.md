@@ -670,7 +670,7 @@ prime suspect is the train-day-fitted scaler under the distribution shift E2 alr
 the same logic as the alert budget in D-020, applied to features instead of scores - is the next
 experiment. It reopens the claim only under the bar in point 2.
 
-### D-024 — Trend feature window sizes for Task S-1
+### D-028 — Trend feature window sizes for Task S-1 (superseded by D-026)
 
 *Date: 2026-09-25 · Status: superseded by D-026 · Evidence: Task S-1 requirements*
 
@@ -736,7 +736,7 @@ leave per-host state (S-2) as the remaining direction.
 ---
 
 ### D-026 — S_t v2 trend block, revised: frozen v1, least-squares slopes, a causal z-score
-*Date: 2026-09-26 · Status: accepted (supersedes D-024; recorded before any v2 build or run) · Evidence: E12, board sequencing rule 1*
+*Date: 2026-09-26 · Status: accepted (supersedes D-028; recorded before any v2 build or run) · Evidence: E12, board sequencing rule 1*
 
 **Decision.** The trend block (task S-1) is kept for the same six E12 features (`uniq_dst_port`,
 `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`), with four
@@ -744,7 +744,7 @@ columns each - **94 features** in S_t v2 (70 + 24):
 
 - `{f}_delta` - `x_t - x_{t-1}`.
 - `{f}_slope_5`, `{f}_slope_10` - the **least-squares slope** over the trailing 5 / 10 windows
-  (0 until a full span exists). D-024's `slope_2` is dropped: a least-squares slope over two points
+  (0 until a full span exists). D-028's `slope_2` is dropped: a least-squares slope over two points
   *is* the delta, so it would be a duplicate column.
 - `{f}_zscore` - against the **previous** 120 windows (60 min at the 30 s stride; not 2 h as D-024
   stated), trusted after 10 windows of history (0 before), standard deviation floored and the
