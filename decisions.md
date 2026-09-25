@@ -746,7 +746,7 @@ columns each - **94 features** in S_t v2 (70 + 24):
 - `{f}_slope_5`, `{f}_slope_10` - the **least-squares slope** over the trailing 5 / 10 windows
   (0 until a full span exists). D-028's `slope_2` is dropped: a least-squares slope over two points
   *is* the delta, so it would be a duplicate column.
-- `{f}_zscore` - against the **previous** 120 windows (60 min at the 30 s stride; not 2 h as D-024
+- `{f}_zscore` - against the **previous** 120 windows (60 min at the 30 s stride; not 2 h as D-028
   stated), trusted after 10 windows of history (0 before), standard deviation floored and the
   result clipped to +-10.
 
@@ -772,7 +772,7 @@ by default), and v2 builds from `configs/features_trend.yaml` into its own `proc
   (`engine/predict.py`) rebuilds the state from those names via `feature_flags_from_names`. A
   config-level window length could differ between the build that trained a model and the engine that
   serves it, and nothing would notice. A name set that matches only part of the trend block (e.g. a
-  D-024-era `slope_2`) now fails loudly instead.
+  D-028-era `slope_2`) now fails loudly instead.
 
 **Also decided.** `engine/predict.py` passes the recovered flags to `window_features`, so a v2
 checkpoint no longer crashes at inference (it would have raised on missing columns); r2 checkpoints
