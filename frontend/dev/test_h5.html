@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>NetWM H-5 Explainability & Flows Verification Suite</title>
-  <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/app.css">
   <style>
     body { padding: 24px; font-family: var(--font-sans); background: var(--bg); color: var(--text); }
     .test-box { margin-bottom: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
@@ -59,10 +59,10 @@
   </div>
 
   <script type="module">
-    import { api } from "./js/api.js";
-    import { store } from "./js/store.js";
-    import { WhyPanel } from "./js/panels/why.js";
-    import { FlowsPanel } from "./js/panels/flows.js";
+    import { api } from "../js/api.js";
+    import { store } from "../js/store.js";
+    import { WhyPanel } from "../js/panels/why.js";
+    import { FlowsPanel } from "../js/panels/flows.js";
 
     async function runSuite() {
       const results = [];

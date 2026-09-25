@@ -24,6 +24,13 @@ import {
   explainThresholdPolicy,
 } from "../format.js";
 
+// Accent colour comes from the --accent token in theme.css so the timeline follows the theme
+// instead of carrying its own copy of the palette (H-7).
+function accentColor() {
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  return v || "#4c9be8";
+}
+
 // Custom Chart.js Plugin for Ground-Truth Attack Spans and Selected Window Hairline
 const netwmTimelineOverlayPlugin = {
   id: "netwmTimelineOverlay",
@@ -70,7 +77,7 @@ const netwmTimelineOverlayPlugin = {
     if (selectedWindow !== null && selectedWindow !== undefined) {
       const xPos = x.getPixelForValue(selectedWindow);
       if (xPos >= left && xPos <= right) {
-        ctx.strokeStyle = "rgba(76, 155, 232, 0.8)";
+        ctx.strokeStyle = hexToRgba(accentColor(), 0.8);
         ctx.lineWidth = 1.5;
         ctx.setLineDash([3, 3]);
         ctx.beginPath();
@@ -79,7 +86,7 @@ const netwmTimelineOverlayPlugin = {
         ctx.stroke();
 
         // Accent top notch
-        ctx.fillStyle = "#4c9be8";
+        ctx.fillStyle = accentColor();
         ctx.fillRect(xPos - 3, top, 6, 4);
       }
     }
@@ -166,7 +173,7 @@ export class TimelinePanel {
           {
             label: "Risk p_max (Historical)",
             data: pMaxData,
-            borderColor: "#4c9be8",
+            borderColor: accentColor(),
             borderWidth: 1.5,
             fill: false,
             tension: 0.05,
@@ -175,7 +182,7 @@ export class TimelinePanel {
             pointBorderColor: timeline.map((w) => (w.alarm ? "#ffffff" : "transparent")),
             pointBorderWidth: timeline.map((w) => (w.alarm ? 1.2 : 0)),
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: "#4c9be8",
+            pointHoverBackgroundColor: accentColor(),
             pointHoverBorderColor: "#ffffff",
             order: 2,
           },
@@ -195,7 +202,7 @@ export class TimelinePanel {
           {
             label: "Forecast Upper (95% CI)",
             data: cone.upper,
-            borderColor: "rgba(76, 155, 232, 0.4)",
+            borderColor: hexToRgba(accentColor(), 0.4),
             borderWidth: 1,
             borderDash: [3, 3],
             fill: false,
@@ -208,11 +215,11 @@ export class TimelinePanel {
           {
             label: "Forecast Lower (5% CI)",
             data: cone.lower,
-            borderColor: "rgba(76, 155, 232, 0.4)",
+            borderColor: hexToRgba(accentColor(), 0.4),
             borderWidth: 1,
             borderDash: [3, 3],
             fill: "-1", // Fill area between lower and upper
-            backgroundColor: "rgba(76, 155, 232, 0.18)",
+            backgroundColor: hexToRgba(accentColor(), 0.18),
             pointRadius: 0,
             pointHoverRadius: 0,
             spanGaps: false,
@@ -222,7 +229,7 @@ export class TimelinePanel {
           {
             label: `K-step Forecast (p_cum · K=${payload.horizon_k || 10})`,
             data: cone.cum,
-            borderColor: "#4c9be8",
+            borderColor: accentColor(),
             borderWidth: 2.5,
             fill: false,
             spanGaps: false,
@@ -236,7 +243,7 @@ export class TimelinePanel {
               if (idx === sel + K) return 4.5; // Final forecast bead at t+K
               return 2.5; // Intermediate steps
             },
-            pointBackgroundColor: "#4c9be8",
+            pointBackgroundColor: accentColor(),
             pointBorderColor: "#ffffff",
             pointBorderWidth: 1,
             pointHoverRadius: 5,
