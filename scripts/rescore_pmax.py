@@ -91,6 +91,12 @@ def main() -> None:
         thresholds = {
             "train-tuned": best_threshold(train_y, train_score),
             f"alert-budget-{int((1 - args.budget) * 100)}pct": float(np.quantile(train_score, args.budget)),
+            # Self-budget: the quantile of the model's scores on *this* capture. It uses no labels,
+            # so a deployed sensor can set it from its own live stream - unlike the oracle threshold,
+            # and unlike a train-day quantile, which E14 shows sits ~100x too high.
+            "self-budget-10pct": float(np.quantile(score, 0.90)),
+            "self-budget-5pct": float(np.quantile(score, 0.95)),
+            "self-budget-2pct": float(np.quantile(score, 0.98)),
             "oracle": best_threshold(y, score),
         }
         for name, thr in thresholds.items():

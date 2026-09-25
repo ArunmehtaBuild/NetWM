@@ -107,6 +107,7 @@ def analyze_flows(
     scaler, names = ckpt["scaler"], ckpt["feature_names"]
     horizon, stride_s = int(ckpt["horizon_k"]), float(ckpt["stride_s"])
     threshold = float(ckpt.get("threshold", 0.5))
+    policy = str(ckpt.get("threshold_policy", "fixed"))
     spec = WindowSpec(2 * stride_s, stride_s)
 
     expanded, t0 = expand_to_windows(flows, spec)
@@ -124,6 +125,12 @@ def analyze_flows(
     # "is this state compromised", a property that persists, so the union multiplies one event K
     # times and saturates (D-019, E13).
     score = out["p_max"]
+    if policy.startswith("self-budget"):
+        # Alert budget on this capture's own score distribution: no labels, so a sensor can set it
+        # from its live stream. Absolute probabilities do not transfer between days (E14: the
+        # train-tuned threshold is ~100x too high on a held-out day).
+        budget_pct = float(policy.rsplit("-", 1)[-1].rstrip("pct")) / 100.0
+        threshold = float(np.quantile(score, 1.0 - budget_pct))
     if progress:
         progress(0.7, "forecast complete, explaining alarms")
 
@@ -175,6 +182,7 @@ def analyze_flows(
     payload: dict[str, Any] = {
         "payload_version": "1.1",
         "alarm_statistic": "p_max",
+        "threshold_policy": policy,
         "source": {
             "flows": int(len(flows)),
             "windows": int(n_windows),
@@ -294,9 +302,13 @@ def _stage_spans(stages, expanded: pd.DataFrame, ts) -> list[dict[str, Any]]:
     for begin, end, stage in spans:
         label = STAGE_LABELS[Stage(stage)]
         if labelled:
-            window_labels = expanded.loc[
-                expanded["w"].between(begin, end) & (expanded["stage"] > 0), "label"
-            ]
+            # Attempted traffic does not set the stage (D-009), so it must not name the span either:
+            # otherwise a span driven by 73 real brute-force flows gets labelled "- Attempted"
+            # because 1 292 ineffective ones outnumber them.
+            in_span = expanded["w"].between(begin, end) & (expanded["stage"] > 0)
+            if "attempted" in expanded.columns:
+                in_span &= ~expanded["attempted"].to_numpy()
+            window_labels = expanded.loc[in_span, "label"]
             if len(window_labels):
                 label = str(window_labels.value_counts().idxmax())
         out.append(

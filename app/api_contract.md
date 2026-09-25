@@ -115,3 +115,46 @@ play/pause replay so the demo video shows the forecast rising *before* the attac
 - Stage ids and colours come from `/api/model`, never hard-coded in the frontend.
 - When no trained model is present the backend still serves `/api/demos` from `app/mock/` so the UI
   is always demo-able (`"mock": true` in the payload).
+
+---
+
+## v1.1 (2026-09-25) - additive
+
+Every v1.0 field is unchanged; v1.1 only adds. Payloads carry `"payload_version": "1.1"`.
+Reference payloads: `app/mock/thursday.json`, `app/mock/friday.json` (2.0 MB each, real model output
+from `models/e4e7-worldmodel-r2/`, not hand-written).
+
+**Top level**
+
+| field | type | meaning |
+|---|---|---|
+| `payload_version` | string | `"1.1"` |
+| `alarm_statistic` | string | `"p_max"` - the statistic `alarm` and `threshold` refer to |
+| `threshold_policy` | string | `"self-budget-10pct"` (threshold = 90th percentile of this capture's own scores) or `"fixed"` |
+| `stages` | array | the stage catalogue, same shape as `GET /api/model.stages` - so a result is renderable on its own |
+
+**Per timeline entry**
+
+| field | type | meaning |
+|---|---|---|
+| `p_max` | float | `max_k P(compromised at t+k)` - **this is what `alarm` thresholds** (D-019) |
+| `forecast.p_step` | float[K] | per-step P(compromised at t+k), before any union formula |
+| `forecast.p_cum_attack` | float[K] | P(anything hostile within k) |
+| `forecast.p_cum_escalate` | float[K] | P(the attacker advances a stage within k) |
+| `top_talkers` | array | `[{ip, flows, bytes_out}]`, the 3 busiest sources in the window |
+| `observed_stage` | int | ground-truth stage, present only when the upload carries labels |
+
+**`ground_truth.spans`**
+
+```json
+{"start_t": 639, "end_t": 657, "start_ts": "2017-07-06T17:18:30Z", "end_ts": "2017-07-06T17:27:30Z",
+ "stage": 3, "label": "Infiltration"}
+```
+
+Contiguous runs of one ground-truth stage, named after the attack that dominates them (attempted-only
+traffic never names a span - D-009). Use these for the shaded bands behind the timeline.
+
+**Note on `alarm`/`threshold`.** `threshold` is now computed per capture when `threshold_policy` is a
+self-budget policy, so it differs between uploads - read it from the payload, never hard-code it.
+Absolute probabilities do not transfer between days (E14: a threshold tuned on training days sits
+~100x too high on a held-out day).
