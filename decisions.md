@@ -619,3 +619,53 @@ does not establish that a model trained on other days finds it. That sentence st
 **Revisit if.** E15 returns a null result *and* the per-family breakdown shows the head is learning
 Impact onsets only - that would say the target is right but the episode definition is too broad, and
 the next cut is per-family heads rather than one pooled channel.
+
+---
+
+### D-021 — AMENDMENT (2026-09-25, after E15a and E15)
+
+*Status: the framing in D-021 is now **operative**, not contingent. Its acceptance bar is replaced.*
+
+**1. The original bar was below chance, so it is withdrawn.** D-021 said an early-warning claim
+unlocks at "≥2 of 5 episodes at a deployable threshold over ≥3 seeds". E15a shows an *unaligned*
+score of the same shape warns early on ~1.7 of 8 episodes by accident at a 10 % alarm budget. A bar
+that noise clears is not a bar. Worse, it retro-scores our own published numbers: E14's Thursday
+"1 of 4 at an oracle threshold" is **p = 0.412** against the null, and Friday's "1 of 1" is
+**p = 0.550** and needs a 47 % alarm rate to happen at all.
+
+**2. The replacement bar** is the one pre-registered in D-023, adopted here as the standing gate for
+any early-warning claim in any artefact: warned-early counts must exceed the 95th percentile of a
+2 000-shift circular null at the same threshold on **≥2 of 4 attack days**, with Fisher-combined
+**p < 0.05**, holding with **Impact excluded**, and reproducing over **≥3 training seeds** - each
+count quoted with its alarm rate, FPR and precision on the same line (D-022).
+
+**3. Which branch of the framing applies: the no-early-warning one.** E15 failed every clause
+(best 1 of 4 folds, one seed; Fisher p = 0.166; 0 of 4 with Impact excluded; nothing stable across
+seeds; 21 of 1 080 cells below p = 0.05 where chance gives ~54). Four candidate causes have now been
+eliminated with an experiment each - statistic (E13), threshold (E14), data (E12), target (E15). We
+present the system exactly as D-021 describes and **make no early-warning claim of any kind**.
+
+**4. Two claims this adds, both of which are ours to make.**
+- We calibrated lead time against a null and **withdrew our own number** when it failed (E14's
+  1 of 4 → p = 0.412). Most submissions will not have tested their headline metric against chance.
+- The elimination chain is the contribution: four causes ruled out, each with a pre-registered bar,
+  and the fifth - representation - named with the evidence that points at it.
+
+**5. Two claims this forbids.**
+- Nothing from round 3 ships. It is a **regression**: Thursday PR-AUC 0.353-0.445 against round 2's
+  0.640, on the same data, verified not to be a mean-path artefact (Spearman 0.995 between
+  deterministic and 16-sample scores; the r2 checkpoint re-scores to 0.6436, reproducing E14).
+  `configs/model_r3_precursor.yaml` must not produce submission checkpoints, and the r3 weights are
+  gitignored so no `git add -A` sweeps them in.
+- **The submission checkpoint is `models/e4e7-worldmodel-r2/`.** Every number in the architecture
+  document, the slides and the video comes from it.
+
+**6. What would reopen the early-warning claim.** The remaining hypothesis is **representation, not
+supervision**. On the precursor label, leave-one-day-out, a single *unscaled* feature
+(`uniq_dst_port`, Thursday ROC-AUC 0.607; Tuesday 0.745) and plain logistic regression (0.604) both
+beat every statistic the world model produces (best 0.533). A model that loses to one raw column is
+not failing to learn the target - it is losing the signal before the target is reached, and the
+prime suspect is the train-day-fitted scaler under the distribution shift E2 already measured
+(Thursday persistence NLL mean 152 010, median 0.85). Per-capture rank/percentile normalisation -
+the same logic as the alert budget in D-020, applied to features instead of scores - is the next
+experiment. It reopens the claim only under the bar in point 2.
