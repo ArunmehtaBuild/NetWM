@@ -26,6 +26,7 @@ export class FlowsPanel {
     this.container = document.getElementById(containerId);
     this.currentWindow = null;
     this.cachedFlows = null;
+    this.currentPayload = null;
     this.isLoading = false;
     this.error = null;
   }
@@ -51,8 +52,11 @@ export class FlowsPanel {
     const threshold = Number(payload.threshold) || 0.05;
 
     // Check if we need to fetch flows for a newly selected window
-    if (this.currentWindow !== selectedWindow || !this.cachedFlows) {
+    // Key the cache on the payload too: switching scenario at the same window index must
+    // refetch, or the new capture shows the previous capture's flows.
+    if (this.currentWindow !== selectedWindow || this.currentPayload !== payload || !this.cachedFlows) {
       this.currentWindow = selectedWindow;
+      this.currentPayload = payload;
       this.isLoading = true;
       this.error = null;
 
@@ -63,7 +67,7 @@ export class FlowsPanel {
         const fetchWindow = selectedWindow;
         const jobId = api.liveJobId(state);
         const flowData = await api.getFlows(jobId, selectedWindow, payload);
-        if (this.currentWindow !== fetchWindow) return; // Stale fetch from earlier window
+        if (this.currentWindow !== fetchWindow || this.currentPayload !== payload) return; // Stale fetch
         this.cachedFlows = flowData?.flows || [];
         this.isLoading = false;
       } catch (err) {
