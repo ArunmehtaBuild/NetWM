@@ -14,6 +14,9 @@ the commentary column.
 | E3 | logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py` | same + `results/figures/e3_*_logreg_forecast.png`, `results/tables/e3_lead_times_lags0.csv` | **0 of 5 episodes warned early**; F1 0.011 (Thu) / 0.000 (Fri) at a deployable threshold |
 | E4-E7 r1 | world model, round 1 | leave-one-day-out | `python scripts/train.py --epochs 25` | `results/tables/e4e7-worldmodel_*.csv`, `results/figures/e5_*`, `e6_*` | Thursday PR-AUC 0.139 -> **0.473**, ROC-AUC 0.379 -> **0.753**; still 0 / 5 warned early; Friday worse than chance |
 | E12 | precursor analysis | within-day probe | `python scripts/precursor_analysis.py` | `results/tables/e12_precursor_effect_sizes.csv`, `results/figures/e12_precursors.png` | pre-onset windows separable at ROC-AUC **0.88 / 0.96** - the early signal exists |
+| E4-E7 r2 | world model, round 2 | leave-one-day-out | `python scripts/train.py --run e4e7-worldmodel-r2` | `results/tables/e4e7-worldmodel-r2_*.csv` | Thursday PR-AUC **0.675**, ROC-AUC **0.814**, F1 0.592 at 4.2 % FPR; lead time still 0 |
+| E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
+| E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
 
 ## Planned experiment set (M1)
 
@@ -319,3 +322,54 @@ the day.
   compromise; that is the core data limitation and it is what M2 (CTU-13) is for.
 - **Thresholds still do not transfer.** Train-tuned 0.990 vs oracle 0.108, and the 5 % alert budget
   lands at 0.977 because the score saturates on training days. Calibration is now the top open item.
+
+---
+
+## E14 - max-over-horizon alarm statistic (T-01)
+
+`python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` · run: `results/runs/e14-pmax-rescore-e4e7-worldmodel-r2/`
+Same r2 checkpoints, same rollouts, different statistic: `p_max = max_k P(compromised at t+k)`
+instead of the cumulative union (D-019). No retraining.
+
+| fold | threshold policy | threshold | F1 | precision | recall | FPR | warned early | first-onset lead |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Thursday | train-tuned | 0.961 | 0.000 | 0.000 | 0.000 | 0.000 | 0 / 4 | 0 |
+| Thursday | alert budget 5 % (train days) | 0.517 | 0.000 | 0.000 | 0.000 | 0.000 | 0 / 4 | 0 |
+| Thursday | **self-budget 10 %** | 0.046 | **0.576** | 0.776 | 0.458 | **0.027** | 0 / 4 | 0 |
+| Thursday | self-budget 5 % | 0.182 | 0.437 | **0.959** | 0.283 | 0.003 | 0 / 4 | 0 |
+| Thursday | self-budget 2 % | 0.225 | 0.194 | 0.900 | 0.108 | 0.003 | 0 / 4 | 0 |
+| Thursday | oracle | 0.010 | 0.584 | 0.634 | 0.542 | 0.065 | **1 / 4** | **5 windows (150 s)** |
+| Friday | any deployable policy | 0.68-0.99 | 0.000 | 0.000 | 0.000 | 0.02-0.15 | 0 / 1 | 0 |
+| Friday | oracle | 0.020 | 0.216 | 0.138 | 0.496 | 0.469 | 1 / 1 | **10 windows (300 s)** |
+
+Threshold-free ranking (unchanged by the statistic, both computed on p_max): Thursday PR-AUC 0.640 /
+ROC-AUC 0.827, Friday PR-AUC 0.109 / ROC-AUC 0.438.
+
+### Answer to the question T-01 asked
+
+**No - the central claim does not land today.** Switching to `p_max` does *not* produce positive lead
+time at a deployable threshold. It changes nothing about ranking, and the only early warnings still
+require the oracle threshold: 5 windows (2.5 min) before Thursday's first onset, 10 windows (5 min)
+before Friday's.
+
+### What E14 did establish
+
+1. **A deployable operating point exists for detection.** The *self-budget* policy - alarm on the top
+   10 % of scores in the capture being analysed, using no labels, so a sensor can set it from its own
+   live stream - gives Thursday **F1 0.576 at 2.7 % FPR** (precision 0.776). At 5 % budget, precision
+   is **0.959** for recall 0.283. Compare the mandated baseline on the same fold: F1 0.011 at its own
+   deployable threshold, or F1 0.193 at FPR 0.608 with an oracle threshold it could never pick.
+2. **Thresholds tuned on training days are ~100x too high.** Train-tuned 0.961 and train-quantile
+   0.517 versus an oracle of 0.010; both produce **zero alarms** on the held-out day. This is now a
+   measured fact rather than a suspicion, and it is why the engine and the API default to a
+   per-capture budget (contract v1.1, `threshold_policy`).
+3. **Friday is still broken** - every deployable policy scores 0.000 because the model's scores
+   saturate near 1 across that day (self-budget 10 % lands at 0.939). One compromise family in
+   training is not enough, as round 2 already showed.
+4. **Lead time is not a thresholding problem.** Both the statistic (E13) and the threshold (E14) have
+   now been ruled out. What remains is the target itself: the compromise head is trained on
+   "is this state compromised", which is only true *after* the fact. The round-3 fix - a
+   first-occurrence hazard target, so a window is positive precisely when a compromise *begins*
+   within k - is the remaining untested hypothesis, and E12 says the signal is there to be found.
+
+Figures: `results/figures/e14_thursday_pmax.png`, `results/figures/e14_friday_pmax.png`.

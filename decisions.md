@@ -346,3 +346,27 @@ episode (never as a single mean) and the first-onset value is quoted separately.
 **Revisit when.** The proper fix is a first-occurrence hazard target (`1` only at the *first*
 compromise window after t, `0` afterwards), which would make the union formula correct. That is the
 first item of round 3.
+
+---
+
+### D-020 — The deployable alarm threshold is a per-capture alert budget
+*Date: 2026-09-25 · Status: accepted · Evidence: E14*
+
+**Decision.** At inference the threshold is the 90th percentile of the model's scores **on the
+capture being analysed** (`threshold_policy: "self-budget-10pct"`, stamped into the checkpoint and
+reported in the API payload). Train-tuned and oracle thresholds remain in the benchmark tables for
+comparison (D-015), never in the product.
+
+**Why.** E14 measured the gap: a threshold tuned on training days sits at 0.961, the oracle for the
+held-out day at 0.010, and both the train-tuned and train-quantile policies fire **zero alarms** on
+that day. A budget computed on the capture's own scores uses no labels - a sensor can set it from
+its live stream - and it produces the best deployable operating point we have: Thursday F1 0.576 at
+2.7 % FPR, or precision 0.959 at a 5 % budget.
+
+**Known limitation.** A budget always fires on *something*: on a capture with no attack at all it
+will flag its quietest 10 % of windows as "most suspicious". The UI must therefore show the score
+and the threshold, not just a binary alarm, and the Monday-benign demo sample exists to make that
+failure mode visible rather than hidden.
+
+**Revisit if.** Calibration (temperature scaling on a held-out training day) brings train and test
+score distributions together - then an absolute probability threshold becomes honest again.
