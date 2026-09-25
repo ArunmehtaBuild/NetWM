@@ -16,7 +16,7 @@ import torch
 
 from netwm.data.cicids2017 import COLUMN_MAP, VICTIM_SUBNET
 from netwm.engine.explain import explain_window, global_attribution, top_features
-from netwm.features.flow_features import window_features
+from netwm.features.flow_features import feature_flags_from_names, window_features
 from netwm.features.windowing import (
     WindowSpec,
     compromise_flags,
@@ -116,7 +116,9 @@ def analyze_flows(
 
     expanded, t0 = expand_to_windows(flows, spec)
     n_windows = int(expanded["w"].max()) + 1
-    feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows)
+    # rebuild exactly the state the checkpoint was trained on - v1 for r2, v2 if it has trend columns
+    feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
+                            **feature_flags_from_names(names))
     x = scaler.transform(feats[names])
     if progress:
         progress(0.35, f"{len(flows):,} flows -> {n_windows:,} windows")

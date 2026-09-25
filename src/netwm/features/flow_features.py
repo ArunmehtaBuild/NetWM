@@ -11,8 +11,12 @@ is 0, so the same model consumes both inputs.
 
 from __future__ import annotations
 
+import re
+from typing import Any, Iterable
+
 import numpy as np
 import pandas as pd
+from numpy.lib.stride_tricks import sliding_window_view
 
 #: Well-known services worth a dedicated ratio - these are the ports attacks actually touch.
 SERVICE_PORTS: dict[str, tuple[int, ...]] = {
@@ -26,6 +30,31 @@ SERVICE_PORTS: dict[str, tuple[int, ...]] = {
     "rdp": (3389,),
     "db": (1433, 3306, 5432, 1521),
 }
+
+
+#: S_t v2 trend block (task S-1, decisions.md D-026): the features E12 ranked highest before an
+#: onset. Levels alone tell the model *how many* ports are being touched, never how fast that rises.
+TREND_BASES: tuple[str, ...] = (
+    "uniq_dst_port",
+    "ports_per_pair_max",
+    "port_fanout_max",
+    "uniq_dst_ip",
+    "fanout_mean",
+    "flows_per_s",
+)
+# Module constants rather than config on purpose (D-026): a checkpoint keeps only its feature
+# *names*, and inference rebuilds the state from those alone, so a config value could silently
+# differ between the build that trained a model and the engine that serves it.
+TREND_SLOPES: tuple[int, ...] = (5, 10)  # least-squares slope windows; over 2 windows it IS the delta
+TREND_BASELINE = 120  # trailing windows for the z-score: 120 x 30 s stride = 60 min
+TREND_MIN_PERIODS = 10  # windows of history (5 min) before a z-score is trusted
+TREND_STD_FLOOR = 1e-6
+TREND_Z_CLIP = 10.0  # a flat baseline must not mint 1e6-sized values - the E2 failure again
+
+#: Per-host channel (task S-2, decisions.md D-027): what each of the busiest *internal* source hosts
+#: is doing in a window. Network-wide aggregates average a pivoting host away among the benign ones.
+HOST_FEATURES: tuple[str, ...] = ("fanout", "ports", "byte_asym", "new_peer_rate")
+_HOST_NAME = re.compile(r"^host(\d+)_")
 
 
 def _entropy(counts: np.ndarray) -> float:
@@ -168,12 +197,18 @@ def window_features(
     window_length_s: float,
     internal_prefixes: tuple[str, ...] = ("192.168.", "10.", "172.16."),
     n_windows: int | None = None,
+    use_trend: bool = False,
+    host_slots: int = 0,
 ) -> pd.DataFrame:
     """Aggregate an expanded (flow x window) frame into one feature row per window.
 
     ``expanded`` comes from :func:`netwm.features.windowing.expand_to_windows`. Empty windows are
     filled with zeros rather than dropped: a gap in traffic is itself a state the dynamics model has
     to be able to represent.
+
+    ``use_trend`` appends the S_t v2 trend block (D-026) and ``host_slots > 0`` the per-host channel
+    for that many hosts (D-027). Both are off by default: S_t v1 (70 columns) is frozen for
+    comparability with every round-2 number.
     """
     df = _derive_flow_columns(expanded, internal_prefixes)
     g = df.groupby("w", sort=True)
@@ -221,9 +256,131 @@ def window_features(
     feats["beacon_score"] = _beacon_score(df).reindex(feats.index)
 
     n = n_windows if n_windows is not None else int(feats.index.max()) + 1
-    feats = feats.reindex(pd.RangeIndex(n))
+    feats = feats.reindex(pd.RangeIndex(n)).fillna(0.0)
+
+    if use_trend:
+        feats = feats.join(_trend_features(feats))
+    if host_slots > 0:
+        feats = feats.join(_host_channels(df, feats.index, host_slots))
+
     feats.index.name = "w"
-    return feats.fillna(0.0).astype(np.float32)
+    return feats.astype(np.float32)
+
+
+def trend_feature_names() -> list[str]:
+    """The S_t v2 trend columns, in the order :func:`window_features` appends them."""
+    suffixes = ["delta", *(f"slope_{w}" for w in TREND_SLOPES), "zscore"]
+    return [f"{b}_{s}" for b in TREND_BASES for s in suffixes]
+
+
+def feature_flags_from_names(names: Iterable[str]) -> dict[str, Any]:
+    """The :func:`window_features` switches a model was trained with, read off its feature names.
+
+    Checkpoints store ``feature_names`` but not the data config, so this is how the inference engine
+    rebuilds the exact state a model saw. A partial match means the checkpoint was built with
+    different trend constants - that must fail loudly, not feed the model a different state.
+    """
+    names = set(names)
+    trend = set(trend_feature_names())
+    present = trend & names
+    if present and present != trend:
+        raise ValueError(
+            f"checkpoint has {len(present)} of {len(trend)} trend features - built with different "
+            f"trend constants than flow_features.py now defines (missing e.g. {sorted(trend - names)[:3]})"
+        )
+    slots = max((int(m.group(1)) for n in names if (m := _HOST_NAME.match(n))), default=0)
+    missing_host = set(host_feature_names(slots)) - names
+    if missing_host:
+        raise ValueError(
+            f"checkpoint has host slots up to {slots} but lacks {sorted(missing_host)[:3]} - built "
+            f"with a different per-host schema than flow_features.py now defines"
+        )
+    return {"use_trend": bool(present), "host_slots": slots}
+
+
+def host_feature_names(slots: int) -> list[str]:
+    """The per-host channel columns for ``slots`` hosts, slot-major, 1-indexed (D-027)."""
+    return [f"host{i}_{f}" for i in range(1, slots + 1) for f in HOST_FEATURES]
+
+
+def _host_channels(df: pd.DataFrame, index: pd.Index, slots: int) -> pd.DataFrame:
+    """One fixed-width slot per busiest internal source host, per window (task S-2, D-027).
+
+    Hosts are ranked by flow count within the window (ties by IP, so the build is deterministic) -
+    the same ranking as the UI's top talkers. Only *internal* sources get a slot: lateral movement
+    and C2 start from a host inside the monitored network, while inbound floods are already visible
+    in the network-wide aggregates. Per slot:
+
+    - ``fanout``        distinct destination hosts;
+    - ``ports``         distinct destination ports;
+    - ``byte_asym``     (sent - received) / (sent + received + 1) over the flows it initiated, in (-1, 1);
+    - ``new_peer_rate`` share of its destinations it had not contacted earlier in this capture.
+
+    ``new_peer_rate`` is causal - whether a pair appeared before window ``w`` does not depend on
+    anything after it - and label-free. Empty slots are 0; a real host always has ``fanout >= 1``.
+    """
+    names = host_feature_names(slots)
+    # is_outbound / is_internal are set exactly when the source is inside the monitored network
+    src_internal = (df["is_outbound"] + df["is_internal"]) > 0
+    flows = df.loc[src_internal, ["w", "src_ip", "dst_ip", "dst_port", "fwd_bytes", "bwd_bytes"]]
+    if flows.empty:
+        return pd.DataFrame(0.0, index=index, columns=names)
+
+    pairs = flows[["w", "src_ip", "dst_ip"]].drop_duplicates()
+    pairs["new"] = pairs.groupby(["src_ip", "dst_ip"], sort=False)["w"].transform("min").eq(pairs["w"])
+    peers = pairs.groupby(["w", "src_ip"], sort=False).agg(fanout=("dst_ip", "size"), new=("new", "sum"))
+
+    host = flows.groupby(["w", "src_ip"], sort=False).agg(
+        n=("dst_ip", "size"),
+        ports=("dst_port", "nunique"),
+        sent=("fwd_bytes", "sum"),
+        received=("bwd_bytes", "sum"),
+    )
+    host = host.join(peers).reset_index()
+    host["byte_asym"] = (host["sent"] - host["received"]) / (host["sent"] + host["received"] + 1.0)
+    host["new_peer_rate"] = host["new"] / host["fanout"]
+
+    host = host.sort_values(["w", "n", "src_ip"], ascending=[True, False, True], kind="stable")
+    host["slot"] = host.groupby("w", sort=False).cumcount() + 1
+    host = host[host["slot"] <= slots]
+
+    wide = host.pivot(index="w", columns="slot", values=list(HOST_FEATURES))
+    wide.columns = [f"host{slot}_{feat}" for feat, slot in wide.columns]
+    return wide.reindex(index=index, columns=names).fillna(0.0).astype(np.float64)
+
+
+def _ols_slope(x: np.ndarray, w: int) -> np.ndarray:
+    """Least-squares slope of ``x`` over each trailing ``w``-window span, per window.
+
+    A fixed linear filter, so it is exact and fast. It uses all ``w`` points, where a two-point
+    difference ``(x_t - x_{t-w}) / w`` would be decided by one noisy endpoint. The first ``w - 1``
+    windows have no complete span and stay 0.
+    """
+    j = np.arange(w, dtype=np.float64) - (w - 1) / 2.0
+    kernel = j / (j**2).sum()
+    out = np.zeros(len(x), dtype=np.float64)
+    if len(x) >= w:
+        out[w - 1 :] = sliding_window_view(x, w) @ kernel
+    return out
+
+
+def _trend_features(feats: pd.DataFrame) -> pd.DataFrame:
+    """Delta, least-squares slopes and a trailing z-score for each of :data:`TREND_BASES`.
+
+    Everything is strictly causal: window ``t`` sees windows ``<= t`` only, and the z-score's
+    baseline stops at ``t - 1`` so a spike cannot dilute its own anomaly. Label-free - the baseline
+    is "the last hour", not "the last benign hour", because a sensor does not know which is which.
+    """
+    out = {}
+    for base in TREND_BASES:
+        x = feats[base].astype(np.float64)
+        out[f"{base}_delta"] = x.diff().fillna(0.0)
+        for w in TREND_SLOPES:
+            out[f"{base}_slope_{w}"] = pd.Series(_ols_slope(x.to_numpy(), w), index=x.index)
+        hist = x.shift(1).rolling(TREND_BASELINE, min_periods=TREND_MIN_PERIODS)
+        z = (x - hist.mean()) / hist.std().clip(lower=TREND_STD_FLOOR)
+        out[f"{base}_zscore"] = z.clip(-TREND_Z_CLIP, TREND_Z_CLIP).fillna(0.0)
+    return pd.DataFrame(out, index=feats.index)[trend_feature_names()]
 
 
 def _beacon_score(df: pd.DataFrame) -> pd.Series:

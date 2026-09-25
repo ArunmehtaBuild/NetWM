@@ -670,6 +670,7 @@ prime suspect is the train-day-fitted scaler under the distribution shift E2 alr
 the same logic as the alert budget in D-020, applied to features instead of scores - is the next
 experiment. It reopens the claim only under the bar in point 2.
 
+
 ---
 
 ### D-024 — The demo endpoint runs the model; `/api/model` metrics are read from `results/runs/`
@@ -694,3 +695,166 @@ E14), and the card must quote every number for the same statistic as its F1.
 **Revisit if.** A-4 shrinks the demo slices (the run folders stay the source), or a later run
 supersedes E14 as the deployable operating point - then change `_E14_RUN` in `backend/inference.py`
 in the same commit as the results.md entry.
+### D-028 — Trend feature window sizes for Task S-1 (superseded by D-026)
+
+*Date: 2026-09-25 · Status: superseded by D-026 · Evidence: Task S-1 requirements*
+
+The model's original `S_t` state vector contained only absolute level values. As outlined in Task S-1, we augment this with trend (derivative) features specifically for the highest-ranking metrics from E12 (`uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`).
+
+The selected mathematical operations are:
+- **Immediate Delta**: Captures sharp, one-window spikes.
+- **Rolling Slopes (2, 5, and 10 windows)**: We use multiple time horizons because attackers operate at different cadences. 2 windows capture immediate escalation, 5 windows capture short-term progression, and 10 windows capture slower, sustained reconnaissance that avoids tripping strict rate-limits.
+- **Rolling Z-Score (120-window baseline)**: Because raw values fluctuate by time of day, we compare current values against a rolling 2-hour (120-window) baseline to identify statistical anomalies rather than absolute threshold breaches.
+
+---
+
+### D-025 — Rank normalisation is a scaler option; the causal variant carries any lead-time claim
+*Date: 2026-09-26 · Status: accepted (recorded before the r4 run, per the board's constraint) · Evidence: E2, E15, D-021 amendment point 6*
+
+**Decision.** `StateScaler` gains `mode="rank"` (task S-4). Each column is replaced by its Gaussian
+rank *within the capture being transformed*: average rank `r` among `n` windows, `p = (r - 0.5) / n`,
+value `= Phi^-1(p)`. Nothing is learned from the training days - `fit` only records the column order.
+Two variants, one config key:
+
+- `rank_window: null` - rank against the whole capture (the D-020 alert-budget analogue).
+- `rank_window: W` - **causal**: rank against the trailing `W` windows only, the first
+  `rank_min_periods` windows of a capture sit at 0.
+
+D-014 stays the default (`mode: log_standard`); a model config with no `scaler:` block reproduces
+round 2 exactly, and so does every existing checkpoint (the new fields have class-level defaults, so
+an old pickle reads them). `configs/model_r4_rank.yaml` selects `mode: rank, rank_window: 120`
+(60 min at a 30 s stride) on the r2 heads - the feature transform is r4's only variable.
+
+**Why.**
+- *Per capture, because the scaler is the prime suspect.* D-014 fits mean/std on the training days;
+  E2 measured what that does to Thursday (persistence NLL mean 152 010, median 0.85), and E15 found
+  one unscaled column beating every world-model statistic on the precursor label. A per-capture rank
+  is invariant to any monotone drift of a column between days, so that failure cannot recur.
+- *Gaussian, not a uniform percentile.* Integrated Gradients uses the all-zero state as its baseline
+  (`engine/explain.py`), which under D-014 means "the average window". A Gaussian rank keeps zero at
+  the capture's median window; a [0, 1] percentile would silently move it to the *minimum* window and
+  change the meaning of every attribution in the UI.
+- *Causal for claims.* Whole-capture ranking lets the windows after an onset set the scale of the
+  windows before it - a pre-onset window's value depends on the attack that follows. That is harmless
+  for detection and fatal for a lead-time claim. Any early-warning count from r4 is therefore made
+  with `rank_window` set; the whole-capture variant may be reported, labelled as an upper bound.
+
+**Also decided.** A caller that transforms several days in one frame must pass
+`groups=frame["split"]`, or the days are ranked against each other. The trainer (`prepare_days`) and
+the inference engine already transform one capture at a time; the leave-one-day-out logistic floor
+in `scripts/precursor_eval.py` concatenates days and needs `groups` for a like-for-like E16 row.
+`inverse_transform` raises in rank mode - a rank has no fitted scale to undo, and nothing calls it.
+
+**Known limitation.** Rank throws away magnitude by design: a DDoS window and an ordinary busy window
+can both sit at the top of their capture. The levels are not lost to the product - flagged flows
+and top talkers in the payload are computed from raw flows - but the model can no longer tell
+"busiest window today" from "busiest window ever". The causal variant also has a warm-up: the first
+`rank_min_periods` windows of every capture carry no information.
+
+**Revisit if.** r4 (Y-6/E16) shows the causal variant losing clearly to the whole-capture one - then
+the trailing window length, not the idea, is the next variable; or rank features fail the D-023 bar
+as badly as D-014 features did, which would take the representation hypothesis off the table and
+leave per-host state (S-2) as the remaining direction.
+
+**Refs.** `research/state-normalisation.md`.
+
+---
+
+### D-026 — S_t v2 trend block, revised: frozen v1, least-squares slopes, a causal z-score
+*Date: 2026-09-26 · Status: accepted (supersedes D-028; recorded before any v2 build or run) · Evidence: E12, board sequencing rule 1*
+
+**Decision.** The trend block (task S-1) is kept for the same six E12 features (`uniq_dst_port`,
+`ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`), with four
+columns each - **94 features** in S_t v2 (70 + 24):
+
+- `{f}_delta` - `x_t - x_{t-1}`.
+- `{f}_slope_5`, `{f}_slope_10` - the **least-squares slope** over the trailing 5 / 10 windows
+  (0 until a full span exists). D-028's `slope_2` is dropped: a least-squares slope over two points
+  *is* the delta, so it would be a duplicate column.
+- `{f}_zscore` - against the **previous** 120 windows (60 min at the 30 s stride; not 2 h as D-028
+  stated), trusted after 10 windows of history (0 before), standard deviation floored and the
+  result clipped to +-10.
+
+v1 stays frozen: `configs/cicids2017.yaml` sets `use_trend_features: false` (it had been switched on
+by default), and v2 builds from `configs/features_trend.yaml` into its own `processed_dir`
+(`data/processed/cicids2017_trend`). The trend parameters are constants in
+`src/netwm/features/flow_features.py`, not config values.
+
+**Why.**
+- *Frozen v1.* Board sequencing rule 1: Y-2's numbers and every round-2 number were built on the 70
+  v1 columns, and v2 is evaluated as an ablation (Y-4), one variable at a time. With the flag on by
+  default, the next `build_features.py` run would have overwritten the v1 parquet silently. Verified:
+  with the flag off, the current code reproduces the pre-S-1 implementation (f7a0029) byte for byte.
+- *Least squares.* A two-point `(x_t - x_{t-w}) / w` is decided by its endpoints alone - one noisy
+  window swings it. The fitted slope uses every point in the span; on white noise its spread is
+  0.78x the two-point version (pinned in `tests/test_flow_features.py`).
+- *Causal, excluded, clipped z-score.* A baseline that includes the current window lets a spike
+  dilute its own anomaly. `min_periods=1` gave windows 0-1 of every capture z-scores from one or two
+  points. A flat baseline with a 1e-6 floor mints values in the 1e6 range, which is the E2 failure
+  mode (Thursday persistence NLL mean 152 010) reintroduced by hand. The baseline is "the last hour",
+  not "the last benign hour": a sensor has no labels.
+- *Constants, not config.* Checkpoints store `feature_names`, not the data config, and inference
+  (`engine/predict.py`) rebuilds the state from those names via `feature_flags_from_names`. A
+  config-level window length could differ between the build that trained a model and the engine that
+  serves it, and nothing would notice. A name set that matches only part of the trend block (e.g. a
+  D-028-era `slope_2`) now fails loudly instead.
+
+**Also decided.** `engine/predict.py` passes the recovered flags to `window_features`, so a v2
+checkpoint no longer crashes at inference (it would have raised on missing columns); r2 checkpoints
+resolve to the v1 call. `build_features.py` records per-split `build_s`, the seed and the feature
+flags in `meta.json`, so results.md F2's build time comes from an artefact.
+
+**Known limitation.** The z-score's baseline absorbs a sustained attack after about an hour, and the
+first 10 windows of every capture carry no trend information. Under the D-025 rank scaler the
+z-score is partly redundant with the causal rank of the level itself; Y-4 decides whether it earns
+its columns.
+
+**Revisit if.** The Y-4 ablation shows no gain from the trend block on the precursor label under the
+D-023 bar, or shows one column family (slopes vs z-score) carrying all of it - then drop the rest
+rather than keep 24 columns for the sake of it.
+
+---
+
+### D-027 — Per-host channel: the busiest internal hosts as fixed slots in S_t
+*Date: 2026-09-26 · Status: accepted (schema only; recorded before any build or run) · Evidence: E12, E15 "remaining untested directions"*
+
+**Decision.** Task S-2 adds an optional per-host sub-vector to `S_t`, `window.host_slots: N`
+(0 = off, the v1 default; `configs/features_hosts.yaml` sets 3 and builds into
+`data/processed/cicids2017_hosts`, trend features off). In each window the internal source hosts
+(`internal_prefixes`) are ranked by flow count, ties by IP, and the top N fill slots `host1..hostN`:
+
+| column | definition | what it exposes |
+|---|---|---|
+| `host{i}_fanout` | distinct destination IPs of the host in the window | a sweep across hosts - discovery, lateral movement |
+| `host{i}_ports` | distinct destination ports | a port scan from one host |
+| `host{i}_byte_asym` | `(sent - received) / (sent + received + 1)` over the flows it initiated | pushing data out (exfiltration, staging) vs pulling it in (payload download) |
+| `host{i}_new_peer_rate` | share of its destinations it had not contacted earlier **in this capture** | a host suddenly talking to machines it never talked to |
+
+`N = 3` gives 12 columns (82 features with v1). An empty slot is all zeros; a real host always has
+`fanout >= 1`, so the two cannot be confused. Inference recovers `host_slots` from the checkpoint's
+feature names (D-026's `feature_flags_from_names`), and a partial host schema fails loudly.
+
+**Why.**
+- *Per host at all.* Every v1 feature is network-wide: one compromised host sweeping the subnet is
+  averaged in with every benign host, and only its max survives (`fanout_max`, `port_fanout_max`).
+  E15 names "network-wide aggregates hide per-host behaviour" as one of the two untested state
+  directions. A slot keeps one host's behaviour intact across four views.
+- *Internal sources only.* Lateral movement and C2 originate inside the monitored network - the
+  Thursday infiltration's internal sweep, the Friday bots' beacons. Inbound floods from outside are
+  already dominant in the aggregates, and a busy external scanner would otherwise take every slot.
+- *Ranked by flows.* It is the ranking the UI's top-talkers panel already uses (`engine/predict.py`
+  `_top_talkers`), so the slot a defender sees explained is the slot the model read.
+- *New-peer rate, causal and label-free.* "First contact in this capture" depends only on windows
+  up to `w`, so it is legal for a lead-time claim and computable on a live stream.
+
+**Known limitation.** *Slot permutation*: slot 1 is whichever host is busiest in *this* window, so
+it can be a different machine one window later. The dynamics model sees a jump that is a change of
+host, not of behaviour. *Warm-up*: at the start of a capture every peer is new, so
+`new_peer_rate` reads 1.0 for everyone until the capture has some history. Demo slices start well
+before their attack, which keeps both out of the story being shown.
+
+**Revisit if.** Y-4 shows the host columns adding nothing, or shows slot churn dominating their
+signal. The next cut is then *sticky* slots, where a host keeps its slot while it stays in the top
+N. If the channel does help, per-host episodes are the natural way to enlarge the 26-episode
+denominator D-022 is limited by.
+

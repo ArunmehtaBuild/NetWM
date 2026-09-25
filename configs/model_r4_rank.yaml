@@ -1,0 +1,18 @@
+# Round 4 - representation, not supervision (board r4 / Y-6, decisions.md D-025).
+#
+# Overrides only. The model and train blocks are deliberately absent: r4 = the round-2 heads
+# (not r3's), and the only variable is the feature transform. Anything absent keeps its dataclass
+# default, so without the `scaler:` block below this file would reproduce round 2 exactly.
+#
+#   python scripts/train.py --config configs/cicids2017.yaml \
+#       --model-config configs/model_r4_rank.yaml \
+#       --test-days tuesday wednesday thursday friday monday \
+#       --run r4-rank-s42 --epochs 25 --seed 42        # and s43/44 (D-023 bar, clause 2)
+
+scaler:
+  mode: rank
+  # Causal: each window is ranked against the 120 windows before it (60 min at a 30 s stride), so
+  # nothing after window t shapes its value. This is the variant a lead-time claim may rest on.
+  # rank_window: null ranks against the whole capture - report it only as an upper bound (D-025).
+  rank_window: 120
+  rank_min_periods: 10    # first 10 windows (5 min) of a capture sit at the median

@@ -1,0 +1,24 @@
+# S_t v2 - the v1 state plus the trend block (task S-1, decisions.md D-026).
+#
+# Identical to configs/cicids2017.yaml except for the two lines marked v2. It builds into its own
+# processed_dir so the frozen v1 parquet that every round-2 number rests on is never overwritten.
+#
+#   python scripts/build_features.py --config configs/features_trend.yaml
+#   python scripts/train.py --config configs/features_trend.yaml ...     # Y-4 ablation
+dataset: cicids2017
+raw_dir: data/raw/cicids2017_improved
+processed_dir: data/processed/cicids2017_trend        # v2
+
+window:
+  length_s: 60.0    # D-002
+  stride_s: 30.0
+  # delta + least-squares slopes (5, 10) + trailing 60-min z-score for the six E12 features;
+  # the parameters are constants in src/netwm/features/flow_features.py, not config (D-026)
+  use_trend_features: true                             # v2
+
+horizon_k: 10
+
+internal_prefixes:
+  - "192.168.10."
+
+seed: 42

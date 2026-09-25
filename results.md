@@ -14,6 +14,8 @@ the commentary column.
 |---|---|---|---|---|---|
 | E1 | dataset audit | CIC-IDS2017 corrected, all 5 days | `python scripts/audit_dataset.py` | `results/tables/e1_*.csv`, `results/figures/e1_*_timeline.png`, `results/runs/e1-dataset-audit/` | 2.10 M flows, 4 907 windows; attack share 0-47 % per day; only 5 compromise onsets all week |
 | F1 | feature build | same, 70 features/window | `python scripts/build_features.py --config configs/cicids2017.yaml` | `data/processed/cicids2017/*.parquet` (not committed), `meta.json` | S_t = 70 features; positives 17.1 % (Thu), 13.1 % (Fri), 0 elsewhere |
+| F2 | feature build, S_t v2 (trend) | same, 94 features/window | `python scripts/build_features.py --config configs/features_trend.yaml` | `results/runs/f2-trend-build/`, `results/runs/f1-v1-recheck/`, `results/tables/f2*.csv` | S_t v2 = 94 features; v1 columns + labels bit-identical to the v1 rebuild, which reproduces F1; no measurable build cost |
+| F3 | feature build, per-host channel | same, 82 features/window | `python scripts/build_features.py --config configs/features_hosts.yaml` | `results/runs/f3-hosts-build/`, `results/tables/f2f3_feature_builds.csv`, `results/tables/f3_host_channel_stats.csv` | 3 host slots x 4; v1 columns + labels bit-identical; slot 1 filled on every Thu/Fri window |
 | E2 | persistence floor | leave-one-day-out | `python scripts/benchmark_baselines.py` | `results/tables/e2e3_baselines_lags0.csv` | median next-state NLL 0.85-0.94; Thursday mean 152 010 (distribution shift) |
 | E3 | logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py` | same + `results/figures/e3_*_logreg_forecast.png`, `results/tables/e3_lead_times_lags0.csv` | **0 of 5 episodes warned early**; F1 0.011 (Thu) / 0.000 (Fri) at a deployable threshold |
 | E4-E7 r1 | world model, round 1 | leave-one-day-out | `python scripts/train.py --epochs 25` | `results/tables/e4e7-worldmodel_*.csv`, `results/figures/e5_*`, `e6_*` | Thursday PR-AUC 0.139 -> **0.473**, ROC-AUC 0.379 -> **0.753**; still 0 / 5 warned early; Friday worse than chance |
@@ -120,6 +122,84 @@ protocol mix, timing (`flow_iat_*`, `active_mean`, `idle_mean`, `beacon_score`),
 Only Thursday and Friday can serve as test days for the forecasting target - Tuesday (brute force)
 and Wednesday (DoS) never reach Lateral Movement. Feature extraction runs in ~0.6 s per day after
 vectorising the entropy and beaconing computations (a groupby-apply version took 16 s per 60 k flows).
+
+---
+
+## F2 - trend feature build (S_t v2)
+
+```
+python scripts/build_features.py --config configs/cicids2017.yaml \
+    > results/runs/f1-v1-recheck/build.log 2>&1; echo "exit=$?"       # v1, rebuilt as the control
+python scripts/build_features.py --config configs/features_trend.yaml \
+    > results/runs/f2-trend-build/build.log 2>&1; echo "exit=$?"
+```
+runs: `results/runs/f1-v1-recheck/`, `results/runs/f2-trend-build/` (`build.log` + `meta.json`, seed 42,
+git `c810f7c`) · 2026-09-26 · both exit 0
+
+S_t v2 = the 70 v1 features + the D-026 trend block (delta, least-squares slopes over 5 and 10
+windows, trailing 60-min z-score) for the six E12 features: **94 features per window**
+(`meta.json` `n_features`). Built into `data/processed/cicids2017_trend/`; the v1 matrix in
+`data/processed/cicids2017/` is untouched.
+
+| day | flows | windows | v1 build (s) | v2 build (s) |
+|---|---:|---:|---:|---:|
+| Monday | 371 624 | 974 | 7.22 | 5.45 |
+| Tuesday | 322 078 | 976 | 6.54 | 4.83 |
+| Wednesday | 496 641 | 1 017 | 10.42 | 7.87 |
+| Thursday | 362 076 | 972 | 7.52 | 5.25 |
+| Friday | 547 557 | 968 | 9.70 | 9.07 |
+
+### Findings
+
+1. **v1 is reproduced exactly.** The v1 rebuild at `c810f7c` gives F1's window counts and positive
+   rates on every day. Inside the v2 build the 70 v1 columns and every label column are
+   bit-identical to the v1 build, so S_t v2 changes the state and nothing else - Y-4 can compare
+   the two one variable at a time.
+2. **The trend block costs nothing measurable.** `build_s` is load + window + features + labels
+   for one day, dominated by reading the CSV. v2 came out *faster* than v1 only because v1 ran first
+   against a cold disk cache - read these as "no measurable overhead", not as a speed-up. They are
+   not comparable with F1's ~0.6 s, which timed feature extraction alone.
+3. **The +-10 z-score clip is a tail guard, not a reshaping.** It fires on at most 0.41 % of a day's
+   windows for any of the six columns, on at most 0.14 % of benign windows, and on about 0.7 % of
+   attack windows (Wednesday / Thursday / Friday). No NaN or inf in any trend column.
+
+Artefacts: `results/tables/f2f3_feature_builds.csv`, `results/tables/f2_zscore_clip_rates.csv`.
+Descriptive only - whether the trend block helps the forecast is Y-4's question, under the D-023 bar.
+
+---
+
+## F3 - per-host channel build (S-2)
+
+```
+python scripts/build_features.py --config configs/features_hosts.yaml \
+    > results/runs/f3-hosts-build/build.log 2>&1; echo "exit=$?"
+```
+run: `results/runs/f3-hosts-build/` (`build.log` + `meta.json`, seed 42, git `c810f7c`) · 2026-09-26 · exit 0
+
+The 70 v1 features + the D-027 per-host channel for the 3 busiest internal source hosts (fanout,
+ports, byte asymmetry, new-peer rate): **82 features per window**, trend block off. Built into
+`data/processed/cicids2017_hosts/`.
+
+| day | windows | build (s) |
+|---|---:|---:|
+| Monday | 974 | 6.65 |
+| Tuesday | 976 | 5.67 |
+| Wednesday | 1 017 | 10.96 |
+| Thursday | 972 | 7.56 |
+| Friday | 968 | 10.33 |
+
+### Findings
+
+1. **Same windows, same v1 columns, same labels** as the v1 build - bit-identical, as for F2.
+2. **Slot 1 is never empty on the attack days**: `host1_fanout` is at least 1 on every Thursday
+   and Friday window (max 212 Thursday, 287 Friday), so there is always an internal host to read.
+3. **`new_peer_rate` is exactly 0 in about 44 % of windows** on Thursday and Friday (the busiest
+   host is talking only to peers it has contacted before) and spans the full 0-1 range - the
+   feature varies instead of saturating.
+
+Artefacts: `results/tables/f2f3_feature_builds.csv`, `results/tables/f3_host_channel_stats.csv`
+(min / max / mean / zero share of every host column, per day). Descriptive only; the forecasting
+value of the channel is measured in Y-4.
 
 ---
 

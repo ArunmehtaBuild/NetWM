@@ -1,0 +1,7 @@
+monday     windows=  974 compromise=0.00% attack=0.00% escalate=0.00% onsets=0 build=6.65s
+tuesday    windows=  976 compromise=0.00% attack=28.59% escalate=3.07% onsets=0 build=5.67s
+wednesday  windows=1,017 compromise=0.00% attack=22.91% escalate=4.92% onsets=0 build=10.96s
+thursday   windows=  972 compromise=17.08% attack=34.26% escalate=20.37% onsets=4 build=7.56s
+friday     windows=  968 compromise=13.12% attack=29.34% escalate=10.12% onsets=1 build=10.33s
+
+wrote data\processed\cicids2017_hosts/*.parquet (82 features) + meta.json

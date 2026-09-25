@@ -126,7 +126,8 @@ def main() -> None:
     for test_day in test_days:
         train_days = [d for d in ds.splits if d != test_day]
         print(f"\n== fold: test={test_day}  train={train_days}  device={device}")
-        scaler = StateScaler().fit(ds.concat(train_days)[ds.feature_names])
+        # an absent `scaler:` block is the D-014 log-standardiser, i.e. round 2 exactly (D-025)
+        scaler = StateScaler(**overrides.get("scaler", {})).fit(ds.concat(train_days)[ds.feature_names])
         model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
         histories[test_day] = history
 
