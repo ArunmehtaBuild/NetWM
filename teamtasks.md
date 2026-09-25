@@ -153,10 +153,10 @@ Full spec: [backend/PLAN.md](backend/PLAN.md).
 
 | id | task | done when |
 |---|---|---|
-| **R-1** | FastAPI app: `server.py` (routes + CORS allowlist), `schemas.py` (Pydantic models mirroring the contract), `jobs.py` (single worker thread - torch blocks, so no async inference), `inference.py` wrapping `netwm.engine.predict.analyze_file`. Serve `fixtures/api/*.json` with `"mock": true` when no checkpoint exists | `uvicorn backend.server:app` -> `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress; OpenAPI renders at `/docs` |
-| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `fixtures/api/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest backend/tests/test_contract.py` fails if engine, fixtures and contract disagree |
-| **R-3** | SSE replay `/api/jobs/<id>/stream` at `?speed=` windows/sec | the dashboard can play an attack unfolding |
-| **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
+| ~~R-1~~ | **Verified done**: FastAPI app in `backend/`: `server.py`, `schemas.py`, `jobs.py`, `inference.py`. Endpoints `/api/health`, `/api/model`, `/api/demos`, `POST /api/analyze`, `POST /api/analyze/demo/<id>`, `GET /api/jobs/<id>`, `GET /api/jobs/<id>/result`, `GET /api/jobs/<id>/flows`. Fallback to mock fixtures ensures system is never undemoable. | `uvicorn backend.server:app` -> `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress; OpenAPI renders at `/docs` |
+| ~~R-2~~ | **Verified done**: `backend/tests/test_contract.py` strictly validates all fixtures and fresh engine output against `docs/api_contract.md` v1.1 Pydantic models. Zero contract drift. | `pytest backend/tests/test_contract.py` fails if engine, fixtures and contract disagree |
+| ~~R-3~~ | **Verified done**: SSE replay `/api/jobs/<id>/stream?speed=` streaming `text/event-stream` window events from disk cache with heartbeats and disconnect handling. | the dashboard can play an attack unfolding |
+| ~~R-4~~ | **Verified done**: File size caps (200MB CSV / 2GB PCAP), uniform error responses `{"error": {"code": "...", "message": "..."}}`, loopback-enforced socket lockdown test `test_offline.py` proving zero external network calls, and `run_demo.bat` one-command launch. | works with WiFi off on a machine that has never seen the repo |
 
 ## Harshit - frontend
 
@@ -223,4 +223,4 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | Technical presentation (max 5 slides) | Sanchi | [ ] |
 | Benchmark table vs logistic regression | Atharv | [ ] |
 | Model weights + reproducible training config | Yash | [x] r2 checkpoints committed |
-| Everything runs offline, no cloud API calls | Arun | [ ] |
+| Everything runs offline, no cloud API calls | Arun | [x] |
