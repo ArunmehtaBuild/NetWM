@@ -1,0 +1,2 @@
+# Vendored assets are stored byte-exact so the recorded sha256 stays verifiable
+app/static/vendor/** -text
