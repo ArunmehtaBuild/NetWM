@@ -2,6 +2,8 @@
 data/raw/
 data/interim/
 data/processed/
+data/uploads/
+data/jobs/
 *.pcap
 *.pcapng
 *.zip

@@ -92,6 +92,8 @@ reason the model detects but does not anticipate.
 
 ## Arun - backend
 
+Full spec: [app/backend-plan.md](app/backend-plan.md).
+
 | id | task | done when |
 |---|---|---|
 | **R-1** | `app/server.py` + `app/jobs.py`: upload -> background worker -> progress -> result, wrapping `netwm.engine.predict.analyze_file`. Serve `app/mock/*.json` when no checkpoint is present so the app is never undemoable | `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress |
@@ -100,6 +102,8 @@ reason the model detects but does not anticipate.
 | **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
 
 ## Harshit - frontend
+
+Full spec: [app/frontend-plan.md](app/frontend-plan.md).
 
 | id | task | done when |
 |---|---|---|

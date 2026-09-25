@@ -61,6 +61,14 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [ ] `data/unswnb15.py` adapter, feature harmonisation across schemas
 - [ ] Zero-shot transfer (train 2017 -> test NB15) and fine-tune; report the drop honestly
 
+## Sub-plans
+
+- **Backend:** [app/backend-plan.md](app/backend-plan.md) - job lifecycle, model registry, threshold
+  policy passthrough, offline guarantee, error codes, tests.
+- **Frontend:** [app/frontend-plan.md](app/frontend-plan.md) - panel-by-panel spec, data flow, design
+  tokens, empty/error states, vendoring rules.
+- **API contract:** [app/api_contract.md](app/api_contract.md) v1.1 - the boundary both sides code to.
+
 ## Working rules
 See [CLAUDE.md](CLAUDE.md). Short version: decisions -> decisions.md, numbers -> results.md +
 results/, findings -> research/.
