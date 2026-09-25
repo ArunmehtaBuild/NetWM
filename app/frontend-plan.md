@@ -124,9 +124,22 @@ tabular-nums`) so columns do not jitter during replay.
 
 Pin the version, download once, commit the file, and record the SHA-256 in this file:
 
+**Done** - `app/static/vendor/chart.umd.min.js` is committed:
+
+| | |
+|---|---|
+| version | Chart.js v4.4.1 (UMD build) |
+| source | `https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js` |
+| size | 205 399 bytes |
+| sha256 | `d2af8974e95271638772e9e9524db5b9a6f58d6ec2d5d781400447b4a31c681e` |
+| licence | MIT |
+
+Load it with `<script src="/static/vendor/chart.umd.min.js"></script>` - no `integrity` attribute is
+needed or wanted, the file is local. To re-vendor or upgrade:
+
 ```bash
-curl -L -o app/static/vendor/chart.umd.min.js https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js
-sha256sum app/static/vendor/chart.umd.min.js
+curl -sL -o app/static/vendor/chart.umd.min.js https://cdn.jsdelivr.net/npm/chart.js@<version>/dist/chart.umd.min.js
+sha256sum app/static/vendor/chart.umd.min.js   # then update the table above
 ```
 
 Nothing else gets vendored without a line here saying what and why. No fonts from Google, no icon
