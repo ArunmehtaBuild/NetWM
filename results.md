@@ -1,5 +1,9 @@
 # Results index
 
+> **Claims policy:** what may and may not be said about these numbers in the video, slides and
+> architecture document is fixed in [decisions.md D-021](decisions.md). Every number quoted outside
+> this file must carry its experiment id and threshold policy.
+
 All experiment artefacts live in `results/`:
 `results/figures/` (PNG), `results/tables/` (CSV), `results/runs/` (per-run JSON metrics + config).
 

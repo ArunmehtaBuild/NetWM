@@ -379,3 +379,82 @@ failure mode visible rather than hidden.
 
 **Revisit if.** Calibration (temperature scaling on a held-out training day) brings train and test
 score distributions together - then an absolute probability threshold becomes honest again.
+
+---
+
+### D-021 — How we present the system if Y-2 returns another honest negative
+*Date: 2026-09-25 · Status: accepted (framing frozen before the video and slides) · Evidence: E3, E4-E7, E12, E13, E14*
+
+**The decision in one line.** If Y-2 does not produce lead time > 0 on at least 2 of 5 episodes at a
+deployable threshold, we present NetWM as **a world model that delivers the PS's required outputs -
+learned transition dynamics, K-step rollouts, stage forecasts, explanations - and a measured,
+localised account of the one thing it cannot yet do: warn before compromise.** We do not claim early
+warning, in any form, anywhere.
+
+**Why this is the stronger position, not the fallback.**
+- It is true, and it is checkable. Every number we would quote has an experiment id, a threshold
+  policy and a command in `results.md`.
+- The gap is *localised*, which is rare. E12 proves the precursor signal exists (within-day ROC-AUC
+  0.88 Thursday / 0.96 Friday). E13 rules out the rollout statistic. E14 rules out the threshold, at
+  five policies. What is left is the supervision target, and Y-2 is the experiment that tests it.
+  "We know exactly which of four candidate causes it is not, and here is the run that tests the
+  fourth" is a better answer to a hard question than a confident number a judge can break in one
+  follow-up.
+- The negative findings are themselves contributions: the corrected-dataset requirement (D-001),
+  attempted-traffic mislabelling swamping a day (D-009), one label covering two kill-chain stages
+  (D-012), split leakage in the standard literature (D-006), and the ~100x threshold non-transfer
+  (D-020). Any team using CIC-IDS2017 after us benefits from those.
+- The PS asks for *interpretable decision support*. A system that reports the confidence it has
+  earned, including where it has none, is decision support. One that reports early warning it cannot
+  substantiate is the opposite.
+
+**What we claim.**
+1. A world model, not a classifier: it learns `P(S_{t+1} | S_t)` in a latent state space and rolls it
+   forward K steps without observations. Evidence: open-loop rollout beats the persistence floor from
+   k = 2 onward (E5), and loses at k = 1 - we say both.
+2. On the held-out infiltration day, the learned dynamics give **F1 0.576 at 2.7 % false-positive
+   rate** (precision 0.776; precision 0.959 at a 5 % budget) against the PS-mandated logistic
+   regression's **0.011** at its own deployable threshold. Evidence: E3, E14, same features, same
+   fold, both thresholds reported.
+3. Forecast outputs the PS names are produced and rendered: K-step probability curves with
+   Monte-Carlo bands, per-step MITRE stage distribution, per-prediction feature attribution and
+   attention over the preceding windows.
+4. Where it fails and why, with the experiment that tests the remaining cause.
+
+**What we never say.** No exceptions, including in the video voice-over and in answers to judges:
+- "predicts attacks before they happen", "early warning", "pre-emptive", or any lead-time number,
+  unless Y-2 (or a later run) produced it at a deployable threshold, reported over multiple seeds.
+- Any oracle-threshold number as a headline. Oracle numbers appear only beside their train-tuned or
+  budget counterpart, labelled as an upper bound no deployment can pick (D-015).
+- Any number taken from `app/mock/thursday_oracle.json`. It is a UI fixture with a hand-picked
+  threshold and is marked `dev_only`.
+- A single averaged metric across folds that hides Friday. Friday is reported as its own
+  leave-one-family-out result, at chance, every time.
+- Accuracy on a random split. We have never used one and will not quote one.
+
+**How the deliverables are bound to this.**
+- **Demo video:** the honest alarm panel - "0 of 4 episodes warned early" - must appear on screen at
+  least once. If the oracle fixture appears at all, the on-screen label must say it is a UI fixture.
+- **Slides (5 max):** one slide is *"What we measured that did not work"* - E13, E14 and the Friday
+  fold, with the E12 result next to them as the reason we are still pursuing it. This is the slide
+  that earns the rest.
+- **Architecture document:** the limitations paragraph names the lead-time gap explicitly and cites
+  E12/E13/E14 by id.
+- **Any number in any deliverable** carries its experiment id and threshold policy in the speaker
+  notes, so a question about provenance has a one-sentence answer.
+
+**What flips the framing** (decided now, so it is not decided at recording time):
+| Y-2 outcome | framing |
+|---|---|
+| lead > 0 on >= 2 of 5 episodes at a deployable threshold, stable across >= 3 seeds | claim early warning, with the lead-time distribution and the seed spread shown, never a single mean |
+| lead > 0 but on 1 episode, or only at the oracle threshold, or unstable across seeds | this framing, plus "first indications of a precursor signal" phrased explicitly as a limitation |
+| no lead at any deployable threshold | this framing, unchanged |
+
+**What would make us wrong.** If anyone demonstrates positive lead time at a deployable threshold on
+this data with a method simpler than ours - including the logistic-regression baseline with lagged
+features, which we have not yet run at the horizon - the framing is wrong and the honest response is
+to say so and cite their result. Running that lagged-LR check ourselves before the deck is the
+cheapest insurance we can buy, and it belongs on the board.
+
+**Freeze.** This framing is fixed from now until the submission. Changing it requires a new decision
+entry with the result that justifies it - not a conversation at recording time.
