@@ -53,8 +53,8 @@ E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this i
 |---|---|---|
 | ~~T-01~~ | **Verified done** (ae10e10, E14): `p_max` wired in, rescore script + figures, honest negative result - no lead time at any deployable threshold, but a real operating point found (Thu F1 0.576 @ 2.7 % FPR, self-budget 10 %). Alarm statistic: switch scoring to `p_max` (max over horizon) per D-019, re-score the existing r2 checkpoints, and report lead time at train-tuned / alert-budget / oracle thresholds | `results.md` E14 with a lead-time column; D-019 moves to `accepted` or is rewritten with the negative result |
 | ~~T-02~~ | **Verified done** (419f5be, 2b2a8a0): both mocks valid v1.1, 972/968 windows, no NaN, alarm flags consistent with threshold, talkers + spans + all three risk curves present. Payload v1.1: emit `p_max`, `p_cum_attack`, `p_cum_escalate`, `observed_stage`, `top_talkers`, `ground_truth.spans` from `engine/predict.py`; regenerate `app/mock/thursday.json` + `friday.json` | Arun and Harshit can both start without asking anyone a question |
-| **T-06** | Two residual drifts found by the T-01/T-02 review gate: (a) `observed_stage_conf` is still documented in contract v1.0 but never emitted - emit it or delete it; (b) D-019 still reads *provisional · Evidence: E13* although E14 answered it - restate with the negative result | contract, payload and decisions agree |
-| **T-07** | No mock contains an early alarm (self-budget policy gives 0 of 5), so Harshit cannot build or verify **H-4**, the lead-time panel. Ship a clearly-named `app/mock/thursday_oracle.json` at the oracle threshold (1 alarm, 5-window lead) **for UI development only**, and make H-4 render the honest "no early warning" state too | Harshit can build both states; no oracle number ever reaches a slide |
+| ~~T-06~~ | **Verified done** (831d2d1): `observed_stage_conf` now emitted and documented as a calibration read-out; D-019 restated as accepted on E14 evidence. Two residual drifts found by the T-01/T-02 review gate: (a) `observed_stage_conf` is still documented in contract v1.0 but never emitted - emit it or delete it; (b) D-019 still reads *provisional · Evidence: E13* although E14 answered it - restate with the negative result | contract, payload and decisions agree |
+| ~~T-07~~ | **Verified done** (831d2d1): `app/mock/thursday_oracle.json`, 14 alarms, one with a 5-window lead, `threshold_policy: fixed-override`. No mock contains an early alarm (self-budget policy gives 0 of 5), so Harshit cannot build or verify **H-4**, the lead-time panel. Ship a clearly-named `app/mock/thursday_oracle.json` at the oracle threshold (1 alarm, 5-window lead) **for UI development only**, and make H-4 render the honest "no early warning" state too | Harshit can build both states; no oracle number ever reaches a slide |
 | **T-03** | Review gate: every incoming commit (teammate or parallel session) checked for a `results.md` / `decisions.md` entry and a task id | no orphan numbers in the repo |
 | **T-04** | Architecture document (2 pages) once T-01 lands | reviewed by two teammates |
 | **T-05** | Keep this board current after every merge | board matches `git log` |
@@ -97,7 +97,7 @@ Full spec: [app/backend-plan.md](app/backend-plan.md).
 | id | task | done when |
 |---|---|---|
 | **R-1** | `app/server.py` + `app/jobs.py`: upload -> background worker -> progress -> result, wrapping `netwm.engine.predict.analyze_file`. Serve `app/mock/*.json` when no checkpoint is present so the app is never undemoable | `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress |
-| **R-2** | Contract v1.1: update `app/api_contract.md` to match what T-02 emits (the two extra risk curves, `p_max`, `observed_stage`, `top_talkers`, `ground_truth.spans`, `until_t` on alarms) and delete anything we decided not to ship | contract, mock and engine agree - verified by a test that validates the mock against the documented keys |
+| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `app/mock/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest tests/test_contract.py` fails if engine, mock and contract disagree |
 | **R-3** | SSE replay `/api/jobs/<id>/stream` at `?speed=` windows/sec | the dashboard can play an attack unfolding |
 | **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
 
@@ -115,6 +115,26 @@ Full spec: [app/frontend-plan.md](app/frontend-plan.md).
 | **H-6** | Replay mode (play/pause/scrub) on the SSE stream, then record the 2-minute demo video | video shows risk rising *before* the attack lands |
 
 H-1 and H-2 start the moment `app/mock/thursday.json` exists (Atharv, T-02). Do not wait for a model.
+
+## Kickoff - the first commit each person should make
+
+Everything below is unblocked **right now**; nothing waits on anything else.
+
+| person | start with | first commit looks like |
+|---|---|---|
+| Arun | **R-1** | `app/server.py` serving `/api/health`, `/api/demos`, `/api/jobs/<id>/result` from `app/mock/` - no model loading yet |
+| Harshit | vendor Chart.js, then **H-1** | `app/templates/index.html` + `theme.css` rendering the Thursday mock's timeline, offline |
+| Sanchi | **S-1** | trend/slope features behind a config flag, `S_t` v2 built for one day, feature count in `results.md` F2 |
+| Yash | **Y-2** | a decisions.md entry for the first-occurrence hazard target *before* the run, then the head + a smoke train |
+| Alok | **A-1** | a decisions.md entry recording the PCAP source **or** the synthesis fallback - closed within 2 days either way |
+
+### Two sequencing rules, so nobody's numbers become incomparable
+
+1. **`S_t` v1 is frozen for Y-2.** Yash trains the first-occurrence hazard experiment on the current
+   70-feature matrix, so E15 is comparable with E14 and the round-2 numbers. Sanchi's v2 features
+   land behind a config flag and get evaluated in **Y-4** as an ablation - one variable at a time.
+2. **Frontend never blocks on the model.** Harshit works from `app/mock/` throughout; when Arun's
+   real inference path lands, the payload shape is identical by construction.
 
 ## How work routes through the orchestrator
 
