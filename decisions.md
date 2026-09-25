@@ -680,3 +680,55 @@ The selected mathematical operations are:
 - **Immediate Delta**: Captures sharp, one-window spikes.
 - **Rolling Slopes (2, 5, and 10 windows)**: We use multiple time horizons because attackers operate at different cadences. 2 windows capture immediate escalation, 5 windows capture short-term progression, and 10 windows capture slower, sustained reconnaissance that avoids tripping strict rate-limits.
 - **Rolling Z-Score (120-window baseline)**: Because raw values fluctuate by time of day, we compare current values against a rolling 2-hour (120-window) baseline to identify statistical anomalies rather than absolute threshold breaches.
+
+---
+
+### D-025 — Rank normalisation is a scaler option; the causal variant carries any lead-time claim
+*Date: 2026-09-26 · Status: accepted (recorded before the r4 run, per the board's constraint) · Evidence: E2, E15, D-021 amendment point 6*
+
+**Decision.** `StateScaler` gains `mode="rank"` (task S-4). Each column is replaced by its Gaussian
+rank *within the capture being transformed*: average rank `r` among `n` windows, `p = (r - 0.5) / n`,
+value `= Phi^-1(p)`. Nothing is learned from the training days - `fit` only records the column order.
+Two variants, one config key:
+
+- `rank_window: null` - rank against the whole capture (the D-020 alert-budget analogue).
+- `rank_window: W` - **causal**: rank against the trailing `W` windows only, the first
+  `rank_min_periods` windows of a capture sit at 0.
+
+D-014 stays the default (`mode: log_standard`); a model config with no `scaler:` block reproduces
+round 2 exactly, and so does every existing checkpoint (the new fields have class-level defaults, so
+an old pickle reads them). `configs/model_r4_rank.yaml` selects `mode: rank, rank_window: 120`
+(60 min at a 30 s stride) on the r2 heads - the feature transform is r4's only variable.
+
+**Why.**
+- *Per capture, because the scaler is the prime suspect.* D-014 fits mean/std on the training days;
+  E2 measured what that does to Thursday (persistence NLL mean 152 010, median 0.85), and E15 found
+  one unscaled column beating every world-model statistic on the precursor label. A per-capture rank
+  is invariant to any monotone drift of a column between days, so that failure cannot recur.
+- *Gaussian, not a uniform percentile.* Integrated Gradients uses the all-zero state as its baseline
+  (`engine/explain.py`), which under D-014 means "the average window". A Gaussian rank keeps zero at
+  the capture's median window; a [0, 1] percentile would silently move it to the *minimum* window and
+  change the meaning of every attribution in the UI.
+- *Causal for claims.* Whole-capture ranking lets the windows after an onset set the scale of the
+  windows before it - a pre-onset window's value depends on the attack that follows. That is harmless
+  for detection and fatal for a lead-time claim. Any early-warning count from r4 is therefore made
+  with `rank_window` set; the whole-capture variant may be reported, labelled as an upper bound.
+
+**Also decided.** A caller that transforms several days in one frame must pass
+`groups=frame["split"]`, or the days are ranked against each other. The trainer (`prepare_days`) and
+the inference engine already transform one capture at a time; the leave-one-day-out logistic floor
+in `scripts/precursor_eval.py` concatenates days and needs `groups` for a like-for-like E16 row.
+`inverse_transform` raises in rank mode - a rank has no fitted scale to undo, and nothing calls it.
+
+**Known limitation.** Rank throws away magnitude by design: a DDoS window and an ordinary busy window
+can both sit at the top of their capture. The levels are not lost to the product - flagged flows
+and top talkers in the payload are computed from raw flows - but the model can no longer tell
+"busiest window today" from "busiest window ever". The causal variant also has a warm-up: the first
+`rank_min_periods` windows of every capture carry no information.
+
+**Revisit if.** r4 (Y-6/E16) shows the causal variant losing clearly to the whole-capture one - then
+the trailing window length, not the idea, is the next variable; or rank features fail the D-023 bar
+as badly as D-014 features did, which would take the representation hypothesis off the table and
+leave per-host state (S-2) as the remaining direction.
+
+**Refs.** `research/state-normalisation.md`.
