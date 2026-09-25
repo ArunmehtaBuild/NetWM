@@ -327,25 +327,34 @@ sampled windows keep the global attribution unbiased towards alarms.
 ---
 
 ### D-019 — Alarm score = max over the horizon, and lead time is measured per episode
-*Date: 2026-09-24 · Status: provisional · Evidence: E13*
+*Date: 2026-09-24, restated 2026-09-25 · Status: accepted (for the reason below, not the original one) · Evidence: E13, E14*
 
 **Decision.** The alarm statistic is `max_k P(compromised at t+k)` over the K imagined steps rather
-than the cumulative union `1 - prod(1 - p_k)`.
+than the cumulative union `1 - prod(1 - p_k)`. Implemented in `engine/predict.py` and in the
+benchmark scripts.
 
-**Why.** The compromise head answers "is this state compromised", a property that *persists*, so the
-union formula multiplies the same event K times and saturates near 1 - which is why the training-day
-score distribution has no headroom and the 5 % alert budget landed at 0.977. Empirically (E13) the
-ranking is nearly identical across statistics, but only the max produces any early warning
-(2 of 4 Thursday episodes, at an oracle threshold).
+**Original reasoning, and what happened to it.** The compromise head answers "is this state
+compromised", a property that *persists*, so the union formula multiplies the same event K times and
+saturates near 1. E13 showed ranking was nearly identical across statistics but that only the max
+produced any early warning (2 of 4 Thursday episodes at an oracle threshold), and we took that as a
+sign that the statistic might unlock lead time.
+
+**E14 says it does not.** Re-scoring the r2 checkpoints with `p_max` under five threshold policies
+gives **zero early warnings at every deployable threshold**, on both folds. Early warnings survive
+only at the oracle threshold (Thursday first-onset lead 5 windows, Friday 10), which no deployment
+can pick. So the statistic is *kept* - it is better behaved, it gives the score distribution headroom,
+and it is what made the per-capture alert budget of D-020 workable (Thursday F1 0.576 at 2.7 % FPR) -
+but the claim that it buys lead time is **withdrawn**.
 
 **Also decided.** Thursday's four onsets are 639, 658, 708 and 729 - separated by only 10-20 windows,
 with attack traffic in between. Only the **first onset of an episode chain** is a genuine
 "before the attacker got in" case; the rest are re-entries. Lead time is therefore reported per
 episode (never as a single mean) and the first-onset value is quoted separately.
 
-**Revisit when.** The proper fix is a first-occurrence hazard target (`1` only at the *first*
-compromise window after t, `0` afterwards), which would make the union formula correct. That is the
-first item of round 3.
+**What is left for lead time.** E13 ruled out the statistic, E14 ruled out the threshold, E12 says
+the pre-onset signal exists (within-day ROC-AUC 0.88). The remaining untested hypothesis is the
+*target*: a first-occurrence hazard (`1` only at the **first** compromise window after t, `0`
+afterwards), which would also make the union formula correct. That is round 3.
 
 ---
 

@@ -158,3 +158,24 @@ traffic never names a span - D-009). Use these for the shaded bands behind the t
 self-budget policy, so it differs between uploads - read it from the payload, never hard-code it.
 Absolute probabilities do not transfer between days (E14: a threshold tuned on training days sits
 ~100x too high on a held-out day).
+
+### v1.1 addendum (2026-09-25) - fields that closed contract drift
+
+| field | where | meaning |
+|---|---|---|
+| `observed_stage_conf` | timeline entry | documented in v1.0 but never emitted until now. It is the probability the model assigned to the stage that was *actually* happening (`stage_probs[observed_stage]`), so it is a calibration read-out, not a ground-truth confidence. Present only with labelled input, alongside `observed_stage`. |
+| `lead_time_summary` | top level | `{episodes, warned_early, mean_lead_windows, mean_lead_seconds, per_episode[]}`; `null` when the upload has no labels. Each `per_episode` row carries `onset`, `onset_ts`, `first_alarm`, `first_alarm_ts`, `lead_windows`, `lead_seconds`, `detected_early`. |
+| `dev_only`, `note` | top level | present **only** on hand-thresholded fixtures. If `dev_only` is true the payload is not a real result - see below. |
+
+**The alarm panel (H-4) must render both states.** With the shipped model and a deployable threshold
+the honest answer today is *"0 of 4 episodes warned early"* - that is what `app/mock/thursday.json`
+contains, and the panel has to show it as a first-class outcome (episodes listed, each marked "no
+early warning", with the onset time and the score at onset) rather than an empty list.
+
+**Fixtures**
+
+| file | threshold | use |
+|---|---|---|
+| `app/mock/thursday.json` | self-budget 10 % (0.044) | the real payload: 8 alarm runs, **0 of 4** episodes warned early |
+| `app/mock/friday.json` | self-budget 10 % | the real payload: 13 alarm runs, **0 of 1** warned early |
+| `app/mock/thursday_oracle.json` | **0.010, hand-picked from the labels** | **UI development only.** `dev_only: true`. 2 of 4 episodes warned early (leads of 5 and 10 windows, 150 s and 300 s) and 2 missed, so H-4 can be built and verified against both branches in one payload. Never quote its numbers as a result - the honest ones are in results.md E14. |

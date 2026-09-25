@@ -24,6 +24,7 @@ from netwm.features.windowing import (
     onset_windows,
     window_stages,
 )
+from netwm.metrics import lead_times
 from netwm.labels.mitre_map import (
     COMPROMISE_THRESHOLD,
     STAGE_LABELS,
@@ -100,6 +101,8 @@ def analyze_flows(
     n_samples: int = 16,
     explain_limit: int = 24,
     explain_every: int = 8,
+    threshold_override: float | None = None,
+    override_note: str | None = None,
     progress=None,
 ) -> dict[str, Any]:
     """Run the world model over a flow table and build the API result payload."""
@@ -125,7 +128,11 @@ def analyze_flows(
     # "is this state compromised", a property that persists, so the union multiplies one event K
     # times and saturates (D-019, E13).
     score = out["p_max"]
-    if policy.startswith("self-budget"):
+    if threshold_override is not None:
+        # Only for fixtures: a threshold chosen with knowledge of the labels is not something a
+        # deployed sensor can pick (E14). Payloads produced this way are marked dev_only.
+        threshold, policy = float(threshold_override), "fixed-override"
+    elif policy.startswith("self-budget"):
         # Alert budget on this capture's own score distribution: no labels, so a sensor can set it
         # from its live stream. Absolute probabilities do not transfer between days (E14: the
         # train-tuned threshold is ~100x too high on a held-out day).
@@ -176,7 +183,10 @@ def analyze_flows(
             ),
         }
         if has_labels:
-            entry["observed_stage"] = int(stages.iloc[t])
+            observed = int(stages.iloc[t])
+            entry["observed_stage"] = observed
+            # How much probability the model put on the stage that was actually happening.
+            entry["observed_stage_conf"] = round(float(out["stage_now"][t][observed]), 4)
         timeline.append(entry)
 
     payload: dict[str, Any] = {
@@ -206,9 +216,16 @@ def analyze_flows(
             "spans": _stage_spans(stages, expanded, ts),
         }
         payload["alarms"] = _alarm_rows(score, threshold, onsets, ts, stride_s, horizon)
+        payload["lead_time_summary"] = _lead_summary(
+            score, threshold, onsets, ts, stride_s, horizon
+        )
     else:
         payload["ground_truth"] = {"available": False}
         payload["alarms"] = _alarm_rows(score, threshold, [], ts, stride_s, horizon)
+        payload["lead_time_summary"] = None
+    if override_note:
+        payload["dev_only"] = True
+        payload["note"] = override_note
     if progress:
         progress(1.0, "done")
     return payload
@@ -243,6 +260,29 @@ def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon) -> list[dict]:
             }
         )
     return out
+
+
+def _lead_summary(score, threshold, onsets, ts, stride_s, horizon) -> dict[str, Any]:
+    """Per-episode early-warning result, including the episodes we missed.
+
+    The alarm panel must be able to say "0 of 4 episodes warned early" as clearly as it says
+    "fired 5 windows early", because today that is the honest answer (E14).
+    """
+    rows = lead_times(np.asarray(score), list(onsets), float(threshold), int(horizon), persistence=2)
+    for row in rows:
+        row["onset_ts"] = ts[row["onset"]].isoformat() + "Z"
+        row["first_alarm_ts"] = (
+            ts[row["first_alarm"]].isoformat() + "Z" if row["first_alarm"] is not None else None
+        )
+        row["lead_seconds"] = float(row["lead_windows"] * stride_s)
+    early = [r for r in rows if r["detected_early"]]
+    return {
+        "episodes": len(rows),
+        "warned_early": len(early),
+        "mean_lead_windows": round(float(np.mean([r["lead_windows"] for r in early])), 2) if early else 0.0,
+        "mean_lead_seconds": round(float(np.mean([r["lead_seconds"] for r in early])), 1) if early else 0.0,
+        "per_episode": rows,
+    }
 
 
 def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:

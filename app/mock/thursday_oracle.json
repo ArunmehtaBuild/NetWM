@@ -1,7 +1,7 @@
 {
  "payload_version": "1.1",
  "alarm_statistic": "p_max",
- "threshold_policy": "self-budget-10pct",
+ "threshold_policy": "fixed-override",
  "source": {
   "flows": 362076,
   "windows": 972,
@@ -11,7 +11,7 @@
   "filename": "thursday.csv",
   "kind": "csv"
  },
- "threshold": 0.04390100762248039,
+ "threshold": 0.01,
  "horizon_k": 10,
  "stages": [
   {
@@ -152,7 +152,7 @@
      0.0771
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0,
    "attention": [
     0.0,
@@ -16087,7 +16087,7 @@
      0.2479
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0809,
    "attention": [
     0.0369,
@@ -16786,7 +16786,7 @@
      0.2057
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2155,
    "attention": [
     0.0204,
@@ -17046,7 +17046,7 @@
      0.1763
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0612,
    "attention": [
     0.0555,
@@ -17176,7 +17176,7 @@
      0.3411
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0755,
    "attention": [
     0.0642,
@@ -17306,7 +17306,7 @@
      0.2305
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0898,
    "attention": [
     0.0362,
@@ -32812,7 +32812,7 @@
      0.2019
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1402,
    "attention": [
     0.0223,
@@ -82126,7 +82126,7 @@
      0.2019
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 7.4718,
    "attention": [
     0.0239,
@@ -82256,7 +82256,7 @@
      0.7938
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 5.4369,
    "attention": [
     0.025,
@@ -83085,7 +83085,7 @@
      0.6521
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1911,
    "attention": [
     0.1517,
@@ -83215,7 +83215,7 @@
      0.8563
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.115,
    "attention": [
     0.3013,
@@ -83345,7 +83345,7 @@
      0.8924
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1117,
    "attention": [
     0.0657,
@@ -83865,7 +83865,7 @@
      0.1727
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0907,
    "attention": [
     0.0464,
@@ -83995,7 +83995,7 @@
      0.1593
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0927,
    "attention": [
     0.1062,
@@ -84304,7 +84304,7 @@
      0.2994
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1039,
    "attention": [
     0.0341,
@@ -84434,7 +84434,7 @@
      0.2442
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2666,
    "attention": [
     0.0524,
@@ -84564,7 +84564,7 @@
      0.1315
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1094,
    "attention": [
     0.0504,
@@ -84694,7 +84694,7 @@
      0.1435
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.061,
    "attention": [
     0.0443,
@@ -86531,7 +86531,7 @@
      0.1332
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1838,
    "attention": [
     0.0691,
@@ -86661,7 +86661,7 @@
      0.1367
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2063,
    "attention": [
     0.0485,
@@ -87490,7 +87490,7 @@
      0.1169
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1274,
    "attention": [
     0.1684,
@@ -91147,7 +91147,7 @@
      0.8745
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 13.0249,
    "attention": [
     0.0551,
@@ -91277,7 +91277,7 @@
      0.8855
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 12.7137,
    "attention": [
     0.0527,
@@ -91407,7 +91407,7 @@
      0.6463
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 1.0604,
    "attention": [
     0.0385,
@@ -91537,7 +91537,7 @@
      0.437
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1485,
    "attention": [
     0.0775,
@@ -91667,7 +91667,7 @@
      0.1213
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0879,
    "attention": [
     0.0446,
@@ -93585,7 +93585,7 @@
      0.1682
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1153,
    "attention": [
     0.0508,
@@ -93715,7 +93715,7 @@
      0.098
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1845,
    "attention": [
     0.0437,
@@ -93845,7 +93845,7 @@
      0.1133
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1391,
    "attention": [
     0.1669,
@@ -94024,7 +94024,7 @@
      0.1677
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1024,
    "attention": [
     0.0943,
@@ -94154,7 +94154,7 @@
      0.1508
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1712,
    "attention": [
     0.0122,
@@ -94284,7 +94284,7 @@
      0.1226
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1664,
    "attention": [
     0.0095,
@@ -94934,7 +94934,7 @@
      0.0794
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2435,
    "attention": [
     0.0127,
@@ -95113,7 +95113,7 @@
      0.0868
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2275,
    "attention": [
     0.0362,
@@ -95243,7 +95243,7 @@
      0.0961
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.2386,
    "attention": [
     0.089,
@@ -95373,7 +95373,7 @@
      0.0705
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.4687,
    "attention": [
     0.0991,
@@ -99859,7 +99859,7 @@
      0.625
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 17.4522,
    "attention": [
     0.0459,
@@ -99989,7 +99989,7 @@
      0.5593
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.4182,
    "attention": [
     0.0279,
@@ -100119,7 +100119,7 @@
      0.4601
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.198,
    "attention": [
     0.0915,
@@ -100249,7 +100249,7 @@
      0.7562
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 3.7602,
    "attention": [
     0.0479,
@@ -100379,7 +100379,7 @@
      0.8984
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 4.0349,
    "attention": [
     0.119,
@@ -100558,7 +100558,7 @@
      0.8598
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.3386,
    "attention": [
     0.0716,
@@ -112931,7 +112931,7 @@
      0.1308
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1523,
    "attention": [
     0.0385,
@@ -113061,7 +113061,7 @@
      0.1387
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1228,
    "attention": [
     0.235,
@@ -113500,7 +113500,7 @@
      0.0952
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.1617,
    "attention": [
     0.0314,
@@ -113760,7 +113760,7 @@
      0.0837
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.3173,
    "attention": [
     0.0756,
@@ -119465,7 +119465,7 @@
      0.1041
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0855,
    "attention": [
     0.0549,
@@ -119595,7 +119595,7 @@
      0.2107
     ]
    },
-   "alarm": false,
+   "alarm": true,
    "surprise": 0.0978,
    "attention": [
     0.0367,
@@ -133656,44 +133656,44 @@
  },
  "alarms": [
   {
-   "t": 118,
-   "ts": "2017-07-06T12:58:00Z",
-   "until_t": 121,
+   "t": 0,
+   "ts": "2017-07-06T11:59:00Z",
+   "until_t": 0,
+   "p": 0.012,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 117,
+   "ts": "2017-07-06T12:57:30Z",
+   "until_t": 126,
    "p": 0.1687,
    "onset_t": null,
    "lead_windows": null,
    "lead_seconds": null
   },
   {
-   "t": 123,
-   "ts": "2017-07-06T13:00:30Z",
-   "until_t": 123,
-   "p": 0.1008,
+   "t": 240,
+   "ts": "2017-07-06T13:59:00Z",
+   "until_t": 240,
+   "p": 0.015,
    "onset_t": null,
    "lead_windows": null,
    "lead_seconds": null
   },
   {
-   "t": 612,
-   "ts": "2017-07-06T17:05:00Z",
-   "until_t": 614,
-   "p": 0.1055,
+   "t": 602,
+   "ts": "2017-07-06T17:00:00Z",
+   "until_t": 603,
+   "p": 0.0374,
    "onset_t": null,
    "lead_windows": null,
    "lead_seconds": null
   },
   {
-   "t": 617,
-   "ts": "2017-07-06T17:07:30Z",
-   "until_t": 617,
-   "p": 0.0494,
-   "onset_t": null,
-   "lead_windows": null,
-   "lead_seconds": null
-  },
-  {
-   "t": 622,
-   "ts": "2017-07-06T17:10:00Z",
+   "t": 609,
+   "ts": "2017-07-06T17:03:30Z",
    "until_t": 625,
    "p": 0.4272,
    "onset_t": null,
@@ -133701,8 +133701,53 @@
    "lead_seconds": null
   },
   {
-   "t": 738,
-   "ts": "2017-07-06T18:08:00Z",
+   "t": 634,
+   "ts": "2017-07-06T17:16:00Z",
+   "until_t": 635,
+   "p": 0.0136,
+   "onset_t": 639,
+   "lead_windows": 5,
+   "lead_seconds": 150.0
+  },
+  {
+   "t": 641,
+   "ts": "2017-07-06T17:19:30Z",
+   "until_t": 641,
+   "p": 0.01,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 668,
+   "ts": "2017-07-06T17:33:00Z",
+   "until_t": 672,
+   "p": 0.0289,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 686,
+   "ts": "2017-07-06T17:42:00Z",
+   "until_t": 691,
+   "p": 0.027,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 696,
+   "ts": "2017-07-06T17:47:00Z",
+   "until_t": 699,
+   "p": 0.022,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 732,
+   "ts": "2017-07-06T18:05:00Z",
    "until_t": 818,
    "p": 0.2623,
    "onset_t": null,
@@ -133712,17 +133757,26 @@
   {
    "t": 820,
    "ts": "2017-07-06T18:49:00Z",
-   "until_t": 821,
+   "until_t": 826,
    "p": 0.0844,
    "onset_t": null,
    "lead_windows": null,
    "lead_seconds": null
   },
   {
-   "t": 824,
-   "ts": "2017-07-06T18:51:00Z",
-   "until_t": 825,
-   "p": 0.0822,
+   "t": 828,
+   "ts": "2017-07-06T18:53:00Z",
+   "until_t": 828,
+   "p": 0.0117,
+   "onset_t": null,
+   "lead_windows": null,
+   "lead_seconds": null
+  },
+  {
+   "t": 870,
+   "ts": "2017-07-06T19:14:00Z",
+   "until_t": 871,
+   "p": 0.0269,
    "onset_t": null,
    "lead_windows": null,
    "lead_seconds": null
@@ -133730,19 +133784,19 @@
  ],
  "lead_time_summary": {
   "episodes": 4,
-  "warned_early": 0,
-  "mean_lead_windows": 0.0,
-  "mean_lead_seconds": 0.0,
+  "warned_early": 2,
+  "mean_lead_windows": 7.5,
+  "mean_lead_seconds": 225.0,
   "per_episode": [
    {
     "onset": 639,
-    "first_alarm": null,
-    "lead_windows": 0,
-    "detected_early": false,
+    "first_alarm": 634,
+    "lead_windows": 5,
+    "detected_early": true,
     "score_at_onset": 0.006679429206997156,
     "onset_ts": "2017-07-06T17:18:30Z",
-    "first_alarm_ts": null,
-    "lead_seconds": 0.0
+    "first_alarm_ts": "2017-07-06T17:16:00Z",
+    "lead_seconds": 150.0
    },
    {
     "onset": 658,
@@ -133756,13 +133810,13 @@
    },
    {
     "onset": 708,
-    "first_alarm": null,
-    "lead_windows": 0,
-    "detected_early": false,
+    "first_alarm": 698,
+    "lead_windows": 10,
+    "detected_early": true,
     "score_at_onset": 0.005613804794847965,
     "onset_ts": "2017-07-06T17:53:00Z",
-    "first_alarm_ts": null,
-    "lead_seconds": 0.0
+    "first_alarm_ts": "2017-07-06T17:48:00Z",
+    "lead_seconds": 300.0
    },
    {
     "onset": 729,
@@ -133775,5 +133829,7 @@
     "lead_seconds": 0.0
    }
   ]
- }
+ },
+ "dev_only": true,
+ "note": "UI FIXTURE ONLY - threshold 0.010 was picked with knowledge of the labels (E14 oracle) so that H-4 has a non-empty early-alarm case to build against. The real payload (thursday.json) warns early on 0 of 4 episodes; see results.md E14."
 }

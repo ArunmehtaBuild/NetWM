@@ -372,4 +372,13 @@ before Friday's.
    first-occurrence hazard target, so a window is positive precisely when a compromise *begins*
    within k - is the remaining untested hypothesis, and E12 says the signal is there to be found.
 
+### Caveat found while building the UI fixture
+
+Forecasts are Monte-Carlo rollouts, so the scores are stochastic. Re-running the same checkpoint at
+the same oracle threshold (0.010) on Thursday gave **1 of 4** episodes warned early in the E14 run
+and **2 of 4** in the fixture run (`app/mock/thursday_oracle.json`, leads of 5 and 10 windows). The
+ranking metrics are stable, but any early-warning *count* quoted from a single run carries that
+sampling noise on top of an n = 4 sample. Round 3 must report these over several seeds, or with the
+deterministic (mean-path) rollout, before any lead-time claim goes in the deck.
+
 Figures: `results/figures/e14_thursday_pmax.png`, `results/figures/e14_friday_pmax.png`.
