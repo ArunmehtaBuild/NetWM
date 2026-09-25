@@ -17,7 +17,7 @@ deployable threshold. Detection is strong (Thursday PR-AUC 0.675 vs 0.139 for lo
 FPR 0.042 vs 0.608) but the system is not yet forecasting, which is the entire premise of PS 26153.
 E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this is fixable.
 
-**Not started at all:** Flask backend, the whole frontend, packet-level features, PCAP ingestion.
+**Not started at all:** the FastAPI backend, the whole frontend, packet-level features, PCAP ingestion.
 
 **Known defects (found in the 2026-09-25 audit):**
 - `engine/predict.py:123` scores alarms with the cumulative union while **D-019** says max over
@@ -25,7 +25,8 @@ E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this i
 - `world_model.py` emits `p_cum_attack` / `p_cum_escalate`; `engine/predict.py` drops both.
 - Payload drift vs `docs/api_contract.md` v1: missing `observed_stage`, `top_talkers`,
   `ground_truth.spans`; extra `until_t`, top-level `stages`.
-- `fixtures/api/` is empty, so the frontend is blocked on a file that takes one command to make.
+- ~~`fixtures/api/` is empty~~ - closed by T-02/T-07: three fixtures ship, Chart.js is vendored, and
+  the frontend runs standalone from `frontend/mock/`.
 
 ## Tracks and owners
 
@@ -37,6 +38,38 @@ E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this i
 | **Alok** | Packets & demo data | PCAP sourcing, packet features, PCAP->flows, demo slices |
 | **Arun** | Backend | Flask API, job runner, SSE replay, offline packaging |
 | **Harshit** | Frontend | the SOC dashboard, replay, demo video |
+
+## Repo structure and who owns what
+
+The backend and the frontend are **separate deployables** as of 21a9786 - pull before you start.
+
+```
+src/netwm/        the ML: data adapters, features, labels, models, engine   (Sanchi, Yash, Alok)
+scripts/          CLI entry points: build_features, train, predict, benchmark, sync_fixtures
+backend/          FastAPI JSON API - renders nothing                        (Arun)
+                    uvicorn backend.server:app --host 127.0.0.1 --port 5000
+frontend/         static files only - no backend needed to develop          (Harshit)
+                    python -m http.server 8080
+fixtures/api/     the three canonical payloads: single source of truth      (Atharv)
+docs/             api_contract.md (the boundary) + submission artefacts
+results/ research/ models/ configs/                                          (as before)
+```
+
+| area | paths | owner |
+|---|---|---|
+| features & state | `src/netwm/features/*`, `scripts/build_features.py`, `configs/features*.yaml` | Sanchi |
+| model & training | `src/netwm/models/world_model.py`, `src/netwm/train.py`, `src/netwm/engine/rollout.py`, `configs/model_*.yaml` | Yash |
+| metrics & explain | `src/netwm/metrics.py`, `src/netwm/evaluate.py`, `src/netwm/engine/explain.py`, `scripts/benchmark*.py` | Atharv |
+| packets & baselines | `src/netwm/features/pcap_features.py`, `flow_aggregator.py`, `src/netwm/models/baseline.py`, `scripts/make_demo_samples.py` | Alok |
+| backend | `backend/**` - server, schemas, jobs, inference, config, errors, tests | Arun |
+| frontend | `frontend/**` - index.html, css, js, vendor | Harshit |
+| inference entry point | `src/netwm/engine/predict.py`, `fixtures/api/*` | Atharv - Arun **consumes** it, does not edit it |
+| shared (PR + a heads-up first) | `src/netwm/labels/*`, `src/netwm/data/*`, `src/netwm/utils.py`, `docs/api_contract.md` | anyone |
+
+**Framework note.** The API is **FastAPI + uvicorn**, not Flask (decided 2026-09-25, rationale in
+[backend/PLAN.md](backend/PLAN.md)): Pydantic response models make `docs/api_contract.md` executable,
+which is the exact class of bug we shipped twice, plus one-line CORS for the split origins and free
+OpenAPI at `/docs`. `requirements.txt` is updated - `pip install -r requirements.txt` again.
 
 ## Priority order (read this before picking anything up)
 
@@ -96,8 +129,8 @@ Full spec: [backend/PLAN.md](backend/PLAN.md).
 
 | id | task | done when |
 |---|---|---|
-| **R-1** | `backend/server.py` + `backend/jobs.py`: upload -> background worker -> progress -> result, wrapping `netwm.engine.predict.analyze_file`. Serve `fixtures/api/*.json` when no checkpoint is present so the app is never undemoable | `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress |
-| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `fixtures/api/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest tests/test_contract.py` fails if engine, mock and contract disagree |
+| **R-1** | FastAPI app: `server.py` (routes + CORS allowlist), `schemas.py` (Pydantic models mirroring the contract), `jobs.py` (single worker thread - torch blocks, so no async inference), `inference.py` wrapping `netwm.engine.predict.analyze_file`. Serve `fixtures/api/*.json` with `"mock": true` when no checkpoint exists | `uvicorn backend.server:app` -> `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress; OpenAPI renders at `/docs` |
+| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `fixtures/api/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest backend/tests/test_contract.py` fails if engine, fixtures and contract disagree |
 | **R-3** | SSE replay `/api/jobs/<id>/stream` at `?speed=` windows/sec | the dashboard can play an attack unfolding |
 | **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
 
@@ -107,14 +140,14 @@ Full spec: [frontend/PLAN.md](frontend/PLAN.md).
 
 | id | task | done when |
 |---|---|---|
-| **H-1** | Shell + dark SOC theme + vendored Chart.js (no CDN), reading `fixtures/api/thursday.json` | loads offline, renders the timeline |
+| **H-1** | Shell + dark SOC theme + `js/config.js` (API_BASE / `?mock`) + `js/api.js` with the mock fallback, reading `frontend/mock/thursday.json`. Chart.js is already vendored | `python -m http.server 8080` in `frontend/`, opened with WiFi off, renders the timeline with no backend running |
 | **H-2** | Forecast timeline: observed risk line, K-step forecast cone (`p_lo`/`p_hi`), alarm threshold, ground-truth attack spans shaded | the Thursday infiltration is visually obvious |
 | **H-3** | Kill-chain ribbon (predicted stage per window) + current-stage card with ATT&CK tactic id | stage colours come from the API, never hard-coded |
 | **H-4** | **Alarm log with lead time** - "fired N windows (M s) before onset". This is the single most important panel in the demo video | reads `alarms[].lead_windows` |
 | **H-5** | Why-panel: attribution bars + attention heatmap; flagged-flows table | every alarm can be explained on screen |
 | **H-6** | Replay mode (play/pause/scrub) on the SSE stream, then record the 2-minute demo video | video shows risk rising *before* the attack lands |
 
-H-1 and H-2 start the moment `fixtures/api/thursday.json` exists (Atharv, T-02). Do not wait for a model.
+H-1 and H-2 need no backend and no model: run `python scripts/sync_fixtures.py` once, then serve the folder.
 
 ## Kickoff - the first commit each person should make
 
@@ -122,8 +155,8 @@ Everything below is unblocked **right now**; nothing waits on anything else.
 
 | person | start with | first commit looks like |
 |---|---|---|
-| Arun | **R-1** | `backend/server.py` serving `/api/health`, `/api/demos`, `/api/jobs/<id>/result` from `fixtures/api/` - no model loading yet |
-| Harshit | vendor Chart.js, then **H-1** | `frontend/index.html` + `theme.css` rendering the Thursday mock's timeline, offline |
+| Arun | **R-1** | `backend/server.py` + `schemas.py` serving `/api/health`, `/api/model`, `/api/demos`, `/api/jobs/<id>/result` from `fixtures/api/` under uvicorn - no model loading yet |
+| Harshit | **H-1** (Chart.js already vendored) | `frontend/index.html` + `css/theme.css` + `js/config.js` rendering the Thursday fixture's timeline, served statically, offline |
 | Sanchi | **S-1** | trend/slope features behind a config flag, `S_t` v2 built for one day, feature count in `results.md` F2 |
 | Yash | **Y-2** | a decisions.md entry for the first-occurrence hazard target *before* the run, then the head + a smoke train |
 | Alok | **A-1** | a decisions.md entry recording the PCAP source **or** the synthesis fallback - closed within 2 days either way |
@@ -133,7 +166,7 @@ Everything below is unblocked **right now**; nothing waits on anything else.
 1. **`S_t` v1 is frozen for Y-2.** Yash trains the first-occurrence hazard experiment on the current
    70-feature matrix, so E15 is comparable with E14 and the round-2 numbers. Sanchi's v2 features
    land behind a config flag and get evaluated in **Y-4** as an ablation - one variable at a time.
-2. **Frontend never blocks on the model.** Harshit works from `fixtures/api/` throughout; when Arun's
+2. **Frontend never blocks on the model or the backend.** Harshit works from `frontend/mock/` throughout; when Arun's
    real inference path lands, the payload shape is identical by construction.
 
 ## How work routes through the orchestrator
