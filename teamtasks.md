@@ -168,6 +168,9 @@ Full spec: [frontend/PLAN.md](frontend/PLAN.md).
 | **H-2** | Forecast timeline: observed risk line, K-step forecast cone (`p_lo`/`p_hi`), alarm threshold, ground-truth attack spans shaded | the Thursday infiltration is visually obvious |
 | **H-3** | Kill-chain ribbon (predicted stage per window) + current-stage card with ATT&CK tactic id | stage colours come from the API, never hard-coded |
 | **H-4** | **Alarm log with lead time** - "fired N windows (M s) before onset". This is the single most important panel in the demo video | reads `alarms[].lead_windows` |
+| ~~H-1..H-5~~ | **Merged** ([#1](https://github.com/ArunmehtaBuild/smart2nd/pull/1), 83af70b). Reviewed by running it: risk line plots `p_max` per D-019/D-020, the honest "0 of 4 episodes warned early" banner is front and centre, the oracle fixture carries its dev-only warning, and all three H-4 alarm states render |
+| **H-7** | Cleanups from the #1 review: (a) move the 7 screenshots (~2 MB) to `docs/` and the `test_h*.html` harnesses to `frontend/dev/` - both currently deploy with the static site; (b) replace the five hard-coded `#4c9be8` in `timeline.js` with the `theme.css` token; (c) check the header layout at the width the demo video will actually be recorded at (it wraps at ~800 px) | nothing ships that is not part of the product |
+| **H-8** | Wire the live path when R-1 lands: upload -> job polling -> result, SSE replay, and the API/fixture badge in the header. Until then keep `?mock` working exactly as it does now | the same dashboard runs against the real API with no code change beyond `config.js` |
 | **H-5** | Why-panel: attribution bars + attention heatmap; flagged-flows table | every alarm can be explained on screen |
 | **H-6** | Replay mode (play/pause/scrub) on the SSE stream, then record the 2-minute demo video | video shows risk rising *before* the attack lands |
 
