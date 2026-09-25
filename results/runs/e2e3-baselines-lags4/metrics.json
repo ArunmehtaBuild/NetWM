@@ -1,0 +1,632 @@
+{
+  "run_id": "e2e3-baselines-lags4",
+  "timestamp_utc": "2026-09-25T10:46:30+00:00",
+  "git_sha": "1c61eaf",
+  "config": {
+    "data": "data/processed/cicids2017",
+    "lags": 4,
+    "seed": 42
+  },
+  "metrics": {
+    "rows": [
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "monday",
+        "nll_mean": 1.0127,
+        "nll_median": 0.8468,
+        "nll_p95": 1.5505
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "tuesday",
+        "nll_mean": 1.0916,
+        "nll_median": 0.8852,
+        "nll_p95": 1.9638
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "wednesday",
+        "nll_mean": 1.1465,
+        "nll_median": 0.9064,
+        "nll_p95": 2.1769
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "thursday",
+        "nll_mean": 152010.125,
+        "nll_median": 0.8513,
+        "nll_p95": 18.837
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "detect",
+        "threshold_mode": "train-tuned",
+        "test_day": "thursday",
+        "base_rate": 0.1111,
+        "threshold": 0.8724,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0035,
+        "pr_auc": 0.069,
+        "roc_auc": 0.2265,
+        "positives": 108,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "detect",
+        "threshold_mode": "oracle",
+        "test_day": "thursday",
+        "base_rate": 0.1111,
+        "threshold": 0.0198,
+        "precision": 0.0241,
+        "recall": 0.0185,
+        "f1": 0.0209,
+        "fpr": 0.0938,
+        "pr_auc": 0.069,
+        "roc_auc": 0.2265,
+        "positives": 108,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 2,
+        "mean_lead_windows": 6.5,
+        "mean_lead_seconds": 195.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "forecast",
+        "threshold_mode": "train-tuned",
+        "test_day": "thursday",
+        "base_rate": 0.1708,
+        "threshold": 0.9018,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0037,
+        "pr_auc": 0.1142,
+        "roc_auc": 0.2776,
+        "positives": 166,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "forecast",
+        "threshold_mode": "oracle",
+        "test_day": "thursday",
+        "base_rate": 0.1708,
+        "threshold": 0.01,
+        "precision": 0.0684,
+        "recall": 0.0482,
+        "f1": 0.0565,
+        "fpr": 0.1352,
+        "pr_auc": 0.1142,
+        "roc_auc": 0.2776,
+        "positives": 166,
+        "n": 972,
+        "episodes": 4,
+        "warned_early": 1,
+        "mean_lead_windows": 3.0,
+        "mean_lead_seconds": 90.0
+      },
+      {
+        "experiment": "E2",
+        "model": "persistence",
+        "target": "next_state",
+        "test_day": "friday",
+        "nll_mean": 1.412,
+        "nll_median": 0.9354,
+        "nll_p95": 2.7481
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "detect",
+        "threshold_mode": "train-tuned",
+        "test_day": "friday",
+        "base_rate": 0.1198,
+        "threshold": 0.8332,
+        "precision": 0.0833,
+        "recall": 0.0086,
+        "f1": 0.0156,
+        "fpr": 0.0129,
+        "pr_auc": 0.2338,
+        "roc_auc": 0.7609,
+        "positives": 116,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "detect",
+        "threshold_mode": "oracle",
+        "test_day": "friday",
+        "base_rate": 0.1198,
+        "threshold": 0.01,
+        "precision": 0.2481,
+        "recall": 0.2759,
+        "f1": 0.2612,
+        "fpr": 0.1138,
+        "pr_auc": 0.2338,
+        "roc_auc": 0.7609,
+        "positives": 116,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "forecast",
+        "threshold_mode": "train-tuned",
+        "test_day": "friday",
+        "base_rate": 0.1312,
+        "threshold": 0.7744,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0309,
+        "pr_auc": 0.1848,
+        "roc_auc": 0.6918,
+        "positives": 127,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      },
+      {
+        "experiment": "E3",
+        "model": "logreg(lags=4)",
+        "target": "forecast",
+        "threshold_mode": "oracle",
+        "test_day": "friday",
+        "base_rate": 0.1312,
+        "threshold": 0.01,
+        "precision": 0.1636,
+        "recall": 0.2126,
+        "f1": 0.1849,
+        "fpr": 0.1641,
+        "pr_auc": 0.1848,
+        "roc_auc": 0.6918,
+        "positives": 127,
+        "n": 968,
+        "episodes": 1,
+        "warned_early": 0,
+        "mean_lead_windows": 0.0,
+        "mean_lead_seconds": 0.0
+      }
+    ],
+    "per_day": {
+      "monday": {
+        "test_day": "monday",
+        "train_days": [
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "tuesday": {
+        "test_day": "tuesday",
+        "train_days": [
+          "monday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "wednesday": {
+        "test_day": "wednesday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "thursday",
+          "friday"
+        ]
+      },
+      "thursday": {
+        "test_day": "thursday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "friday"
+        ],
+        "detect_lead": {
+          "episodes": 4,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 639,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 8.298284747780731e-07
+            },
+            {
+              "onset": 658,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 2.763387438213649e-08
+            },
+            {
+              "onset": 708,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 3.6989335607506813e-06
+            },
+            {
+              "onset": 729,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.027321842360906016
+            }
+          ]
+        },
+        "detect_threshold": 0.8724,
+        "detect_top_features": [
+          [
+            "one_way_rate@t-4",
+            -2.7493843657686257
+          ],
+          [
+            "one_way_rate@t-2",
+            -2.3150635516697964
+          ],
+          [
+            "one_way_rate",
+            -2.260615438785095
+          ],
+          [
+            "one_way_rate@t-1",
+            -2.102231373477368
+          ],
+          [
+            "one_way_rate@t-3",
+            -2.0633490057545893
+          ],
+          [
+            "proto_icmp_rate",
+            -1.7190053344941667
+          ],
+          [
+            "has_fin_rate@t-2",
+            1.7124139649374306
+          ],
+          [
+            "priv_port_rate@t-4",
+            -1.6692292029740146
+          ],
+          [
+            "priv_port_rate",
+            -1.6552954728937912
+          ],
+          [
+            "proto_icmp_rate@t-1",
+            -1.6267498576522925
+          ],
+          [
+            "dst_port_entropy@t-1",
+            1.5710217896698004
+          ],
+          [
+            "dst_port_entropy",
+            1.498653712191918
+          ],
+          [
+            "has_fin_rate@t-4",
+            1.4770060494114061
+          ],
+          [
+            "svc_smb_rate@t-4",
+            -1.4631098143855243
+          ],
+          [
+            "has_fin_rate@t-1",
+            1.4554087267900389
+          ]
+        ],
+        "forecast_lead": {
+          "episodes": 4,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 639,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 1.5446330524354669e-06
+            },
+            {
+              "onset": 658,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 7.030845787892951e-07
+            },
+            {
+              "onset": 708,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 5.669595013998566e-06
+            },
+            {
+              "onset": 729,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.006118151428509573
+            }
+          ]
+        },
+        "forecast_threshold": 0.9017999999999999,
+        "forecast_top_features": [
+          [
+            "one_way_rate@t-4",
+            -2.38229391455039
+          ],
+          [
+            "one_way_rate@t-2",
+            -2.2584592426411807
+          ],
+          [
+            "one_way_rate@t-3",
+            -2.2308681468972633
+          ],
+          [
+            "proto_icmp_rate@t-1",
+            -2.0230387365738753
+          ],
+          [
+            "one_way_rate@t-1",
+            -1.9117293874246946
+          ],
+          [
+            "priv_port_rate",
+            -1.8217711375696275
+          ],
+          [
+            "dst_port_entropy",
+            1.7598738765474367
+          ],
+          [
+            "proto_icmp_rate@t-2",
+            -1.7495610768836873
+          ],
+          [
+            "proto_icmp_rate",
+            -1.7223995834067252
+          ],
+          [
+            "proto_udp_rate",
+            1.7036350653864663
+          ],
+          [
+            "one_way_rate",
+            -1.6911474817882444
+          ],
+          [
+            "svc_smb_rate@t-4",
+            -1.649109366814009
+          ],
+          [
+            "bytes_max",
+            1.6417072323818247
+          ],
+          [
+            "proto_udp_rate@t-1",
+            1.5700136306979724
+          ],
+          [
+            "proto_udp_rate@t-4",
+            1.5158680242165379
+          ]
+        ]
+      },
+      "friday": {
+        "test_day": "friday",
+        "train_days": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday"
+        ],
+        "detect_lead": {
+          "episodes": 1,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 129,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.0004688950694834126
+            }
+          ]
+        },
+        "detect_threshold": 0.8331999999999999,
+        "detect_top_features": [
+          [
+            "outbound_bytes",
+            2.5713328877553203
+          ],
+          [
+            "outbound_bytes@t-4",
+            2.0578534399788446
+          ],
+          [
+            "bytes_max@t-3",
+            1.5900058995717572
+          ],
+          [
+            "active_mean_mean",
+            1.4548710292051927
+          ],
+          [
+            "psh_cnt_sum@t-4",
+            1.3840665498009297
+          ],
+          [
+            "has_rst_rate@t-3",
+            -1.300605655634347
+          ],
+          [
+            "dst_ip_entropy",
+            -1.1646586393867737
+          ],
+          [
+            "is_inbound_rate",
+            -1.1396450891554908
+          ],
+          [
+            "fwd_seg_size_min_mean",
+            1.135032920219003
+          ],
+          [
+            "fwd_init_win_mean@t-4",
+            -1.1290365216502967
+          ],
+          [
+            "fwd_init_win_mean@t-1",
+            -1.0902071406121892
+          ],
+          [
+            "has_rst_rate@t-2",
+            -1.0708921228526727
+          ],
+          [
+            "uniq_dst_port@t-2",
+            1.0665934805063029
+          ],
+          [
+            "outbound_bytes@t-1",
+            1.028308002575098
+          ],
+          [
+            "flow_iat_std_mean@t-1",
+            -1.0265491962363926
+          ]
+        ],
+        "forecast_lead": {
+          "episodes": 1,
+          "episodes_warned_early": 0,
+          "mean_lead_windows": 0.0,
+          "mean_lead_seconds": 0.0,
+          "max_lead_windows": 0,
+          "per_episode": [
+            {
+              "onset": 129,
+              "first_alarm": null,
+              "lead_windows": 0,
+              "detected_early": false,
+              "score_at_onset": 0.0024515218420263466
+            }
+          ]
+        },
+        "forecast_threshold": 0.7744,
+        "forecast_top_features": [
+          [
+            "ephemeral_dst_rate",
+            1.902562038054091
+          ],
+          [
+            "flow_iat_mean_mean@t-4",
+            -1.9001831889440952
+          ],
+          [
+            "duration_s_max@t-1",
+            1.8642938107575597
+          ],
+          [
+            "svc_https_rate@t-4",
+            1.8483353611799238
+          ],
+          [
+            "urg_cnt_sum@t-3",
+            -1.7976736540963627
+          ],
+          [
+            "is_internal_rate",
+            1.7672616051350847
+          ],
+          [
+            "outbound_bytes",
+            1.7173819061587732
+          ],
+          [
+            "is_inbound_rate",
+            -1.6996497168190479
+          ],
+          [
+            "is_inbound_rate@t-4",
+            -1.6883776076758326
+          ],
+          [
+            "flow_iat_mean_mean@t-3",
+            -1.6714979098995004
+          ],
+          [
+            "dst_port_entropy",
+            1.6567740673644986
+          ],
+          [
+            "is_internal_rate@t-2",
+            1.6395694170419897
+          ],
+          [
+            "is_internal_rate@t-1",
+            1.6244189604535
+          ],
+          [
+            "is_inbound_rate@t-2",
+            -1.602588010849346
+          ],
+          [
+            "dst_port_entropy@t-2",
+            1.598460874652749
+          ]
+        ]
+      }
+    }
+  }
+}

@@ -21,6 +21,7 @@ the commentary column.
 | E4-E7 r2 | world model, round 2 | leave-one-day-out | `python scripts/train.py --run e4e7-worldmodel-r2` | `results/tables/e4e7-worldmodel-r2_*.csv` | Thursday PR-AUC **0.675**, ROC-AUC **0.814**, F1 0.592 at 4.2 % FPR; lead time still 0 |
 | E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
 | E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
+| E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
 
 ## Planned experiment set (M1)
 
@@ -386,3 +387,30 @@ sampling noise on top of an n = 4 sample. Round 3 must report these over several
 deterministic (mean-path) rollout, before any lead-time claim goes in the deck.
 
 Figures: `results/figures/e14_thursday_pmax.png`, `results/figures/e14_friday_pmax.png`.
+
+---
+
+## E3b - the lagged logistic-regression check (insurance for D-021)
+
+`python scripts/benchmark_baselines.py --lags 4` · `results/tables/e2e3_baselines_lags4.csv`
+
+D-021 says the framing is wrong if a method simpler than ours gets positive lead time at a deployable
+threshold. The cheapest candidate is the mandated baseline given *history*: logistic regression on
+the current state plus the previous 4 windows (2 minutes), same folds, same features.
+
+| fold | target | threshold | F1 | PR-AUC | ROC-AUC | warned early | lead |
+|---|---|---|---:|---:|---:|---:|---:|
+| Thursday | forecast | train-tuned (0.902) | 0.000 | 0.114 | 0.278 | 0 / 4 | 0 |
+| Thursday | forecast | oracle (0.010) | 0.057 | 0.114 | 0.278 | 1 / 4 | 3 windows |
+| Friday | forecast | train-tuned (0.774) | 0.000 | 0.185 | 0.692 | 0 / 1 | 0 |
+| Friday | forecast | oracle (0.010) | 0.185 | 0.185 | 0.692 | 0 / 1 | 0 |
+
+**The check passes.** Adding history to the baseline does not buy lead time at any deployable
+threshold, and on Thursday it makes the ranking *worse* than the memoryless baseline
+(PR-AUC 0.139 -> 0.114, ROC-AUC 0.379 -> 0.278). The one early warning it produces needs the oracle
+threshold and comes from a score that is close to noise (F1 0.057).
+
+Curiosity worth noting for Y-3: Thursday's `detect` target at an oracle threshold reports 2 of 4
+episodes "warned early" with a mean lead of 6.5 windows while scoring F1 0.021 and PR-AUC 0.069. That
+is a score firing almost everywhere, not a forecaster - a reminder that lead time must always be read
+next to the false-positive rate, and that our own early-warning counts need the same scrutiny.

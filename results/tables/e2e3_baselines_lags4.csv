@@ -1,0 +1,14 @@
+experiment,model,target,test_day,nll_mean,nll_median,nll_p95,threshold_mode,base_rate,threshold,precision,recall,f1,fpr,pr_auc,roc_auc,positives,n,episodes,warned_early,mean_lead_windows,mean_lead_seconds
+E2,persistence,next_state,monday,1.0127,0.8468,1.5505,,,,,,,,,,,,,,,
+E2,persistence,next_state,tuesday,1.0916,0.8852,1.9638,,,,,,,,,,,,,,,
+E2,persistence,next_state,wednesday,1.1465,0.9064,2.1769,,,,,,,,,,,,,,,
+E2,persistence,next_state,thursday,152010.125,0.8513,18.837,,,,,,,,,,,,,,,
+E3,logreg(lags=4),detect,thursday,,,,train-tuned,0.1111,0.8724,0.0,0.0,0.0,0.0035,0.069,0.2265,108.0,972.0,4.0,0.0,0.0,0.0
+E3,logreg(lags=4),detect,thursday,,,,oracle,0.1111,0.0198,0.0241,0.0185,0.0209,0.0938,0.069,0.2265,108.0,972.0,4.0,2.0,6.5,195.0
+E3,logreg(lags=4),forecast,thursday,,,,train-tuned,0.1708,0.9018,0.0,0.0,0.0,0.0037,0.1142,0.2776,166.0,972.0,4.0,0.0,0.0,0.0
+E3,logreg(lags=4),forecast,thursday,,,,oracle,0.1708,0.01,0.0684,0.0482,0.0565,0.1352,0.1142,0.2776,166.0,972.0,4.0,1.0,3.0,90.0
+E2,persistence,next_state,friday,1.412,0.9354,2.7481,,,,,,,,,,,,,,,
+E3,logreg(lags=4),detect,friday,,,,train-tuned,0.1198,0.8332,0.0833,0.0086,0.0156,0.0129,0.2338,0.7609,116.0,968.0,1.0,0.0,0.0,0.0
+E3,logreg(lags=4),detect,friday,,,,oracle,0.1198,0.01,0.2481,0.2759,0.2612,0.1138,0.2338,0.7609,116.0,968.0,1.0,0.0,0.0,0.0
+E3,logreg(lags=4),forecast,friday,,,,train-tuned,0.1312,0.7744,0.0,0.0,0.0,0.0309,0.1848,0.6918,127.0,968.0,1.0,0.0,0.0,0.0
+E3,logreg(lags=4),forecast,friday,,,,oracle,0.1312,0.01,0.1636,0.2126,0.1849,0.1641,0.1848,0.6918,127.0,968.0,1.0,0.0,0.0,0.0

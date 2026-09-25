@@ -451,10 +451,11 @@ warning, in any form, anywhere.
 | no lead at any deployable threshold | this framing, unchanged |
 
 **What would make us wrong.** If anyone demonstrates positive lead time at a deployable threshold on
-this data with a method simpler than ours - including the logistic-regression baseline with lagged
-features, which we have not yet run at the horizon - the framing is wrong and the honest response is
-to say so and cite their result. Running that lagged-LR check ourselves before the deck is the
-cheapest insurance we can buy, and it belongs on the board.
+this data with a method simpler than ours, the framing is wrong and the honest response is to say so
+and cite their result. The cheapest such candidate - logistic regression with 4 lagged windows - has
+now been run: **E3b, zero early warnings at every deployable threshold**, and worse ranking than the
+memoryless baseline on Thursday (PR-AUC 0.139 -> 0.114). The insurance holds; if a reviewer proposes
+another simple method, run it before arguing with them.
 
 **Freeze.** This framing is fixed from now until the submission. Changing it requires a new decision
 entry with the result that justifies it - not a conversation at recording time.
