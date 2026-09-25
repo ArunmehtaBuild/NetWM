@@ -8,8 +8,10 @@ from netwm.features.flow_features import (
     TREND_BASES,
     TREND_MIN_PERIODS,
     TREND_Z_CLIP,
+    HOST_FEATURES,
     _trend_features,
     feature_flags_from_names,
+    host_feature_names,
     trend_feature_names,
     window_features,
 )
@@ -149,11 +151,81 @@ def test_a_widening_sweep_shows_up_as_rising_trend_not_only_as_level():
 
 
 def test_flags_round_trip_through_feature_names():
-    assert feature_flags_from_names(V1_COLUMNS) == {"use_trend": False}
-    assert feature_flags_from_names([*V1_COLUMNS, *trend_feature_names()]) == {"use_trend": True}
+    assert feature_flags_from_names(V1_COLUMNS) == {"use_trend": False, "host_slots": 0}
+    v2 = [*V1_COLUMNS, *trend_feature_names()]
+    assert feature_flags_from_names(v2) == {"use_trend": True, "host_slots": 0}
+    both = features(sweep(3), use_trend=True, host_slots=2).columns
+    assert feature_flags_from_names(both) == {"use_trend": True, "host_slots": 2}
 
 
 def test_a_checkpoint_built_with_other_trend_constants_fails_loudly():
     stale = [*V1_COLUMNS, "uniq_dst_port_delta", "uniq_dst_port_slope_2"]  # a D-024-era name set
     with pytest.raises(ValueError):
         feature_flags_from_names(stale)
+
+
+def test_a_checkpoint_with_a_partial_host_schema_fails_loudly():
+    with pytest.raises(ValueError):
+        feature_flags_from_names([*V1_COLUMNS, *host_feature_names(2)[:-1]])
+
+
+# --- S-2: the per-host channel (D-027) ----------------------------------------------------------
+
+
+def host(src, dst, t, port=80, sent=100, received=100):
+    return {"t": t, "src_ip": src, "dst_ip": dst, "dst_port": port, "fwd_bytes": sent, "bwd_bytes": received,
+            "fwd_pkts": 1, "bwd_pkts": 1}
+
+
+A, B, C = "192.168.10.5", "192.168.10.8", "192.168.10.50"  # internal hosts
+EXT = "205.174.165.73"  # an outside source - never gets a slot
+
+
+def test_host_channel_appends_slot_major_columns_after_v1():
+    f = features([host(A, B, 10)], host_slots=3)
+    assert tuple(f.columns[:70]) == V1_COLUMNS
+    assert list(f.columns[70:]) == host_feature_names(3)
+    assert host_feature_names(1) == [f"host1_{x}" for x in HOST_FEATURES]
+    assert f.dtypes.eq(np.float32).all()
+    assert not f.columns.str.startswith(("stage_", "hazard_k", "attack_k", "escalate_k")).any()
+
+
+def test_slots_rank_internal_hosts_by_flows_and_skip_outside_sources():
+    rows = [host(A, B, 5)] + [host(C, B, 5 + i, port=i) for i in range(3)] + [host(EXT, B, 5 + i) for i in range(9)]
+    f = features(rows, host_slots=3).iloc[0]
+    assert f["host1_ports"] == 3  # C: 3 flows, 3 ports - the busiest *internal* host
+    assert f["host2_ports"] == 1  # A: 1 flow
+    assert f["host3_fanout"] == 0  # EXT had 9 flows but is outside - its slot stays empty
+
+
+def test_fanout_ports_and_byte_asymmetry_per_host():
+    rows = [host(A, d, 5, port=p, sent=900, received=0) for d, p in ((B, 22), (C, 22), ("192.168.10.9", 445))]
+    f = features(rows, host_slots=1).iloc[0]
+    assert (f["host1_fanout"], f["host1_ports"]) == (3, 2)
+    assert f["host1_byte_asym"] == pytest.approx(2700 / 2701)  # pushes, never receives
+    quiet = features([host(A, B, 5, sent=0, received=0)], host_slots=1).iloc[0]
+    assert -1 < quiet["host1_byte_asym"] <= 0 < quiet["host1_fanout"]
+
+
+def test_new_peer_rate_counts_first_contacts_within_the_capture():
+    rows = [host(A, B, 5), host(A, B, 125), host(A, C, 125), host(A, B, 245)]
+    f = features(rows, host_slots=1)["host1_new_peer_rate"]
+    # windows are 60 s long at a 30 s stride, so a flow at 125 s sits in windows 3 and 4
+    assert f.iloc[0] == 1.0  # first sight of B
+    assert f.iloc[3] == 0.5  # B again, C for the first time
+    assert f.iloc[4] == 0.0  # the same two peers, one window later
+    assert f.iloc[7] == 0.0  # B, long known
+
+
+def test_host_channel_never_sees_the_future():
+    rows = [host(A, B, 5), host(A, C, 65), host(B, C, 95)]
+    later = rows + [host(A, f"192.168.10.{i}", 400 + i, port=i) for i in range(60, 90)]  # a sweep at 400 s
+    before = features(rows, n_windows=20, host_slots=2)
+    after = features(later, n_windows=20, host_slots=2)
+    early = [c for c in before.columns if c.startswith("host")]
+    pd.testing.assert_frame_equal(before.loc[:11, early], after.loc[:11, early])
+
+
+def test_a_capture_with_no_internal_sources_gets_empty_slots():
+    f = features([host(EXT, B, 5)], host_slots=2)
+    assert (f[host_feature_names(2)] == 0).all().all()

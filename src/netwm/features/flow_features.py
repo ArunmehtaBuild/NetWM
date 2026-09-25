@@ -11,6 +11,7 @@ is 0, so the same model consumes both inputs.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Iterable
 
 import numpy as np
@@ -49,6 +50,11 @@ TREND_BASELINE = 120  # trailing windows for the z-score: 120 x 30 s stride = 60
 TREND_MIN_PERIODS = 10  # windows of history (5 min) before a z-score is trusted
 TREND_STD_FLOOR = 1e-6
 TREND_Z_CLIP = 10.0  # a flat baseline must not mint 1e6-sized values - the E2 failure again
+
+#: Per-host channel (task S-2, decisions.md D-027): what each of the busiest *internal* source hosts
+#: is doing in a window. Network-wide aggregates average a pivoting host away among the benign ones.
+HOST_FEATURES: tuple[str, ...] = ("fanout", "ports", "byte_asym", "new_peer_rate")
+_HOST_NAME = re.compile(r"^host(\d+)_")
 
 
 def _entropy(counts: np.ndarray) -> float:
@@ -192,6 +198,7 @@ def window_features(
     internal_prefixes: tuple[str, ...] = ("192.168.", "10.", "172.16."),
     n_windows: int | None = None,
     use_trend: bool = False,
+    host_slots: int = 0,
 ) -> pd.DataFrame:
     """Aggregate an expanded (flow x window) frame into one feature row per window.
 
@@ -199,8 +206,9 @@ def window_features(
     filled with zeros rather than dropped: a gap in traffic is itself a state the dynamics model has
     to be able to represent.
 
-    ``use_trend`` appends the S_t v2 trend block (D-026). It is off by default: S_t v1 (70 columns)
-    is frozen for comparability with every round-2 number.
+    ``use_trend`` appends the S_t v2 trend block (D-026) and ``host_slots > 0`` the per-host channel
+    for that many hosts (D-027). Both are off by default: S_t v1 (70 columns) is frozen for
+    comparability with every round-2 number.
     """
     df = _derive_flow_columns(expanded, internal_prefixes)
     g = df.groupby("w", sort=True)
@@ -252,6 +260,8 @@ def window_features(
 
     if use_trend:
         feats = feats.join(_trend_features(feats))
+    if host_slots > 0:
+        feats = feats.join(_host_channels(df, feats.index, host_slots))
 
     feats.index.name = "w"
     return feats.astype(np.float32)
@@ -278,7 +288,65 @@ def feature_flags_from_names(names: Iterable[str]) -> dict[str, Any]:
             f"checkpoint has {len(present)} of {len(trend)} trend features - built with different "
             f"trend constants than flow_features.py now defines (missing e.g. {sorted(trend - names)[:3]})"
         )
-    return {"use_trend": bool(present)}
+    slots = max((int(m.group(1)) for n in names if (m := _HOST_NAME.match(n))), default=0)
+    missing_host = set(host_feature_names(slots)) - names
+    if missing_host:
+        raise ValueError(
+            f"checkpoint has host slots up to {slots} but lacks {sorted(missing_host)[:3]} - built "
+            f"with a different per-host schema than flow_features.py now defines"
+        )
+    return {"use_trend": bool(present), "host_slots": slots}
+
+
+def host_feature_names(slots: int) -> list[str]:
+    """The per-host channel columns for ``slots`` hosts, slot-major, 1-indexed (D-027)."""
+    return [f"host{i}_{f}" for i in range(1, slots + 1) for f in HOST_FEATURES]
+
+
+def _host_channels(df: pd.DataFrame, index: pd.Index, slots: int) -> pd.DataFrame:
+    """One fixed-width slot per busiest internal source host, per window (task S-2, D-027).
+
+    Hosts are ranked by flow count within the window (ties by IP, so the build is deterministic) -
+    the same ranking as the UI's top talkers. Only *internal* sources get a slot: lateral movement
+    and C2 start from a host inside the monitored network, while inbound floods are already visible
+    in the network-wide aggregates. Per slot:
+
+    - ``fanout``        distinct destination hosts;
+    - ``ports``         distinct destination ports;
+    - ``byte_asym``     (sent - received) / (sent + received + 1) over the flows it initiated, in (-1, 1);
+    - ``new_peer_rate`` share of its destinations it had not contacted earlier in this capture.
+
+    ``new_peer_rate`` is causal - whether a pair appeared before window ``w`` does not depend on
+    anything after it - and label-free. Empty slots are 0; a real host always has ``fanout >= 1``.
+    """
+    names = host_feature_names(slots)
+    # is_outbound / is_internal are set exactly when the source is inside the monitored network
+    src_internal = (df["is_outbound"] + df["is_internal"]) > 0
+    flows = df.loc[src_internal, ["w", "src_ip", "dst_ip", "dst_port", "fwd_bytes", "bwd_bytes"]]
+    if flows.empty:
+        return pd.DataFrame(0.0, index=index, columns=names)
+
+    pairs = flows[["w", "src_ip", "dst_ip"]].drop_duplicates()
+    pairs["new"] = pairs.groupby(["src_ip", "dst_ip"], sort=False)["w"].transform("min").eq(pairs["w"])
+    peers = pairs.groupby(["w", "src_ip"], sort=False).agg(fanout=("dst_ip", "size"), new=("new", "sum"))
+
+    host = flows.groupby(["w", "src_ip"], sort=False).agg(
+        n=("dst_ip", "size"),
+        ports=("dst_port", "nunique"),
+        sent=("fwd_bytes", "sum"),
+        received=("bwd_bytes", "sum"),
+    )
+    host = host.join(peers).reset_index()
+    host["byte_asym"] = (host["sent"] - host["received"]) / (host["sent"] + host["received"] + 1.0)
+    host["new_peer_rate"] = host["new"] / host["fanout"]
+
+    host = host.sort_values(["w", "n", "src_ip"], ascending=[True, False, True], kind="stable")
+    host["slot"] = host.groupby("w", sort=False).cumcount() + 1
+    host = host[host["slot"] <= slots]
+
+    wide = host.pivot(index="w", columns="slot", values=list(HOST_FEATURES))
+    wide.columns = [f"host{slot}_{feat}" for feat, slot in wide.columns]
+    return wide.reindex(index=index, columns=names).fillna(0.0).astype(np.float64)
 
 
 def _ols_slope(x: np.ndarray, w: int) -> np.ndarray:

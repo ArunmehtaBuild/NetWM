@@ -1,0 +1,25 @@
+# S_t + per-host channel (task S-2, decisions.md D-027).
+#
+# Identical to configs/cicids2017.yaml except for the lines marked. Trend features stay OFF here so
+# the Y-4 ablation varies one thing at a time; the per-host channel builds into its own processed_dir.
+#
+#   python scripts/build_features.py --config configs/features_hosts.yaml
+#   python scripts/train.py --config configs/features_hosts.yaml ...     # Y-4 ablation
+dataset: cicids2017
+raw_dir: data/raw/cicids2017_improved
+processed_dir: data/processed/cicids2017_hosts        # per-host
+
+window:
+  length_s: 60.0    # D-002
+  stride_s: 30.0
+  use_trend_features: false
+  # the 3 busiest internal source hosts per window, 4 columns each: fanout, ports, byte_asym,
+  # new_peer_rate -> 70 + 12 = 82 features
+  host_slots: 3                                        # per-host
+
+horizon_k: 10
+
+internal_prefixes:
+  - "192.168.10."
+
+seed: 42

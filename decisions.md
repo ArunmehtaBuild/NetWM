@@ -787,3 +787,48 @@ its columns.
 **Revisit if.** The Y-4 ablation shows no gain from the trend block on the precursor label under the
 D-023 bar, or shows one column family (slopes vs z-score) carrying all of it - then drop the rest
 rather than keep 24 columns for the sake of it.
+
+---
+
+### D-027 — Per-host channel: the busiest internal hosts as fixed slots in S_t
+*Date: 2026-09-26 · Status: accepted (schema only; recorded before any build or run) · Evidence: E12, E15 "remaining untested directions"*
+
+**Decision.** Task S-2 adds an optional per-host sub-vector to `S_t`, `window.host_slots: N`
+(0 = off, the v1 default; `configs/features_hosts.yaml` sets 3 and builds into
+`data/processed/cicids2017_hosts`, trend features off). In each window the internal source hosts
+(`internal_prefixes`) are ranked by flow count, ties by IP, and the top N fill slots `host1..hostN`:
+
+| column | definition | what it exposes |
+|---|---|---|
+| `host{i}_fanout` | distinct destination IPs of the host in the window | a sweep across hosts - discovery, lateral movement |
+| `host{i}_ports` | distinct destination ports | a port scan from one host |
+| `host{i}_byte_asym` | `(sent - received) / (sent + received + 1)` over the flows it initiated | pushing data out (exfiltration, staging) vs pulling it in (payload download) |
+| `host{i}_new_peer_rate` | share of its destinations it had not contacted earlier **in this capture** | a host suddenly talking to machines it never talked to |
+
+`N = 3` gives 12 columns (82 features with v1). An empty slot is all zeros; a real host always has
+`fanout >= 1`, so the two cannot be confused. Inference recovers `host_slots` from the checkpoint's
+feature names (D-026's `feature_flags_from_names`), and a partial host schema fails loudly.
+
+**Why.**
+- *Per host at all.* Every v1 feature is network-wide: one compromised host sweeping the subnet is
+  averaged in with every benign host, and only its max survives (`fanout_max`, `port_fanout_max`).
+  E15 names "network-wide aggregates hide per-host behaviour" as one of the two untested state
+  directions. A slot keeps one host's behaviour intact across four views.
+- *Internal sources only.* Lateral movement and C2 originate inside the monitored network - the
+  Thursday infiltration's internal sweep, the Friday bots' beacons. Inbound floods from outside are
+  already dominant in the aggregates, and a busy external scanner would otherwise take every slot.
+- *Ranked by flows.* It is the ranking the UI's top-talkers panel already uses (`engine/predict.py`
+  `_top_talkers`), so the slot a defender sees explained is the slot the model read.
+- *New-peer rate, causal and label-free.* "First contact in this capture" depends only on windows
+  up to `w`, so it is legal for a lead-time claim and computable on a live stream.
+
+**Known limitation.** *Slot permutation*: slot 1 is whichever host is busiest in *this* window, so
+it can be a different machine one window later. The dynamics model sees a jump that is a change of
+host, not of behaviour. *Warm-up*: at the start of a capture every peer is new, so
+`new_peer_rate` reads 1.0 for everyone until the capture has some history. Demo slices start well
+before their attack, which keeps both out of the story being shown.
+
+**Revisit if.** Y-4 shows the host columns adding nothing, or shows slot churn dominating their
+signal. The next cut is then *sticky* slots, where a host keeps its slot while it stays in the top
+N. If the channel does help, per-host episodes are the natural way to enlarge the 26-episode
+denominator D-022 is limited by.
