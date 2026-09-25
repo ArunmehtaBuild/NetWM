@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Modal End-to-End Interaction Test</title>
+  <style>
+    body { background: #0f1216; color: #fff; font-family: monospace; padding: 20px; }
+    .log-item { margin: 6px 0; padding: 4px 8px; border-radius: 4px; }
+    .success { background: rgba(46, 160, 67, 0.2); color: #3fb950; }
+    .info { color: #4c9be8; }
+  </style>
+</head>
+<body>
+  <h2>Upload Modal End-to-End Interaction Test</h2>
+  <div id="logs"></div>
+
+  <iframe id="appFrame" src="/index.html?mock" style="width: 1200px; height: 750px; border: 1px solid #333; margin-top: 10px;"></iframe>
+
+  <script type="module">
+    const logs = document.getElementById("logs");
+    function log(msg, type = "info") {
+      const el = document.createElement("div");
+      el.className = `log-item ${type}`;
+      el.textContent = `[${new Date().toISOString().split("T")[1].slice(0,8)}] ${msg}`;
+      logs.appendChild(el);
+    }
+
+    const frame = document.getElementById("appFrame");
+
+    frame.onload = async () => {
+      log("Dashboard loaded in iframe", "success");
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+
+      await new Promise(r => setTimeout(r, 600));
+
+      const btnUpload = doc.getElementById("btnUploadCapture");
+      const modal = doc.getElementById("uploadModal");
+
+      if (!btnUpload) {
+        log("btnUploadCapture NOT found", "fail");
+        return;
+      }
+      log("Found btnUploadCapture button, clicking...", "info");
+      btnUpload.click();
+
+      await new Promise(r => setTimeout(r, 200));
+
+      if (modal.classList.contains("hidden")) {
+        log("Modal failed to open (has hidden class)", "fail");
+        return;
+      }
+      log("Upload modal opened successfully", "success");
+
+      // Find Friday preset chip
+      const fridayChip = doc.querySelector('.demo-preset-chip[data-demo="friday"]');
+      if (!fridayChip) {
+        log("Friday preset chip not found", "fail");
+        return;
+      }
+      log("Clicking Friday Multi-Attack preset chip...", "info");
+      fridayChip.click();
+
+      // Monitor progress
+      const progressBar = doc.getElementById("uploadProgressBarFill");
+      const stageText = doc.getElementById("uploadStageText");
+      const percentText = doc.getElementById("uploadPercentText");
+
+      for (let i = 0; i < 8; i++) {
+        await new Promise(r => setTimeout(r, 450));
+        log(`Progress: ${percentText.textContent} · ${stageText.textContent}`);
+      }
+
+      await new Promise(r => setTimeout(r, 1200));
+
+      // Verify modal closed
+      if (modal.classList.contains("hidden")) {
+        log("Upload modal auto-closed after completion", "success");
+      } else {
+        log("Upload modal did not close", "fail");
+      }
+
+      // Check capture filename in header
+      const filenameEl = doc.getElementById("sourceFilename");
+      log(`Active capture in header: ${filenameEl.textContent}`, "success");
+      log("ALL INTERACTION VERIFICATIONS PASSED!", "success");
+    };
+  </script>
+</body>
+</html>

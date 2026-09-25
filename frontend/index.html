@@ -59,7 +59,7 @@
           <option value="friday">Friday-WorkingHours (Botnet / PortScan / DDoS)</option>
           <option value="thursday_oracle">Thursday Oracle (Dev-Only · Hand-Tuned Lead Time)</option>
         </select>
-        <button class="btn" title="Upload PCAP or Flow CSV (Track Arun R-1)" disabled style="opacity:0.6; cursor:not-allowed;">
+        <button class="btn btn-action" id="btnUploadCapture" title="Upload PCAP or Flow CSV dataset">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="17 8 12 3 7 8"></polyline>
@@ -259,7 +259,126 @@
           </section>
         </div>
       </div>
-    </main>
+    <!-- Upload / Ingestion Modal (H-1 / Track Arun R-1) -->
+    <div class="modal-overlay hidden" id="uploadModal" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-title" id="uploadModalTitle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Upload Network Capture
+            </div>
+            <div class="modal-subtitle">Ingest raw PCAP or CIC-IDS2017 flow CSV for RSSM world model forecasting</div>
+          </div>
+          <button class="btn-icon" id="btnCloseUploadModal" aria-label="Close modal" title="Close (Esc)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Dropzone Area -->
+          <div class="upload-dropzone" id="uploadDropzone">
+            <input type="file" id="captureFileInput" accept=".csv,.pcap,.pcapng" style="display:none">
+            <div class="dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                <path d="M12 12v9"></path>
+                <path d="m16 16-4-4-4 4"></path>
+              </svg>
+            </div>
+            <div class="dropzone-title">Drag & drop network capture file here</div>
+            <div class="dropzone-subtitle">or click to browse from local workstation</div>
+            <div class="dropzone-actions">
+              <button type="button" class="btn btn-primary" id="btnBrowseFiles">Browse Files</button>
+            </div>
+            <div class="dropzone-caps">
+              <span class="cap-tag">.CSV (up to 200 MB)</span>
+              <span class="cap-tag">.PCAP / .PCAPNG (up to 2 GB)</span>
+              <span class="cap-tag">Offline Safe</span>
+            </div>
+          </div>
+
+          <!-- Preloaded Demo Presets -->
+          <div class="upload-presets" id="uploadDemoPresets">
+            <div class="presets-label">Or analyze canonical test scenario:</div>
+            <div class="preset-chips-grid">
+              <button type="button" class="demo-preset-chip" data-demo="thursday" data-name="Thursday Infiltration">
+                <span class="preset-name">Thursday-WorkingHours</span>
+                <span class="preset-meta">Infiltration · 972 windows · Deployable</span>
+              </button>
+              <button type="button" class="demo-preset-chip" data-demo="friday" data-name="Friday Multi-Attack">
+                <span class="preset-name">Friday-WorkingHours</span>
+                <span class="preset-meta">Botnet / PortScan / DDoS · 968 windows</span>
+              </button>
+              <button type="button" class="demo-preset-chip" data-demo="thursday_oracle" data-name="Thursday Oracle">
+                <span class="preset-name">Thursday Oracle (Dev)</span>
+                <span class="preset-meta">Hand-Tuned Lead Time · 5-window warning</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active File Info Card (Visible during processing) -->
+          <div class="upload-file-card hidden" id="uploadFileInfoCard">
+            <div class="file-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div class="file-card-details">
+              <div class="file-card-name font-mono" id="uploadFileNameText">capture.csv</div>
+              <div class="file-card-size font-mono" id="uploadFileSizeText">-- MB</div>
+            </div>
+            <span class="status-pill pill-running" id="uploadStatusPill">RUNNING</span>
+          </div>
+
+          <!-- Progress Container (Visible during processing) -->
+          <div class="upload-progress-container hidden" id="uploadProgressContainer">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="uploadProgressBarFill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-status-row">
+              <div class="stage-text-indicator">
+                <span class="pulse-dot"></span>
+                <span class="stage-text" id="uploadStageText">Preparing analysis...</span>
+              </div>
+              <div class="percent-text font-mono" id="uploadPercentText">0%</div>
+            </div>
+          </div>
+
+          <!-- Error Banner (Visible on failure) -->
+          <div class="upload-error-banner hidden" id="uploadErrorBanner">
+            <div class="error-banner-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <div class="error-banner-content">
+              <div class="error-code-badge font-mono" id="uploadErrorCode">BAD_FILE</div>
+              <div class="error-message" id="uploadErrorMessageText">An error occurred during file validation.</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnRetryUpload">Try Again</button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="modal-footer-note font-mono">PS 26153 Compliant · Fast Inference Pipeline</div>
+          <button type="button" class="btn btn-secondary" id="btnCancelUpload">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Footer -->
     <footer class="app-footer">

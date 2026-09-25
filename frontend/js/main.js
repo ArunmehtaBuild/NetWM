@@ -12,6 +12,7 @@ import { RibbonPanel } from "./panels/ribbon.js";
 import { AlarmsPanel } from "./panels/alarms.js";
 import { WhyPanel } from "./panels/why.js";
 import { FlowsPanel } from "./panels/flows.js";
+import { UploadPanel } from "./panels/upload.js";
 import { ReplayController } from "./replay.js";
 import {
   formatInt,
@@ -27,6 +28,7 @@ let ribbonPanel = null;
 let alarmsPanel = null;
 let whyPanel = null;
 let flowsPanel = null;
+let uploadPanel = null;
 let replayController = null;
 
 /**
@@ -139,6 +141,7 @@ store.subscribe((state) => {
   if (alarmsPanel) alarmsPanel.render(state);
   if (whyPanel) whyPanel.render(state);
   if (flowsPanel) flowsPanel.render(state);
+  if (uploadPanel) uploadPanel.render(state);
   if (replayController) replayController.update(state);
 });
 
@@ -149,6 +152,7 @@ window.addEventListener("DOMContentLoaded", () => {
   alarmsPanel = new AlarmsPanel("alarmPanelBody");
   whyPanel = new WhyPanel("whyPanelBody");
   flowsPanel = new FlowsPanel("flowsPanelBody");
+  uploadPanel = new UploadPanel("uploadModal");
   replayController = new ReplayController();
 
   const params = new URLSearchParams(window.location.search);
