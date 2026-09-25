@@ -32,7 +32,10 @@ import torch.nn.functional as F
 class WorldModelConfig:
     n_features: int = 70
     n_stages: int = 7
-    n_risk: int = 3                # [compromise, attack, escalation] read off a state (D-016)
+    # [compromise, attack, escalation] read off a state (D-016), optionally followed by
+    # [onset_now, precursor] for round 3 (D-023). The default stays 3 so every round-2 checkpoint
+    # and the E14 reproduction path are untouched; round 3 sets n_risk=5 from its own config.
+    n_risk: int = 3
     embed_dim: int = 128
     hidden_dim: int = 192          # deterministic GRU state
     latent_dim: int = 32           # stochastic state
@@ -47,6 +50,19 @@ class WorldModelConfig:
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()}
+
+
+#: The D-016 triple [compromise, attack, escalation], as an exclusive upper bound on the channel
+#: index. Kept as its own loss term so its value is identical to round 2 whatever n_risk becomes.
+BASE_CHANNELS = 3
+
+#: Channels that may be read off an *imagined* state and unioned over a rollout. Channels 0-2 are
+#: state properties; channel 3 (``onset_now``) is a first-occurrence indicator, so for all four
+#: ``1 - prod(1 - p_k)`` answers a real question. Channel 4 (``precursor``) is already a statement
+#: about the next K windows, so unioning it over a rollout would ask about a horizon of up to 2K.
+#: It is supervised and read on the filtered state only, and never leaves this file via a
+#: rollout-derived key (D-023).
+IMAGINED_CHANNELS = 4
 
 
 class ObservationEncoder(nn.Module):
@@ -175,14 +191,21 @@ class NetWorldModel(nn.Module):
         z = mean + std * torch.randn_like(std) if sample else mean
         return RSSMState(h, z, mean, std)
 
-    def _posterior_step(self, prior: RSSMState, embed: torch.Tensor) -> RSSMState:
+    def _posterior_step(
+        self, prior: RSSMState, embed: torch.Tensor, sample: bool = True
+    ) -> RSSMState:
         mean, std = self.posterior(torch.cat([prior.h, embed], dim=-1))
-        z = mean + std * torch.randn_like(std)
+        z = mean + std * torch.randn_like(std) if sample else mean
         return RSSMState(prior.h, z, mean, std)
 
     # ---- observation (teacher forcing) -------------------------------------------------------
-    def observe(self, x: torch.Tensor) -> dict:
-        """Filter a sequence of observed states. x: (B, T, F)."""
+    def observe(self, x: torch.Tensor, sample: bool = True) -> dict:
+        """Filter a sequence of observed states. x: (B, T, F).
+
+        ``sample=False`` takes the mean of both the prior and the posterior, giving a fully
+        deterministic filtered trajectory. Training always samples; only the mean-path forecast
+        turns it off, so that a lead-time count carries no Monte-Carlo variance at all.
+        """
         b, t, _ = x.shape
         embeds = self.encoder(x)
         context, attention = self.context(embeds)
@@ -190,8 +213,8 @@ class NetWorldModel(nn.Module):
         state = self.initial_state(b, x.device)
         posts, priors, buffers = [], [], []
         for i in range(t):
-            prior = self._prior_step(state, context[:, i])
-            post = self._posterior_step(prior, embeds[:, i])
+            prior = self._prior_step(state, context[:, i], sample=sample)
+            post = self._posterior_step(prior, embeds[:, i], sample=sample)
             posts.append(post)
             priors.append(prior)
             buffers.append(embeds[:, i])
@@ -273,14 +296,29 @@ class NetWorldModel(nn.Module):
         stage_loss = F.cross_entropy(
             self.stage_head(feats).reshape(-1, cfg.n_stages), stage.reshape(-1), weight=stage_weight
         )
+
+        # The D-016 triple and the round-3 precursor family are separate loss terms with separate
+        # weights. BCE is mean-reduced over every element, so slicing the first three channels keeps
+        # this term *numerically identical* to round 2 - a single term spanning all five channels
+        # would quietly rescale the compromise gradient by 3/5 and confound every E14 comparison.
+        base = min(BASE_CHANNELS, cfg.n_risk)
+        risk_now = self.risk_head(feats)
         comp_loss = F.binary_cross_entropy_with_logits(
-            self.risk_head(feats), risk, pos_weight=pos_weight
+            risk_now[..., :base], risk[..., :base],
+            pos_weight=None if pos_weight is None else pos_weight[:base],
         )
+        # Guarded: BCE over an empty channel slice is a mean of no elements, i.e. NaN.
+        prec_loss = x.new_zeros(())
+        if cfg.n_risk > base:
+            prec_loss = F.binary_cross_entropy_with_logits(
+                risk_now[..., base:], risk[..., base:],
+                pos_weight=None if pos_weight is None else pos_weight[base:],
+            )
 
         # open-loop: imagine from a subset of start points and supervise the imagined future
         b, t, _ = x.shape
         starts = list(range(cfg.context_len, max(cfg.context_len + 1, t - horizon), imagine_every))
-        img_comp = img_stage = img_recon = x.new_zeros(())
+        img_comp = img_stage = img_recon = img_prec = x.new_zeros(())
         if starts:
             for start in starts:
                 state = out["posts"][start]
@@ -291,8 +329,20 @@ class NetWorldModel(nn.Module):
                 tgt_obs = x[:, target_slice]
                 k = tgt_risk.shape[1]
                 img_comp = img_comp + F.binary_cross_entropy_with_logits(
-                    img["risk_logits"][:, :k], tgt_risk, pos_weight=pos_weight
+                    img["risk_logits"][:, :k, :base], tgt_risk[..., :base],
+                    pos_weight=None if pos_weight is None else pos_weight[:base],
                 )
+                if cfg.n_risk > base:
+                    # onset_now only. The precursor channel is a statement about the next K windows,
+                    # so supervising it on an imagined state asks about a nested horizon - it gets
+                    # no gradient here, and forecast() correspondingly never derives it from a
+                    # rollout (D-023).
+                    img_prec = img_prec + F.binary_cross_entropy_with_logits(
+                        img["risk_logits"][:, :k, base:IMAGINED_CHANNELS],
+                        tgt_risk[..., base:IMAGINED_CHANNELS],
+                        pos_weight=None if pos_weight is None
+                        else pos_weight[base:IMAGINED_CHANNELS],
+                    )
                 img_stage = img_stage + F.cross_entropy(
                     img["stage_logits"][:, :k].reshape(-1, cfg.n_stages),
                     tgt_stage.reshape(-1),
@@ -301,6 +351,7 @@ class NetWorldModel(nn.Module):
                 img_recon = img_recon + F.mse_loss(img["decoded"][:, :k], tgt_obs)
             n = len(starts)
             img_comp, img_stage, img_recon = img_comp / n, img_stage / n, img_recon / n
+            img_prec = img_prec / n
 
         return {
             "recon": recon,
@@ -311,6 +362,8 @@ class NetWorldModel(nn.Module):
             "imagine_compromise": img_comp,
             "imagine_stage": img_stage,
             "imagine_recon": img_recon,
+            "precursor": prec_loss,
+            "imagine_precursor": img_prec,
         }
 
     # ---- inference ---------------------------------------------------------------------------
@@ -321,6 +374,7 @@ class NetWorldModel(nn.Module):
         horizon: int | None = None,
         n_samples: int = 16,
         chunk: int = 64,
+        sample: bool = True,
     ) -> dict[str, torch.Tensor]:
         """Per-window K-step forecast for one sequence. x: (1, T, F).
 
@@ -338,8 +392,16 @@ class NetWorldModel(nn.Module):
         self.eval()
         b, t, _ = x.shape
         assert b == 1, "forecast expects a single sequence"
+        if not sample:
+            # Mean path: the posterior, the prior and the rollout all take their means, so the whole
+            # trajectory is deterministic and 16 rollouts would be 16 identical tensors. Used when a
+            # lead-time count must not carry Monte-Carlo variance (E14's caveat: the same checkpoint
+            # at the same threshold gave 1 of 4 and then 2 of 4). Note sigmoid(head(E[z])) is not
+            # E[sigmoid(head(z))], so the mean path under-states saturating probabilities - the
+            # threshold is a quantile of the same series, so ranks are what carry over.
+            n_samples = 1
 
-        out = self.observe(x)
+        out = self.observe(x, sample=sample)
         feats = torch.stack([p.feat() for p in out["posts"]], dim=1)
         stage_now = F.softmax(self.stage_head(feats), dim=-1)[0]
 
@@ -352,7 +414,6 @@ class NetWorldModel(nn.Module):
 
         p_cum_samples = torch.zeros(n_samples, t, horizon)
         p_raw_samples = torch.zeros(n_samples, t, horizon, cfg.n_risk)
-        extra_cum = torch.zeros(cfg.n_risk - 1, t, horizon)
         stage_future = torch.zeros(t, horizon, cfg.n_stages)
         for begin in range(0, t, chunk):
             end = min(begin + chunk, t)
@@ -365,19 +426,22 @@ class NetWorldModel(nn.Module):
             )
             history = self._history_buffer(out["embeds"][0], idx)
             for s in range(n_samples):
-                img = self.imagine(state, history, horizon, sample=True)
+                img = self.imagine(state, history, horizon, sample=sample)
                 risk = torch.sigmoid(img["risk_logits"])
                 p_raw_samples[s, begin:end] = risk.cpu()
                 p_cum_samples[s, begin:end] = (1 - torch.cumprod(1 - risk[..., 0], dim=1)).cpu()
                 if s == 0:
                     stage_future[begin:end] = F.softmax(img["stage_logits"], dim=-1).cpu()
-                    for r in range(1, cfg.n_risk):
-                        extra_cum[r - 1, begin:end] = (
-                            1 - torch.cumprod(1 - risk[..., r], dim=1)
-                        ).cpu()
 
         p_cum = p_cum_samples.mean(0)
         p_raw = p_raw_samples.mean(0)
+        # Union per sample, then average - 1 - prod(1 - E[p]) is not E[1 - prod(1 - p)]. Until
+        # 2026-09-25 these curves came from Monte-Carlo sample 0 alone while p_cum was a 16-sample
+        # mean; the two were being read side by side in the same payload (D-023).
+        n_union = min(IMAGINED_CHANNELS, cfg.n_risk)
+        extra_cum = (
+            (1 - torch.cumprod(1 - p_raw_samples[..., 1:n_union], dim=2)).mean(0).permute(2, 0, 1)
+        )
         return {
             "p_cum": p_cum,
             # Per-step P(state has this property at t+k), before any union formula. The compromise
@@ -391,6 +455,19 @@ class NetWorldModel(nn.Module):
             "p_step": torch.cat([p_cum[:, :1], p_cum[:, 1:] - p_cum[:, :-1]], dim=1),
             "p_cum_attack": extra_cum[0],
             "p_cum_escalate": extra_cum[1] if cfg.n_risk > 2 else extra_cum[0],
+            # Round 3 (D-023). onset_now is a first-occurrence indicator, so its union over the
+            # rollout is a genuine P(an attack episode begins within k) - this is the forecasting
+            # statistic. The precursor channel is never derived from a rollout: it is read off the
+            # filtered posterior in risk_now, and is a representation result, not a forecast.
+            **(
+                {
+                    "p_onset_cum": extra_cum[2],
+                    "p_onset_max": p_raw[..., 3].max(dim=1).values,
+                }
+                if cfg.n_risk > 3
+                else {}
+            ),
+            "risk_now": torch.sigmoid(self.risk_head(feats))[0].cpu(),
             "stage_now": stage_now.cpu(),
             "stage_future": stage_future,
             "surprise": surprise.cpu(),

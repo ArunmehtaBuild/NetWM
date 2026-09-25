@@ -1,0 +1,42 @@
+# Round 3 - precursor supervision (Y-2, decisions.md D-023).
+#
+# Overrides only. Anything absent keeps its dataclass default in src/netwm/train.py and
+# src/netwm/models/world_model.py, so a run without --model-config reproduces round 2 exactly.
+#
+#   python scripts/train.py --config configs/cicids2017.yaml \
+#       --model-config configs/model_r3_precursor.yaml \
+#       --test-days tuesday wednesday thursday friday monday \
+#       --run r3-precursor-s42 --epochs 25 --seed 42
+
+model:
+  # 3 (D-016) + onset_now + precursor. Round-2 checkpoints carry n_risk: 3 explicitly and keep
+  # loading unchanged; only this file widens the head.
+  n_risk: 5
+
+train:
+  # Order is positional and must match n_risk - scripts/train.py refuses the run otherwise.
+  risk_columns:
+    - compromise        # at or past Lateral Movement                    (D-016)
+    - attack_now        # anything non-benign, Impact included           (D-016)
+    - escalate_step     # a step up the progression scale                (D-016)
+    - onset_now         # this window begins an attack episode           (D-023, the forecast claim)
+    - precursor         # an onset lands within K and this window is quiet (D-023, filtered only)
+
+  # Episodes are keyed on any non-benign run, not on compromise: compromise-keyed gives a training
+  # fold 10 positive windows from one attack family, which is the D-016 failure that broke round 1.
+  # Lead time is still *evaluated* against the compromise onsets - see scripts/precursor_eval.py.
+  onset_source: attack
+  onset_gap: 4          # quiet windows separating two episodes, matching windowing.onset_windows
+
+  weights:
+    recon: 1.0
+    kl: 0.5
+    stage: 1.0
+    compromise: 2.0
+    imagine_compromise: 3.0
+    imagine_stage: 0.5
+    imagine_recon: 1.0
+    # Same weights as the compromise pair: round 3 asks the same question one step earlier, so
+    # there is no prior reason to weight it differently. Revisited in the E15 ablation.
+    precursor: 2.0
+    imagine_precursor: 3.0

@@ -83,6 +83,8 @@ def plot_rollout(rollout: dict, day: str, out: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config", default="configs/cicids2017.yaml")
+    ap.add_argument("--model-config", default=None,
+                    help="YAML overriding WorldModelConfig / TrainConfig (e.g. the round-3 heads)")
     ap.add_argument("--data", default=None, help="override processed_dir from the config")
     ap.add_argument("--test-days", nargs="*", default=["thursday", "friday"])
     ap.add_argument("--run", default="e4e7-worldmodel")
@@ -98,11 +100,24 @@ def main() -> None:
     ds = ProcessedDataset(args.data or cfg["processed_dir"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    test_days = args.test_days[:1] if args.smoke else args.test_days
-    train_cfg = TrainConfig(epochs=2 if args.smoke else args.epochs)
-    model_cfg = WorldModelConfig(
-        n_features=len(ds.feature_names), horizon_k=ds.horizon, n_stages=7
+    # --config is the *data* config; model and training knobs live in their own file so a run
+    # without --model-config is byte-for-byte the round-2 setup (D-023).
+    overrides = (
+        yaml.safe_load(Path(args.model_config).read_text(encoding="utf-8"))
+        if args.model_config
+        else {}
     )
+    test_days = args.test_days[:1] if args.smoke else args.test_days
+    train_cfg = TrainConfig(epochs=2 if args.smoke else args.epochs, **overrides.get("train", {}))
+    model_cfg = WorldModelConfig(
+        n_features=len(ds.feature_names), horizon_k=ds.horizon, n_stages=7,
+        **overrides.get("model", {}),
+    )
+    if len(train_cfg.risk_columns) != model_cfg.n_risk:
+        raise SystemExit(
+            f"config mismatch: n_risk={model_cfg.n_risk} but "
+            f"{len(train_cfg.risk_columns)} risk_columns {train_cfg.risk_columns}"
+        )
     run_id = f"{args.run}-smoke" if args.smoke else args.run
     model_root = Path("models") / run_id
     model_root.mkdir(parents=True, exist_ok=True)
@@ -115,7 +130,8 @@ def main() -> None:
         model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
         histories[test_day] = history
 
-        prepared = prepare_days(ds, ds.splits, scaler)
+        prepared = prepare_days(ds, ds.splits, scaler, train_cfg.risk_columns,
+                                train_cfg.onset_source, train_cfg.onset_gap)
         fold_rows, extras = evaluate_fold(
             model,
             {d: prepared[d] for d in train_days},
@@ -142,12 +158,18 @@ def main() -> None:
                 "horizon_k": ds.horizon,
                 "stride_s": ds.stride_s,
                 "threshold": extras["threshold_train"],
+                # so precursor_eval.py never has to guess which logit is which
+                "risk_columns": list(train_cfg.risk_columns),
+                "onset_source": train_cfg.onset_source,
             },
             model_root / f"{test_day}.pt",
         )
+        # Namespaced by run id: these filenames used to be run-independent, so any training run
+        # silently overwrote the published E5/E6 figures of a previous one.
         plot_forecast(ds, test_day, extras, extras["threshold_train"],
-                      FIGURES / f"e6_{test_day}_worldmodel_forecast.png")
-        plot_rollout(extras["rollout"], test_day, FIGURES / f"e5_{test_day}_rollout_fidelity.png")
+                      FIGURES / f"e6_{run_id}_{test_day}_worldmodel_forecast.png")
+        plot_rollout(extras["rollout"], test_day,
+                     FIGURES / f"e5_{run_id}_{test_day}_rollout_fidelity.png")
 
         for row in fold_rows:
             keys = ("target", "threshold_mode", "f1", "precision", "recall", "fpr", "pr_auc",

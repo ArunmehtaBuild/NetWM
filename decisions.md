@@ -519,3 +519,103 @@ at the budget remain the ranking evidence.
 
 **Revisit if.** A denominator larger than 26 episodes becomes available (more capture days, or
 per-host episodes from S-2), at which point the null's resolution improves and the p95 bar tightens.
+
+---
+
+### D-023 — Round 3 supervises when an episode *begins*, keyed on attack episodes
+*Date: 2026-09-25 · Status: accepted (recorded before the run, per the board's constraint) · Evidence: E12, E14, E15a; to be tested by E15*
+
+**Decision.** The risk head widens from 3 channels to 5. The two new channels are:
+
+| idx | channel | target | read from |
+|---|---|---|---|
+| 3 | `onset_now` | this window is the **first** window of an attack episode | imagined states - unioned over the rollout |
+| 4 | `precursor` | an onset falls within the next K windows **and** this window is not itself an attack window | the **filtered** posterior only |
+
+They are two different claims and are never merged into one number:
+
+- `onset_now` is a first-occurrence indicator, so `1 - prod(1 - p_k)` over a rollout is a genuine
+  `P(an attack episode begins within k)`. **This is the forecasting claim**, and it is the
+  hypothesis D-019 left open: *"a first-occurrence hazard ... would also make the union formula
+  correct. That is round 3."*
+- `precursor` is already a statement about the next K windows, so unioning it over a rollout would
+  ask about a horizon of up to 2K. It is read off the filtered state, which means it is a
+  **representation** result - `sigmoid(head(RSSM_posterior(S_{t-15..t})))` is a sequence classifier,
+  not a rollout. `CLAUDE.md` reserves *rollout* for K-step open-loop imagination, and this is not
+  one. It will be reported as "filtered" and never described as forecasting.
+
+**Episodes are keyed on attack, not compromise - and this is a deviation from D-019.** D-019 says
+"the first *compromise* window after t". Measured on the frozen dataset:
+
+| keying | onsets per training fold | precursor windows per fold | families |
+|---|---:|---:|---|
+| compromise (D-019, D-011) | 1 (Thursday fold) | 10 | 1 |
+| attack episodes | 18 | 165 | 3 |
+
+Compromise-keyed gives the Thursday fold ten positive windows drawn from a single attack family.
+That is exactly the condition D-016 was written to escape - round 1 gave the compromise head one
+positive family per fold, it memorised that family, and it scored ROC-AUC 0.245 on the other. There
+is no reason to expect a different outcome from a target that is fifteen times sparser. Keying on
+any non-benign episode puts positives on four of five days and three attack families in every fold.
+
+**What that costs, and how it is paid.** Training on attack onsets while the product's question is
+about compromise is a real gap, so lead time is **evaluated** on three denominators, always
+reported together and never collapsed (D-022): all 26 attack episodes, Impact excluded (19), and
+the 5 compromise onsets - which are also, by construction, the hard set (4 infiltration + 1 botnet
+C2). Per-family counts sit beside them, because 7 of the 26 attack onsets are Impact and 6 of those
+are Wednesday DoS: a DDoS ramp is visible minutes ahead in flow rate, so an aggregate carried by
+Impact would look like success and mean nothing for PS 26153.
+
+**Pre-registered bar** (fixed before the run; a bar moved after seeing the number is worth nothing):
+
+1. **Significance.** Warned-early must exceed the 95th percentile of a 2,000-shift circular null at
+   the same threshold on **>= 2 of the 4 attack folds**, Fisher-combined p < 0.05, **and hold with
+   Impact excluded**. An Impact-only result does not pass.
+2. **Stability.** Over **>= 3 training seeds** (42/43/44), per-seed counts reported, never only a
+   mean. Seed variance here is *training* seed: `onset_now` fires on ~18 windows in a four-day fold
+   at a pos_weight of ~199, which is exactly the regime where one seed lands and the next does not.
+   Monte-Carlo spread is a separate and weaker number, reported as such.
+3. **Floors, on the same table.** The run's **own** channel-0 `p_max` (comparing against the r2
+   checkpoint would confound "new target" with "new run"); the single unscaled features
+   `uniq_dst_port` / `uniq_dst_ip` / `fanout_mean`, two of which already beat r2 at early warning on
+   Friday (E15a); and logistic regression leave-one-day-out on the same precursor label.
+
+This bar supersedes "lead > 0 on >= 2 of 5 episodes" from the Y-2 card, which E15a showed is not
+measurable - on Friday's one-episode compromise fold the null's p95 is 1 of 1, so no observed count
+can ever exceed it. **Pending ratification in D-021's amendment**; if that amendment sets a
+different bar, it governs and this clause is superseded by it.
+
+**Known circularity, stated before the result exists.** `metrics.lead_times` credits alarms in
+`[onset - K, onset)`; the `precursor` label is 1 on exactly that set. "Warned early" for channel 4
+is therefore per-episode recall with a run-length-2 filter - a legitimate operational readout, not
+independent confirmation. Channel 4's headline is leave-one-day-out PR-AUC and precision at the
+budget against the floors above. Channel 3's union does not have this problem.
+
+**E12 is not evidence that this label is learnable.** E12's ROC-AUC 0.88-0.96 is a within-day probe
+with a within-day scaler, on the *compromise*-keyed window set, at n = 10 on Friday. This target is
+attack-keyed and evaluated leave-one-day-out. E12 establishes that a signal exists in the state; it
+does not establish that a model trained on other days finds it. That sentence stays out of the deck.
+
+**Implementation notes that are part of the decision.**
+- The `WorldModelConfig.n_risk` default stays 3, so every round-2 checkpoint loads unchanged and the
+  E14 reproduction path is untouched. Only `configs/model_r3_precursor.yaml` widens the head.
+- The risk BCE is split into `compromise` (channels 0-2) and `precursor` (channels 3-4) with
+  separate weights. BCE is mean-reduced over every element, so slicing the first three channels
+  leaves that term numerically identical to round 2; one term spanning five channels would have
+  rescaled the compromise gradient by 3/5 and confounded every comparison with E14.
+- `class_weights` caps inverse-frequency weights at 50x. `onset_now` wants ~199, so its cap is
+  raised to 250; capping it would flatten the channel carrying the forecasting claim.
+- **Corrected latent bug.** `p_cum_attack` and `p_cum_escalate` were computed from Monte-Carlo
+  sample 0 while `p_cum` beside them was a 16-sample mean. Unions are now taken per sample and then
+  averaged, since `1 - prod(1 - E[p])` is not `E[1 - prod(1 - p)]`. This changes those two curves'
+  values (not their shapes) in payloads and in the E6/E13 escalation rows; `p_cum`, `p_max` and the
+  alarm path are untouched, so E14 and the demo are unaffected. Fixtures need regenerating.
+- A `sample=False` mean path was added to `forecast()`, taking the mean of the posterior, the prior
+  and the rollout, so a lead-time count can be produced with no Monte-Carlo variance at all.
+  `sigmoid(head(E[z]))` is not `E[sigmoid(head(z))]`, so it under-states saturating probabilities;
+  the threshold is a quantile of the same series, so ranking carries over. Reported with Spearman
+  rho against the 16-sample score.
+
+**Revisit if.** E15 returns a null result *and* the per-family breakdown shows the head is learning
+Impact onsets only - that would say the target is right but the episode definition is too broad, and
+the next cut is per-family heads rather than one pooled channel.
