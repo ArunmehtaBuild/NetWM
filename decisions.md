@@ -426,7 +426,7 @@ warning, in any form, anywhere.
   unless Y-2 (or a later run) produced it at a deployable threshold, reported over multiple seeds.
 - Any oracle-threshold number as a headline. Oracle numbers appear only beside their train-tuned or
   budget counterpart, labelled as an upper bound no deployment can pick (D-015).
-- Any number taken from `app/mock/thursday_oracle.json`. It is a UI fixture with a hand-picked
+- Any number taken from `fixtures/api/thursday_oracle.json`. It is a UI fixture with a hand-picked
   threshold and is marked `dev_only`.
 - A single averaged metric across folds that hides Friday. Friday is reported as its own
   leave-one-family-out result, at chance, every time.
