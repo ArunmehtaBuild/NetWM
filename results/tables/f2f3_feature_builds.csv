@@ -1,0 +1,16 @@
+build,day,features,flows,windows,build_s
+f1-v1-recheck,monday,70,371624,974,7.217
+f1-v1-recheck,tuesday,70,322078,976,6.537
+f1-v1-recheck,wednesday,70,496641,1017,10.416
+f1-v1-recheck,thursday,70,362076,972,7.515
+f1-v1-recheck,friday,70,547557,968,9.702
+f2-trend-build,monday,94,371624,974,5.449
+f2-trend-build,tuesday,94,322078,976,4.826
+f2-trend-build,wednesday,94,496641,1017,7.874
+f2-trend-build,thursday,94,362076,972,5.25
+f2-trend-build,friday,94,547557,968,9.072
+f3-hosts-build,monday,82,371624,974,6.651
+f3-hosts-build,tuesday,82,322078,976,5.674
+f3-hosts-build,wednesday,82,496641,1017,10.965
+f3-hosts-build,thursday,82,362076,972,7.563
+f3-hosts-build,friday,82,547557,968,10.334
