@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from backend.config import settings
+from backend.errors import APIError
 
 logger = logging.getLogger("netwm.jobs")
 
@@ -60,7 +61,13 @@ class JobStore:
         file_path: Optional[Path] = None,
         policy: Optional[str] = None,
         threshold: Optional[float] = None,
+        enqueue: bool = True,
     ) -> Job:
+        """Register a job; enqueue it now unless its input is still being written.
+
+        Uploads pass ``enqueue=False`` and call :meth:`submit` once the file is on disk -
+        enqueueing first let the worker pick the job up with ``file_path=None`` (R-5).
+        """
         with self._lock:
             self._cleanup_locked()
             job_id = f"j_{uuid.uuid4().hex[:8]}"
@@ -77,9 +84,19 @@ class JobStore:
                 threshold=threshold,
             )
             self._jobs[job_id] = job
-            self._queue.put(job_id)
+            if enqueue:
+                self._queue.put(job_id)
             logger.info("Job created: id=%s kind=%s file=%s", job_id, kind, filename)
             return job
+
+    def submit(self, job_id: str) -> None:
+        """Hand a job registered with ``enqueue=False`` to the worker."""
+        self._queue.put(job_id)
+
+    def discard(self, job_id: str) -> None:
+        """Forget a job whose input never arrived (rejected or failed upload)."""
+        with self._lock:
+            self._delete_job_files(self._jobs.pop(job_id, None))
 
     def get_job(self, job_id: str) -> Optional[Job]:
         with self._lock:
@@ -178,12 +195,18 @@ class JobStore:
                         state="error",
                         progress=1.0,
                         stage_text="failed",
-                        error={"code": "bad_file" if isinstance(exc, ValueError) else "internal", "message": str(exc)},
+                        error={"code": _error_code(exc), "message": str(exc)},
                     )
                 finally:
                     self._queue.task_done()
             except Exception as exc:
                 logger.critical("Unexpected error in job queue worker: %s", exc)
+
+
+def _error_code(exc: Exception) -> str:
+    if isinstance(exc, APIError):
+        return exc.code
+    return "bad_file" if isinstance(exc, ValueError) else "internal"
 
 
 job_store = JobStore()

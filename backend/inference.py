@@ -75,6 +75,45 @@ def get_checkpoint(name: Optional[str] = None) -> Optional[dict[str, Any]]:
         return None
 
 
+# The deployable operating point quoted everywhere (results.md, E14): Thursday fold, p_max,
+# self-budget-10pct threshold, against the E3 logistic-regression baseline at its train-tuned
+# threshold on the same fold. Read from the run folders so the API can never drift from them.
+_E14_RUN = "e14-pmax-rescore-e4e7-worldmodel-r2"
+_E3_RUN = "e2e3-baselines-lags0"
+
+
+def _find_row(run_id: str, **match: Any) -> Optional[dict[str, Any]]:
+    path = settings.repo_root / "results" / "runs" / run_id / "metrics.json"
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            rows = json.load(f)["metrics"]["rows"]
+    except Exception as exc:
+        logger.warning("Cannot read metrics from %s: %s", path, exc)
+        return None
+    return next((r for r in rows if all(r.get(k) == v for k, v in match.items())), None)
+
+
+def load_headline_metrics() -> dict[str, float]:
+    """Model-card metrics, sourced from results/runs/ (zeros only if a run folder is missing)."""
+    metrics = {k: 0.0 for k in ("f1", "precision", "recall", "fpr", "pr_auc",
+                                "mean_lead_time_windows", "baseline_f1")}
+    wm = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
+    if wm:
+        metrics.update(
+            f1=round(wm["f1"], 3),
+            precision=round(wm["precision"], 3),
+            recall=round(wm["recall"], 3),
+            fpr=round(wm["fpr"], 3),
+            pr_auc=round(wm["pr_auc"], 3),
+            mean_lead_time_windows=float(wm["mean_lead_windows"]),
+        )
+    base = _find_row(_E3_RUN, experiment="E3", target="forecast",
+                     test_day="thursday", threshold_mode="train-tuned")
+    if base:
+        metrics["baseline_f1"] = round(base["f1"], 3)
+    return metrics
+
+
 def get_model_card() -> dict[str, Any]:
     """Return model card matching ModelResponse schema."""
     from netwm.engine.predict import stage_catalogue
@@ -96,15 +135,7 @@ def get_model_card() -> dict[str, Any]:
             "params": param_count,
             "git_sha": git_sha,
             "stages": stages,
-            "metrics": {
-                "f1": 0.0,
-                "precision": 0.0,
-                "recall": 0.0,
-                "fpr": 0.0,
-                "pr_auc": 0.0,
-                "mean_lead_time_windows": 0.0,
-                "baseline_f1": 0.0,
-            },
+            "metrics": load_headline_metrics(),
             "feature_count": feature_count,
         }
 
@@ -118,17 +149,23 @@ def get_model_card() -> dict[str, Any]:
         "params": 1840000,
         "git_sha": "abc1234",
         "stages": stages,
-        "metrics": {
-            "f1": 0.0,
-            "precision": 0.0,
-            "recall": 0.0,
-            "fpr": 0.0,
-            "pr_auc": 0.0,
-            "mean_lead_time_windows": 0.0,
-            "baseline_f1": 0.0,
-        },
+        "metrics": load_headline_metrics(),
         "feature_count": 84,
     }
+
+
+def resolve_demo(demo_id: str) -> tuple[Path, str]:
+    """Map a demo id to its CSV slice and checkpoint day, or raise a client-facing error."""
+    matched = next((s for s in get_demo_scenarios() if s.get("id") == demo_id), None)
+    if matched is None:
+        raise APIError("bad_file", f"Demo scenario '{demo_id}' does not exist")
+    path = (settings.repo_root / "data" / "demo" / matched["file"]).resolve()
+    if not path.exists():
+        raise APIError(
+            "no_model",
+            f"Demo slice {path} is missing - regenerate with `python scripts/make_demo_samples.py`",
+        )
+    return path, str(matched.get("day", "thursday"))
 
 
 def get_demo_scenarios() -> list[dict[str, Any]]:
@@ -158,35 +195,25 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
 
     result_file = settings.jobs_dir / f"{job.id}.json"
 
-    # Handle demo jobs
+    # Handle demo jobs: always real inference on the slice in data/demo/. Serving a fixture
+    # here returned a full-day payload under a 2-hour slice's metadata (R-6).
     if job.kind == "demo":
-        progress_cb(0.3, "Loading demo scenario data")
-        demo_id = job.filename
-        scenarios = get_demo_scenarios()
-        matched = next((s for s in scenarios if s.get("id") == demo_id), None)
-        day = matched.get("day", "thursday") if matched else "thursday"
-        demo_filename = matched.get("file") if matched else f"{demo_id}.csv"
-        demo_csv_path = settings.repo_root / "data" / "demo" / demo_filename
-
+        demo_csv_path, day = resolve_demo(job.filename)
         ckpt = get_checkpoint(day)
+        if ckpt is None:
+            raise APIError("no_model", f"No checkpoint available for demo day '{day}'")
 
-        if demo_csv_path.exists() and ckpt is not None:
-            progress_cb(0.4, f"Running model inference on {demo_filename}")
-            from netwm.engine.predict import analyze_file
+        progress_cb(0.3, f"Running model inference on {demo_csv_path.name}")
+        from netwm.engine.predict import analyze_file
 
-            kwargs: dict[str, Any] = {"progress": progress_cb}
-            if job.threshold is not None:
-                kwargs["threshold_override"] = job.threshold
+        kwargs: dict[str, Any] = {"progress": progress_cb}
+        if job.threshold is not None:
+            kwargs["threshold_override"] = job.threshold
 
-            payload = analyze_file(demo_csv_path, ckpt, **kwargs)
-            payload["job_id"] = job.id
-            payload["source"]["filename"] = demo_filename
-        else:
-            progress_cb(0.6, "Loading precomputed demonstration fixture")
-            payload = _load_fallback_fixture(day)
-            payload["job_id"] = job.id
-            payload["mock"] = True
-            payload["source"]["filename"] = demo_filename
+        logger.info("Demo job %s reading %s", job.id, demo_csv_path)
+        payload = analyze_file(demo_csv_path, ckpt, **kwargs)
+        payload["job_id"] = job.id
+        payload["mock"] = False
 
         with open(result_file, "w", encoding="utf-8") as f:
             json.dump(payload, f)
@@ -194,8 +221,9 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
         return result_file
 
     # Handle uploaded file jobs
+    logger.info("Job %s reading upload %s", job.id, job.file_path)
     if not job.file_path or not job.file_path.exists():
-        raise APIError("bad_file", f"Uploaded file not found: {job.filename}")
+        raise APIError("bad_file", f"Uploaded file not found: {job.file_path or job.filename}")
 
     progress_cb(0.2, "Preparing uploaded file")
     ckpt = get_checkpoint()
@@ -223,6 +251,7 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
     payload = analyze_file(job.file_path, ckpt, **kwargs)
     payload["job_id"] = job.id
     payload["source"]["filename"] = job.filename
+    payload["mock"] = False
 
     with open(result_file, "w", encoding="utf-8") as f:
         json.dump(payload, f)

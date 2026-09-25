@@ -69,9 +69,9 @@ def test_zero_network_calls_guarantee(monkeypatch: pytest.MonkeyPatch) -> None:
     assert demo_resp.status_code == 202
     demo_job_id = demo_resp.json()["job_id"]
 
-    # Wait for completion
-    for _ in range(50):
-        time.sleep(0.1)
+    # Wait for completion - the demo now runs real inference, not a fixture load
+    for _ in range(1500):
+        time.sleep(0.2)
         st = client.get(f"/api/jobs/{demo_job_id}").json()["state"]
         if st in {"done", "error"}:
             break

@@ -8,6 +8,8 @@ import time
 from fastapi.testclient import TestClient
 import pytest
 
+from backend.errors import APIError
+from backend.inference import resolve_demo
 from backend.server import app
 
 client = TestClient(app)
@@ -80,14 +82,19 @@ def test_error_job_not_found() -> None:
 
 
 def test_demo_job_lifecycle_and_results() -> None:
-    # 1. Trigger demo job
+    try:
+        resolve_demo("thursday_infiltration")
+    except APIError:
+        pytest.skip("data/demo/ not generated (python scripts/make_demo_samples.py)")
+
+    # 1. Trigger demo job (real inference on the slice - allow for CPU-only machines)
     create_resp = client.post("/api/analyze/demo/thursday_infiltration")
     assert create_resp.status_code == 202
     job_id = create_resp.json()["job_id"]
 
     # 2. Poll until done (or timeout)
-    for _ in range(50):
-        time.sleep(0.1)
+    for _ in range(1500):
+        time.sleep(0.2)
         status_resp = client.get(f"/api/jobs/{job_id}")
         assert status_resp.status_code == 200
         state = status_resp.json()["state"]
@@ -104,11 +111,11 @@ def test_demo_job_lifecycle_and_results() -> None:
     assert "timeline" in payload
     assert len(payload["timeline"]) > 0
 
-    # 4. Inspect flows for window 417
-    flows_resp = client.get(f"/api/jobs/{job_id}/flows?window=417")
+    # 4. Inspect flows for window 100
+    flows_resp = client.get(f"/api/jobs/{job_id}/flows?window=100")
     assert flows_resp.status_code == 200
     flows_data = flows_resp.json()
-    assert flows_data["window"] == 417
+    assert flows_data["window"] == 100
     assert "flows" in flows_data
     assert isinstance(flows_data["flows"], list)
 

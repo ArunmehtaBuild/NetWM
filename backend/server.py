@@ -25,6 +25,7 @@ from backend.inference import (
     get_demo_scenarios,
     get_flows_for_window,
     get_model_card,
+    resolve_demo,
     run_job_inference,
 )
 from backend.jobs import job_store
@@ -124,18 +125,20 @@ async def analyze_file(
             f"File size exceeds maximum limit of {max_bytes // (1024 * 1024)} MB",
         )
 
-    # Stream file to disk while enforcing size cap
+    # Register the job but do not enqueue it until the file is fully on disk,
+    # otherwise the worker races the upload and sees file_path=None (R-5).
     clean_name = _sanitize_filename(file.filename)
     job = job_store.create_job(
         kind=ext.lstrip("."),
         filename=clean_name,
         policy=policy,
         threshold=threshold,
+        enqueue=False,
     )
 
     upload_dir = settings.uploads_dir / job.id
     upload_dir.mkdir(parents=True, exist_ok=True)
-    destination = upload_dir / clean_name
+    destination = (upload_dir / clean_name).resolve()
 
     total_bytes = 0
     chunk_size = 1024 * 1024  # 1 MB chunks
@@ -152,20 +155,18 @@ async def analyze_file(
                         f"File size exceeds limit of {max_bytes // (1024 * 1024)} MB",
                     )
                 f_out.write(chunk)
-    except APIError:
-        # Clean up partially written file
-        if destination.exists():
-            destination.unlink()
+        if total_bytes == 0:
+            raise APIError("bad_file", "Uploaded file is empty (0 bytes)")
+    except BaseException:
+        job.file_path = destination
+        job_store.discard(job.id)
         raise
     finally:
         await file.close()
 
-    if total_bytes == 0:
-        if destination.exists():
-            destination.unlink()
-        raise APIError("bad_file", "Uploaded file is empty (0 bytes)")
-
-    job.file_path = destination
+    job_store.update_job(job.id, file_path=destination)
+    logger.info("Upload for job %s written: %s (%d bytes)", job.id, destination, total_bytes)
+    job_store.submit(job.id)
     return JobCreatedResponse(job_id=job.id, state="queued")
 
 
@@ -176,10 +177,7 @@ async def analyze_demo(
     threshold: Optional[float] = Query(None),
 ) -> JobCreatedResponse:
     """Launch analysis for a preloaded demo scenario."""
-    scenarios = get_demo_scenarios()
-    matched = next((s for s in scenarios if s.get("id") == demo_id), None)
-    if not matched:
-        raise APIError("bad_file", f"Demo scenario '{demo_id}' does not exist")
+    resolve_demo(demo_id)  # 400/503 now, not a job that fails later
 
     job = job_store.create_job(
         kind="demo",

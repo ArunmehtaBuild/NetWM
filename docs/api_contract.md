@@ -113,8 +113,9 @@ play/pause replay so the demo video shows the forecast rising *before* the attac
 - `timeline` is capped at 5 000 entries per response; longer captures paginate with `?from=&to=`.
 - Uploads capped at 200 MB CSV / 2 GB PCAP; oversize returns `too_large`.
 - Stage ids and colours come from `/api/model`, never hard-coded in the frontend.
-- When no trained model is present the backend still serves `/api/demos` from `fixtures/api/` so the UI
-  is always demo-able (`"mock": true` in the payload).
+- Demos (`POST /api/analyze/demo/{id}`) always run the model on `data/demo/<file>.csv`
+  (`"mock": false`). A missing slice or checkpoint is `503 no_model`, never a substituted fixture (D-024).
+- An *upload* with no checkpoint loaded falls back to `fixtures/api/` with `"mock": true`.
 
 ---
 
@@ -193,8 +194,8 @@ origin; the API is JSON only and renders nothing.
 
 - **CORS:** the API allowlists the dashboard origins explicitly (`NETWM_CORS_ORIGINS`), never `*` -
   it accepts file uploads.
-- **Fixtures:** `fixtures/api/*.json` is the single source of truth. The API serves them when no
-  checkpoint is loaded (`"mock": true`); the dashboard keeps a generated copy in `frontend/mock/`
+- **Fixtures:** `fixtures/api/*.json` is the single source of truth. The API serves them for uploads when no
+  checkpoint is loaded (`"mock": true`), never for demos; the dashboard keeps a generated copy in `frontend/mock/`
   (`python scripts/sync_fixtures.py`) so it runs with no backend at all.
 - **No cookies, no auth, no state on the server** beyond the job store, so the dashboard can be
   hosted anywhere without changing the API.
