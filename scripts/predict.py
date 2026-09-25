@@ -34,6 +34,11 @@ def main() -> None:
         help="override the alarm threshold (fixtures only - marks the payload dev_only)",
     )
     ap.add_argument("--note", default=None, help="why this payload was produced with an override")
+    ap.add_argument(
+        "--sampled-score",
+        action="store_true",
+        help="score alarms from sampled rollouts instead of the deterministic mean path",
+    )
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
@@ -44,6 +49,7 @@ def main() -> None:
     payload = analyze_file(
         args.input, ckpt, n_samples=args.samples,
         threshold_override=args.threshold, override_note=args.note,
+        mean_path_score=not args.sampled_score,
         progress=lambda p, msg: print(f"  [{p:5.0%}] {msg}"),
     )
     if args.max_windows:
