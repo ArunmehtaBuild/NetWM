@@ -414,3 +414,69 @@ Curiosity worth noting for Y-3: Thursday's `detect` target at an oracle threshol
 episodes "warned early" with a mean lead of 6.5 windows while scoring F1 0.021 and PR-AUC 0.069. That
 is a score firing almost everywhere, not a forecaster - a reminder that lead time must always be read
 next to the false-positive rate, and that our own early-warning counts need the same scrutiny.
+
+---
+
+## E15a - what does an unaligned score warn about? (Y-2 / Y-5, calibration for D-021)
+
+`python scripts/precursor_eval.py --scores-from-run e14-pmax-rescore-e4e7-worldmodel-r2`
+run: `results/runs/e15a-null-calibration-e14-pmax-rescore-e4e7-worldmodel-r2/`
+
+Before training anything for Y-2, we asked what an early-warning *count* is worth. The harness reads
+the **exact score arrays E14 published** rather than re-forecasting, so no Monte-Carlo noise sits
+between this calibration and the numbers already in this file. Method in D-022: a 2,000-shift
+circular null at the same threshold, an eligibility mask that refuses credit for alarms inside the
+previous episode's traffic, and a confirmation that must land before the onset.
+
+**Reproduction gate.** The harness reproduces E14 exactly on the same scores - Thursday self-budget
+10 %: F1 **0.5758**, FPR **0.0273**, precision 0.776, 0 of 4 compromise episodes; Friday oracle
+1 of 1. Measurement verified before anything was measured with it.
+
+### The two early warnings E14 reports
+
+| fold | policy | alarm rate | FPR | warned early | null mean | null p95 | **p** |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Thursday | oracle (0.010) | 0.146 | 0.065 | 1 / 4 compromise | 0.78 | 3 | **0.412** |
+| Friday | oracle (0.020) | **0.472** | **0.469** | 1 / 1 compromise | 0.55 | 1 | **0.550** |
+| Thursday | self-budget 10 % | 0.101 | 0.027 | 0 / 4 compromise | 0.53 | 2 | 1.000 |
+| Friday | self-budget 10 % | 0.100 | 0.115 | 0 / 1 compromise | 0.14 | 1 | 1.000 |
+
+### The raw-feature floor, same threshold policy, no model at all
+
+| fold | score | alarm rate | warned early (attack, n=8) | warned early (compromise) | p (compromise) |
+|---|---|---:|---:|---:|---:|
+| Friday | `uniq_dst_ip` | 0.100 | 1 / 8 | **1 / 1** | 0.236 |
+| Friday | `fanout_mean` | 0.100 | 2 / 8 | **1 / 1** | 0.224 |
+| Friday | `p_max` (the model) | 0.100 | 2 / 8 | 0 / 1 | 1.000 |
+| Thursday | `uniq_dst_ip` | 0.101 | 1 / 8 | 0 / 4 | 1.000 |
+| Thursday | `p_max` (the model) | 0.101 | 0 / 8 | 0 / 4 | 1.000 |
+
+### Findings
+
+1. **Neither of E14's early warnings is distinguishable from chance.** Thursday's "1 of 4 at the
+   oracle threshold" scores p = 0.412 against an unaligned score of the same shape; Friday's
+   "1 of 1" scores p = 0.550 and needs a 47 % alarm rate to occur at all. This does not change
+   E14's conclusion - it strengthens it. D-019 withdrew the claim that `p_max` buys lead time on
+   the evidence that the warnings only survived at an oracle threshold; the null says they did not
+   really survive there either.
+2. **The board's Y-2 bar is not measurable on the compromise denominator.** Null p95 is 2 of 4 on
+   Thursday and **1 of 1 on Friday** - on a one-episode fold no observed count can ever exceed its
+   own null. "Lead > 0 on >= 2 of 5 episodes" can therefore be met by chance, and a run that met it
+   would prove nothing. This is the finding that forces the bar to be restated before round 3, not
+   after (D-022, and D-021's amendment).
+3. **Two raw features beat the model at early warning on Friday.** `uniq_dst_ip` and `fanout_mean`,
+   unscaled, at the same 10 % budget, warn before the botnet C2 onset where `p_max` does not - at
+   p = 0.24 and 0.22, so not significant either, but they are the floor round 3 has to clear. Both
+   are features E12 ranked highest on that day (Cohen's d +1.51 and +1.39), which is consistent:
+   the signal is in the state, and the model is not currently reading it.
+4. **The eligibility mask matters where we expected.** Wednesday's onsets 219 and 309 have 6 of
+   their 10 pre-onset windows inside the previous attack run. They are not in this table (Wednesday
+   is a training day for both r2 folds) but they will be in E15, and without the mask a pure
+   detector would collect two free warnings there.
+5. **Zero-alarm policies behave correctly under the null.** Thursday's train-tuned and
+   alert-budget-5 % thresholds fire on 0.0 % of windows, so the null mean is 0.00 and p = 1.000 -
+   the harness does not manufacture a comparison where there is nothing to compare.
+
+Full table, all six threshold policies and all three episode denominators:
+`results/tables/e15a-null-calibration-e14-pmax-rescore-e4e7-worldmodel-r2.csv`; the per-statistic
+Fisher combination across folds is in the `_combined.csv` beside it.

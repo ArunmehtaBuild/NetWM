@@ -459,3 +459,63 @@ another simple method, run it before arguing with them.
 
 **Freeze.** This framing is fixed from now until the submission. Changing it requires a new decision
 entry with the result that justifies it - not a conversation at recording time.
+
+---
+
+### D-022 — Lead time is reported against a null, per episode family, or it is not reported
+*Date: 2026-09-25 · Status: accepted · Evidence: E15a*
+
+**Decision.** Every early-warning count in this repo carries, on the same line: the alarm rate and
+the false-positive rate at that threshold (board card Y-5), the episode denominator it is counted
+over, the per-family breakdown, and the p-value of a 2,000-shift circular-shift null computed at the
+same threshold. **A count that does not exceed the null's 95th percentile is not a result.**
+
+Three measurement changes make that possible, all in `src/netwm/models/leadtime.py`:
+
+1. **An eligibility mask.** `metrics.lead_times` credits any alarm in `[onset - K, onset)`, including
+   windows that are themselves attack windows belonging to the *previous* episode. Wednesday's
+   onsets 219 and 309 have 6 of their 10 pre-onset windows inside the run before them, so a pure
+   detector collects two free "early warnings". Only non-attack windows can now be credited.
+2. **A confirmation that lands before the onset.** With `persistence=2` and `t = onset - 1`, the
+   confirming window is the onset itself - a score that only wakes up once the attack starts was
+   being credited with a one-window lead.
+3. **The null.** Rolling the score circularly preserves its distribution exactly (so the alert
+   budget, and therefore the alarm rate, is identical) and its autocorrelation almost exactly, while
+   destroying its alignment with the onsets. Shifts smaller than K are excluded. The p-value uses
+   the standard +1 correction and so can never be quoted as zero.
+
+**Episode denominators.** Three, always reported together, never collapsed into one number:
+all attack episodes (26 across the week), Impact excluded (19), and the five compromise onsets
+(D-011). Plus warned/total per attack family, because 7 of the 26 attack onsets are Impact and 6 of
+those are Wednesday DoS - a DDoS ramp is visible minutes ahead in flow rate, so an aggregate carried
+by Impact would look like success and mean nothing for PS 26153.
+
+**Why now.** E15a ran the null against the **published** E14 score arrays - not a re-run, so no
+Monte-Carlo noise sits between the null and the number in `results.md`:
+
+| number as published | null mean | null p95 | p |
+|---|---:|---:|---:|
+| E14 Thursday, oracle, 1 of 4 compromise episodes | 0.78 | 3 | **0.412** |
+| E14 Friday, oracle, 1 of 1 compromise episodes | 0.55 | 1 | **0.550** |
+| E14 Thursday, self-budget 10 %, 0 of 4 | 0.53 | 2 | 1.000 |
+
+Neither surviving early warning in E14 is distinguishable from an unaligned score of the same shape.
+Friday's is worse than that: it needs an alarm rate of 47 % (FPR 0.469) to happen at all, which is
+the E3b pathology reproduced on our own model rather than on the baseline.
+
+**What this costs us.** The two early warnings E14 reports at the oracle threshold can no longer be
+described as evidence of anything, and `fixtures/api/thursday_oracle.json` remains what T-07 already
+called it: a UI development fixture whose number never reaches a slide.
+
+**Consequence for the Y-2 bar.** On the compromise denominator the null p95 is 2 of 4 on Thursday
+and **1 of 1 on Friday** - so on Friday no possible result can exceed it, and the board's
+"lead > 0 on >= 2 of 5 episodes" can be met by chance. The bar is restated in D-021's amendment;
+this entry only records that the old one is not measurable.
+
+**Known limitation.** The null tests alignment, not calibration: a score that is genuinely
+predictive but fires constantly will still fail it, and correctly so, because the alert budget is
+what a SOC actually pays. It says nothing about whether the *ranking* is good - PR-AUC and precision
+at the budget remain the ranking evidence.
+
+**Revisit if.** A denominator larger than 26 episodes becomes available (more capture days, or
+per-host episodes from S-2), at which point the null's resolution improves and the p95 bar tightens.
