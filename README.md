@@ -61,4 +61,24 @@ Torch is installed separately for CUDA (GTX 1650 / CUDA 12.1):
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
-Data download and training instructions are added as each stage lands.
+## Data
+
+One command, ~328 MB download, ~1.1 GB extracted into `data/raw/cicids2017_improved/` (gitignored):
+
+```bash
+python scripts/get_data.py          # download + sha256 verify + extract
+python scripts/get_data.py --check  # report what is on disk, download nothing
+```
+
+This fetches the **corrected** CIC-IDS2017 re-extraction, not the CIC original - the original
+mis-terminates TCP flows and mislabels attack onsets, and onset time is the quantity we predict
+(decisions.md D-001, research/cicids2017.md). The checksum is pinned: every published number in
+`results.md` assumes that exact archive.
+
+Then build the state matrices:
+
+```bash
+python scripts/build_features.py --config configs/cicids2017.yaml
+```
+
+Training and demo instructions are in `plan.md` and `docs/architecture.md`.
