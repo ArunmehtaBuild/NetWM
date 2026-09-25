@@ -11,8 +11,11 @@ is 0, so the same model consumes both inputs.
 
 from __future__ import annotations
 
+from typing import Any, Iterable
+
 import numpy as np
 import pandas as pd
+from numpy.lib.stride_tricks import sliding_window_view
 
 #: Well-known services worth a dedicated ratio - these are the ports attacks actually touch.
 SERVICE_PORTS: dict[str, tuple[int, ...]] = {
@@ -26,6 +29,26 @@ SERVICE_PORTS: dict[str, tuple[int, ...]] = {
     "rdp": (3389,),
     "db": (1433, 3306, 5432, 1521),
 }
+
+
+#: S_t v2 trend block (task S-1, decisions.md D-026): the features E12 ranked highest before an
+#: onset. Levels alone tell the model *how many* ports are being touched, never how fast that rises.
+TREND_BASES: tuple[str, ...] = (
+    "uniq_dst_port",
+    "ports_per_pair_max",
+    "port_fanout_max",
+    "uniq_dst_ip",
+    "fanout_mean",
+    "flows_per_s",
+)
+# Module constants rather than config on purpose (D-026): a checkpoint keeps only its feature
+# *names*, and inference rebuilds the state from those alone, so a config value could silently
+# differ between the build that trained a model and the engine that serves it.
+TREND_SLOPES: tuple[int, ...] = (5, 10)  # least-squares slope windows; over 2 windows it IS the delta
+TREND_BASELINE = 120  # trailing windows for the z-score: 120 x 30 s stride = 60 min
+TREND_MIN_PERIODS = 10  # windows of history (5 min) before a z-score is trusted
+TREND_STD_FLOOR = 1e-6
+TREND_Z_CLIP = 10.0  # a flat baseline must not mint 1e6-sized values - the E2 failure again
 
 
 def _entropy(counts: np.ndarray) -> float:
@@ -175,6 +198,9 @@ def window_features(
     ``expanded`` comes from :func:`netwm.features.windowing.expand_to_windows`. Empty windows are
     filled with zeros rather than dropped: a gap in traffic is itself a state the dynamics model has
     to be able to represent.
+
+    ``use_trend`` appends the S_t v2 trend block (D-026). It is off by default: S_t v1 (70 columns)
+    is frozen for comparability with every round-2 number.
     """
     df = _derive_flow_columns(expanded, internal_prefixes)
     g = df.groupby("w", sort=True)
@@ -225,35 +251,68 @@ def window_features(
     feats = feats.reindex(pd.RangeIndex(n)).fillna(0.0)
 
     if use_trend:
-        # Task S-1: Deltas, rolling slopes, and z-scores for top features
-        target_cols = [
-            "uniq_dst_port", "ports_per_pair_max", "port_fanout_max",
-            "uniq_dst_ip", "fanout_mean", "flows_per_s"
-        ]
-        
-        for col in target_cols:
-            if col not in feats.columns:
-                continue
-                
-            # 1. Immediate delta
-            feats[f"{col}_delta"] = feats[col].diff().fillna(0.0)
-            
-            # 2. Rolling slopes (2, 5, and 10 windows)
-            # Slope is roughly the change over W windows divided by W
-            for w in [2, 5, 10]:
-                feats[f"{col}_slope_{w}"] = (feats[col] - feats[col].shift(w)).fillna(0.0) / w
-                
-            # 3. Z-scores against a rolling "benign" baseline
-            # Assuming a 2-hour window (120 * 60s windows) is long enough to act as a baseline
-            baseline_window = 120
-            roll = feats[col].rolling(window=baseline_window, min_periods=1)
-            mean = roll.mean()
-            std = roll.std().replace(0, 1e-6) # avoid division by zero
-            
-            feats[f"{col}_zscore"] = ((feats[col] - mean) / std).fillna(0.0)
+        feats = feats.join(_trend_features(feats))
 
     feats.index.name = "w"
     return feats.astype(np.float32)
+
+
+def trend_feature_names() -> list[str]:
+    """The S_t v2 trend columns, in the order :func:`window_features` appends them."""
+    suffixes = ["delta", *(f"slope_{w}" for w in TREND_SLOPES), "zscore"]
+    return [f"{b}_{s}" for b in TREND_BASES for s in suffixes]
+
+
+def feature_flags_from_names(names: Iterable[str]) -> dict[str, Any]:
+    """The :func:`window_features` switches a model was trained with, read off its feature names.
+
+    Checkpoints store ``feature_names`` but not the data config, so this is how the inference engine
+    rebuilds the exact state a model saw. A partial match means the checkpoint was built with
+    different trend constants - that must fail loudly, not feed the model a different state.
+    """
+    names = set(names)
+    trend = set(trend_feature_names())
+    present = trend & names
+    if present and present != trend:
+        raise ValueError(
+            f"checkpoint has {len(present)} of {len(trend)} trend features - built with different "
+            f"trend constants than flow_features.py now defines (missing e.g. {sorted(trend - names)[:3]})"
+        )
+    return {"use_trend": bool(present)}
+
+
+def _ols_slope(x: np.ndarray, w: int) -> np.ndarray:
+    """Least-squares slope of ``x`` over each trailing ``w``-window span, per window.
+
+    A fixed linear filter, so it is exact and fast. It uses all ``w`` points, where a two-point
+    difference ``(x_t - x_{t-w}) / w`` would be decided by one noisy endpoint. The first ``w - 1``
+    windows have no complete span and stay 0.
+    """
+    j = np.arange(w, dtype=np.float64) - (w - 1) / 2.0
+    kernel = j / (j**2).sum()
+    out = np.zeros(len(x), dtype=np.float64)
+    if len(x) >= w:
+        out[w - 1 :] = sliding_window_view(x, w) @ kernel
+    return out
+
+
+def _trend_features(feats: pd.DataFrame) -> pd.DataFrame:
+    """Delta, least-squares slopes and a trailing z-score for each of :data:`TREND_BASES`.
+
+    Everything is strictly causal: window ``t`` sees windows ``<= t`` only, and the z-score's
+    baseline stops at ``t - 1`` so a spike cannot dilute its own anomaly. Label-free - the baseline
+    is "the last hour", not "the last benign hour", because a sensor does not know which is which.
+    """
+    out = {}
+    for base in TREND_BASES:
+        x = feats[base].astype(np.float64)
+        out[f"{base}_delta"] = x.diff().fillna(0.0)
+        for w in TREND_SLOPES:
+            out[f"{base}_slope_{w}"] = pd.Series(_ols_slope(x.to_numpy(), w), index=x.index)
+        hist = x.shift(1).rolling(TREND_BASELINE, min_periods=TREND_MIN_PERIODS)
+        z = (x - hist.mean()) / hist.std().clip(lower=TREND_STD_FLOOR)
+        out[f"{base}_zscore"] = z.clip(-TREND_Z_CLIP, TREND_Z_CLIP).fillna(0.0)
+    return pd.DataFrame(out, index=feats.index)[trend_feature_names()]
 
 
 def _beacon_score(df: pd.DataFrame) -> pd.Series:

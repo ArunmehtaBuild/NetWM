@@ -672,7 +672,7 @@ experiment. It reopens the claim only under the bar in point 2.
 
 ### D-024 — Trend feature window sizes for Task S-1
 
-*Date: 2026-09-25 · Status: accepted · Evidence: Task S-1 requirements*
+*Date: 2026-09-25 · Status: superseded by D-026 · Evidence: Task S-1 requirements*
 
 The model's original `S_t` state vector contained only absolute level values. As outlined in Task S-1, we augment this with trend (derivative) features specifically for the highest-ranking metrics from E12 (`uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`).
 
@@ -732,3 +732,58 @@ as badly as D-014 features did, which would take the representation hypothesis o
 leave per-host state (S-2) as the remaining direction.
 
 **Refs.** `research/state-normalisation.md`.
+
+---
+
+### D-026 — S_t v2 trend block, revised: frozen v1, least-squares slopes, a causal z-score
+*Date: 2026-09-26 · Status: accepted (supersedes D-024; recorded before any v2 build or run) · Evidence: E12, board sequencing rule 1*
+
+**Decision.** The trend block (task S-1) is kept for the same six E12 features (`uniq_dst_port`,
+`ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`), with four
+columns each - **94 features** in S_t v2 (70 + 24):
+
+- `{f}_delta` - `x_t - x_{t-1}`.
+- `{f}_slope_5`, `{f}_slope_10` - the **least-squares slope** over the trailing 5 / 10 windows
+  (0 until a full span exists). D-024's `slope_2` is dropped: a least-squares slope over two points
+  *is* the delta, so it would be a duplicate column.
+- `{f}_zscore` - against the **previous** 120 windows (60 min at the 30 s stride; not 2 h as D-024
+  stated), trusted after 10 windows of history (0 before), standard deviation floored and the
+  result clipped to +-10.
+
+v1 stays frozen: `configs/cicids2017.yaml` sets `use_trend_features: false` (it had been switched on
+by default), and v2 builds from `configs/features_trend.yaml` into its own `processed_dir`
+(`data/processed/cicids2017_trend`). The trend parameters are constants in
+`src/netwm/features/flow_features.py`, not config values.
+
+**Why.**
+- *Frozen v1.* Board sequencing rule 1: Y-2's numbers and every round-2 number were built on the 70
+  v1 columns, and v2 is evaluated as an ablation (Y-4), one variable at a time. With the flag on by
+  default, the next `build_features.py` run would have overwritten the v1 parquet silently. Verified:
+  with the flag off, the current code reproduces the pre-S-1 implementation (f7a0029) byte for byte.
+- *Least squares.* A two-point `(x_t - x_{t-w}) / w` is decided by its endpoints alone - one noisy
+  window swings it. The fitted slope uses every point in the span; on white noise its spread is
+  0.78x the two-point version (pinned in `tests/test_flow_features.py`).
+- *Causal, excluded, clipped z-score.* A baseline that includes the current window lets a spike
+  dilute its own anomaly. `min_periods=1` gave windows 0-1 of every capture z-scores from one or two
+  points. A flat baseline with a 1e-6 floor mints values in the 1e6 range, which is the E2 failure
+  mode (Thursday persistence NLL mean 152 010) reintroduced by hand. The baseline is "the last hour",
+  not "the last benign hour": a sensor has no labels.
+- *Constants, not config.* Checkpoints store `feature_names`, not the data config, and inference
+  (`engine/predict.py`) rebuilds the state from those names via `feature_flags_from_names`. A
+  config-level window length could differ between the build that trained a model and the engine that
+  serves it, and nothing would notice. A name set that matches only part of the trend block (e.g. a
+  D-024-era `slope_2`) now fails loudly instead.
+
+**Also decided.** `engine/predict.py` passes the recovered flags to `window_features`, so a v2
+checkpoint no longer crashes at inference (it would have raised on missing columns); r2 checkpoints
+resolve to the v1 call. `build_features.py` records per-split `build_s`, the seed and the feature
+flags in `meta.json`, so results.md F2's build time comes from an artefact.
+
+**Known limitation.** The z-score's baseline absorbs a sustained attack after about an hour, and the
+first 10 windows of every capture carry no trend information. Under the D-025 rank scaler the
+z-score is partly redundant with the causal rank of the level itself; Y-4 decides whether it earns
+its columns.
+
+**Revisit if.** The Y-4 ablation shows no gain from the trend block on the precursor label under the
+D-023 bar, or shows one column family (slopes vs z-score) carrying all of it - then drop the rest
+rather than keep 24 columns for the sake of it.

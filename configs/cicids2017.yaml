@@ -6,7 +6,9 @@ processed_dir: data/processed/cicids2017
 window:
   length_s: 60.0    # D-002
   stride_s: 30.0
-  use_trend_features: true
+  # S_t v1 (70 features) is frozen: every round-2 number was built with this off. The v2 trend
+  # block builds from configs/features_trend.yaml into its own processed_dir (D-026).
+  use_trend_features: false
 
 # Forecast horizon in windows. 10 x 30 s stride = 5 minutes of look-ahead, which is the order of
 # magnitude of the gap between the Dropbox download and the internal scan on the infiltration day.

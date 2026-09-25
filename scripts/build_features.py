@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -27,7 +28,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from netwm.data.cicids2017 import CICIDS2017Adapter
-from netwm.features.flow_features import window_features
+from netwm.features.flow_features import feature_flags_from_names, window_features
 from netwm.features.windowing import (
     WindowSpec,
     any_within,
@@ -128,7 +129,11 @@ def main() -> None:
     splits = args.splits or adapter.splits()
     metas, feature_names = [], None
     for split in splits:
+        started = time.perf_counter()
         frame, meta = build_split(adapter, split, cfg)
+        # load + window + features + labels for one split, excluding the parquet write; results.md
+        # F-entries quote this number, so it lives in meta.json rather than in a terminal
+        meta["build_s"] = round(time.perf_counter() - started, 3)
         frame.to_parquet(out_dir / f"{split}.parquet", index=False)
         metas.append(meta)
         feature_names = [
@@ -140,7 +145,7 @@ def main() -> None:
         ]
         print(f"{split:10s} windows={meta['windows']:>5,} compromise={meta['positive_rate']:.2%} "
               f"attack={meta['attack_rate']:.2%} escalate={meta['escalate_rate']:.2%} "
-              f"onsets={len(meta['onsets'])}")
+              f"onsets={len(meta['onsets'])} build={meta['build_s']:.2f}s")
 
     (out_dir / "meta.json").write_text(
         json.dumps(
@@ -148,8 +153,11 @@ def main() -> None:
                 "dataset": cfg["dataset"],
                 "config": cfg,
                 "git_sha": git_sha(),
+                "seed": args.seed,
                 "feature_names": feature_names,
                 "n_features": len(feature_names or []),
+                # what inference will reconstruct from the names alone (D-026)
+                "feature_flags": feature_flags_from_names(feature_names or []),
                 "splits": metas,
             },
             indent=2,

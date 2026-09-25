@@ -14,6 +14,7 @@ the commentary column.
 |---|---|---|---|---|---|
 | E1 | dataset audit | CIC-IDS2017 corrected, all 5 days | `python scripts/audit_dataset.py` | `results/tables/e1_*.csv`, `results/figures/e1_*_timeline.png`, `results/runs/e1-dataset-audit/` | 2.10 M flows, 4 907 windows; attack share 0-47 % per day; only 5 compromise onsets all week |
 | F1 | feature build | same, 70 features/window | `python scripts/build_features.py --config configs/cicids2017.yaml` | `data/processed/cicids2017/*.parquet` (not committed), `meta.json` | S_t = 70 features; positives 17.1 % (Thu), 13.1 % (Fri), 0 elsewhere |
+| F2 | feature build, S_t v2 (trend) | same, 94 features/window | `python scripts/build_features.py --config configs/features_trend.yaml` | `results/runs/f2-trend-build/` | **not yet run** (raw data not in checkout); v1 untouched in its own processed_dir (D-026) |
 | E2 | persistence floor | leave-one-day-out | `python scripts/benchmark_baselines.py` | `results/tables/e2e3_baselines_lags0.csv` | median next-state NLL 0.85-0.94; Thursday mean 152 010 (distribution shift) |
 | E3 | logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py` | same + `results/figures/e3_*_logreg_forecast.png`, `results/tables/e3_lead_times_lags0.csv` | **0 of 5 episodes warned early**; F1 0.011 (Thu) / 0.000 (Fri) at a deployable threshold |
 | E4-E7 r1 | world model, round 1 | leave-one-day-out | `python scripts/train.py --epochs 25` | `results/tables/e4e7-worldmodel_*.csv`, `results/figures/e5_*`, `e6_*` | Thursday PR-AUC 0.139 -> **0.473**, ROC-AUC 0.379 -> **0.753**; still 0 / 5 warned early; Friday worse than chance |
@@ -121,15 +122,24 @@ Only Thursday and Friday can serve as test days for the forecasting target - Tue
 and Wednesday (DoS) never reach Lateral Movement. Feature extraction runs in ~0.6 s per day after
 vectorising the entropy and beaconing computations (a groupby-apply version took 16 s per 60 k flows).
 
+---
+
 ## F2 - trend feature build (S_t v2)
 
-`python scripts/build_features.py --config configs/cicids2017.yaml` · 2026-09-25
+```
+python scripts/build_features.py --config configs/features_trend.yaml \
+    > results/runs/f2-trend-build/build.log 2>&1; echo "exit=$?"
+```
+run: `results/runs/f2-trend-build/` (`build.log` + a copy of `meta.json`) · **not yet run** - the raw
+dataset is not in this checkout. Every cell below stays `[TBD]` until the command above has produced it.
 
-*Note: S-1 was implemented to add trend features behind `use_trend_features: true`. The following metrics need to be populated after downloading the raw dataset and running the build.*
+S_t v2 = the 70 v1 features + the D-026 trend block (delta, least-squares slopes over 5 and 10
+windows, trailing 60-min z-score) for the six E12 features = **94 features per window by
+construction** (`tests/test_flow_features.py`); the build confirms it in `meta.json` `n_features`.
+Builds into `data/processed/cicids2017_trend/`, so the frozen v1 matrix of F1 is untouched. The
+trend columns are causal, so v2 must reproduce F1's window counts exactly.
 
-**[TBD] features per window**, incorporating the base features plus 5 trend components (1 delta, 3 rolling slopes, 1 z-score) for the 6 top-ranked metrics from E12 (expected +30 features).
-
-| day | windows | build time (s) |
+| day | windows | build time (s, `meta.json` `build_s`) |
 |---|---:|---:|
 | Monday | [TBD] | [TBD] |
 | Tuesday | [TBD] | [TBD] |
