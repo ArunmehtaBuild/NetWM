@@ -669,3 +669,14 @@ prime suspect is the train-day-fitted scaler under the distribution shift E2 alr
 (Thursday persistence NLL mean 152 010, median 0.85). Per-capture rank/percentile normalisation -
 the same logic as the alert budget in D-020, applied to features instead of scores - is the next
 experiment. It reopens the claim only under the bar in point 2.
+
+### D-024 — Trend feature window sizes for Task S-1
+
+*Date: 2026-09-25 · Status: accepted · Evidence: Task S-1 requirements*
+
+The model's original `S_t` state vector contained only absolute level values. As outlined in Task S-1, we augment this with trend (derivative) features specifically for the highest-ranking metrics from E12 (`uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`).
+
+The selected mathematical operations are:
+- **Immediate Delta**: Captures sharp, one-window spikes.
+- **Rolling Slopes (2, 5, and 10 windows)**: We use multiple time horizons because attackers operate at different cadences. 2 windows capture immediate escalation, 5 windows capture short-term progression, and 10 windows capture slower, sustained reconnaissance that avoids tripping strict rate-limits.
+- **Rolling Z-Score (120-window baseline)**: Because raw values fluctuate by time of day, we compare current values against a rolling 2-hour (120-window) baseline to identify statistical anomalies rather than absolute threshold breaches.

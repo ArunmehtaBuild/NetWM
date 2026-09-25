@@ -121,6 +121,22 @@ Only Thursday and Friday can serve as test days for the forecasting target - Tue
 and Wednesday (DoS) never reach Lateral Movement. Feature extraction runs in ~0.6 s per day after
 vectorising the entropy and beaconing computations (a groupby-apply version took 16 s per 60 k flows).
 
+## F2 - trend feature build (S_t v2)
+
+`python scripts/build_features.py --config configs/cicids2017.yaml` · 2026-09-25
+
+*Note: S-1 was implemented to add trend features behind `use_trend_features: true`. The following metrics need to be populated after downloading the raw dataset and running the build.*
+
+**[TBD] features per window**, incorporating the base features plus 5 trend components (1 delta, 3 rolling slopes, 1 z-score) for the 6 top-ranked metrics from E12 (expected +30 features).
+
+| day | windows | build time (s) |
+|---|---:|---:|
+| Monday | [TBD] | [TBD] |
+| Tuesday | [TBD] | [TBD] |
+| Wednesday | [TBD] | [TBD] |
+| Thursday | [TBD] | [TBD] |
+| Friday | [TBD] | [TBD] |
+
 ---
 
 ## E2 + E3 - the baselines (leave-one-day-out)
