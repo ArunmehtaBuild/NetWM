@@ -92,18 +92,40 @@ OpenAPI at `/docs`. `requirements.txt` is updated - `pip install -r requirements
 | ~~D-021~~ | **Verified** (1c61eaf, d4d010d): framing frozen with claims bound to experiment ids, and its falsification test run - E3b shows lagged logistic regression buys no lead time at any deployable threshold and is *worse* on Thursday (PR-AUC 0.139 -> 0.114) |
 | **T-04** | Architecture document (2 pages); stable sections now, results row parameterised until Y-2 reports | reviewed by two teammates |
 | **T-05** | Keep this board current after every merge | board matches `git log` |
+| ~~T-08~~ | **Done** - D-021 amendment written after E15a/E15: sub-chance bar withdrawn, null gate adopted, no-early-warning branch now operative, r2 fixed as the submission checkpoint |
+| **T-09** | `evaluate.py` still scores on `p_cum[:, -1]`, not `p_max` - which is why in-training E6 rows do not match E14. Fix, then confirm no published number moves | in-training and rescored numbers agree |
+| **T-10** | Promote `alarm_rate` / `eligible` / `confirm_before_onset` from `models/leadtime.py` into `metrics.py`, additive, with a regression check that E2/E3/E6/E13/E14 are unchanged | one lead-time implementation in the repo |
+| **T-11** | Regenerate `fixtures/api/*` after the MC-mean fix to `p_cum_attack` / `p_cum_escalate`; re-run `scripts/sync_fixtures.py` | fixtures match the current engine |
+| **T-12** | Fold E15/E15a into `docs/architecture.md` - the elimination chain is now four causes, and the null calibration belongs in the methodology section | doc matches `results.md` |
 
 ## Yash - make it forecast (the research risk)
 
 | id | task | done when |
 |---|---|---|
 | **Y-1** | Calibration: temperature-scale the risk heads on a held-out *training* day, then re-report the train-tuned threshold gap (D-017 says revisit once this exists) | train-tuned vs oracle threshold gap under 3x, or documented as unfixable |
-| **Y-2** | **Precursor supervision.** E12 shows the 10 windows before an onset are separable at ROC-AUC 0.88-0.96, but nothing in training tells the model they are special. Add a fourth head: `precursor` = "an onset occurs within the next K windows and this window is not itself an attack window", trained on those windows explicitly | `results.md` E15: lead time > 0 on at least 2 of 5 episodes at the alert-budget threshold, or a documented negative result with the loss curves |
+| ~~Y-2~~ | **Done, merged 8517764** - failed its pre-registered bar on every clause; round 3 is a regression (Thu PR-AUC 0.353-0.445 vs r2 0.640) and its weights never ship. Target eliminated as the cause. **Precursor supervision.** E12 shows the 10 windows before an onset are separable at ROC-AUC 0.88-0.96, but nothing in training tells the model they are special. Add a fourth head: `precursor` = "an onset occurs within the next K windows and this window is not itself an attack window", trained on those windows explicitly | `results.md` E15: lead time > 0 on at least 2 of 5 episodes at the alert-budget threshold, or a documented negative result with the loss curves |
 | **Y-3** | Formalise E8: leave-one-attack-family-out, reported as its own experiment rather than buried in the Friday fold | `results.md` E8 with Infiltration-held-out and Botnet-held-out rows |
-| **Y-5** | **Guardrail, do this inside Y-2 before reporting any count.** Lead time is manufacturable: E3b found Thursday's `detect` target at an oracle threshold reporting *2 of 4 episodes warned early, mean lead 6.5 windows*, while scoring F1 0.021 and PR-AUC 0.069 - a score firing nearly everywhere "warns early" by accident. Every early-warning count must be reported with the FPR and alarm rate at the same threshold, on the same line | no lead-time number appears anywhere - results, slides, video - without its FPR beside it |
+| ~~Y-5~~ | **Satisfied** - E15a built the null, D-022 made it a standing rule, and it retired E14's own 1-of-4 (p = 0.412). **Guardrail, do this inside Y-2 before reporting any count.** Lead time is manufacturable: E3b found Thursday's `detect` target at an oracle threshold reporting *2 of 4 episodes warned early, mean lead 6.5 windows*, while scoring F1 0.021 and PR-AUC 0.069 - a score firing nearly everywhere "warns early" by accident. Every early-warning count must be reported with the FPR and alarm rate at the same threshold, on the same line | no lead-time number appears anywhere - results, slides, video - without its FPR beside it |
 | **Y-4** | After Sanchi ships S-1, retrain on `S_t` v2 and run the E10 ablation (with / without trend features, with / without stochastic latent, with / without multi-step loss) | ablation table showing which components earn their place |
 
 Constraint: architecture changes need a decisions.md entry *before* the run, not after.
+
+## Next experiment - representation, not supervision (r4)
+
+Four causes are eliminated: statistic (E13), threshold (E14), data (E12), target (E15). The fifth is
+that the model **loses the signal before the target is reached**: on the precursor label, LODO, a
+single *unscaled* column (`uniq_dst_port`, Thursday 0.607, Tuesday 0.745) and plain logistic
+regression (0.604) both beat every statistic the world model produces (best 0.533). Prime suspect:
+the train-day-fitted scaler under the distribution shift E2 measured (Thursday persistence NLL mean
+152 010 vs median 0.85).
+
+| id | task | owner | done when |
+|---|---|---|---|
+| **S-4** | Per-capture rank / percentile normalisation as a scaler option - the D-020 alert-budget logic applied to features instead of scores. Label-free, so it is legal at inference on an unseen capture | Sanchi | `StateScaler(mode="rank")` behind a config flag; S-1 trend features built on top of it |
+| **Y-6** | Retrain r4 = **r2 heads** (not r3) on rank-normalised features; evaluate under the D-023 bar and against the same raw-feature and LR floors | Yash | `results.md` E16 with the floors on the same table; claim gate is D-021 amendment point 2 |
+
+Do **not** carry the r3 heads into r4. Two extra targets on the shared trunk cost ~0.20 PR-AUC and
+bought nothing; the only variable in r4 is the feature transform.
 
 ## Sanchi - give the model the signal E12 found
 

@@ -42,6 +42,16 @@ Read [problemstatement.md](problemstatement.md) first - it is the spec everythin
 - **lead time** - windows between the first alarm and ground-truth attack onset.
 - **surprise** - next-state prediction NLL, used as an unseen-attack signal.
 
+## Running long jobs
+
+Never pipe a long unattended run through `grep`/`head`: the exit code you see is the *tail* of the
+pipe, so a job that dies half way looks like a success and you lose the work silently (this cost a
+third of one sweep). Write to a log and inspect it afterwards:
+
+```bash
+python scripts/train.py ... > results/runs/<id>/train.log 2>&1; echo "exit=$?"
+```
+
 ## What "done" means for a component
 
 Code + a config + a test + an entry in results.md (if it produces numbers) + a decisions.md entry
