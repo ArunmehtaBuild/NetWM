@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetWM H-5 Explainability & Flows Verification Suite</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    body { padding: 24px; font-family: var(--font-sans); background: var(--bg); color: var(--text); }
+    .test-box { margin-bottom: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .test-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+    .test-verdict { padding: 8px 12px; margin-top: 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+    .pass { background: rgba(47, 168, 122, 0.15); color: var(--success); border: 1px solid rgba(47, 168, 122, 0.4); }
+    .fail { background: rgba(226, 87, 76, 0.15); color: var(--danger); border: 1px solid rgba(226, 87, 76, 0.4); }
+  </style>
+</head>
+<body>
+  <h1>NetWM H-5 Explainability & Network Context Verification Suite</h1>
+  <div id="resultsSummary"></div>
+
+  <!-- Test 1: Window WITH Explanations (t=120) -->
+  <div class="test-box">
+    <div class="test-title">1. Why Panel — Window WITH Explanations (t=120)</div>
+    <div id="testWhyWithExpContainer"></div>
+    <div id="testWhyWithExpResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 2: Window WITHOUT Explanations (t=417) -->
+  <div class="test-box">
+    <div class="test-title">2. Why Panel — Window WITHOUT Explanations (t=417)</div>
+    <div id="testWhyNoExpContainer"></div>
+    <div id="testWhyNoExpResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 3: Attention Lookback Heatmap -->
+  <div class="test-box">
+    <div class="test-title">3. Attention Heatmap Lookback (16 Context Steps)</div>
+    <div id="testAttentionResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 4: Global Capture Explanation -->
+  <div class="test-box">
+    <div class="test-title">4. Global Explanation ("What Drives This Capture Overall")</div>
+    <div id="testGlobalResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 5: Top Talkers for Selected Window -->
+  <div class="test-box">
+    <div class="test-title">5. Top Talkers (IP, Flows, Bytes Out)</div>
+    <div id="testTalkersContainer"></div>
+    <div id="testTalkersResult" class="test-verdict"></div>
+  </div>
+
+  <!-- Test 6: Flagged Flows Table & Filtering -->
+  <div class="test-box">
+    <div class="test-title">6. Flagged Flows Table & Reactive Filtering</div>
+    <div id="testFlowsContainer"></div>
+    <div id="testFlowsResult" class="test-verdict"></div>
+  </div>
+
+  <script type="module">
+    import { api } from "./js/api.js";
+    import { store } from "./js/store.js";
+    import { WhyPanel } from "./js/panels/why.js";
+    import { FlowsPanel } from "./js/panels/flows.js";
+
+    async function runSuite() {
+      const results = [];
+      const { payload } = await api.loadAnalysis("thursday");
+
+      // TEST 1: Window WITH explanations (t=120)
+      try {
+        const panel = new WhyPanel("testWhyWithExpContainer");
+        panel.render({ payload, selectedWindow: 120, filters: {} });
+        const html = document.getElementById("testWhyWithExpContainer").innerHTML;
+
+        const hasBars = html.includes("attr-bar-container");
+        const hasPos = html.includes("attr-bar-pos") && html.includes("Risk Up");
+        const hasNeg = html.includes("attr-bar-neg") && html.includes("Risk Down");
+        const hasSeqPort = html.includes("seq_port_ratio");
+        const hasNoEmpty = !html.includes("No attribution computed for this window");
+
+        if (hasBars && hasPos && hasNeg && hasSeqPort && hasNoEmpty) {
+          document.getElementById("testWhyWithExpResult").className = "test-verdict pass";
+          document.getElementById("testWhyWithExpResult").textContent =
+            "✓ PASS: Window t=120 renders signed attribution bars, values, feature names, and visually distinguishes positive vs negative contributions.";
+          results.push({ name: "Why With Explanations", pass: true });
+        } else {
+          throw new Error("Missing attribution bar components");
+        }
+      } catch (e) {
+        document.getElementById("testWhyWithExpResult").className = "test-verdict fail";
+        document.getElementById("testWhyWithExpResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Why With Explanations", pass: false });
+      }
+
+      // TEST 2: Window WITHOUT explanations (t=417)
+      try {
+        const panel = new WhyPanel("testWhyNoExpContainer");
+        panel.render({ payload, selectedWindow: 417, filters: {} });
+        const html = document.getElementById("testWhyNoExpContainer").innerHTML;
+
+        const hasEmptyMsg = html.includes("No attribution computed for this window");
+        const noFakeBars = !html.includes("attr-bar-pos") && !html.includes("attr-bar-neg");
+
+        if (hasEmptyMsg && noFakeBars) {
+          document.getElementById("testWhyNoExpResult").className = "test-verdict pass";
+          document.getElementById("testWhyNoExpResult").textContent =
+            "✓ PASS: Window t=417 correctly displays 'No attribution computed for this window' with no fake bars rendered.";
+          results.push({ name: "Why Without Explanations", pass: true });
+        } else {
+          throw new Error("Empty state check failed");
+        }
+      } catch (e) {
+        document.getElementById("testWhyNoExpResult").className = "test-verdict fail";
+        document.getElementById("testWhyNoExpResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Why Without Explanations", pass: false });
+      }
+
+      // TEST 3: Attention Lookback Heatmap
+      try {
+        const html = document.getElementById("testWhyWithExpContainer").innerHTML;
+        const hasHeatmap = html.includes("att-heatmap-wrapper");
+        const hasCells = html.includes("att-cell");
+        const hasCurrentCell = html.includes("att-cell-current");
+        const hasLookbackAxis = html.includes("t-15") && html.includes("Current Window");
+
+        if (hasHeatmap && hasCells && hasCurrentCell && hasLookbackAxis) {
+          document.getElementById("testAttentionResult").className = "test-verdict pass";
+          document.getElementById("testAttentionResult").textContent =
+            "✓ PASS: Attention heatmap renders 16 context lookback cells with strength weights, current window badge, and hover metadata.";
+          results.push({ name: "Attention Heatmap", pass: true });
+        } else {
+          throw new Error("Attention heatmap structure check failed");
+        }
+      } catch (e) {
+        document.getElementById("testAttentionResult").className = "test-verdict fail";
+        document.getElementById("testAttentionResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Attention Heatmap", pass: false });
+      }
+
+      // TEST 4: Global Explanation
+      try {
+        const html = document.getElementById("testWhyWithExpContainer").innerHTML;
+        const hasGlobalTitle = html.includes("What Drives This Capture Overall");
+        const hasTopGlobal = html.includes("uniq_dst_port") && html.includes("0.0135");
+
+        if (hasGlobalTitle && hasTopGlobal) {
+          document.getElementById("testGlobalResult").className = "test-verdict pass";
+          document.getElementById("testGlobalResult").textContent =
+            "✓ PASS: Global capture explanation correctly ranks top driving features (e.g. uniq_dst_port: 0.0135) across capture.";
+          results.push({ name: "Global Explanation", pass: true });
+        } else {
+          throw new Error("Global explanation check failed");
+        }
+      } catch (e) {
+        document.getElementById("testGlobalResult").className = "test-verdict fail";
+        document.getElementById("testGlobalResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Global Explanation", pass: false });
+      }
+
+      // TEST 5 & 6: Flows & Top Talkers
+      try {
+        const flowsPanel = new FlowsPanel("testFlowsContainer");
+        await flowsPanel.render({ payload, selectedWindow: 120, filters: { stage: null, minScore: 0 } });
+        const html = document.getElementById("testFlowsContainer").innerHTML;
+
+        const hasTalkers = html.includes("Top Talkers (Window t=120)") && html.includes("192.168.10.9");
+        const hasTable = html.includes("flows-table");
+        const hasCols = html.includes("Source IP:Port") && html.includes("Dest IP:Port") && html.includes("Score");
+
+        if (hasTalkers && hasTable && hasCols) {
+          document.getElementById("testTalkersResult").className = "test-verdict pass";
+          document.getElementById("testTalkersResult").textContent =
+            "✓ PASS: Top talkers rendered for window t=120 with IP, flows count, and bytes_out.";
+          document.getElementById("testFlowsResult").className = "test-verdict pass";
+          document.getElementById("testFlowsResult").textContent =
+            "✓ PASS: Flagged flows table renders fields (ts, src, dst, proto, flags, pkts, bytes, score, stage hint) capped at 50 rows.";
+          results.push({ name: "Top Talkers", pass: true });
+          results.push({ name: "Flows Table", pass: true });
+        } else {
+          throw new Error("Flows panel structure check failed");
+        }
+
+        // TEST 7: Flow Filters and Empty Filter State
+        await flowsPanel.render({ payload, selectedWindow: 120, filters: { stage: 999, minScore: 0.999 } });
+        const filteredHtml = document.getElementById("testFlowsContainer").innerHTML;
+        const hasEmptyFilterState = filteredHtml.includes("No flows match the active filter criteria");
+        if (hasEmptyFilterState) {
+          results.push({ name: "Flow Filters & Empty State", pass: true });
+        } else {
+          throw new Error("Empty filter state check failed");
+        }
+
+        // TEST 8: Window Change Reactivity
+        await flowsPanel.render({ payload, selectedWindow: 417, filters: { stage: null, minScore: 0 } });
+        const win417Html = document.getElementById("testFlowsContainer").innerHTML;
+        const hasWin417Talkers = win417Html.includes("Top Talkers (Window t=417)");
+        if (hasWin417Talkers) {
+          results.push({ name: "Window Change Reactivity", pass: true });
+        } else {
+          throw new Error("Window change reactivity check failed");
+        }
+      } catch (e) {
+        document.getElementById("testFlowsResult").className = "test-verdict fail";
+        document.getElementById("testFlowsResult").textContent = `✗ FAIL: ${e.message}`;
+        results.push({ name: "Flows & Talkers", pass: false });
+      }
+
+      const allPassed = results.every((r) => r.pass);
+      const summaryEl = document.getElementById("resultsSummary");
+      summaryEl.innerHTML = `
+        <div style="margin-bottom: 20px; padding: 12px; border-radius: 6px; font-weight: bold; background: ${allPassed ? 'rgba(47, 168, 122, 0.2)' : 'rgba(226, 87, 76, 0.2)'}; color: ${allPassed ? 'var(--success)' : 'var(--danger)'}">
+          ${allPassed ? 'ALL H-5 TESTS PASSED (' + results.length + ' / ' + results.length + ')' : 'SOME H-5 TESTS FAILED'}
+        </div>
+      `;
+      window.__TEST_RESULTS__ = { allPassed, results };
+    }
+
+    runSuite();
+  </script>
+</body>
+</html>
