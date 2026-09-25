@@ -120,7 +120,10 @@ def analyze_flows(
         torch.from_numpy(x).unsqueeze(0).to(device), horizon=horizon, n_samples=n_samples
     )
     out = {k: v.numpy() for k, v in out.items()}
-    score = out["p_cum"][:, -1]
+    # Alarm statistic is max over the horizon, not the cumulative union: the compromise head answers
+    # "is this state compromised", a property that persists, so the union multiplies one event K
+    # times and saturates (D-019, E13).
+    score = out["p_max"]
     if progress:
         progress(0.7, "forecast complete, explaining alarms")
 
@@ -137,6 +140,7 @@ def analyze_flows(
     ts = spec.window_start(t0, np.arange(n_windows))
     has_labels = "stage" in flows.columns
     stages = window_stages(expanded, n_windows=n_windows) if has_labels else None
+    talkers = _top_talkers(expanded)
 
     timeline = []
     for t in range(n_windows):
@@ -150,11 +154,16 @@ def analyze_flows(
                 "p_cum": [round(float(p), 4) for p in out["p_cum"][t]],
                 "p_lo": [round(float(p), 4) for p in out["p_lo"][t]],
                 "p_hi": [round(float(p), 4) for p in out["p_hi"][t]],
+                "p_step": [round(float(p), 4) for p in out["p_raw"][t, :, 0]],
+                "p_cum_attack": [round(float(p), 4) for p in out["p_cum_attack"][t]],
+                "p_cum_escalate": [round(float(p), 4) for p in out["p_cum_escalate"][t]],
             },
             "alarm": bool(score[t] >= threshold),
             "surprise": round(float(out["surprise"][t]), 4),
             "attention": [round(float(a), 4) for a in out["attention"][t]],
+            "p_max": round(float(score[t]), 4),
             "flow_count": int(feats["n_flows"].iloc[t]),
+            "top_talkers": talkers.get(t, []),
             "top_features": (
                 top_features(expl["feature_attribution"], x[t], names) if expl is not None else []
             ),
@@ -164,6 +173,8 @@ def analyze_flows(
         timeline.append(entry)
 
     payload: dict[str, Any] = {
+        "payload_version": "1.1",
+        "alarm_statistic": "p_max",
         "source": {
             "flows": int(len(flows)),
             "windows": int(n_windows),
@@ -184,6 +195,7 @@ def analyze_flows(
             "available": True,
             "onsets": [{"t": int(o), "ts": ts[o].isoformat() + "Z"} for o in onsets],
             "compromise_windows": int(comp.sum()),
+            "spans": _stage_spans(stages, expanded, ts),
         }
         payload["alarms"] = _alarm_rows(score, threshold, onsets, ts, stride_s, horizon)
     else:
@@ -244,3 +256,57 @@ def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:
     payload["source"]["filename"] = path.name
     payload["source"]["kind"] = path.suffix.lower().lstrip(".")
     return payload
+
+
+def _top_talkers(expanded: pd.DataFrame, k: int = 3) -> dict[int, list[dict[str, Any]]]:
+    """The k busiest sources per window - what the flagged-flows panel leads with."""
+    frame = expanded.assign(_bytes=expanded["fwd_bytes"] + expanded["bwd_bytes"])
+    grouped = (
+        frame.groupby(["w", "src_ip"], sort=False)
+        .agg(flows=("src_ip", "size"), bytes_out=("_bytes", "sum"))
+        .reset_index()
+    )
+    grouped = grouped.sort_values(["w", "flows"], ascending=[True, False])
+    top = grouped.groupby("w", sort=False).head(k)
+    out: dict[int, list[dict[str, Any]]] = {}
+    for w, ip, flows_n, bytes_out in top.itertuples(index=False):
+        out.setdefault(int(w), []).append(
+            {"ip": str(ip), "flows": int(flows_n), "bytes_out": int(bytes_out)}
+        )
+    return out
+
+
+def _stage_spans(stages, expanded: pd.DataFrame, ts) -> list[dict[str, Any]]:
+    """Contiguous runs of a non-benign stage, labelled with the attack that dominates them."""
+    values = stages.to_numpy()
+    spans: list[dict[str, Any]] = []
+    start = None
+    for t in range(len(values) + 1):
+        current = values[t] if t < len(values) else 0
+        if start is not None and (current != values[start]):
+            spans.append((start, t - 1, int(values[start])))
+            start = None
+        if start is None and current > 0:
+            start = t
+
+    labelled = "label" in expanded.columns
+    out = []
+    for begin, end, stage in spans:
+        label = STAGE_LABELS[Stage(stage)]
+        if labelled:
+            window_labels = expanded.loc[
+                expanded["w"].between(begin, end) & (expanded["stage"] > 0), "label"
+            ]
+            if len(window_labels):
+                label = str(window_labels.value_counts().idxmax())
+        out.append(
+            {
+                "start_t": int(begin),
+                "end_t": int(end),
+                "start_ts": ts[begin].isoformat() + "Z",
+                "end_ts": ts[end].isoformat() + "Z",
+                "stage": int(stage),
+                "label": label,
+            }
+        )
+    return out
