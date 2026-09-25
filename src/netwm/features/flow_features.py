@@ -225,15 +225,32 @@ def window_features(
     feats = feats.reindex(pd.RangeIndex(n)).fillna(0.0)
 
     if use_trend:
-        # Calculate the difference from the previous window for key volume and spread metrics
-        trend_cols = [
-            "n_flows", "bytes_total", "pkts_total", 
-            "uniq_src_ip", "uniq_dst_ip", "dst_port_entropy",
-            "outbound_bytes", "inbound_bytes", "fanout_max"
+        # Task S-1: Deltas, rolling slopes, and z-scores for top features
+        target_cols = [
+            "uniq_dst_port", "ports_per_pair_max", "port_fanout_max",
+            "uniq_dst_ip", "fanout_mean", "flows_per_s"
         ]
-        for col in trend_cols:
-            if col in feats.columns:
-                feats[f"{col}_trend"] = feats[col].diff().fillna(0.0)
+        
+        for col in target_cols:
+            if col not in feats.columns:
+                continue
+                
+            # 1. Immediate delta
+            feats[f"{col}_delta"] = feats[col].diff().fillna(0.0)
+            
+            # 2. Rolling slopes (2, 5, and 10 windows)
+            # Slope is roughly the change over W windows divided by W
+            for w in [2, 5, 10]:
+                feats[f"{col}_slope_{w}"] = (feats[col] - feats[col].shift(w)).fillna(0.0) / w
+                
+            # 3. Z-scores against a rolling "benign" baseline
+            # Assuming a 2-hour window (120 * 60s windows) is long enough to act as a baseline
+            baseline_window = 120
+            roll = feats[col].rolling(window=baseline_window, min_periods=1)
+            mean = roll.mean()
+            std = roll.std().replace(0, 1e-6) # avoid division by zero
+            
+            feats[f"{col}_zscore"] = ((feats[col] - mean) / std).fillna(0.0)
 
     feats.index.name = "w"
     return feats.astype(np.float32)
