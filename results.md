@@ -479,4 +479,124 @@ previous episode's traffic, and a confirmation that must land before the onset.
 
 Full table, all six threshold policies and all three episode denominators:
 `results/tables/e15a-null-calibration-e14-pmax-rescore-e4e7-worldmodel-r2.csv`; the per-statistic
-Fisher combination across folds is in the `_combined.csv` beside it.
+Fisher combination across folds is in the `_combined.csv` beside it. That table also carries the leave-one-day-out
+logistic-regression floor on the precursor label, added with E15's other floors: ROC-AUC 0.604
+Thursday and 0.556 Friday, against E12's *within-day* 0.883 and 0.955. The E12 signal does not
+transfer across days for a linear model on the same features.
+
+---
+
+## E15 - precursor supervision (Y-2, round 3): the target was not the cause either
+
+```
+python scripts/train.py --config configs/cicids2017.yaml \
+    --model-config configs/model_r3_precursor.yaml \
+    --test-days tuesday wednesday thursday friday monday \
+    --run r3-precursor-s42 --epochs 25 --seed 42        # and s43/44 with --seed 43/44
+python scripts/precursor_eval.py --run r3-precursor-s42 r3-precursor-s43 r3-precursor-s44 \
+    --deterministic --n-shifts 2000
+```
+run: `results/runs/e15-precursor-r3-precursor-3seeds/` · 3 training seeds x 5 leave-one-day-out
+folds · two new risk channels per D-023: `onset_now` (a first-occurrence hazard, unioned over the
+rollout - the forecasting claim) and `precursor` (read off the filtered posterior - a representation
+claim). Bar pre-registered in D-023 before the run.
+
+### The bar, and the answer
+
+**Failed on every clause, on every seed.**
+
+| clause of the D-023 bar | required | best observed |
+|---|---|---|
+| folds exceeding the null's 95th percentile | >= 2 of 4 | **1 of 4**, and only on seed 43 |
+| Fisher-combined p across folds | < 0.05 | **0.166** (`p_onset_cum`, seed 43, all attack episodes) |
+| holds with Impact excluded | yes | **0 of 4 folds** for `p_onset_cum` on all three seeds |
+| stable over >= 3 training seeds | yes | no statistic clears any clause on more than one seed |
+
+Across the whole table, **21 of 1,080 cells with a null p-value fall below 0.05, where chance alone
+would give about 54.** The result is not merely non-significant; it is less significant than noise.
+
+### Ranking on the precursor label, leave-one-day-out (ROC-AUC, mean of 3 seeds)
+
+| statistic | Tuesday | Wednesday | Thursday | Friday |
+|---|---:|---:|---:|---:|
+| `p_onset_cum` - union of the first-occurrence hazard (**the forecast claim**) | 0.590 | 0.629 | **0.440** | 0.624 |
+| `p_onset_max` - max over horizon of the same channel | 0.607 | 0.629 | 0.488 | 0.628 |
+| `p_precursor` - filtered posterior (**the representation claim**) | 0.596 | **0.369** | 0.477 | 0.610 |
+| `p_max` - **the same run's channel 0**, the within-run control | 0.663 | 0.652 | 0.533 | 0.630 |
+| logistic regression, LODO, same label (floor) | 0.686 | 0.574 | 0.604 | 0.556 |
+| `uniq_dst_port`, unscaled (floor) | 0.745 | 0.542 | 0.607 | 0.558 |
+| `uniq_dst_ip`, unscaled (floor) | 0.570 | 0.675 | 0.578 | 0.560 |
+| `fanout_mean`, unscaled (floor) | 0.540 | 0.670 | 0.585 | 0.558 |
+
+1. **Both new heads lose to the run's own compromise channel on all four folds.** That is the control
+   D-023 pre-registered precisely so that a comparison against the round-2 checkpoint could not be
+   mistaken for a result.
+2. **On Thursday - the infiltration fold, the PS-relevant one - everything the model produces sits
+   at or below chance** (0.440-0.533) while plain logistic regression reaches 0.604 and a single
+   unscaled feature reaches 0.607.
+3. `p_precursor` on Wednesday is **0.369**, well below chance and consistent across seeds.
+
+### The heads trained. They just did not transfer.
+
+| seed | `precursor` loss, Thursday fold | `imagine_precursor` |
+|---|---|---|
+| 42 | 1.388 -> 0.450 | 1.372 -> 0.369 |
+| 43 | 1.393 -> 0.316 | 1.385 -> 0.230 |
+| 44 | 1.371 -> 0.348 | 1.384 -> 0.268 |
+
+The loss falls by two thirds and the leave-one-day-out ranking does not improve. This is the round-1
+signature from a different direction: in round 1 the compromise head memorised the one attack family
+it saw (D-016); here the precursor heads fit day-specific run-ups and carry nothing to a held-out
+day. E12's separability is real and remains within-day.
+
+### The cost: round 3 is measurably worse at detection than round 2
+
+`p_max` on the held-out Thursday, self-budget 10 %, the E14-comparable configuration:
+
+| run | F1 | precision | FPR | PR-AUC | ROC-AUC |
+|---|---:|---:|---:|---:|---:|
+| round 2 (E14) | **0.576** | **0.776** | **0.027** | **0.640** | **0.827** |
+| round 3, seed 42 | 0.523 | 0.704 | 0.036 | 0.439 | 0.750 |
+| round 3, seed 43 | 0.439 | 0.592 | 0.050 | 0.353 | 0.697 |
+| round 3, seed 44 | 0.492 | 0.663 | 0.041 | 0.445 | 0.754 |
+
+Adding two more targets to the shared trunk **cost about 0.20 PR-AUC on the fold that matters** and
+bought nothing. This is not a mean-path artefact: on the same Thursday checkpoint the deterministic
+mean path and the 16-sample Monte-Carlo score agree at Spearman rho **0.995** (PR-AUC 0.4387 vs
+0.4396), and the same comparison on the round-2 checkpoint returns PR-AUC 0.6436, reproducing E14's
+published 0.640. Friday is unchanged and still broken (ROC-AUC 0.47-0.54).
+
+### The cherry the bar stopped us picking
+
+One cell in the table reaches significance: `p_precursor`, Friday, seed 42, the compromise
+denominator - 1 of 1 episodes warned early at a 2.1 % alarm rate, FPR 0.013, precision 0.450,
+**p = 0.0375**. Quoted alone it reads like the result Y-2 was looking for. It is one fold of four,
+one seed of three (seed 43 gives 0 of 1; seed 44 gives 1 of 1 at p = 0.314), on a denominator of a
+single episode, out of 1,080 cells. It is exactly what D-023's stability and multi-fold clauses were
+written to exclude, and it is recorded here so that nobody rediscovers it later and quotes it.
+
+### What this settles
+
+E13 ruled out the alarm statistic. E14 ruled out the threshold. E15a showed E14's two surviving
+early warnings were themselves indistinguishable from chance. **E15 now rules out the supervision
+target**, which was the last of the four candidate causes named in D-019, tested on the target
+D-019 itself nominated and with more positives per fold than the literal definition allows.
+
+The honest conclusion is the one D-021 already froze: NetWM delivers the PS's required outputs -
+learned transition dynamics, K-step rollouts, stage forecasts, explanations - and does not warn
+before compromise. What E15 adds is that the gap is now bounded on all four sides by experiments
+rather than by argument, and that the round-2 configuration remains the one to ship: **round 3's
+heads are not merely unhelpful, they are a regression, and `configs/model_r3_precursor.yaml` should
+not be used for the submission checkpoints.**
+
+Remaining untested directions, in order of what E15 makes most plausible - all of them about the
+*state*, not the objective: `S_t` is levels-only (S-1's trend and slope features), network-wide
+aggregates hide per-host behaviour (S-2), and every result here is a single week of one synthetic
+capture with 26 attack episodes and 5 compromise onsets.
+
+Artefacts: `results/tables/e15-precursor-r3-precursor-3seeds.csv` (full table: 4 statistics x 3
+floors x 6 threshold policies x 3 episode denominators x 5 folds x 3 seeds),
+`..._combined.csv` (Fisher per run), `results/tables/r3-precursor-s4*_training_curves.csv`
+(the loss curves Y-2 asks for), `results/figures/e6_r3-precursor-s4*_*.png`. The 15 round-3
+checkpoints are **not** committed - 36 MB for a configuration this experiment rejects; regenerate
+them with the training command above, which pins the seed, the config and the git SHA.

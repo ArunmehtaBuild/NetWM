@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -254,7 +255,8 @@ def floor_rows(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--run", default=None, help="model run under models/ to roll out")
+    ap.add_argument("--run", nargs="+", default=None,
+                    help="model run(s) under models/ to roll out; several = one per training seed")
     ap.add_argument("--scores-from-run", default=None,
                     help="reuse the score arrays a previous run wrote (no model, no MC noise)")
     ap.add_argument("--experiment", default=None, help="experiment id for the rows (default E15a/E15)")
@@ -275,21 +277,31 @@ def main() -> None:
     ensure_dirs()
     ds = ProcessedDataset(args.data)
 
+    rows: list[dict] = []
     if args.scores_from_run:
         source, experiment = args.scores_from_run, args.experiment or "E15a"
-        per_day = load_published_scores(args.scores_from_run)
+        sources = {args.scores_from_run: load_published_scores(args.scores_from_run)}
     else:
-        source, experiment = args.run, args.experiment or "E15"
-        per_day = forecast_all(args.run, ds, args.samples, args.budget, args.deterministic)
+        experiment = args.experiment or "E15"
+        # One entry per training seed. D-023 measures stability over training seeds, not Monte-Carlo
+        # seeds: onset_now fires on ~18 windows per fold, which is the regime where one seed lands
+        # and the next does not.
+        source = args.run[0] if len(args.run) == 1 else (
+            os.path.commonprefix(args.run).rstrip("-s0123456789") + f"-{len(args.run)}seeds"
+        )
+        sources = {
+            run: forecast_all(run, ds, args.samples, args.budget, args.deterministic)
+            for run in args.run
+        }
 
-    rows: list[dict] = []
-    for day, payload in sorted(per_day.items()):
-        sets = episode_sets(ds, day)
-        for statistic, score in payload["scores"].items():
-            rows.extend(score_rows(day, statistic, score, payload["thresholds"], ds, sets,
-                                   experiment, source, args.n_shifts, args.seed))
-        if not args.no_floors:
-            rows.extend(floor_rows(day, ds, sets, experiment, source, args.n_shifts, args.seed))
+    for run, per_day in sources.items():
+        for day, payload in sorted(per_day.items()):
+            sets = episode_sets(ds, day)
+            for statistic, score in payload["scores"].items():
+                rows.extend(score_rows(day, statistic, score, payload["thresholds"], ds, sets,
+                                       experiment, run, args.n_shifts, args.seed))
+            if not args.no_floors:
+                rows.extend(floor_rows(day, ds, sets, experiment, run, args.n_shifts, args.seed))
 
     table = pd.DataFrame(rows)
     kind = "null-calibration" if args.scores_from_run else "precursor"
@@ -297,20 +309,24 @@ def main() -> None:
     out_csv = TABLES / f"{run_id}.csv"
     table.to_csv(out_csv, index=False)
 
-    # Fisher across folds, per statistic and episode set - the primary bar of D-022.
+    # Fisher across folds, per run - the primary bar of D-023. Folds with no episodes (Monday)
+    # carry no p-value and are dropped rather than counted as a failure to warn.
     combined = []
-    for (stat, policy, eset), grp in table.groupby(["statistic", "threshold_mode", "episode_set"]):
+    for (run, stat, policy, eset), grp in table.groupby(
+        ["run", "statistic", "threshold_mode", "episode_set"]
+    ):
         valid = grp.dropna(subset=["null_p_value"])
         if valid.empty:
             continue
         f = fisher_combine(list(valid["null_p_value"]))
         combined.append({
-            "statistic": stat, "threshold_mode": policy, "episode_set": eset,
+            "run": run, "statistic": stat, "threshold_mode": policy, "episode_set": eset,
             "folds": int(len(valid)),
             "warned_early": int(valid["warned_early"].sum()),
             "episodes": int(valid["episodes"].sum()),
             "folds_exceeding_null_p95": int(valid["exceeds_null_p95"].sum()),
             "fisher_chi2": round(f["chi2"], 3), "fisher_p": round(f["p_value"], 5),
+            "mean_precursor_roc_auc": round(float(valid["precursor_roc_auc"].mean()), 4),
         })
     pd.DataFrame(combined).to_csv(TABLES / f"{run_id}_combined.csv", index=False)
     save_run(run_id, {"rows": rows, "combined": combined}, config=vars(args))
