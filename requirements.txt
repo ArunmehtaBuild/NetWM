@@ -23,8 +23,11 @@ shap>=0.44
 # Plots / reports
 matplotlib>=3.7
 
-# Demo app
-flask>=3.0
+# Backend API (deployed separately from the frontend - see backend/PLAN.md)
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9   # multipart upload parsing
+httpx>=0.26               # TestClient for the API tests
 
 # Dev
 pytest>=7.4

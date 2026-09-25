@@ -1,4 +1,4 @@
-"""One inference entry point, shared by the CLI and the Flask API (app/api_contract.md).
+"""One inference entry point, shared by the CLI and the Flask API (docs/api_contract.md).
 
 Input: a CIC-style flow CSV (or a PCAP once track D's aggregator lands).
 Output: the JSON payload the dashboard renders - per-window forecast, stage prediction, explanation,

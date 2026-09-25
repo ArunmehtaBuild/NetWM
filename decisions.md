@@ -151,7 +151,7 @@ worried".
 ### D-008 — Demo UI: Flask + vanilla JS + vendored Chart.js, fully offline
 *Date: 2026-09-24 · Status: accepted*
 
-**Decision.** Flask backend, no build step, all JS/CSS assets vendored into `app/static/vendor/`.
+**Decision.** Flask backend, no build step, all JS/CSS assets vendored into `frontend/vendor/`.
 
 **Why.** The PS requires the interface to run offline with no cloud API dependency; a CDN
 `<script>` tag would break that on an air-gapped evaluation machine.

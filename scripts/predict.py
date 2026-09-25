@@ -1,7 +1,7 @@
 """Run the world model over a flow CSV (or PCAP) and write the API-shaped analysis JSON.
 
     python scripts/predict.py --model models/e4e7-worldmodel/thursday.pt \
-        --input data/raw/cicids2017_improved/thursday.csv --out app/mock/thursday.json
+        --input data/raw/cicids2017_improved/thursday.csv --out fixtures/api/thursday.json
 
 Used three ways: as the CLI deliverable, as the backend's inference call (``analyze_file``), and to
 generate the mock payloads the frontend develops against before a model exists.

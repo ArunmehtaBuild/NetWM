@@ -1,7 +1,7 @@
 # NetWM API contract v1
 
 Frozen on day 1 so frontend, backend and ML can work in parallel. **Any change is a PR that updates
-this file, `app/mock/*.json` and the frontend in one commit.** The mock fixtures are the source of
+this file, `fixtures/api/*.json` and the frontend in one commit.** The mock fixtures are the source of
 truth for the UI until the real model lands - the frontend must never need a trained model to run.
 
 Base URL: `http://127.0.0.1:5000`. Everything is offline; no external calls, ever.
@@ -113,7 +113,7 @@ play/pause replay so the demo video shows the forecast rising *before* the attac
 - `timeline` is capped at 5 000 entries per response; longer captures paginate with `?from=&to=`.
 - Uploads capped at 200 MB CSV / 2 GB PCAP; oversize returns `too_large`.
 - Stage ids and colours come from `/api/model`, never hard-coded in the frontend.
-- When no trained model is present the backend still serves `/api/demos` from `app/mock/` so the UI
+- When no trained model is present the backend still serves `/api/demos` from `fixtures/api/` so the UI
   is always demo-able (`"mock": true` in the payload).
 
 ---
@@ -121,7 +121,7 @@ play/pause replay so the demo video shows the forecast rising *before* the attac
 ## v1.1 (2026-09-25) - additive
 
 Every v1.0 field is unchanged; v1.1 only adds. Payloads carry `"payload_version": "1.1"`.
-Reference payloads: `app/mock/thursday.json`, `app/mock/friday.json` (2.0 MB each, real model output
+Reference payloads: `fixtures/api/thursday.json`, `fixtures/api/friday.json` (2.0 MB each, real model output
 from `models/e4e7-worldmodel-r2/`, not hand-written).
 
 **Top level**
@@ -168,7 +168,7 @@ Absolute probabilities do not transfer between days (E14: a threshold tuned on t
 | `dev_only`, `note` | top level | present **only** on hand-thresholded fixtures. If `dev_only` is true the payload is not a real result - see below. |
 
 **The alarm panel (H-4) must render both states.** With the shipped model and a deployable threshold
-the honest answer today is *"0 of 4 episodes warned early"* - that is what `app/mock/thursday.json`
+the honest answer today is *"0 of 4 episodes warned early"* - that is what `fixtures/api/thursday.json`
 contains, and the panel has to show it as a first-class outcome (episodes listed, each marked "no
 early warning", with the onset time and the score at onset) rather than an empty list.
 
@@ -176,6 +176,25 @@ early warning", with the onset time and the score at onset) rather than an empty
 
 | file | threshold | use |
 |---|---|---|
-| `app/mock/thursday.json` | self-budget 10 % (0.044) | the real payload: 8 alarm runs, **0 of 4** episodes warned early |
-| `app/mock/friday.json` | self-budget 10 % | the real payload: 13 alarm runs, **0 of 1** warned early |
-| `app/mock/thursday_oracle.json` | **0.010, hand-picked from the labels** | **UI development only.** `dev_only: true`. 2 of 4 episodes warned early (leads of 5 and 10 windows, 150 s and 300 s) and 2 missed, so H-4 can be built and verified against both branches in one payload. Never quote its numbers as a result - the honest ones are in results.md E14. |
+| `fixtures/api/thursday.json` | self-budget 10 % (0.044) | the real payload: 8 alarm runs, **0 of 4** episodes warned early |
+| `fixtures/api/friday.json` | self-budget 10 % | the real payload: 13 alarm runs, **0 of 1** warned early |
+| `fixtures/api/thursday_oracle.json` | **0.010, hand-picked from the labels** | **UI development only.** `dev_only: true`. 2 of 4 episodes warned early (leads of 5 and 10 windows, 150 s and 300 s) and 2 missed, so H-4 can be built and verified against both branches in one payload. Never quote its numbers as a result - the honest ones are in results.md E14. |
+
+
+## Deployment (the two halves ship separately)
+
+The API and the dashboard are separate deployables. The dashboard is static files that may sit on any
+origin; the API is JSON only and renders nothing.
+
+| | dev default | notes |
+|---|---|---|
+| API | `http://127.0.0.1:5000` (`uvicorn backend.server:app`) | binds loopback; OpenAPI at `/docs` |
+| dashboard | `http://127.0.0.1:8080` (`python -m http.server 8080` in `frontend/`) | overrides the API host with `?api=` or `window.NETWM_API_BASE` |
+
+- **CORS:** the API allowlists the dashboard origins explicitly (`NETWM_CORS_ORIGINS`), never `*` -
+  it accepts file uploads.
+- **Fixtures:** `fixtures/api/*.json` is the single source of truth. The API serves them when no
+  checkpoint is loaded (`"mock": true`); the dashboard keeps a generated copy in `frontend/mock/`
+  (`python scripts/sync_fixtures.py`) so it runs with no backend at all.
+- **No cookies, no auth, no state on the server** beyond the job store, so the dashboard can be
+  hosted anywhere without changing the API.

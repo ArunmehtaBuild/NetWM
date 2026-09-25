@@ -1,12 +1,12 @@
 # Frontend plan - NetWM dashboard
 
-Owner: **Harshit** (H-1..H-6 on [teamtasks.md](../teamtasks.md)) · Data contract:
-[api_contract.md](api_contract.md) v1.1 · Build against `app/mock/*.json` - **never wait for a model.**
+Owner: **Harshit** (H-1..H-6 on [../teamtasks.md](../teamtasks.md)) · Data contract:
+[../docs/api_contract.md](../docs/api_contract.md) v1.1 · Build against `fixtures/api/*.json` - **never wait for a model.**
 
 ## Constraints
 
-- **No build step.** Plain ES modules, no npm, no bundler. Open `index.html` through Flask and it works.
-- **Fully offline.** Every asset is vendored in `app/static/vendor/`. A single CDN `<script>` tag
+- **No build step.** Plain ES modules, no npm, no bundler. Serve the folder and it works.
+- **Fully offline.** Every asset is vendored in `frontend/vendor/`. A single CDN `<script>` tag
   fails the PS requirement on an air-gapped evaluation machine.
 - **The payload is the API.** Colours, stage names, horizon, threshold and the alarm statistic all come
   from the JSON. Nothing about MITRE stages is hard-coded in JS.
@@ -14,32 +14,56 @@ Owner: **Harshit** (H-1..H-6 on [teamtasks.md](../teamtasks.md)) · Data contrac
 
 ## Layout
 
+The frontend is **static files only** - it deploys on its own (any static host, or
+`python -m http.server 8080` from this folder) and talks to the API over HTTP.
+
 ```
-app/
-  templates/index.html         single page, panel containers only, no logic
-  static/
-    css/theme.css              design tokens (colours, spacing, type scale)
-    css/app.css                layout + panel styles
-    js/api.js                  fetch wrappers, mock fallback, SSE client
-    js/store.js                one state object + subscribe/notify, no framework
-    js/format.js               time, percent, byte and lead-time formatting
-    js/main.js                 wiring: load payload -> store -> render panels
-    js/panels/upload.js        file picker, demo selector, job progress
-    js/panels/timeline.js      risk timeline + forecast cone (the main chart)
-    js/panels/ribbon.js        kill-chain stage ribbon + current-stage card
-    js/panels/alarms.js        alarm log with lead time  <- H-4, the demo money shot
-    js/panels/why.js           attribution bars + attention heatmap
-    js/panels/flows.js         flagged flows table + top talkers
-    js/charts/cone.js          cone rendering helper for Chart.js
-    js/charts/heatmap.js       canvas attention heatmap (Chart.js has no heatmap)
-    vendor/chart.umd.min.js    pinned Chart.js, vendored (see below)
+frontend/
+  index.html              the single page: panel containers, no logic
+  css/theme.css           design tokens (colours, spacing, type scale)
+  css/app.css             layout + panel styles
+  js/config.js            API_BASE resolution + feature flags   <- the only file that knows about hosts
+  js/api.js               fetch wrappers, mock fallback, SSE client
+  js/store.js             one state object + subscribe/notify, no framework
+  js/format.js            time, percent, byte and lead-time formatting
+  js/main.js              wiring: load payload -> store -> render panels
+  js/panels/upload.js     file picker, demo selector, job progress
+  js/panels/timeline.js   risk timeline + forecast cone (the main chart)
+  js/panels/ribbon.js     kill-chain stage ribbon + current-stage card
+  js/panels/alarms.js     alarm log with lead time   <- H-4, the demo money shot
+  js/panels/why.js        attribution bars + attention heatmap
+  js/panels/flows.js      flagged flows table + top talkers
+  js/charts/cone.js       cone rendering helper for Chart.js
+  js/charts/heatmap.js    canvas attention heatmap (Chart.js has none)
+  vendor/chart.umd.min.js pinned Chart.js, committed (see below)
+  mock/                   generated copy of fixtures/api - gitignored, made by scripts/sync_fixtures.py
 ```
+
+## Talking to the API
+
+`js/config.js` is the only place a host appears:
+
+```js
+export const API_BASE =
+  new URLSearchParams(location.search).get("api")   // ?api=http://host:5000 for demos
+  ?? window.NETWM_API_BASE                          // set by a deployment if it wants
+  ?? "http://127.0.0.1:5000";
+export const USE_MOCK = new URLSearchParams(location.search).has("mock");
+```
+
+`js/api.js` resolves in this order and says which one it used in the UI header:
+1. `?mock` in the URL, or the API unreachable -> `./mock/thursday.json` (run
+   `python scripts/sync_fixtures.py` once to populate `frontend/mock/`).
+2. Otherwise `API_BASE` - upload, poll, fetch result, stream.
+
+**Consequence of the split:** the dashboard must work with no backend at all. That is not a fallback
+hack, it is how Harshit develops and how the deck gets screenshots if a laptop misbehaves during
+judging.
 
 ## Data flow
 
 ```
 main.js ──► api.loadAnalysis()  ──► store.set({payload})
-               │  (POST /api/analyze  or  GET /api/demos  or  fetch('/static/../mock/thursday.json'))
                ▼
           store.subscribe(panel.render)   every panel is a pure render(state) function
                ▲
@@ -47,7 +71,7 @@ main.js ──► api.loadAnalysis()  ──► store.set({payload})
 ```
 
 `store.js` holds exactly: `payload`, `selectedWindow` (int), `replay` (`{playing, t, speed}`),
-`filters` (`{stage, minScore}`), `jobStatus`. No other global state; no framework.
+`filters` (`{stage, minScore}`), `jobStatus`. No other global state, no framework.
 
 ## Panels
 
@@ -84,7 +108,7 @@ One row per entry in `alarms[]`: time, peak `p`, predicted stage, and the lead-t
 3. no onset ahead -> *"no compromise followed within the horizon"* (a false positive, shown plainly).
 
 Today's real payloads produce **only state 2/3** (see `results.md` E14). State 1 is built against
-`app/mock/thursday_oracle.json` (task T-07), which is a **UI development fixture only** - no number
+`fixtures/api/thursday_oracle.json` (task T-07), which is a **UI development fixture only** - no number
 from it ever reaches a slide.
 
 ### Why panel (H-5)
@@ -124,7 +148,7 @@ tabular-nums`) so columns do not jitter during replay.
 
 Pin the version, download once, commit the file, and record the SHA-256 in this file:
 
-**Done** - `app/static/vendor/chart.umd.min.js` is committed:
+**Done** - `frontend/vendor/chart.umd.min.js` is committed:
 
 | | |
 |---|---|
@@ -138,8 +162,8 @@ Load it with `<script src="/static/vendor/chart.umd.min.js"></script>` - no `int
 needed or wanted, the file is local. To re-vendor or upgrade:
 
 ```bash
-curl -sL -o app/static/vendor/chart.umd.min.js https://cdn.jsdelivr.net/npm/chart.js@<version>/dist/chart.umd.min.js
-sha256sum app/static/vendor/chart.umd.min.js   # then update the table above
+curl -sL -o frontend/vendor/chart.umd.min.js https://cdn.jsdelivr.net/npm/chart.js@<version>/dist/chart.umd.min.js
+sha256sum frontend/vendor/chart.umd.min.js   # then update the table above
 ```
 
 Nothing else gets vendored without a line here saying what and why. No fonts from Google, no icon
@@ -156,7 +180,7 @@ horizon"* reads as honest.
 
 | id | done when |
 |---|---|
-| H-1 | page loads from `python -m flask --app app.server run`, offline, renders the Thursday mock |
+| H-1 | `python -m http.server 8080` in `frontend/`, opened offline, renders the Thursday fixture |
 | H-2 | timeline with risk line, cone on the selected window, threshold line labelled by policy, ground-truth spans |
 | H-3 | ribbon + current-stage card, colours sourced from the payload |
 | H-4 | all three alarm states render; verified against `thursday.json` (state 2/3) *and* `thursday_oracle.json` (state 1) |
