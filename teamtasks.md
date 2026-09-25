@@ -153,10 +153,14 @@ Full spec: [backend/PLAN.md](backend/PLAN.md).
 
 | id | task | done when |
 |---|---|---|
-| **R-1** | FastAPI app: `server.py` (routes + CORS allowlist), `schemas.py` (Pydantic models mirroring the contract), `jobs.py` (single worker thread - torch blocks, so no async inference), `inference.py` wrapping `netwm.engine.predict.analyze_file`. Serve `fixtures/api/*.json` with `"mock": true` when no checkpoint exists | `uvicorn backend.server:app` -> `POST /api/analyze` with a real CSV returns a real payload; `GET /api/jobs/<id>` reports progress; OpenAPI renders at `/docs` |
-| **R-2** | The contract is already v1.1-correct (T-02/T-06 closed the drift). What remains: a **validator test** that walks every documented key against `fixtures/api/*.json` and a freshly produced payload, so future drift fails a test instead of the demo | `pytest backend/tests/test_contract.py` fails if engine, fixtures and contract disagree |
-| **R-3** | SSE replay `/api/jobs/<id>/stream` at `?speed=` windows/sec | the dashboard can play an attack unfolding |
-| **R-4** | Offline hardening: size caps, error codes, no outbound calls anywhere, `run_demo.bat` one-command start | works with WiFi off on a machine that has never seen the repo |
+| ~~R-1~~ | **Verified done** (PR #2): FastAPI app - `server.py` (routes + CORS allowlist), `schemas.py`, `jobs.py` (single worker thread), `inference.py` wrapping `analyze_file`; fixtures served with `"mock": true` when no checkpoint exists |
+| ~~R-2~~ | **Verified done**: `backend/tests/test_contract.py` validates fixtures *and* fresh engine output against the v1.1 models |
+| ~~R-3~~ | **Verified done**: SSE `/api/jobs/<id>/stream?speed=` from the disk cache, with heartbeats and disconnect handling |
+| ~~R-4~~ | **Verified done**: size caps, uniform error shape, `test_offline.py` socket lockdown, `run_demo.bat` |
+| ~~R-5~~ | **Verified fixed** - reviewed live: a 39 999-flow CSV upload returns `mock: false`, 514 windows, threshold 0.0036 under `self-budget-10pct`, 3 alarms. Root cause was a race, not a path bug: the job was enqueued before the upload finished streaming, so the worker saw `file_path=None`. Covered by `test_upload_e2e.py` |
+| ~~R-6~~ | **Verified fixed**: the demo endpoint runs the model - `mock: false`, 260 windows from 169 135 flows, the real 2-hour slice rather than the full-day fixture |
+| ~~R-7~~ | **Verified fixed**: `/api/model` reports F1 0.576, precision 0.775, FPR 0.027, PR-AUC 0.64, baseline F1 0.011, lead time 0.0 |
+| **R-8** | `test_contract.py` and `test_offline.py` fail on a clean checkout because they need the gitignored `data/demo/*.csv`. Add `skipif` on missing demo data so a fresh clone stays green - this is the same clean-machine criterion R-4 is judged on |
 
 ## Harshit - frontend
 
@@ -168,6 +172,10 @@ Full spec: [frontend/PLAN.md](frontend/PLAN.md).
 | **H-2** | Forecast timeline: observed risk line, K-step forecast cone (`p_lo`/`p_hi`), alarm threshold, ground-truth attack spans shaded | the Thursday infiltration is visually obvious |
 | **H-3** | Kill-chain ribbon (predicted stage per window) + current-stage card with ATT&CK tactic id | stage colours come from the API, never hard-coded |
 | **H-4** | **Alarm log with lead time** - "fired N windows (M s) before onset". This is the single most important panel in the demo video | reads `alarms[].lead_windows` |
+| ~~H-1..H-5~~ | **Merged** ([#1](https://github.com/ArunmehtaBuild/smart2nd/pull/1), 83af70b). Reviewed by running it: risk line plots `p_max` per D-019/D-020, the honest "0 of 4 episodes warned early" banner is front and centre, the oracle fixture carries its dev-only warning, and all three H-4 alarm states render |
+| **H-7** | Cleanups from the #1 review: (a) move the 7 screenshots (~2 MB) to `docs/` and the `test_h*.html` harnesses to `frontend/dev/` - both currently deploy with the static site; (b) replace the five hard-coded `#4c9be8` in `timeline.js` with the `theme.css` token; (c) check the header layout at the width the demo video will actually be recorded at (it wraps at ~800 px) | nothing ships that is not part of the product |
+| **H-9** | **The scenario selector never engages the live API.** Verified against the merged backend: `GET /api/demos` returns 200, then `POST /api/analyze/demo/thursday` returns 400 - the day name is posted instead of the `id` from that same response (`thursday_infiltration`), so it falls back to `./mock/` and the header reads "Mock Fixture" with a healthy API behind it. `GET /api/jobs/demo/flows` 404s for the same reason (literal `demo` as job id). Use the ids from `/api/demos` and thread the real `job_id` into the flows call | picking a scenario with the backend running shows **Live API**, not Mock Fixture |
+| **H-8** | **Upload path verified working** against the merged backend (6 000-flow CSV -> 77 windows, badge flips to Live API, per-capture threshold 0.0030). Was on hold until R-5 landed; - the upload panel is built against an endpoint that cannot currently succeed, and the branch is 13 commits behind main. Rebase, then verify against a working API. Wire the live path when R-1 lands: upload -> job polling -> result, SSE replay, and the API/fixture badge in the header. Until then keep `?mock` working exactly as it does now | the same dashboard runs against the real API with no code change beyond `config.js` |
 | **H-5** | Why-panel: attribution bars + attention heatmap; flagged-flows table | every alarm can be explained on screen |
 | **H-6** | Replay mode (play/pause/scrub) on the SSE stream, then record the 2-minute demo video | video shows risk rising *before* the attack lands |
 
@@ -220,4 +228,4 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | Technical presentation (max 5 slides) | Sanchi | [ ] |
 | Benchmark table vs logistic regression | Atharv | [ ] |
 | Model weights + reproducible training config | Yash | [x] r2 checkpoints committed |
-| Everything runs offline, no cloud API calls | Arun | [ ] |
+| Everything runs offline, no cloud API calls | Arun | [x] |

@@ -350,6 +350,13 @@ Largest effect sizes (Cohen's d, pre-onset vs background):
 
 ## E4-E7 (round 2) - multi-target supervision (D-016)
 
+> **Statistic note (2026-09-25, T-09).** The forecast rows below were produced inside the training
+> run, which scored `p_cum[:, -1]` while the engine and E14 score `p_max` (D-019). The two disagreed
+> on the same checkpoints. `evaluate.py` now scores `p_max`, so future in-training rows match; the
+> rows in this section are **superseded by E14** for anything threshold-dependent and must not be
+> quoted. The PR-AUC / ROC-AUC figures for the *cumulative union* statistic remain valid as such -
+> E13 compares the statistics directly.
+
 `python scripts/train.py --epochs 25 --samples 16 --run e4e7-worldmodel-r2`
 run: `results/runs/e4e7-worldmodel-r2/` · same architecture, three risk targets instead of one.
 

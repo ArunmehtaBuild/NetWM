@@ -670,6 +670,31 @@ prime suspect is the train-day-fitted scaler under the distribution shift E2 alr
 the same logic as the alert budget in D-020, applied to features instead of scores - is the next
 experiment. It reopens the claim only under the bar in point 2.
 
+
+---
+
+### D-024 — The demo endpoint runs the model; `/api/model` metrics are read from `results/runs/`
+*Date: 2026-09-26 · Status: accepted · Evidence: R-5/R-6/R-7 review, E14, E3*
+
+**Decision.** (1) `POST /api/analyze/demo/{id}` always runs real inference on
+`data/demo/<file>.csv` with the day's checkpoint and returns `mock: false`. If the slice or the
+checkpoint is missing it fails at request time with `503 no_model` and names the regeneration
+command - it never substitutes a fixture. The fixture fallback remains only for uploads with no
+checkpoint, where the payload says `mock: true`. (2) The model card's `metrics` are loaded from
+`results/runs/e14-pmax-rescore-e4e7-worldmodel-r2` (Thursday, `p_max`, self-budget-10pct: F1 0.576,
+FPR 0.027, PR-AUC 0.640) and `results/runs/e2e3-baselines-lags0` (E3 logistic regression,
+forecast, train-tuned: F1 0.011), not typed into code.
+
+**Why.** The fixture fallback served the 972-window full-day Thursday payload under the metadata of
+a 130-minute, 169 135-flow slice - a demo whose data and description disagree is the first thing a
+judge probes, and the PS asks for an interface that runs inference on an accepted file. Metrics read
+from the run folders cannot drift from results.md. PR-AUC is 0.640, not the 0.675 of the
+e4e7-worldmodel-r2 training run: that figure scores `p_cum` (superseded for this purpose by D-019 /
+E14), and the card must quote every number for the same statistic as its F1.
+
+**Revisit if.** A-4 shrinks the demo slices (the run folders stay the source), or a later run
+supersedes E14 as the deployable operating point - then change `_E14_RUN` in `backend/inference.py`
+in the same commit as the results.md entry.
 ### D-028 — Trend feature window sizes for Task S-1 (superseded by D-026)
 
 *Date: 2026-09-25 · Status: superseded by D-026 · Evidence: Task S-1 requirements*
@@ -832,3 +857,4 @@ before their attack, which keeps both out of the story being shown.
 signal. The next cut is then *sticky* slots, where a host keeps its slot while it stays in the top
 N. If the channel does help, per-host episodes are the natural way to enlarge the 26-episode
 denominator D-022 is limited by.
+

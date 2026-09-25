@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetWM — AI Network Attack Forecasting (SIH 2026 PS 26153)</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+  <!-- Pinned Vendored Chart.js v4.4.1 (UMD) - No CDN, fully offline -->
+  <script src="vendor/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation & SOC Telemetry Bar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-logo" title="NetWM World Model">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-title">NetWM</div>
+        <div class="brand-subtitle">Attack Forecasting // SOC Dashboard</div>
+      </div>
+
+      <div class="header-meta">
+        <div class="meta-item">
+          <span class="meta-label">Capture:</span>
+          <span class="meta-value font-mono" id="sourceFilename">Loading...</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Volume:</span>
+          <span class="meta-value font-mono" id="sourceStats">-- flows</span>
+        </div>
+        <div class="pill pill-accent" id="thresholdPill">Threshold: --</div>
+        <div class="pill" id="horizonPill">Horizon K=10</div>
+        <div class="pill pill-mock" id="mockPill">
+          <span class="status-dot"></span>Mock Fixture
+        </div>
+      </div>
+    </header>
+
+    <!-- Dev Notice Banner (Shown for Dev/Oracle Fixtures) -->
+    <div class="dev-banner hidden" id="devBanner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span id="devNote">UI DEVELOPMENT FIXTURE ONLY</span>
+    </div>
+
+    <!-- Scenario / Action Control Bar -->
+    <section class="control-bar">
+      <div class="control-group">
+        <label for="demoSelector" style="color:var(--text-dim); font-size:11px; text-transform:uppercase; font-weight:600;">Scenario:</label>
+        <select id="demoSelector" class="select-input">
+          <option value="thursday">Thursday-WorkingHours (Infiltration · Real Deployable)</option>
+          <option value="friday">Friday-WorkingHours (Botnet / PortScan / DDoS)</option>
+          <option value="thursday_oracle">Thursday Oracle (Dev-Only · Hand-Tuned Lead Time)</option>
+        </select>
+        <button class="btn" title="Upload PCAP or Flow CSV (Track Arun R-1)" disabled style="opacity:0.6; cursor:not-allowed;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Upload Capture
+        </button>
+      </div>
+
+      <div class="selected-indicator font-mono" id="selectedWindowText">
+        Window: <strong>t=0</strong> · Risk: <strong>--%</strong>
+      </div>
+    </section>
+
+    <!-- H-6 Chronological Replay Controller Bar -->
+    <section class="replay-bar">
+      <div class="replay-controls-group">
+        <button class="btn btn-replay-primary" id="btnPlayPause" title="Play or pause chronological day replay">
+          <svg class="icon-play" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <svg class="icon-pause hidden" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          <span id="playPauseText">Play Replay</span>
+        </button>
+
+        <button class="btn btn-secondary" id="btnReset" title="Reset replay to window t=0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+          Reset
+        </button>
+
+        <div class="replay-speed-group">
+          <label for="replaySpeedSelect">Speed:</label>
+          <select id="replaySpeedSelect" class="filter-select">
+            <option value="1">1x (1 w/s)</option>
+            <option value="2">2x (2 w/s)</option>
+            <option value="4" selected>4x (4 w/s · Default)</option>
+            <option value="8">8x (8 w/s)</option>
+            <option value="16">16x (16 w/s · Fast)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="replay-scrub-group">
+        <input type="range" id="replayScrubber" class="replay-slider" min="0" max="971" value="0" title="Scrub chronological window position">
+      </div>
+
+      <div class="replay-meta-group font-mono">
+        <span class="replay-status-badge badge-paused" id="replayStatusBadge">PAUSED</span>
+        <span class="replay-time-text" id="replayTimeText">t=0 / 971 · --:--:--</span>
+      </div>
+    </section>
+
+    <!-- Main Dashboard Body -->
+    <main class="dashboard-main">
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="font-size:12px; color:var(--text-muted);">Loading capture telemetry...</div>
+      </div>
+
+      <!-- Panel 1: Main Forecast Timeline (H-1 / H-2) -->
+      <section class="panel panel-timeline">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Forecast Timeline & Risk Dynamics
+          </div>
+          <div class="timeline-controls">
+            <label class="toggle-control" title="Toggle K-step attack progression forecast (p_cum_attack)">
+              <input type="checkbox" id="toggleAttackSeries">
+              <span>Attack (p_cum_attack)</span>
+            </label>
+            <label class="toggle-control" title="Toggle K-step stage escalation forecast (p_cum_escalate)">
+              <input type="checkbox" id="toggleEscalateSeries">
+              <span>Escalation (p_cum_escalate)</span>
+            </label>
+            <div class="panel-tag">60s WINDOW · 30s STRIDE</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="timeline-chart-wrapper">
+            <canvas id="timelineChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Kill-Chain Progression Ribbon (H-3) -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            MITRE ATT&CK Kill-Chain Ribbon
+          </div>
+          <div class="panel-tag">MITRE ATT&CK MATRIX</div>
+        </div>
+        <div class="panel-body" id="ribbonPanelBody">
+          <div class="panel-placeholder">
+            <div class="placeholder-title">Loading kill-chain progression ribbon...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2-Column Grid for Alarms, Explainability, Flows -->
+      <div class="grid-2col">
+        <!-- Left Column: Alarms & Explainability -->
+        <div class="stack">
+          <!-- Panel 3: Alarms & Lead Time (H-4) -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                Alarm Log & Lead Time
+              </div>
+              <div class="panel-tag">EARLY WARNING LOG</div>
+            </div>
+            <div class="panel-body" id="alarmPanelBody">
+              <div class="panel-placeholder">
+                <div class="placeholder-title">Loading alarm evaluation log...</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 4: Why Panel / Explainability (H-5) -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Why Panel (Attribution & Attention)
+              </div>
+              <div class="panel-tag">INTEGRATED GRADIENTS</div>
+            </div>
+            <div class="panel-body" id="whyPanelBody">
+              <div class="panel-placeholder">
+                <div class="placeholder-title">Loading explainability attribution...</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column: Current Stage Card & Flagged Flows -->
+        <div class="stack">
+          <!-- Panel 5: Current Stage & Model Card (H-3) -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Current Kill-Chain Stage Assessment
+              </div>
+              <div class="panel-tag">STAGE PROBABILITIES</div>
+            </div>
+            <div class="panel-body" id="stageCardBody">
+              <div class="panel-placeholder">
+                <div class="placeholder-title">Loading stage assessment...</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 6: Flagged Flows & Top Talkers (H-5) -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="4 17 10 11 4 5"></polyline>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                Telemetry Flows & Top Talkers
+              </div>
+              <div class="panel-tag">FLOW ATTRIBUTION</div>
+            </div>
+            <div class="panel-body" id="flowsPanelBody">
+              <div class="panel-placeholder">
+                <div class="placeholder-title">Loading telemetry flows...</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>NetWM // World Model for Attack Forecasting · SIH 2026 PS 26153 · NTRO</div>
+      <div>Fully Offline Architecture · Plain ES Modules · Vendored Assets</div>
+    </footer>
+  </div>
+
+  <!-- ES Module Application Wiring -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

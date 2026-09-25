@@ -99,6 +99,7 @@ def analyze_flows(
     flows: pd.DataFrame,
     ckpt: dict,
     n_samples: int = 16,
+    mean_path_score: bool = True,
     explain_limit: int = 24,
     explain_every: int = 8,
     threshold_override: float | None = None,
@@ -122,13 +123,23 @@ def analyze_flows(
     if progress:
         progress(0.35, f"{len(flows):,} flows -> {n_windows:,} windows")
 
-    out = model.forecast(
-        torch.from_numpy(x).unsqueeze(0).to(device), horizon=horizon, n_samples=n_samples
-    )
+    tensor = torch.from_numpy(x).unsqueeze(0).to(device)
+    out = model.forecast(tensor, horizon=horizon, n_samples=n_samples)
     out = {k: v.numpy() for k, v in out.items()}
     # Alarm statistic is max over the horizon, not the cumulative union: the compromise head answers
     # "is this state compromised", a property that persists, so the union multiplies one event K
     # times and saturates (D-019, E13).
+    #
+    # The curves and their Monte-Carlo band come from sampled rollouts, but the *alarm score* is read
+    # off the deterministic mean path: a lead-time count must not move between runs of the same
+    # checkpoint on the same file (E14 saw 1 of 4 and then 2 of 4 at one threshold). Sampling stays
+    # for the band, because a cone drawn from a single deterministic path would be a flat line.
+    statistic = "p_max"
+    if mean_path_score:
+        mean_out = model.forecast(tensor, horizon=horizon, n_samples=1, sample=False)
+        out["p_max_mc"] = out["p_max"]
+        out["p_max"] = mean_out["p_max"].numpy()
+        statistic = "p_max (mean path)"
     score = out["p_max"]
     if threshold_override is not None:
         # Only for fixtures: a threshold chosen with knowledge of the labels is not something a
@@ -178,6 +189,7 @@ def analyze_flows(
             "surprise": round(float(out["surprise"][t]), 4),
             "attention": [round(float(a), 4) for a in out["attention"][t]],
             "p_max": round(float(score[t]), 4),
+            "p_max_mc": round(float(out["p_max_mc"][t]), 4) if "p_max_mc" in out else None,
             "flow_count": int(feats["n_flows"].iloc[t]),
             "top_talkers": talkers.get(t, []),
             "top_features": (
@@ -193,7 +205,7 @@ def analyze_flows(
 
     payload: dict[str, Any] = {
         "payload_version": "1.1",
-        "alarm_statistic": "p_max",
+        "alarm_statistic": statistic,
         "threshold_policy": policy,
         "source": {
             "flows": int(len(flows)),
@@ -233,8 +245,13 @@ def analyze_flows(
     return payload
 
 
-def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon) -> list[dict]:
-    """Contiguous alarm runs, annotated with lead time to the next known onset."""
+def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon, persistence: int = 2) -> list[dict]:
+    """Contiguous alarm runs, annotated with lead time to the next known onset.
+
+    A run shorter than ``persistence`` windows is still reported - the operator saw it - but it earns
+    no lead time, because a single spike above the threshold is not a warning. This is the same rule
+    ``lead_time_summary`` applies, so the two never disagree about how many episodes were warned.
+    """
     above = score >= threshold
     rows, start = [], None
     for t, flag in enumerate(above):
@@ -248,13 +265,16 @@ def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon) -> list[dict]:
 
     out = []
     for begin, end in rows:
-        nxt = [o for o in onsets if begin <= o <= begin + horizon]
+        length = end - begin + 1
+        nxt = [o for o in onsets if begin <= o <= begin + horizon] if length >= persistence else []
         lead = (nxt[0] - begin) if nxt else None
         out.append(
             {
                 "t": int(begin),
                 "ts": ts[begin].isoformat() + "Z",
                 "until_t": int(end),
+                "windows": int(length),
+                "sustained": bool(length >= persistence),
                 "p": round(float(score[begin : end + 1].max()), 4),
                 "onset_t": int(nxt[0]) if nxt else None,
                 "lead_windows": int(lead) if lead is not None else None,
@@ -280,6 +300,7 @@ def _lead_summary(score, threshold, onsets, ts, stride_s, horizon) -> dict[str, 
     early = [r for r in rows if r["detected_early"]]
     return {
         "episodes": len(rows),
+        "persistence_windows": 2,
         "warned_early": len(early),
         "mean_lead_windows": round(float(np.mean([r["lead_windows"] for r in early])), 2) if early else 0.0,
         "mean_lead_seconds": round(float(np.mean([r["lead_seconds"] for r in early])), 1) if early else 0.0,

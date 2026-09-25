@@ -1,0 +1,104 @@
+/* NetWM SOC Dashboard Theme Tokens - frontend/PLAN.md */
+:root {
+  /* Color Palette */
+  --bg: #0f1216;
+  --surface: #161b22;
+  --surface-2: #1c2230;
+  --surface-hover: #212836;
+  --border: #2a3038;
+  --border-subtle: #21262d;
+
+  --text: #e6edf3;
+  --text-muted: #8b98a5;
+  --text-dim: #65707d;
+
+  --accent: #4c9be8;
+  --accent-dim: rgba(76, 155, 232, 0.15);
+  --accent-border: rgba(76, 155, 232, 0.4);
+
+  --danger: #e2574c;
+  --danger-dim: rgba(226, 87, 76, 0.15);
+  --danger-border: rgba(226, 87, 76, 0.4);
+
+  --warning: #f2a541;
+  --warning-dim: rgba(242, 165, 65, 0.15);
+
+  --success: #2fa87a;
+  --success-dim: rgba(47, 168, 122, 0.15);
+
+  --grid: #2a3038;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Sizing & Spacing Scale */
+  --header-height: 48px;
+  --control-height: 38px;
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Elevation Shadows (clean, crisp, zero neon blur) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.55);
+
+  /* Accessibility & Focus Ring */
+  --focus-ring: 0 0 0 2px rgba(76, 155, 232, 0.4);
+
+  /* Tabular Numerals across metrics to prevent jitter */
+  font-variant-numeric: tabular-nums;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
