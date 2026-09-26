@@ -816,6 +816,23 @@ Thursday's 1997 attempted flows all carry `- Attempted` in the label and none fa
 The one clean precursor on Thursday is a genuine rise in `uniq_dst_port` through traffic the
 corrected dataset labels benign. D-009's revisit clause is not triggered.
 
+**Who carries the rise (S-8).** `python scripts/onset_audit.py --day thursday --onset 602` ->
+`results/tables/s8_thursday_onset602_{windows,hosts}.csv`. The script first checks that
+`uniq_dst_port` recomputed from the raw flows equals the matrix column exactly. The rise is real:
+14.5 over the run-up against 9.7 over the 120 windows before it. But it is carried by bystanders.
+192.168.10.9 opens more ports on 192.168.10.3 (+4.3 distinct ports per window), with smaller
+increases from .17, .25 and .19. The hosts the attack touches do not move: the scan's target
+192.168.10.51 (+0.1), the host compromised at 17:19, 192.168.10.8 (-0.4), and the scanner 172.16.0.1,
+which is absent. .25 is the Cool Disk victim 53 minutes later. In the run-up it sends only NTP,
+NetBIOS, SMB, LDAP and mDNS. The level also stays up after the onset: 13.7 over windows 604-638. The
+onset itself is a 14-second external scan: 172.16.0.1 -> 192.168.10.51, 954 ports,
+17:00:31-17:00:45.
+
+So 602's run-up has the *shape* of a precursor, a long quiet gap followed by a rise, without the
+*content* of one. Nothing in it comes from the attack. A model that warned there would have been
+right for the wrong reason. The circular-shift null exists to guard against exactly this, and this
+is its first concrete instance. The other seven Thursday onsets have not been audited this way.
+
 ### Diagnostic arm: whole-capture rank (E16D, excluded from the bar)
 
 `results/tables/e16d-precursor-r4-rank-whole-s42.csv`, one seed. Reported per D-025, which forbids a
