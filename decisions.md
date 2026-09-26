@@ -129,6 +129,16 @@ train/test temporally disjoint. The attack-family holdout is the PS's explicit "
 unseen attack patterns" requirement, and lead time is the metric that distinguishes forecasting
 from detection — a classifier scores 0 on it by construction.
 
+**AMENDMENT (2026-09-26, Task Y-3c): Closing D-006(b) with evidence.**
+On CIC-IDS2017, every compromise family is confined to one day. According to `meta.json`, the compromise positives are:
+| Day | Family | Positives |
+|---|---|---|
+| Mon/Tue/Wed | None | 0 |
+| Thursday | Infiltration | 166 |
+| Friday | Botnet C2 | 127 |
+
+Because families do not span multiple days, *leave-one-day-out is exactly leave-one-family-out for compromise*. Proposing a run like "drop Friday's botnet from the Thursday fold" would leave the hazard head with zero positives in the training set. Therefore, D-006(b) is satisfied by the leave-one-day-out runs (D-006(a)), and no separate family-holdout runs are possible on this dataset without a multi-family dataset like CTU-13.
+
 ---
 
 ### D-007 — Explainability: attention + Integrated Gradients, with SHAP for the baseline
