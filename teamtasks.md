@@ -90,7 +90,9 @@ Y-6 occupies one machine for ~90 minutes and gates only the results slide. Nothi
 
 | person | id | task | done when |
 |---|---|---|---|
-| **Alok** | **A-2/A-3** | in flight on `a2` - packet features + PCAP -> flows. **This is the critical path**: it gates the video, and the PS requires packet-level features | `predict.py --input x.pcap` works and a PCAP upload returns a v1.1 payload |
+| **Alok** | ~~A-2~~ | **Merged (PR #6)**: streaming extractor with Welford TTL stats, session cap, scan signatures, tests on a synthetic PCAP. A building block, not the capability |
+| | **A-3** | **Still the critical path.** `features/flow_aggregator.py` -> `pcap_to_flows(path)` returning the **canonical flow schema** (`src/netwm/data/base.py`: `ts`, `src_ip/port`, `dst_ip/port`, `protocol`, durations, per-direction counts, flag counts, IAT stats) with the A-2 packet columns riding along per flow. Two blockers this closes: the extractor currently has **no timestamps** (it summarises a whole capture per session, and `S_t` is a 60 s window at 30 s stride - D-002), and `analyze_file()` still raises `NotImplementedError` on `.pcap`. Do not build a parallel packet feature path - the canonical schema exists so windowing, features, the model, the API and the dashboard all work unchanged | `predict.py --input x.pcap` produces a v1.1 payload and a PCAP upload works in the browser |
+| | **A-1** | Record the PCAP-source decision in `decisions.md` (real capture or Scapy synthesis) - still unwritten, and the fallback needs to be chosen this week rather than in the last 48 hours | a decision entry either way |
 | | **A-5** | one small PCAP demo (< 5 MB, one clean story) registered in `data/demo/index.json` | the scenario picker offers a PCAP that runs in under 10 s |
 | **Arun** | **R-8** | `skipif` on missing `data/demo/*.csv` so a clean clone stays green | fresh clone: `pytest backend/tests` passes with no generated data |
 | | **R-9** | drive SSE replay from the dashboard - implemented, never exercised from the UI | a day replays in the browser without stutter |
