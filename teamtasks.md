@@ -133,7 +133,7 @@ bought nothing; the only variable in r4 is the feature transform.
 |---|---|---|
 | ~~S-1~~ | **Done** - **Trend features.** `S_t` is currently levels only - the model sees *how many* distinct destination ports, never *how fast that is rising*. Add deltas and rolling slopes (2, 5, 10 windows) for the features E12 ranked highest: `uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`, plus z-scores against a rolling benign baseline | `S_t` v2 built for all 5 days; feature count and build time in `results.md` F2; decisions entry for the window choices |
 | ~~S-2~~ | **Done** - Per-host channel: top-N talkers as their own sub-vector (fan-out, ports touched, in/out byte ratio, new-peer rate) so lateral movement is visible per host, not only in network-wide aggregates | schema documented; Yash can train on it behind a config flag |
-| **S-3** | Feature dictionary in `research/features.md`: every feature, its formula, and which attack behaviour it is meant to expose | reviewable by someone who has not read the code |
+| ~~S-3~~ | **Done** - Feature dictionary in `research/features.md`: every feature, its formula, and which attack behaviour it is meant to expose | reviewable by someone who has not read the code |
 
 S-1 is the highest-value ML task on the board after T-01/Y-2. Levels-only state is the most likely
 reason the model detects but does not anticipate.
