@@ -945,8 +945,8 @@ in a single synthetic week.
 
 ---
 
-### D-029 — Pre-registration for Y-4 Ablation (E10)
-*Date: 2026-09-26 · Status: accepted*
+### D-030 — Pre-registration for Y-4 Ablation (E10)
+*Date: 2026-09-26 · Status: accepted · renumbered from a second D-029 at merge*
 
 **Decision.** The ablation study (E10) tests two components against the r2 baseline (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`): the stochastic latent space (`model_no_stochastic.yaml`) and the multi-step rollout loss (`model_no_multistep.yaml`).
 
@@ -956,3 +956,26 @@ Before any number exists, a component is deemed necessary if its removal worsens
 2. **Detection performance**: Both ablations are compared on E14's `p_max` statistic at the 10 % alert budget. The full model must outperform the ablated models on this metric to justify the added complexity.
 
 **Why.** We must ensure that the stochastic latent space and multi-step rollout loss actually contribute to the model's performance. If they do not meet the pre-registered criteria, they will be marked as unsupported components in `docs/architecture.md`.
+
+---
+
+### D-031 — PCAP demo source: Scapy synthesis
+*Date: 2026-09-26 · Status: accepted for demonstrating the PCAP pipeline; the demo capture itself is withdrawn pending A-5b · renumbered from a third D-029 at merge*
+
+**Decision.** The small PCAP demo (A-5) is synthesized using Scapy rather than extracted from a real
+capture.
+
+**Why.** The demo needs to be under 5 MB with one clean, easily explainable story (e.g., a sequential
+port scan) that the model can confidently flag. Extracting and anonymizing a clean 5 MB slice from
+the 30+ GB CIC-IDS2017 PCAPs while maintaining flow continuity and avoiding unrelated background
+noise is complex. Synthesizing it with Scapy guarantees the exact packets, timestamps, and sizes we
+need for a crisp demonstration of the `pcap_to_flows` pipeline and the dashboard UI, without
+accidental background traffic muddying the narrative.
+
+**Measured at merge (orchestrator).** The generated capture is 6.7 KB and 120 packets spanning 70 s,
+which is 3 windows. The index claimed 4.5 MB and 10 minutes. On `e4e7-worldmodel-r2/thursday.pt`, the
+single alarm falls on the *benign* window. The scan windows are labelled Impact (stage 6). Surprise
+does react to the scan (33 against 0). The addresses (192.168.1.x, 10.0.0.5) sit outside the
+training network's `internal_prefixes`. The synthesis choice stands; the capture must be long enough
+for the model's context and must use the training network's address plan. Note that the project
+downloads CSVs only; no CIC-IDS2017 PCAP is on disk (`scripts/get_data.py`).

@@ -70,36 +70,42 @@ python scripts/sync_fixtures.py && cd frontend && python -m http.server 8080
 Everything runs offline. With no checkpoint present the API still serves `fixtures/api/*.json`
 marked `"mock": true`, so the dashboard is never undemoable.
 
-## Setup
+## Setup for a Fresh Machine
+
+Follow these exact steps from a clean clone to get the dashboard running locally.
+
+**1. Clone the repository and install dependencies:**
 
 ```bash
-python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt
+git clone https://github.com/your-org/netwm.git
+cd netwm
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-Torch is installed separately for CUDA (GTX 1650 / CUDA 12.1):
+*(Torch is installed separately for CUDA, e.g., `pip install torch --index-url https://download.pytorch.org/whl/cu121`)*
+
+**2. Fetch the dataset:**
+
+This downloads ~328 MB and extracts it to `data/raw/cicids2017_improved/`. We use the **corrected** CIC-IDS2017 re-extraction (see decisions.md D-001).
 
 ```bash
-pip install torch --index-url https://download.pytorch.org/whl/cu121
+python scripts/get_data.py
 ```
 
-## Data
-
-One command, ~328 MB download, ~1.1 GB extracted into `data/raw/cicids2017_improved/` (gitignored):
-
-```bash
-python scripts/get_data.py          # download + sha256 verify + extract
-python scripts/get_data.py --check  # report what is on disk, download nothing
-```
-
-This fetches the **corrected** CIC-IDS2017 re-extraction, not the CIC original - the original
-mis-terminates TCP flows and mislabels attack onsets, and onset time is the quantity we predict
-(decisions.md D-001, research/cicids2017.md). The checksum is pinned: every published number in
-`results.md` assumes that exact archive.
-
-Then build the state matrices:
+**3. Build the feature matrices:**
 
 ```bash
 python scripts/build_features.py --config configs/cicids2017.yaml
 ```
 
-Training and demo instructions are in `plan.md` and `docs/architecture.md`.
+**4. Run the demo:**
+
+This starts both the FastAPI backend on `:5000` and the frontend dashboard on `:8080`.
+
+```bash
+run_demo.bat
+```
+
+Everything runs completely offline. You can also upload PCAP captures (like the included 5MB demo PCAP) directly in the dashboard UI!
