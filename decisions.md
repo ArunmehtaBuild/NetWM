@@ -953,10 +953,18 @@ in a single synthetic week.
 *Amended 2026-09-26 before any E10 numbers were seen: r2's Friday `p_max` F1 at the 10% budget is 0.000 (E14), and nothing can be worse than zero, so "worse on both folds" marks every component unsupported by construction.*
 
 For each ablation (`model_no_stochastic.yaml` and `model_no_multistep.yaml`), its removal must worsen the model's performance on **both** of these metrics:
-1. **Rollout**: The mean over `k = 2..K` of `(NLL_model - NLL_persistence)` must be worse (higher) in the ablated model than the full model, on both folds (Thursday and Friday), on ≥2 of 3 seeds.
-2. **Detection**: E14 `p_max` F1 at the 10 % alert budget must be worse in the ablated model than the full model on **Thursday only**, on ≥2 of 3 seeds (or PR-AUC must be worse on both folds).
+1. **Rollout**: The mean over `k = 2..K` of `(world_model_mse - persistence_mse)` must be worse (higher) in the ablated model than the full model, on both folds (Thursday and Friday), on ≥2 of 3 seeds. Read from `results/runs/<run>/metrics.json` → `per_day[<fold>].rollout`.
+2. **Detection**: E14 `p_max` F1 at the 10 % alert budget (`self-budget-10pct`, from `scripts/rescore_pmax.py --run <run>`, without `--write-thresholds`) must be worse in the ablated model than the full model on **Thursday only**, on ≥2 of 3 seeds. PR-AUC on both folds is reported beside it and does not gate.
 
 If the full model is worse than (or equivalent to) the ablated model on these metrics, we conclude that the component does not justify its added complexity, and it will be marked as unsupported in `docs/architecture.md`. "Equivalent" is defined as a difference of < 0.01 in the metric.
+
+*Clarified 2026-09-26 by Atharv, still before any E10 number was read (the sweep outputs were
+unpushed and unopened until this commit). Two points, with Yash's choices otherwise unchanged:*
+- *Rollout: E5 records rollout **MSE** against persistence per k (`world_model_mse`,
+  `persistence_mse`); it never recorded NLL, so the NLL form could not be scored from the runs.*
+- *Detection: the parenthetical "or PR-AUC on both folds" offered two alternative gates, which would
+  let the scorer pick one after seeing the numbers. Thursday `p_max` F1 is the gate; PR-AUC is
+  reported only.*
 
 **Why.** The stochastic latent has no test of its own. Without a strict seed rule and margin, variance can mask failures (E16 showed one seed in three can collapse). We must test whether each component actually earns its place before we claim it does.
 
