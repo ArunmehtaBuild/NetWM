@@ -83,6 +83,48 @@ should be produced on the mean path, where it has **no sampling variance at all*
 
 Keep the MC band for the UI's uncertainty cone; do not pay for it in a benchmark.
 
+## 5b. Report the per-seed distribution, not the mean (added after E16)
+
+Round 4 matched round 2 on Thursday detection on **two** training seeds (F1 0.591, 0.553 against
+0.576) and collapsed on the **third** (F1 0.023, PR-AUC 0.221). A mean over three seeds would have
+read as a mild regression; a single seed would have read as "equal to round 2" or "broken" depending
+which one was drawn. All three summaries are wrong. The failure mode that disqualified the
+configuration was **variance across training seeds**, and it is invisible to every one of them.
+
+This is why the stability clause has to say *training* seed. Monte-Carlo seeds vary the rollout of a
+fixed model; training seeds vary the model, which is where a representation change with a sharp
+optimisation landscape actually bites. Three seeds is the minimum that can show a one-in-three
+event at all, and it still cannot estimate its rate - report the per-seed numbers as a list.
+
+## 5c. Three cheap checks that each retired a candidate without a training run
+
+**A monotone transform cannot change a univariate AUC.** Whole-capture rank replaces each column by
+its rank *within the capture*, which is order-preserving, so every single-feature ROC-AUC is
+identical to the raw column's - measured, 0.607 against 0.607. Any effect such a transform has is
+multivariate only (making columns commensurable). That is an identity, not an experiment, and it
+retired a candidate in one line.
+
+**Check the univariate signal before proposing a re-expression of it.** We proposed ranking the v2
+trend features on the theory that `slope_5`/`slope_10` re-express a rise that a trailing-window rank
+flattens. The slopes score 0.487 / 0.480 / 0.475 univariately *before* any transform: there is no
+rise on that fold for a slope to carry. A 20-minute univariate table killed a 90-minute GPU run.
+
+**Ask whether the multivariate model beats its own best single input.** On Thursday, logistic
+regression over 70 features scores 0.604 on the precursor label; `uniq_dst_port` alone scores 0.607.
+A 70-input model gaining *nothing* from 69 extra features, under leave-one-day-out, is a direct
+measurement of failed cross-day weight transfer - and it localises the problem away from the feature
+representation without training anything. Under rank the same comparison is 0.497 against 0.573, i.e.
+actively worse.
+
+## 5d. Fix the negative set before quoting an AUC
+
+The same feature on the same label gives three defensible numbers depending on what counts as a
+negative: **0.607** against all non-precursor windows, **0.678** against non-attack windows only, and
+**0.739** against E12's quiet background (>= 30 windows from any attack). We compared a floor measured
+one way against a univariate measured another and briefly drew a stronger conclusion than the data
+supported. Pick one, state it next to the number, and never mix two in a single comparison. D-029
+fixes ours as all non-precursor windows, because that is what the LR floors use.
+
 ## 6. What we would do differently
 
 1. Compute the null **before** the experiment, not after. E15a took ten minutes and needed no model

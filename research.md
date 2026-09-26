@@ -9,7 +9,7 @@ how it changed the build.
 | [research/world-models.md](research/world-models.md) | What a world model is (PlaNet/Dreamer RSSM), why it differs from a sequence classifier, how it maps onto network telemetry |
 | [research/mitre-mapping.md](research/mitre-mapping.md) | CIC-IDS2017 attack labels → MITRE ATT&CK tactics/techniques, and the ordered stage scale |
 | [research/related-work.md](research/related-work.md) | Prior art in attack forecasting / prediction, and how NetWM differs |
-| [research/early-warning-nulls.md](research/early-warning-nulls.md) | Why a lead-time count needs a circular-shift null; within-day vs leave-one-day-out separability; negative transfer from auxiliary heads; mean path vs Monte-Carlo (post-mortem of E12 → E15a → E15) |
+| [research/early-warning-nulls.md](research/early-warning-nulls.md) | Why a lead-time count needs a circular-shift null; within-day vs leave-one-day-out separability; negative transfer from auxiliary heads; mean path vs Monte-Carlo; per-seed variance as a disqualifier; three cheap checks that retire a candidate without a training run; fixing the negative set (post-mortem of E12 → E15a → E15 → E16) |
 | [research/state-normalisation.md](research/state-normalisation.md) | Why a train-fitted z-score loses the signal under day-to-day shift; the rank-based inverse normal transform; why whole-capture ranking leaks the future into a lead-time claim and the causal variant does not (S-4, D-025) |
 
 ## The five findings that shaped the design
