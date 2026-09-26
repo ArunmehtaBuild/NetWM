@@ -24,8 +24,8 @@ the commentary column.
 | E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
 | E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
-| E10 | ablations | r2 checkpoints | `python scripts/e10_collect.py` | `results/tables/e10_ablation_summary.csv` | stochastic latent and multi-step rollout fail to pass the D-030 bar |
-| E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves in-sample but fails on held-out Friday (worse than constant); budget stays |
+| E10 | ablations | 9 retrained runs (`e10-*`), 3 seeds | `run_y4_ablation.bat` -> `rescore_pmax.py --run e10-*` -> `e10_collect.py` | `results/tables/e10_ablation_summary.csv` | neither component passes D-030; the multi-step loss earns detection (2 of 3 seeds), not rollout; headline F1 spans 0.43-0.57 over seeds |
+| E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves held-out Thursday and fails held-out Friday (worse than a constant forecast); budget stays |
 
 ## Planned experiment set (M1)
 
@@ -907,22 +907,75 @@ Artefacts: `results/tables/e17_*`, `results/figures/e17_reliability.png`. `scrip
 
 ## E10 - Ablation Study (Stochastic Latent & Multi-step Rollout)
 
-`python scripts/e10_collect.py` · 2026-09-26
+```
+scriptsun_y4_ablation.bat                         # 3 arms x seeds 42/43/44 x Thursday/Friday, 25 epochs
+python scripts/rescore_pmax.py --run e10-<arm>-s<seed>   # all nine runs, no --write-thresholds
+python scripts/e10_collect.py                       # -> results/tables/e10_ablation_summary.csv
+```
+runs: `results/runs/e10-*` (checkpoints gitignored) · 2026-09-26 · scored against **D-030 as amended
+before any number was read** (`6390d6b`, `93e96f9`).
 
-**Write-up (Y-4b):** E10 tests two core model components against the D-030 bar: to earn its place, a component's removal must worsen both rollout MSE (vs persistence, across both folds) and detection F1 (Thursday, 10% budget) by at least 0.01 on $\ge$ 2 of 3 seeds. 
+**The bar (D-030).** A component earns its place on a metric if removing it makes that metric worse
+by more than 0.01 on >= 2 of 3 seeds, paired by seed. Rollout: R = mean over k = 2..10 of
+(world-model MSE - persistence MSE), on both folds. Detection: `p_max` F1 at the 10 % budget, on
+Thursday only. To be *supported*, a component must earn its place on **both** metrics.
 
-**1. No Stochastic Latent (`model_no_stochastic.yaml`)**
-- **Seed 42:** Rollout improved by 0.018 (Thu) and 0.021 (Fri). Detection F1 worsened by 0.030 (Thu).
-- **Seed 43:** Rollout worsened by 0.016 (Thu) and 0.007 (Fri - under margin). Detection F1 improved by 0.083 (Thu).
-- **Seed 44:** Rollout worsened by 0.014 (Thu) and 0.030 (Fri). Detection F1 unchanged (0.000 diff).
-**Verdict:** The stochastic latent does not earn its place. It fails to consistently improve either rollout or detection across seeds.
+### The full model, per seed - the spread every number below sits inside
 
-**2. No Multi-step Rollout Loss (`model_no_multistep.yaml`)**
-- **Seed 42:** Rollout improved by 0.070 (Thu). Detection F1 improved by 0.045 (Thu).
-- **Seed 43:** Rollout improved by 0.122 (Thu) and 0.008 (Fri). Detection F1 worsened by 0.205 (Thu).
-- **Seed 44:** Rollout improved by 0.058 (Thu) and 0.006 (Fri). Detection F1 worsened by 0.174 (Thu).
-**Verdict:** The multi-step rollout loss does not earn its place. Rollout fidelity is generally *better* without it on most seeds and folds.
+| seed | Thursday F1 | Thursday PR-AUC | R Thursday | R Friday |
+|---:|---:|---:|---:|---:|
+| 42 | 0.568 | 0.640 | -0.188 | -0.119 |
+| 43 | 0.432 | 0.365 | -0.182 | -0.165 |
+| 44 | 0.470 | 0.412 | -0.165 | -0.162 |
 
-**Conclusion:** Neither the stochastic latent nor the multi-step rollout loss pass the pre-registered bar. Both add complexity without reliably improving performance and are therefore marked as unsupported in the architecture document.
+Seed 42 reproduces the submission checkpoint (r2: F1 0.576, PR-AUC 0.640). **The headline F1 sits at
+the top of a 0.43-0.57 seed range** (mean 0.49), and Thursday PR-AUC spans 0.37-0.64. The 0.01
+margin in D-030 is far inside that spread, so a single-seed difference is not evidence on its own.
+Only the >= 2-of-3 rule protects it. Friday F1 is 0.000 on every seed, as in E14.
 
-Artefacts: `results/tables/e10_ablation_summary.csv`.
+**What holds.** R is negative for every arm, every seed and both folds. Averaged over steps 2-10,
+every variant's open-loop rollout beats persistence on both held-out days. This is the evidence for
+the world-model rollout claim, in its averaged form. It is *not* true step by step: r2 loses to
+persistence at k = 2 on Friday (E5).
+
+### 1. Stochastic latent (`model_no_stochastic.yaml`)
+
+Differences are "removing it made this worse by ...", so a negative number means it got better.
+
+| seed | R Thu | R Fri | Thursday F1 |
+|---:|---:|---:|---:|
+| 42 | -0.018 | -0.021 | **+0.030** |
+| 43 | **+0.016** | +0.007 (within margin) | -0.083 |
+| 44 | **+0.014** | **+0.030** | 0.000 |
+
+Rollout: worse on both folds on 1 of 3 seeds (seed 44). Detection: worse on 1 of 3 (seed 42).
+**Verdict: unsupported. No consistent effect in either direction.** Removing the latent hurts some
+seeds and helps others. That neither supports it nor shows a deterministic model is better.
+
+### 2. Multi-step rollout loss (`model_no_multistep.yaml`)
+
+| seed | R Thu | R Fri | Thursday F1 |
+|---:|---:|---:|---:|
+| 42 | -0.070 | **+0.024** | -0.045 |
+| 43 | -0.122 | -0.008 (within margin) | **+0.205** |
+| 44 | -0.058 | -0.006 (within margin) | **+0.174** |
+
+Rollout: worse on both folds on 0 of 3 seeds. Thursday rollout is *better* without the loss on all
+three seeds. Detection: worse on 2 of 3 seeds, by 0.205 and 0.174 F1.
+**Verdict: unsupported under D-030's both-metrics rule, but it earns its place on detection.** The
+loss imagines the compromise and stage heads forward (`imagine_compromise`, `imagine_stage`). What it
+buys is detection, not rollout fidelity. Removing it would cost about 0.2 F1 on two of three seeds.
+It stays in the model, described for what it does.
+
+### What E10 settles
+
+- Neither component is supported under the pre-registered bar. `docs/architecture.md` claims neither
+  as the reason the rollout works.
+- The multi-step loss is a detection component, not a rollout component, and it is kept.
+- The stochastic latent has no demonstrated effect. It is kept because the submission checkpoint has
+  it and the Monte-Carlo bands come from it, and the doc says it is unsupported.
+- The headline F1 (0.576, seed 42) should never be quoted without this 0.43-0.57 seed range. How
+  the slides, demo script and model card quote it is an open decision on the board.
+
+Artefacts: `results/tables/e10_ablation_summary.csv`, `results/tables/e14_pmax_rescore_e10-*.csv`,
+`results/runs/e10-*`, `results/runs/e14-pmax-rescore-e10-*`.
