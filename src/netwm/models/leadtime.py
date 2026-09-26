@@ -2,9 +2,9 @@
 
 E3b found Thursday's ``detect`` target reporting *2 of 4 episodes warned early, mean lead 6.5
 windows* while scoring F1 0.021 - a score firing nearly everywhere "warns early" by accident. Y-5
-exists because of that, and this module is Y-5 in code. Three things the plain metric does not do:
+exists because of that. Three things the plain metric does not do by default:
 
-1. **An eligibility mask.** ``metrics.lead_times`` credits any alarm in ``[onset - K, onset)``,
+1. **An eligibility mask.** Without one, ``metrics.lead_times`` credits any alarm in ``[onset - K, onset)``,
    including windows that are themselves attack windows from the *previous* episode. On Wednesday,
    onsets 219 and 309 have 6 of their 10 pre-onset windows inside the preceding attack run, so a
    pure detector collects two free early warnings.
@@ -15,11 +15,9 @@ exists because of that, and this module is Y-5 in code. Three things the plain m
    same shape scores. The circular-shift null holds the score's distribution and autocorrelation
    fixed, destroys only its alignment with the onsets, and gives an empirical p-value.
 
-``strict_lead_times`` with ``eligible=None, confirm_before_onset=False`` is asserted equal to
-``netwm.metrics.lead_times`` in the tests, so the two cannot drift.
-
-This is the interim home: ``alarm_rate``, ``eligible`` and ``confirm_before_onset`` belong in
-``netwm.metrics`` once the owner of that file promotes them (board handoff, 2026-09-25).
+The guards live in ``netwm.metrics.lead_times`` (T-10: one lead-time implementation in the repo);
+``strict_lead_times`` is that function with both guards on, plus an eligible-window count per
+episode. ``alarm_rate`` lives in ``netwm.metrics`` and is re-exported here for existing callers.
 """
 
 from __future__ import annotations
@@ -27,15 +25,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import chi2
 
-
-def alarm_rate(y_score: np.ndarray, threshold: float) -> float:
-    """Fraction of windows the alarm fires on. Y-5 requires this beside every lead-time count.
-
-    Note it is a tautology at a self-budget threshold, where it equals the budget by construction.
-    Precision and the null are the guardrails; this is the sanity check that the threshold policy
-    did what it claimed.
-    """
-    return float((np.asarray(y_score, dtype=float) >= threshold).mean())
+from netwm.metrics import alarm_rate, lead_times  # noqa: F401 - alarm_rate re-exported
 
 
 def strict_lead_times(
@@ -49,41 +39,16 @@ def strict_lead_times(
 ) -> list[dict]:
     """Per-episode lead time, refusing the two kinds of credit a detector gets for free.
 
-    Returns the same row shape as ``netwm.metrics.lead_times`` so ``summarise_lead`` consumes it
-    unchanged, plus ``eligible_windows`` - how many of the pre-onset windows were even allowed to
-    count, which is how a reader sees that an episode had no fair chance.
+    ``netwm.metrics.lead_times`` with both guards on. Adds ``eligible_windows`` - how many of the
+    pre-onset windows were even allowed to count, which is how a reader sees that an episode had no
+    fair chance. ``summarise_lead`` consumes the rows unchanged.
     """
-    y_score = np.asarray(y_score, dtype=float)
-    alarm = y_score >= threshold
-    if eligible is not None:
-        alarm = alarm & np.asarray(eligible, dtype=bool)
-
-    rows: list[dict] = []
-    for onset in onsets:
-        start = max(0, onset - horizon)
-        first, lead = None, 0
-        for t in range(start, onset):
-            end = t + persistence
-            if confirm_before_onset and end > onset:
-                break
-            if end <= len(alarm) and alarm[t:end].all():
-                first, lead = t, onset - t
-                break
-        n_eligible = (
-            int(np.asarray(eligible, dtype=bool)[start:onset].sum())
-            if eligible is not None
-            else onset - start
-        )
-        rows.append(
-            {
-                "onset": int(onset),
-                "first_alarm": None if first is None else int(first),
-                "lead_windows": int(lead),
-                "detected_early": bool(first is not None),
-                "score_at_onset": float(y_score[onset]) if onset < len(y_score) else float("nan"),
-                "eligible_windows": n_eligible,
-            }
-        )
+    rows = lead_times(y_score, onsets, threshold, horizon, persistence=persistence,
+                      eligible=eligible, confirm_before_onset=confirm_before_onset)
+    mask = None if eligible is None else np.asarray(eligible, dtype=bool)
+    for row in rows:
+        start = max(0, row["onset"] - horizon)
+        row["eligible_windows"] = int(mask[start:row["onset"]].sum()) if mask is not None else row["onset"] - start
     return rows
 
 

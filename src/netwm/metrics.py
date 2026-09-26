@@ -63,12 +63,24 @@ def best_threshold(y_true: np.ndarray, y_score: np.ndarray, grid: int = 101) -> 
     return float(thresholds[int(np.argmax(scores))])
 
 
+def alarm_rate(y_score: np.ndarray, threshold: float) -> float:
+    """Fraction of windows the alarm fires on. Y-5 requires this beside every lead-time count.
+
+    Note it is a tautology at a self-budget threshold, where it equals the budget by construction.
+    Precision and the null are the guardrails; this is the sanity check that the threshold policy
+    did what it claimed.
+    """
+    return float((np.asarray(y_score, dtype=float) >= threshold).mean())
+
+
 def lead_times(
     y_score: np.ndarray,
     onsets: "list[int]",
     threshold: float,
     horizon: int,
     persistence: int = 1,
+    eligible: np.ndarray | None = None,
+    confirm_before_onset: bool = False,
 ) -> list[dict]:
     """How many windows before each compromise onset the alarm first (and then stays) raised.
 
@@ -76,16 +88,32 @@ def lead_times(
     not counted as an early warning. Only alarms inside ``[onset - horizon, onset)`` count: claiming
     credit for an alarm an hour early, when the model was trained to look ``horizon`` windows ahead,
     would be measuring luck.
+
+    Two guards against credit a detector gets for free (Y-5, D-022), both off by default so every
+    number published before T-10 reproduces unchanged:
+
+    * ``eligible`` - a boolean mask; alarms outside it are ignored. Pass the non-attack windows so an
+      alarm inside the *previous* episode's traffic is not counted as a warning for the next one.
+    * ``confirm_before_onset`` - the ``persistence`` confirmation must complete before the onset.
+      Without it, a score that only wakes when the attack starts gets a one-window lead.
+
+    This is the only lead-time implementation in the repo; ``netwm.models.leadtime.strict_lead_times``
+    calls it with both guards on.
     """
     y_score = np.asarray(y_score, dtype=float)
     alarm = y_score >= threshold
+    if eligible is not None:
+        alarm = alarm & np.asarray(eligible, dtype=bool)
     out: list[dict] = []
     for onset in onsets:
         start = max(0, onset - horizon)
         lead = 0
         first = None
         for t in range(start, onset):
-            if alarm[t : t + persistence].all() and len(alarm[t : t + persistence]) == persistence:
+            end = t + persistence
+            if confirm_before_onset and end > onset:
+                break
+            if end <= len(alarm) and alarm[t:end].all():
                 first = t
                 lead = onset - t
                 break
