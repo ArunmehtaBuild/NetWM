@@ -297,7 +297,7 @@ export class AlarmsPanel {
                 <tr>
                   <th>#</th>
                   <th>Window (Time)</th>
-                  <th>Peak p_max vs Thr</th>
+                  <th title="Ranked against this capture's alert budget, not a calibrated probability (E17)">Peak Risk (p_max) vs Thr</th>
                   <th>Predicted Stage</th>
                   <th>Forecast Lead-Time Verdict</th>
                 </tr>

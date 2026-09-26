@@ -43,3 +43,6 @@ frontend/mock/
 # presentations
 *.ppt
 *.pptx
+# E10 ablation checkpoints (18 folds): not submission checkpoints. Regenerate with
+# scripts/run_y4_ablation.bat, which pins config, seed and epochs.
+models/e10-*/

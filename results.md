@@ -24,6 +24,8 @@ the commentary column.
 | E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
 | E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
+| E10 | ablations | r2 checkpoints | `python scripts/e10_collect.py` | `results/tables/e10_ablation_summary.csv` | stochastic latent and multi-step rollout fail to pass the D-030 bar |
+| E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves in-sample but fails on held-out Friday (worse than constant); budget stays |
 
 ## Planned experiment set (M1)
 
@@ -883,3 +885,44 @@ Artefacts: `results/tables/e16-precursor-r4-rank-3seeds{,_combined,_per_onset}.c
 `results/tables/e16d-precursor-r4-rank-whole-s42{,_combined,_per_onset}.csv`,
 `results/tables/r4-rank-s4*_training_curves.csv`, `results/runs/r4-rank-*/train.log`. The 20 round-4
 checkpoints are not committed (rejected configuration); the commands above pin seed, config and SHA.
+
+---
+
+## E17 - Calibration of e4e7-worldmodel-r2 on Held-out Days
+
+`python scripts/calibration_eval.py` · run: `ac4ec62` · 2026-09-26
+
+**Write-up (Y-1w / Y-1x):** E17 tests whether calibration transfers to unseen days. 
+
+- **What was scored:** `p_cum[:, K-1]` (P(compromise within K)) against `y_within_K`.
+- **The in-sample caveat:** The temperature was fitted on the checkpoint's own training days, because no held-out training day with positives exists. So E17 answers "does an in-sample temperature transfer".
+- **Thursday (Held-out):** Brier score 0.097 against 0.142 for a constant base rate. ECE improved from 0.077 to 0.061 with temperature scaling.
+- **Friday (Held-out):** Brier score 0.280 against 0.114, which is *worse than a constant baseline*. ECE worsened from 0.245 to 0.270 with temperature scaling. Furthermore, Friday severely over-forecasts: the mean forecast is 0.274 against a 0.131 base rate, and its most confident bins are nearly always wrong.
+
+**Conclusion:** Temperature scaling makes calibration worse on the Friday fold. Calibration does not transfer to unseen days, so probabilities cannot be quoted honestly. We must maintain the alert budget (D-017 stays) and ensure the dashboard labels p-values as "score", not "calibrated probability". 
+
+Artefacts: `results/tables/e17_*`, `results/figures/e17_reliability.png`. `scripts/calibrate.py` is marked superseded.
+
+---
+
+## E10 - Ablation Study (Stochastic Latent & Multi-step Rollout)
+
+`python scripts/e10_collect.py` · 2026-09-26
+
+**Write-up (Y-4b):** E10 tests two core model components against the D-030 bar: to earn its place, a component's removal must worsen both rollout MSE (vs persistence, across both folds) and detection F1 (Thursday, 10% budget) by at least 0.01 on $\ge$ 2 of 3 seeds. 
+
+**1. No Stochastic Latent (`model_no_stochastic.yaml`)**
+- **Seed 42:** Rollout improved by 0.018 (Thu) and 0.021 (Fri). Detection F1 worsened by 0.030 (Thu).
+- **Seed 43:** Rollout worsened by 0.016 (Thu) and 0.007 (Fri - under margin). Detection F1 improved by 0.083 (Thu).
+- **Seed 44:** Rollout worsened by 0.014 (Thu) and 0.030 (Fri). Detection F1 unchanged (0.000 diff).
+**Verdict:** The stochastic latent does not earn its place. It fails to consistently improve either rollout or detection across seeds.
+
+**2. No Multi-step Rollout Loss (`model_no_multistep.yaml`)**
+- **Seed 42:** Rollout improved by 0.070 (Thu). Detection F1 improved by 0.045 (Thu).
+- **Seed 43:** Rollout improved by 0.122 (Thu) and 0.008 (Fri). Detection F1 worsened by 0.205 (Thu).
+- **Seed 44:** Rollout improved by 0.058 (Thu) and 0.006 (Fri). Detection F1 worsened by 0.174 (Thu).
+**Verdict:** The multi-step rollout loss does not earn its place. Rollout fidelity is generally *better* without it on most seeds and folds.
+
+**Conclusion:** Neither the stochastic latent nor the multi-step rollout loss pass the pre-registered bar. Both add complexity without reliably improving performance and are therefore marked as unsupported in the architecture document.
+
+Artefacts: `results/tables/e10_ablation_summary.csv`.

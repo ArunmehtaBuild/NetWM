@@ -1,3 +1,5 @@
+# SUPERSEDED: This script is superseded by scripts/calibration_eval.py.
+# Calibration does not transfer to unseen days (see E17 in results.md).
 import argparse
 import sys
 from pathlib import Path

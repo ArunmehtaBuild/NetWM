@@ -1,0 +1,13 @@
+experiment,statistic,test_day,threshold_mode,threshold,base_rate,precision,recall,f1,fpr,pr_auc,roc_auc,positives,n,episodes,warned_early,mean_lead_windows,mean_lead_seconds,first_onset_lead_windows
+E14,p_max,friday,train-tuned,0.9704,0.1312,0.0,0.0,0.0,0.1177,0.0995,0.3796,127,968,1,0,0.0,0.0,0
+E14,p_max,friday,alert-budget-5pct,0.9008,0.1312,0.0,0.0,0.0,0.1522,0.0995,0.3796,127,968,1,0,0.0,0.0,0
+E14,p_max,friday,self-budget-10pct,0.9732,0.1312,0.0,0.0,0.0,0.1153,0.0995,0.3796,127,968,1,0,0.0,0.0,0
+E14,p_max,friday,self-budget-5pct,0.9855,0.1312,0.0,0.0,0.0,0.0583,0.0995,0.3796,127,968,1,0,0.0,0.0,0
+E14,p_max,friday,self-budget-2pct,0.988,0.1312,0.0,0.0,0.0,0.0238,0.0995,0.3796,127,968,1,0,0.0,0.0,0
+E14,p_max,friday,oracle,0.01,0.1312,0.1134,0.4724,0.1829,0.5577,0.0995,0.3796,127,968,1,1,10.0,300.0,10
+E14,p_max,thursday,train-tuned,0.9018,0.1708,0.0,0.0,0.0,0.0037,0.3653,0.7317,166,972,4,0,0.0,0.0,0
+E14,p_max,thursday,alert-budget-5pct,0.7238,0.1708,0.0,0.0,0.0,0.0099,0.3653,0.7317,166,972,4,0,0.0,0.0,0
+E14,p_max,thursday,self-budget-10pct,0.2548,0.1708,0.5816,0.3434,0.4318,0.0509,0.3653,0.7317,166,972,4,0,0.0,0.0,0
+E14,p_max,thursday,self-budget-5pct,0.3605,0.1708,0.3878,0.1145,0.1767,0.0372,0.3653,0.7317,166,972,4,0,0.0,0.0,0
+E14,p_max,thursday,self-budget-2pct,0.4952,0.1708,0.0,0.0,0.0,0.0248,0.3653,0.7317,166,972,4,0,0.0,0.0,0
+E14,p_max,thursday,oracle,0.0884,0.1708,0.5603,0.4759,0.5147,0.0769,0.3653,0.7317,166,972,4,0,0.0,0.0,0

@@ -343,8 +343,8 @@ export class RibbonPanel {
 
         ${groundTruthHtml}
 
-        <div class="stage-probs-section">
-          <div class="section-subtitle">MITRE ATT&CK Stage Probability Distribution</div>
+        <div class="stage-probs-section" title="Ranked against this capture's alert budget, not a calibrated probability (E17)">
+          <div class="section-subtitle">MITRE ATT&CK Stage Score Distribution</div>
           <div class="stage-probs-list">
             ${probRowsHtml}
           </div>

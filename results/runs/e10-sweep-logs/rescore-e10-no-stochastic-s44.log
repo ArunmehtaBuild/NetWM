@@ -1,0 +1,18 @@
+C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\torch\nn\init.py:511: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\torch\nn\init.py:511: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+friday    train-tuned          thr=0.980 f1=0.000 prec=0.000 rec=0.000 fpr=0.024 early=0/1 first-onset lead=0w
+friday    alert-budget-5pct    thr=0.736 f1=0.000 prec=0.000 rec=0.000 fpr=0.055 early=0/1 first-onset lead=0w
+friday    self-budget-10pct    thr=0.148 f1=0.000 prec=0.000 rec=0.000 fpr=0.115 early=0/1 first-onset lead=0w
+friday    self-budget-5pct     thr=0.602 f1=0.000 prec=0.000 rec=0.000 fpr=0.058 early=0/1 first-onset lead=0w
+friday    self-budget-2pct     thr=0.980 f1=0.000 prec=0.000 rec=0.000 fpr=0.024 early=0/1 first-onset lead=0w
+friday    oracle               thr=0.010 f1=0.279 prec=0.162 rec=1.000 fpr=0.782 early=1/1 first-onset lead=10w
+thursday  train-tuned          thr=0.912 f1=0.000 prec=0.000 rec=0.000 fpr=0.000 early=0/4 first-onset lead=0w
+thursday  alert-budget-5pct    thr=0.759 f1=0.000 prec=0.000 rec=0.000 fpr=0.000 early=0/4 first-onset lead=0w
+thursday  self-budget-10pct    thr=0.071 f1=0.470 prec=0.633 rec=0.373 fpr=0.045 early=0/4 first-onset lead=0w
+thursday  self-budget-5pct     thr=0.141 f1=0.242 prec=0.531 rec=0.157 fpr=0.029 early=0/4 first-onset lead=0w
+thursday  self-budget-2pct     thr=0.250 f1=0.065 prec=0.300 rec=0.036 fpr=0.017 early=0/4 first-onset lead=0w
+thursday  oracle               thr=0.020 f1=0.587 prec=0.650 rec=0.536 fpr=0.060 early=0/4 first-onset lead=0w
+
+wrote results/tables/e14_pmax_rescore_e10-no-stochastic-s44.csv and results/figures/e14_*.png

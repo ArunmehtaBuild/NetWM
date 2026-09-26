@@ -319,8 +319,7 @@ a 14x gap, so a fixed probability threshold produced *zero* alarms on the test d
 probabilities from a model trained on four days do not transfer to a fifth; a rank-based budget
 does, and it is how alert volume is actually managed in a SOC.
 
-**Revisit if.** Calibration (temperature scaling on a held-out training day) closes the gap - then
-we can quote probabilities honestly and drop the budget.
+**Revisit if.** Calibration (temperature scaling on a held-out training day) closes the gap. *(Amended 2026-09-26: E17 tested this. Held-out Thursday calibration improved, but held-out Friday Brier score is 0.280 against 0.114 for a constant base rate, and ECE worsened from 0.245 to 0.270 with temperature scaling. Calibration does not transfer to an unseen day. The budget stays, and dashboard values must be labeled "score, not a calibrated probability".)*
 
 ---
 
@@ -951,11 +950,23 @@ in a single synthetic week.
 **Decision.** The ablation study (E10) tests two components against the r2 baseline (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`): the stochastic latent space (`model_no_stochastic.yaml`) and the multi-step rollout loss (`model_no_multistep.yaml`).
 
 **What "earns its place" means (Pre-registered Bar).** 
-Before any number exists, a component is deemed necessary if its removal worsens the model's performance on the following criteria:
-1. **Multi-step loss**: Removing the multi-step loss must worsen k >= 2 rollout NLL against the persistence baseline (E5) on both test folds (Thursday and Friday), on >= 2 of 3 seeds (42, 43, 44).
-2. **Detection performance**: Both ablations are compared on E14's `p_max` statistic at the 10 % alert budget. The full model must outperform the ablated models on this metric to justify the added complexity.
+*Amended 2026-09-26 before any E10 numbers were seen: r2's Friday `p_max` F1 at the 10% budget is 0.000 (E14), and nothing can be worse than zero, so "worse on both folds" marks every component unsupported by construction.*
 
-**Why.** We must ensure that the stochastic latent space and multi-step rollout loss actually contribute to the model's performance. If they do not meet the pre-registered criteria, they will be marked as unsupported components in `docs/architecture.md`.
+For each ablation (`model_no_stochastic.yaml` and `model_no_multistep.yaml`), its removal must worsen the model's performance on **both** of these metrics:
+1. **Rollout**: The mean over `k = 2..K` of `(world_model_mse - persistence_mse)` must be worse (higher) in the ablated model than the full model, on both folds (Thursday and Friday), on ≥2 of 3 seeds. Read from `results/runs/<run>/metrics.json` → `per_day[<fold>].rollout`.
+2. **Detection**: E14 `p_max` F1 at the 10 % alert budget (`self-budget-10pct`, from `scripts/rescore_pmax.py --run <run>`, without `--write-thresholds`) must be worse in the ablated model than the full model on **Thursday only**, on ≥2 of 3 seeds. PR-AUC on both folds is reported beside it and does not gate.
+
+If the full model is worse than (or equivalent to) the ablated model on these metrics, we conclude that the component does not justify its added complexity, and it will be marked as unsupported in `docs/architecture.md`. "Equivalent" is defined as a difference of < 0.01 in the metric.
+
+*Clarified 2026-09-26 by Atharv, still before any E10 number was read (the sweep outputs were
+unpushed and unopened until this commit). Two points, with Yash's choices otherwise unchanged:*
+- *Rollout: E5 records rollout **MSE** against persistence per k (`world_model_mse`,
+  `persistence_mse`); it never recorded NLL, so the NLL form could not be scored from the runs.*
+- *Detection: the parenthetical "or PR-AUC on both folds" offered two alternative gates, which would
+  let the scorer pick one after seeing the numbers. Thursday `p_max` F1 is the gate; PR-AUC is
+  reported only.*
+
+**Why.** The stochastic latent has no test of its own. Without a strict seed rule and margin, variance can mask failures (E16 showed one seed in three can collapse). We must test whether each component actually earns its place before we claim it does.
 
 ---
 

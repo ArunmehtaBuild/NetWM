@@ -1,0 +1,68 @@
+C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\torch\nn\init.py:511: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\torch\nn\init.py:511: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+
+== fold: test=thursday  train=['monday', 'tuesday', 'wednesday', 'friday']  device=cuda
+  epoch   0  total=10.320  recon=0.444  kl=0.000  comp=1.129  imag_comp=1.125
+  epoch   1  total=9.596  recon=0.444  kl=0.000  comp=1.039  imag_comp=1.036
+  epoch   2  total=8.804  recon=0.437  kl=0.000  comp=0.945  imag_comp=0.966
+  epoch   3  total=7.313  recon=0.438  kl=0.000  comp=0.729  imag_comp=0.745
+  epoch   4  total=6.169  recon=0.433  kl=0.000  comp=0.574  imag_comp=0.558
+  epoch   5  total=5.247  recon=0.431  kl=0.000  comp=0.422  imag_comp=0.446
+  epoch   6  total=4.807  recon=0.431  kl=0.000  comp=0.375  imag_comp=0.386
+  epoch   7  total=4.328  recon=0.427  kl=0.000  comp=0.326  imag_comp=0.349
+  epoch   8  total=4.070  recon=0.433  kl=0.000  comp=0.290  imag_comp=0.319
+  epoch   9  total=3.643  recon=0.426  kl=0.000  comp=0.262  imag_comp=0.269
+  epoch  10  total=3.518  recon=0.428  kl=0.000  comp=0.249  imag_comp=0.244
+  epoch  11  total=3.445  recon=0.446  kl=0.000  comp=0.232  imag_comp=0.241
+  epoch  12  total=3.301  recon=0.424  kl=0.000  comp=0.206  imag_comp=0.226
+  epoch  13  total=3.117  recon=0.427  kl=0.000  comp=0.192  imag_comp=0.208
+  epoch  14  total=3.140  recon=0.429  kl=0.000  comp=0.197  imag_comp=0.213
+  epoch  15  total=3.053  recon=0.427  kl=0.000  comp=0.179  imag_comp=0.196
+  epoch  16  total=2.958  recon=0.420  kl=0.000  comp=0.175  imag_comp=0.193
+  epoch  17  total=3.004  recon=0.437  kl=0.000  comp=0.179  imag_comp=0.187
+  epoch  18  total=2.867  recon=0.423  kl=0.000  comp=0.165  imag_comp=0.171
+  epoch  19  total=2.972  recon=0.430  kl=0.000  comp=0.176  imag_comp=0.176
+  epoch  20  total=2.922  recon=0.429  kl=0.000  comp=0.165  imag_comp=0.167
+  epoch  21  total=2.869  recon=0.429  kl=0.000  comp=0.166  imag_comp=0.168
+  epoch  22  total=2.864  recon=0.426  kl=0.000  comp=0.158  imag_comp=0.164
+  epoch  23  total=2.880  recon=0.423  kl=0.000  comp=0.159  imag_comp=0.167
+  epoch  24  total=2.884  recon=0.420  kl=0.000  comp=0.174  imag_comp=0.181
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.5028, "roc_auc": 0.7894, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.5028, "roc_auc": 0.7894, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.5333, "precision": 0.6387, "recall": 0.4578, "fpr": 0.0533, "pr_auc": 0.5028, "roc_auc": 0.7894, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.3831, "precision": 0.2656, "recall": 0.6869, "fpr": 0.4858, "pr_auc": 0.32, "roc_auc": 0.6264}
+
+== fold: test=friday  train=['monday', 'tuesday', 'wednesday', 'thursday']  device=cuda
+  epoch   0  total=10.647  recon=0.454  kl=0.000  comp=1.193  imag_comp=1.191
+  epoch   1  total=9.256  recon=0.451  kl=0.000  comp=0.990  imag_comp=0.969
+  epoch   2  total=7.813  recon=0.457  kl=0.000  comp=0.780  imag_comp=0.760
+  epoch   3  total=7.103  recon=0.451  kl=0.000  comp=0.695  imag_comp=0.700
+  epoch   4  total=6.116  recon=0.445  kl=0.000  comp=0.554  imag_comp=0.605
+  epoch   5  total=5.482  recon=0.449  kl=0.000  comp=0.465  imag_comp=0.502
+  epoch   6  total=4.778  recon=0.448  kl=0.000  comp=0.402  imag_comp=0.402
+  epoch   7  total=4.582  recon=0.437  kl=0.000  comp=0.371  imag_comp=0.380
+  epoch   8  total=4.328  recon=0.442  kl=0.000  comp=0.354  imag_comp=0.344
+  epoch   9  total=3.918  recon=0.431  kl=0.000  comp=0.306  imag_comp=0.313
+  epoch  10  total=3.843  recon=0.430  kl=0.000  comp=0.295  imag_comp=0.300
+  epoch  11  total=3.695  recon=0.432  kl=0.000  comp=0.283  imag_comp=0.290
+  epoch  12  total=3.518  recon=0.425  kl=0.000  comp=0.274  imag_comp=0.267
+  epoch  13  total=3.614  recon=0.427  kl=0.000  comp=0.265  imag_comp=0.284
+  epoch  14  total=3.596  recon=0.427  kl=0.000  comp=0.267  imag_comp=0.298
+  epoch  15  total=3.453  recon=0.433  kl=0.000  comp=0.258  imag_comp=0.266
+  epoch  16  total=3.411  recon=0.432  kl=0.000  comp=0.259  imag_comp=0.260
+  epoch  17  total=3.255  recon=0.419  kl=0.000  comp=0.242  imag_comp=0.239
+  epoch  18  total=3.302  recon=0.440  kl=0.000  comp=0.241  imag_comp=0.241
+  epoch  19  total=3.228  recon=0.421  kl=0.000  comp=0.236  imag_comp=0.232
+  epoch  20  total=3.246  recon=0.432  kl=0.000  comp=0.236  imag_comp=0.234
+  epoch  21  total=3.188  recon=0.421  kl=0.000  comp=0.228  imag_comp=0.228
+  epoch  22  total=3.155  recon=0.424  kl=0.000  comp=0.227  imag_comp=0.228
+  epoch  23  total=3.148  recon=0.422  kl=0.000  comp=0.223  imag_comp=0.223
+  epoch  24  total=3.120  recon=0.420  kl=0.000  comp=0.222  imag_comp=0.221
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.063, "pr_auc": 0.108, "roc_auc": 0.4303, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0761, "pr_auc": 0.108, "roc_auc": 0.4303, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.1463, "precision": 0.1019, "recall": 0.2598, "fpr": 0.346, "pr_auc": 0.108, "roc_auc": 0.4303, "warned_early": 1, "episodes": 1, "mean_lead_windows": 6.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.2381, "precision": 0.1394, "recall": 0.8163, "fpr": 0.5678, "pr_auc": 0.1394, "roc_auc": 0.6223}
+
+wrote models\e10-no-stochastic-s43/*.pt, results/tables/e10-no-stochastic-s43_*.csv, results/figures/e5_*, e6_*
