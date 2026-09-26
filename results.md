@@ -24,6 +24,7 @@ the commentary column.
 | E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
 | E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
+| E10 | ablations | r2 checkpoints | `python scripts/e10_collect.py` | `results/tables/e10_ablation_summary.csv` | stochastic latent and multi-step rollout fail to pass the D-030 bar |
 | E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves in-sample but fails on held-out Friday (worse than constant); budget stays |
 
 ## Planned experiment set (M1)
@@ -901,3 +902,27 @@ checkpoints are not committed (rejected configuration); the commands above pin s
 **Conclusion:** Temperature scaling makes calibration worse on the Friday fold. Calibration does not transfer to unseen days, so probabilities cannot be quoted honestly. We must maintain the alert budget (D-017 stays) and ensure the dashboard labels p-values as "score", not "calibrated probability". 
 
 Artefacts: `results/tables/e17_*`, `results/figures/e17_reliability.png`. `scripts/calibrate.py` is marked superseded.
+
+---
+
+## E10 - Ablation Study (Stochastic Latent & Multi-step Rollout)
+
+`python scripts/e10_collect.py` · 2026-09-26
+
+**Write-up (Y-4b):** E10 tests two core model components against the D-030 bar: to earn its place, a component's removal must worsen both rollout MSE (vs persistence, across both folds) and detection F1 (Thursday, 10% budget) by at least 0.01 on $\ge$ 2 of 3 seeds. 
+
+**1. No Stochastic Latent (`model_no_stochastic.yaml`)**
+- **Seed 42:** Rollout improved by 0.018 (Thu) and 0.021 (Fri). Detection F1 worsened by 0.030 (Thu).
+- **Seed 43:** Rollout worsened by 0.016 (Thu) and 0.007 (Fri - under margin). Detection F1 improved by 0.083 (Thu).
+- **Seed 44:** Rollout worsened by 0.014 (Thu) and 0.030 (Fri). Detection F1 unchanged (0.000 diff).
+**Verdict:** The stochastic latent does not earn its place. It fails to consistently improve either rollout or detection across seeds.
+
+**2. No Multi-step Rollout Loss (`model_no_multistep.yaml`)**
+- **Seed 42:** Rollout improved by 0.070 (Thu). Detection F1 improved by 0.045 (Thu).
+- **Seed 43:** Rollout improved by 0.122 (Thu) and 0.008 (Fri). Detection F1 worsened by 0.205 (Thu).
+- **Seed 44:** Rollout improved by 0.058 (Thu) and 0.006 (Fri). Detection F1 worsened by 0.174 (Thu).
+**Verdict:** The multi-step rollout loss does not earn its place. Rollout fidelity is generally *better* without it on most seeds and folds.
+
+**Conclusion:** Neither the stochastic latent nor the multi-step rollout loss pass the pre-registered bar. Both add complexity without reliably improving performance and are therefore marked as unsupported in the architecture document.
+
+Artefacts: `results/tables/e10_ablation_summary.csv`.

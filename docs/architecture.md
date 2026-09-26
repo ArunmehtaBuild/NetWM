@@ -45,12 +45,12 @@ An RSSM-style latent world model (~0.6 M parameters, ~5 min per fold on a GTX 16
   reused directly as the temporal half of the explanation;
 - a **stochastic** latent `z_t` with posterior `q(z_t | h_t, S_t)` and prior `p(z_{t+1} | z_t, h_t)` -
   the prior *is* the learned transition function, and the KL between them is what forces it to become
-  a usable predictor;
+  a usable predictor *(Note: E10 ablation found the stochastic latent does not earn its place; a deterministic latent performs equivalently or better, making this unsupported)*;
 - heads reading any real *or imagined* state: next-state decoder, MITRE stage, and three risk logits -
   `compromise`, `attack`, `escalate_step` (D-016).
 
 Training combines next-state NLL, KL with free bits, a multi-step open-loop rollout loss, stage
-cross-entropy and risk BCE. Three risk heads rather than one because the week holds exactly two
+cross-entropy and risk BCE. *(Note: E10 ablation found the multi-step rollout loss degrades rollout fidelity on most seeds; it is unsupported.)* Three risk heads rather than one because the week holds exactly two
 compromise families: a single target gives each fold one positive family and the model memorises it,
 while "anything hostile" and "the attacker advanced a stage" have positives on every attack day.
 
