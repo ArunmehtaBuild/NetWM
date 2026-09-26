@@ -121,7 +121,7 @@ the train-day-fitted scaler under the distribution shift E2 measured (Thursday p
 
 | id | task | owner | done when |
 |---|---|---|---|
-| **S-4** | Per-capture rank / percentile normalisation as a scaler option - the D-020 alert-budget logic applied to features instead of scores. Label-free, so it is legal at inference on an unseen capture | Sanchi | `StateScaler(mode="rank")` behind a config flag; S-1 trend features built on top of it |
+| ~~S-4~~ | **Done** - Per-capture rank / percentile normalisation as a scaler option - the D-020 alert-budget logic applied to features instead of scores. Label-free, so it is legal at inference on an unseen capture | Sanchi | `StateScaler(mode="rank")` behind a config flag; S-1 trend features built on top of it |
 | **Y-6** | Retrain r4 = **r2 heads** (not r3) on rank-normalised features; evaluate under the D-023 bar and against the same raw-feature and LR floors | Yash | `results.md` E16 with the floors on the same table; claim gate is D-021 amendment point 2 |
 
 Do **not** carry the r3 heads into r4. Two extra targets on the shared trunk cost ~0.20 PR-AUC and
@@ -131,8 +131,8 @@ bought nothing; the only variable in r4 is the feature transform.
 
 | id | task | done when |
 |---|---|---|
-| **S-1** | **Trend features.** `S_t` is currently levels only - the model sees *how many* distinct destination ports, never *how fast that is rising*. Add deltas and rolling slopes (2, 5, 10 windows) for the features E12 ranked highest: `uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`, plus z-scores against a rolling benign baseline | `S_t` v2 built for all 5 days; feature count and build time in `results.md` F2; decisions entry for the window choices |
-| **S-2** | Per-host channel: top-N talkers as their own sub-vector (fan-out, ports touched, in/out byte ratio, new-peer rate) so lateral movement is visible per host, not only in network-wide aggregates | schema documented; Yash can train on it behind a config flag |
+| ~~S-1~~ | **Done** - **Trend features.** `S_t` is currently levels only - the model sees *how many* distinct destination ports, never *how fast that is rising*. Add deltas and rolling slopes (2, 5, 10 windows) for the features E12 ranked highest: `uniq_dst_port`, `ports_per_pair_max`, `port_fanout_max`, `uniq_dst_ip`, `fanout_mean`, `flows_per_s`, plus z-scores against a rolling benign baseline | `S_t` v2 built for all 5 days; feature count and build time in `results.md` F2; decisions entry for the window choices |
+| ~~S-2~~ | **Done** - Per-host channel: top-N talkers as their own sub-vector (fan-out, ports touched, in/out byte ratio, new-peer rate) so lateral movement is visible per host, not only in network-wide aggregates | schema documented; Yash can train on it behind a config flag |
 | **S-3** | Feature dictionary in `research/features.md`: every feature, its formula, and which attack behaviour it is meant to expose | reviewable by someone who has not read the code |
 
 S-1 is the highest-value ML task on the board after T-01/Y-2. Levels-only state is the most likely
@@ -189,7 +189,7 @@ Everything below is unblocked **right now**; nothing waits on anything else.
 |---|---|---|
 | Arun | **R-1** | `backend/server.py` + `schemas.py` serving `/api/health`, `/api/model`, `/api/demos`, `/api/jobs/<id>/result` from `fixtures/api/` under uvicorn - no model loading yet |
 | Harshit | **H-1** (Chart.js already vendored) | `frontend/index.html` + `css/theme.css` + `js/config.js` rendering the Thursday fixture's timeline, served statically, offline |
-| Sanchi | **S-1** | trend/slope features behind a config flag, `S_t` v2 built for one day, feature count in `results.md` F2 |
+| Sanchi | ~~S-1~~ | trend/slope features behind a config flag, `S_t` v2 built for one day, feature count in `results.md` F2 |
 | Yash | **Y-2** | a decisions.md entry for the first-occurrence hazard target *before* the run, then the head + a smoke train |
 | Alok | **A-1** | a decisions.md entry recording the PCAP source **or** the synthesis fallback - closed within 2 days either way |
 
