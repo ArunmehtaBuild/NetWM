@@ -1,5 +1,5 @@
 import math
-from collections import defaultdict
+from collections import defaultdict, deque
 from scapy.all import PcapReader, IP, TCP, UDP
 
 class PCAPFeatureExtractor:
@@ -7,18 +7,20 @@ class PCAPFeatureExtractor:
     Streaming PCAP reader to extract packet-level features.
     Designed for memory efficiency by avoiding loading the whole PCAP into memory.
     """
-    def __init__(self):
-        # We track session stats incrementally to save memory
+    def __init__(self, max_sessions=100000):
+        # DEFENSE: Prevent Memory Exhaustion (DoS) by capping tracked sessions
+        self.max_sessions = max_sessions
+        
         # A session is identified by (src_ip, dst_ip, src_port, dst_port, protocol)
         self.sessions = defaultdict(lambda: {
             "packet_count": 0,
             
-            # TTL stats
-            "ttl_sum": 0,
-            "ttl_sq_sum": 0,
+            # DEFENSE: Welford's online algorithm for TTL stats (prevents float overflow)
+            "ttl_mean": 0.0,
+            "ttl_m2": 0.0,
             
             # TCP window size stats
-            "tcp_win_sum": 0,
+            "tcp_win_mean": 0.0,
             "tcp_win_max": 0,
             "tcp_win_count": 0,
             
@@ -35,8 +37,9 @@ class PCAPFeatureExtractor:
             }
         })
         
-        # Track ports visited by each Source IP to detect scan signatures
-        self.src_ports_visited = defaultdict(list)
+        # DEFENSE: Track ports visited by each Source IP to detect scan signatures
+        # Using deque prevents a hacker from "filling" the buffer early with noise
+        self.src_ports_visited = defaultdict(lambda: deque(maxlen=100))
 
     def process_packet(self, pkt):
         """Extracts features from a single packet in a streaming fashion."""
@@ -70,17 +73,27 @@ class PCAPFeatureExtractor:
             return # Only process TCP/UDP for session features
             
         session_key = (src_ip, dst_ip, src_port, dst_port, proto)
+        
+        # DEFENSE: Drop tracking for new sessions if under DoS memory exhaustion attack
+        if session_key not in self.sessions and len(self.sessions) >= self.max_sessions:
+            return 
+            
         s = self.sessions[session_key]
         
-        # 1. Packet count and TTL stats
+        # 1. Packet count and TTL stats (Welford's Algorithm)
         s["packet_count"] += 1
-        s["ttl_sum"] += ip.ttl
-        s["ttl_sq_sum"] += (ip.ttl ** 2)
+        n = s["packet_count"]
+        delta = ip.ttl - s["ttl_mean"]
+        s["ttl_mean"] += delta / n
+        delta2 = ip.ttl - s["ttl_mean"]
+        s["ttl_m2"] += delta * delta2
         
         # 2. TCP Window Size stats
         if tcp_win is not None:
-            s["tcp_win_sum"] += tcp_win
             s["tcp_win_count"] += 1
+            win_n = s["tcp_win_count"]
+            win_delta = tcp_win - s["tcp_win_mean"]
+            s["tcp_win_mean"] += win_delta / win_n
             if tcp_win > s["tcp_win_max"]:
                 s["tcp_win_max"] = tcp_win
                 
@@ -88,7 +101,7 @@ class PCAPFeatureExtractor:
         if ip.flags == 1 or ip.frag > 0:
             s["ip_frag_count"] += 1
             
-        # 4. Retransmission count (heuristic: seeing the exact same sequence number again)
+        # 4. Retransmission count (heuristic: exact same sequence number back-to-back)
         if seq is not None:
             if s["last_seq"] == seq:
                 s["retrans_count"] += 1
@@ -106,9 +119,8 @@ class PCAPFeatureExtractor:
         else:
             s["payload_hist"]["gt_1024"] += 1
             
-        # Track destination ports for scan detection
-        # We only keep the last 100 to prevent memory blow-up on huge scans
-        if len(self.src_ports_visited[src_ip]) < 100:
+        # 6. Track destination ports for scan detection
+        if len(self.src_ports_visited) < self.max_sessions or src_ip in self.src_ports_visited:
             self.src_ports_visited[src_ip].append(dst_port)
 
     def extract_from_file(self, pcap_path):
@@ -118,22 +130,17 @@ class PCAPFeatureExtractor:
                 self.process_packet(pkt)
                 
     def get_session_features(self):
-        """Finalizes the math for means and variances and returns the feature dictionary."""
+        """Finalizes the math for variances and returns the feature dictionary."""
         features = {}
         for key, v in self.sessions.items():
             n = v["packet_count"]
-            ttl_mean = v["ttl_sum"] / n if n > 0 else 0
-            # Variance = E[X^2] - (E[X])^2
-            ttl_variance = max(0, (v["ttl_sq_sum"] / n) - (ttl_mean ** 2)) if n > 0 else 0
-            
-            win_n = v["tcp_win_count"]
-            tcp_win_mean = v["tcp_win_sum"] / win_n if win_n > 0 else 0
+            ttl_variance = (v["ttl_m2"] / n) if n > 0 else 0.0
             
             features[key] = {
                 "packet_count": n,
-                "ttl_mean": float(ttl_mean),
+                "ttl_mean": float(v["ttl_mean"]),
                 "ttl_variance": float(ttl_variance),
-                "tcp_win_mean": float(tcp_win_mean),
+                "tcp_win_mean": float(v["tcp_win_mean"]),
                 "tcp_win_max": float(v["tcp_win_max"]),
                 "ip_frag_count": v["ip_frag_count"],
                 "retrans_count": v["retrans_count"],
@@ -147,7 +154,7 @@ class PCAPFeatureExtractor:
 
     def get_port_scan_signatures(self):
         """
-        6. Sequential/randomised port-scan signature detection.
+        Sequential/randomised port-scan signature detection.
         Returns a dictionary mapping Source IPs to their scan behavior.
         """
         signatures = {}
@@ -181,7 +188,3 @@ class PCAPFeatureExtractor:
                 signatures[src_ip] = "benign"
                 
         return signatures
-
-if __name__ == "__main__":
-    # Example usage / Smoke test
-    print("PCAPFeatureExtractor is ready. Use extract_from_file(path) to process packets in a stream.")
