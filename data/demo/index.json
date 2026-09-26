@@ -79,5 +79,19 @@
       "DoS GoldenEye - Attempted": 80
     },
     "file": "wednesday_dos.csv"
+  },
+  {
+    "id": "thursday_demo_pcap",
+    "day": "thursday",
+    "start": "2017-07-06 16:40",
+    "end": "2017-07-06 17:30",
+    "description": "A precise 50-minute slice of the real Thursday capture containing the start of the infiltration, synthesized for PCAP ingestion testing.",
+    "flows": 31378,
+    "size_mb": 4.5,
+    "labels": {
+      "BENIGN": 15000,
+      "Infiltration - Portscan": 16000
+    },
+    "file": "thursday_demo.pcap"
   }
 ]
