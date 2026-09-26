@@ -1,0 +1,19 @@
+[17:56:40] start 1/9 e10-full-s42
+[18:07:55] e10-full-s42 exit=0
+[18:07:55] start 2/9 e10-full-s43
+[18:17:48] e10-full-s43 exit=0
+[18:17:48] start 3/9 e10-full-s44
+[18:28:06] e10-full-s44 exit=0
+[18:28:06] start 4/9 e10-no-stochastic-s42
+[18:36:31] e10-no-stochastic-s42 exit=0
+[18:36:31] start 5/9 e10-no-stochastic-s43
+[18:45:37] e10-no-stochastic-s43 exit=0
+[18:45:37] start 6/9 e10-no-stochastic-s44
+[18:54:42] e10-no-stochastic-s44 exit=0
+[18:54:42] start 7/9 e10-no-multistep-s42
+[19:04:52] e10-no-multistep-s42 exit=0
+[19:04:53] start 8/9 e10-no-multistep-s43
+[19:14:44] e10-no-multistep-s43 exit=0
+[19:14:44] start 9/9 e10-no-multistep-s44
+[19:24:07] e10-no-multistep-s44 exit=0
+SWEEP COMPLETE 19:24:07

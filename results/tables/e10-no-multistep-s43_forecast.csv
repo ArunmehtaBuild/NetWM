@@ -1,0 +1,9 @@
+experiment,model,target,threshold_mode,test_day,base_rate,threshold,precision,recall,f1,fpr,pr_auc,roc_auc,positives,n,episodes,warned_early,mean_lead_windows,mean_lead_seconds
+E6,world-model,forecast,train-tuned,thursday,0.1708,0.9606,0.0,0.0,0.0,0.005,0.301,0.7331,166,972,4.0,0.0,0.0,0.0
+E6,world-model,forecast,alert-budget-5pct,thursday,0.1708,0.778,0.0,0.0,0.0,0.0323,0.301,0.7331,166,972,4.0,0.0,0.0,0.0
+E6,world-model,forecast,oracle,thursday,0.1708,0.1766,0.4783,0.4639,0.4709,0.1042,0.301,0.7331,166,972,4.0,0.0,0.0,0.0
+E6,world-model,escalation,oracle,thursday,0.2037,0.01,0.2022,0.5455,0.2951,0.5504,0.2038,0.5131,198,972,,,,
+E6,world-model,forecast,train-tuned,friday,0.1312,0.4118,0.0,0.0,0.0,0.069,0.13,0.5225,127,968,1.0,0.0,0.0,0.0
+E6,world-model,forecast,alert-budget-5pct,friday,0.1312,0.127,0.0465,0.0315,0.0376,0.0975,0.13,0.5225,127,968,1.0,0.0,0.0,0.0
+E6,world-model,forecast,oracle,friday,0.1312,0.01,0.1526,0.3701,0.2161,0.3103,0.13,0.5225,127,968,1.0,1.0,2.0,60.0
+E6,world-model,escalation,oracle,friday,0.1012,0.0296,0.1274,0.6122,0.2109,0.4724,0.1214,0.5761,98,968,,,,

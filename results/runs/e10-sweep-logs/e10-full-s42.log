@@ -1,0 +1,64 @@
+
+== fold: test=thursday  train=['monday', 'tuesday', 'wednesday', 'friday']  device=cuda
+  epoch   0  total=10.422  recon=0.444  kl=0.311  comp=1.157  imag_comp=1.147
+  epoch   1  total=9.723  recon=0.447  kl=0.663  comp=1.066  imag_comp=1.059
+  epoch   2  total=8.543  recon=0.429  kl=0.640  comp=0.914  imag_comp=0.916
+  epoch   3  total=7.399  recon=0.426  kl=0.674  comp=0.749  imag_comp=0.770
+  epoch   4  total=6.071  recon=0.422  kl=0.761  comp=0.544  imag_comp=0.565
+  epoch   5  total=5.698  recon=0.429  kl=0.593  comp=0.488  imag_comp=0.533
+  epoch   6  total=4.895  recon=0.426  kl=0.433  comp=0.372  imag_comp=0.399
+  epoch   7  total=4.370  recon=0.431  kl=0.685  comp=0.321  imag_comp=0.348
+  epoch   8  total=3.872  recon=0.420  kl=0.706  comp=0.274  imag_comp=0.298
+  epoch   9  total=3.727  recon=0.423  kl=0.620  comp=0.252  imag_comp=0.272
+  epoch  10  total=3.455  recon=0.421  kl=0.692  comp=0.229  imag_comp=0.252
+  epoch  11  total=3.335  recon=0.418  kl=0.476  comp=0.213  imag_comp=0.239
+  epoch  12  total=3.161  recon=0.416  kl=0.473  comp=0.201  imag_comp=0.217
+  epoch  13  total=3.040  recon=0.414  kl=0.597  comp=0.193  imag_comp=0.202
+  epoch  14  total=2.999  recon=0.421  kl=0.690  comp=0.178  imag_comp=0.195
+  epoch  15  total=2.930  recon=0.414  kl=0.696  comp=0.177  imag_comp=0.189
+  epoch  16  total=2.922  recon=0.415  kl=0.419  comp=0.173  imag_comp=0.188
+  epoch  17  total=2.877  recon=0.409  kl=0.387  comp=0.165  imag_comp=0.179
+  epoch  18  total=2.865  recon=0.417  kl=0.406  comp=0.159  imag_comp=0.180
+  epoch  19  total=2.865  recon=0.427  kl=0.432  comp=0.158  imag_comp=0.175
+  epoch  20  total=2.773  recon=0.410  kl=0.437  comp=0.149  imag_comp=0.170
+  epoch  21  total=2.799  recon=0.415  kl=0.449  comp=0.150  imag_comp=0.166
+  epoch  22  total=2.852  recon=0.424  kl=0.473  comp=0.154  imag_comp=0.176
+  epoch  23  total=2.831  recon=0.418  kl=0.479  comp=0.154  imag_comp=0.172
+  epoch  24  total=2.761  recon=0.409  kl=0.465  comp=0.148  imag_comp=0.164
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.6412, "roc_auc": 0.8245, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.6412, "roc_auc": 0.8245, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.5916, "precision": 0.6345, "recall": 0.5542, "fpr": 0.0658, "pr_auc": 0.6412, "roc_auc": 0.8245, "warned_early": 2, "episodes": 4, "mean_lead_windows": 7.5}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.3144, "precision": 0.3211, "recall": 0.3081, "fpr": 0.1667, "pr_auc": 0.3433, "roc_auc": 0.6456}
+
+== fold: test=friday  train=['monday', 'tuesday', 'wednesday', 'thursday']  device=cuda
+  epoch   0  total=10.445  recon=0.458  kl=0.215  comp=1.163  imag_comp=1.154
+  epoch   1  total=9.337  recon=0.461  kl=0.554  comp=1.010  imag_comp=0.992
+  epoch   2  total=7.644  recon=0.446  kl=0.767  comp=0.764  imag_comp=0.770
+  epoch   3  total=6.336  recon=0.454  kl=0.604  comp=0.588  imag_comp=0.615
+  epoch   4  total=5.227  recon=0.445  kl=0.582  comp=0.480  imag_comp=0.468
+  epoch   5  total=4.864  recon=0.441  kl=0.570  comp=0.404  imag_comp=0.424
+  epoch   6  total=4.654  recon=0.436  kl=0.582  comp=0.394  imag_comp=0.406
+  epoch   7  total=4.447  recon=0.433  kl=0.399  comp=0.367  imag_comp=0.398
+  epoch   8  total=4.163  recon=0.432  kl=0.771  comp=0.358  imag_comp=0.361
+  epoch   9  total=3.968  recon=0.436  kl=0.891  comp=0.321  imag_comp=0.318
+  epoch  10  total=3.901  recon=0.431  kl=0.610  comp=0.336  imag_comp=0.324
+  epoch  11  total=3.696  recon=0.428  kl=0.430  comp=0.299  imag_comp=0.286
+  epoch  12  total=3.542  recon=0.430  kl=0.725  comp=0.289  imag_comp=0.271
+  epoch  13  total=3.501  recon=0.424  kl=0.906  comp=0.278  imag_comp=0.268
+  epoch  14  total=3.524  recon=0.421  kl=0.838  comp=0.275  imag_comp=0.263
+  epoch  15  total=3.348  recon=0.420  kl=0.321  comp=0.263  imag_comp=0.253
+  epoch  16  total=3.416  recon=0.430  kl=0.284  comp=0.269  imag_comp=0.257
+  epoch  17  total=3.377  recon=0.430  kl=0.301  comp=0.259  imag_comp=0.251
+  epoch  18  total=3.238  recon=0.419  kl=0.307  comp=0.248  imag_comp=0.239
+  epoch  19  total=3.229  recon=0.419  kl=0.311  comp=0.246  imag_comp=0.236
+  epoch  20  total=3.268  recon=0.419  kl=0.327  comp=0.253  imag_comp=0.235
+  epoch  21  total=3.326  recon=0.431  kl=0.332  comp=0.255  imag_comp=0.242
+  epoch  22  total=3.326  recon=0.427  kl=0.336  comp=0.252  imag_comp=0.245
+  epoch  23  total=3.199  recon=0.424  kl=0.331  comp=0.246  imag_comp=0.231
+  epoch  24  total=3.166  recon=0.418  kl=0.328  comp=0.240  imag_comp=0.231
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.1141, "pr_auc": 0.1082, "roc_auc": 0.4349, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.151, "pr_auc": 0.1082, "roc_auc": 0.4349, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.214, "precision": 0.1296, "recall": 0.6142, "fpr": 0.6231, "pr_auc": 0.1082, "roc_auc": 0.4349, "warned_early": 1, "episodes": 1, "mean_lead_windows": 10.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.2072, "precision": 0.1181, "recall": 0.8469, "fpr": 0.7126, "pr_auc": 0.1088, "roc_auc": 0.5212}
+
+wrote models\e10-full-s42/*.pt, results/tables/e10-full-s42_*.csv, results/figures/e5_*, e6_*
