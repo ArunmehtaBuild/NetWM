@@ -36,3 +36,7 @@ data/demo/*.csv
 
 # generated from fixtures/api by scripts/sync_fixtures.py
 frontend/mock/
+
+# presentations
+*.ppt
+*.pptx

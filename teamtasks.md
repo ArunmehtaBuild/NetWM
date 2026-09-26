@@ -39,6 +39,73 @@ E12 proved the pre-onset signal exists (within-day ROC-AUC 0.88-0.96), so this i
 | **Arun** | Backend | Flask API, job runner, SSE replay, offline packaging |
 | **Harshit** | Frontend | the SOC dashboard, replay, demo video |
 
+## Status - 2026-09-26
+
+**Merged:** #1 dashboard · #2 FastAPI backend · #3 live wiring (upload + scenario selector) ·
+#4 S-track (trend block, per-host channel, rank scaler). Main now runs end to end: a real CSV
+upload produces a real forecast in the browser, offline. 86 ML tests + 16 API tests.
+
+**Model status is unchanged and frozen:** detection is strong (Thursday F1 0.576 at 2.7 % FPR vs the
+baseline's 0.011), forecasting is unproven (0 of 5 episodes, four causes eliminated), r2 is the
+submission checkpoint, and D-021's amendment governs every claim.
+
+**The one mandated capability with nothing behind it is PCAP ingestion** - no `pcap_features.py`,
+no `flow_aggregator.py`, no packet-level features. The PS asks for both levels and the demo video is
+supposed to show a PCAP upload. This is now the single largest submission risk.
+
+## Next tasks
+
+> **Scaffolding is not a result (PR #5, 2026-09-26).** Y-1, Y-4 and Y-6 merged as scripts and configs
+> with no runs behind them, and the E16 section was held back because it was a table of `*fill*`
+> cells for an experiment that has not happened. Y-3 was relabelled as a re-analysis of the E14
+> checkpoints, which is what it is. A card closes when `results.md` carries numbers and the command
+> that produced them - not when the runner exists.
+
+
+| person | id | task | done when |
+|---|---|---|---|
+| **Alok** | **A-1/A-2/A-3** | The overdue one. Record the PCAP-source decision (mirror or Scapy synthesis - either is fine, the open question is not), then `features/pcap_features.py` (TTL variance, window size, fragments, payload histogram, retransmissions, scan signatures) and `features/flow_aggregator.py` (PCAP -> canonical flows) | `python scripts/predict.py --input x.pcap` and a PCAP upload in the UI both work |
+| | **A-4** | Shrink the demo slices (20-73 MB is too slow for a 2-minute video) and add one small PCAP demo | each demo runs in under 10 s |
+| **Yash** | **Y-6** | **r4: the last live hypothesis.** r2 heads on rank-normalised features (`configs/model_r4_rank.yaml`, causal `rank_window: 120` - the non-causal variant cannot carry a lead-time claim, D-025), ≥3 *training* seeds, scored under the D-023 null bar with the per-family breakdown and Impact excluded | `results.md` E16 with the null p-values and the raw-feature + LR floors on the same table |
+| | **Y-3** | E8 as its own leave-one-attack-family-out experiment rather than buried in the Friday fold | Infiltration-held-out and Botnet-held-out rows |
+| **Atharv** | **T-10** | Promote `alarm_rate` / `eligible` / `confirm_before_onset` from `models/leadtime.py` into `metrics.py`, additive, with a regression check that E2/E3/E6/E13/E14 are unchanged | one lead-time implementation in the repo |
+| | **T-13** | Refresh `docs/architecture.md`: it predates the S-track, the backend and E15/E15a | doc matches `results.md` and the repo |
+| | **T-14** | Own the demo script and the rehearsal (with Harshit), including what is said about the forecasting gap | a script that survives a judge's follow-up |
+| **Arun** | **R-8** | `skipif` on missing `data/demo/*.csv` so a clean checkout stays green - the same criterion R-4 is judged on | fresh clone: `pytest backend/tests` passes with no generated data |
+| | **R-9** | Verify SSE replay end to end against the dashboard (implemented, never driven from the UI) | a day replays in the browser without stutter |
+| | **R-10** | Clean-machine run with Alok: clone, `get_data.py`, `run_demo.bat`, WiFi off | someone who has never seen the repo gets a working demo from the README |
+| **Sanchi** | **S-3** | Merge the feature-dictionary branch (`s3`) | `research/features.md` on main |
+| | **S-5** | Build the matrices Y-6 needs (v2 + rank) and stay paired with him while r4 runs | Y-6 is never blocked on a build |
+| | **S-6** | Start the 5-slide deck - problem, why a world model, architecture, results, what we measured that did not work (D-021 requires that fifth slide) | draft reviewed by two teammates |
+| **Harshit** | **H-10** | Drive replay from the live SSE stream and fix whatever the integration shows | play/pause/scrub against the API, not a fixture |
+| | **H-11** | Rehearse the demo with Atharv's script; **do not record until a PCAP upload works** (the video must show CSV *and* PCAP) | a rehearsal run with no dead ends |
+
+**Sequencing:** A-2/A-3 gate the video, Y-6 gates what the results slide says, and everything else is
+independent. If Alok's track slips again, the fallback is a synthesised PCAP - decide that this week,
+not in the last 48 hours.
+
+## While r4 runs - parallel work (2026-09-26)
+
+Y-6 occupies one machine for ~90 minutes and gates only the results slide. Nothing below waits on it.
+
+| person | id | task | done when |
+|---|---|---|---|
+| **Alok** | **A-2/A-3** | in flight on `a2` - packet features + PCAP -> flows. **This is the critical path**: it gates the video, and the PS requires packet-level features | `predict.py --input x.pcap` works and a PCAP upload returns a v1.1 payload |
+| | **A-5** | one small PCAP demo (< 5 MB, one clean story) registered in `data/demo/index.json` | the scenario picker offers a PCAP that runs in under 10 s |
+| **Arun** | **R-8** | `skipif` on missing `data/demo/*.csv` so a clean clone stays green | fresh clone: `pytest backend/tests` passes with no generated data |
+| | **R-9** | drive SSE replay from the dashboard - implemented, never exercised from the UI | a day replays in the browser without stutter |
+| | **R-11** | extend `test_upload_e2e.py` to the PCAP path as soon as A-3 lands; today, write it `skipif` on the aggregator being importable | the PCAP path has the same end-to-end test the CSV path got |
+| **Harshit** | **H-10** | replay against the live stream, fix whatever the integration shows | play/pause/scrub against the API, not a fixture |
+| | **H-12** | upload states for a large file: progress, cancel, and an honest error for an unreadable capture | a 200 MB upload never looks frozen |
+| **Sanchi** | **S-6** | the 5-slide deck. Slide 5 is **"what we measured that did not work"** - D-021 requires it, and the elimination chain (E12 -> E13 -> E14 -> E15 -> E16) is the strongest thing we have | draft reviewed by two teammates |
+| | **S-7** | extend `research/features.md` to the v2 trend block and the per-host channel - it covers v1 only | a reader can map every column in S_t v2 to a behaviour |
+| **Atharv** | **T-14** | the demo script: which capture, what is said at each beat, and the exact wording on the forecasting gap. Harshit cannot rehearse without it | a script that survives a judge's follow-up |
+| | **T-10** | promote `alarm_rate` / `eligible` / `confirm_before_onset` into `metrics.py` with a regression check | one lead-time implementation in the repo |
+| | **T-15** | submission gap-check against the PS deliverables list, top to bottom, and put the gaps on this board | every deliverable has an owner and a state |
+
+**Blocked on r4 only:** the E16 write-up, the results slide's headline row, and the results section of
+`docs/architecture.md` (T-13). Everything else in this table can finish today.
+
 ## Repo structure and who owns what
 
 The backend and the frontend are **separate deployables** as of 21a9786 - pull before you start.

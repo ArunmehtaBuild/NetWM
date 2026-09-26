@@ -1,0 +1,9 @@
+train:
+  weights:
+    recon: 1.0
+    kl: 0.5
+    stage: 1.0
+    compromise: 2.0
+    imagine_compromise: 0.0
+    imagine_stage: 0.0
+    imagine_recon: 0.0
