@@ -32,8 +32,13 @@ from netwm.utils import FIGURES, TABLES, ensure_dirs, save_run, set_seed
 
 def evaluate_day(ds: ProcessedDataset, test_day: str, lags: int, seed: int) -> tuple[list[dict], dict]:
     train_days = [s for s in ds.splits if s != test_day]
-    scaler = StateScaler().fit(ds.concat(train_days)[ds.feature_names])
-    x_train = scaler.transform(ds.concat(train_days)[ds.feature_names])
+    train_frame = ds.concat(train_days)
+    scaler = StateScaler().fit(train_frame[ds.feature_names])
+    # ``groups`` matters only in rank mode, where a frame is treated as one capture: without it the
+    # training days would be ranked against each other while the test day is ranked alone, so the
+    # baseline would be fitted and scored under two different transforms (D-025). Ignored, and
+    # therefore number-preserving, in the log_standard mode every published baseline used.
+    x_train = scaler.transform(train_frame[ds.feature_names], groups=train_frame["split"])
     x_test = scaler.transform(ds.states(test_day))
 
     rows: list[dict] = []
