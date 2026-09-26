@@ -104,12 +104,12 @@ afterthought.
 |---|---:|---:|---:|
 | PR-AUC (base rate 0.171) | 0.139 | 0.473 | **0.675** |
 | ROC-AUC | 0.379 | 0.753 | **0.814** |
-| F1 at a deployable threshold | 0.011 | - | **0.576** (self-budget 10 %) |
+| F1 at a deployable threshold | 0.011 | - | **0.576** (0.43-0.57 over 3 seeds; self-budget 10 %) |
 | FPR at that threshold | 0.608 (oracle) | - | **0.027** |
 | episodes warned early | 0 / 4 | 0 / 4 | 0 / 4 |
 
-Open-loop rollout beats the persistence floor from k = 2 onward (NLL 2.05 vs 2.72 at k = 8) and loses
-at k = 1 - one step ahead, "nothing changes" is still the better guess (E5). Adding 2 minutes of
+Open-loop rollout beats the persistence floor averaged over steps 2-10, on both held-out days
+- one step ahead, "nothing changes" is still the better guess (E5). Adding 2 minutes of
 history to the baseline does not help it: PR-AUC falls to 0.114 (E3b).
 
 Round 3 (first-occurrence hazard + precursor heads, 3 seeds x 5 folds) is **a regression, not an

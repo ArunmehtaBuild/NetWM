@@ -139,6 +139,18 @@ fixes ours as all non-precursor windows, because that is what the LR floors use.
    0.05 where chance gives ~54. One cell reached p = 0.0375 and, read alone, looked exactly like the
    result we had spent a week trying to produce.
 
+## 7. Seed spread as the real margin (E10)
+
+E10 defined a strict pre-registered bar for the stochastic latent and multi-step rollout: they must improve metrics by 0.01 on $\ge$ 2 of 3 seeds to earn their place. What we found was that the F1 score itself varied from 0.43 to 0.57 across seeds — a 0.14 spread. Testing a 0.01 effect size inside a 0.14 spread without seed-level tracking means you are reading noise. If a component's presence cannot consistently overcome the variance of the initialization seed, it is not actually carrying its weight.
+
+## 8. Pre-registration drift is a silent failure mode (E10)
+
+Twice during the ablation studies, our pre-registered criteria drifted before they were executed. The rollout metric was originally specified as cross-entropy, then drifted to NLL, and the success criteria drifted from "improves both" to "an either/or gate". This drift creates a silent failure mode where you lower the bar to accommodate the experiment rather than holding the component accountable. We had to halt and explicitly amend D-030 to fix the either/or gate before any numbers could be trusted.
+
+## 9. Calibration cannot be held out when positives live on one day (E17)
+
+E17 tested whether temperature scaling transfers to unseen days. It does not. Because all positives for the tested family live on Thursday, the temperature must be fitted on Thursday (in-sample) or Monday/Tuesday (where positives are absent). Fitting on Monday/Tuesday and applying to Friday yielded probabilities worse than a constant baseline. Without positives distributed across multiple held-out folds, calibration does not transfer, and reporting a "calibrated probability" on a new day is dishonest. The only safe operating point is a relative alert budget (e.g. top 10%).
+
 ## Sources
 
 - Theiler, Eubank, Longtin, Galdrikian, Farmer — *Testing for nonlinearity in time series: the

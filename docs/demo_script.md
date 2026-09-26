@@ -41,11 +41,11 @@ Monday-Thursday) - a family the model never saw in training.
 |---|---|---|
 | **0:00-0:30** | title | "Most intrusion detectors classify one flow at a time. We built a *world model*: it learns how the network's state moves from one 30-second window to the next, then rolls that forward ten steps without seeing any more traffic. Everything you'll see runs offline, on a day the model never trained on." |
 | **0:30-1:00** | pick `thursday_infiltration`, progress bar | "This is two hours of Thursday from CIC-IDS2017, as flow records - a hundred and seventy thousand of them. The model trained on the other four days." |
-| **1:00-1:45** | timeline 16:40-17:15; hover 17:00 in the ribbon | "Quiet traffic until 17:00, when an outside host scans one of our servers - 954 ports in fourteen seconds. Watch the surprise score: it's the model's own error at predicting the next window. Typical is about 0.15; here it jumps to 7.5. Infiltration probability stays low, correctly - a scan from outside is reconnaissance, not a compromise." |
+| **1:00-1:45** | timeline 16:40-17:15; hover 17:00 in the ribbon | "Quiet traffic until 17:00, when an outside host scans one of our servers - 954 ports in fourteen seconds. Watch the surprise score: it's the model's own error at predicting the next window. Typical is about 0.15; here it jumps to 7.5. Infiltration risk score stays low, correctly - a scan from outside is reconnaissance, not a compromise." |
 | | the 17:10 alarm | **Scripted, do not improvise:** "There's one alarm here at 17:10, eight minutes before the attacker gets in. We don't count it as a warning. It's outside our five-minute horizon, and when we tested early alarms against chance, ours didn't beat it (p = 0.41). So it's a false positive, and we score it as one." |
 | **1:45-2:45** | 18:04-18:45; click the 18:23 alarm; open the why panel | "At 17:19, 192.168.10.8 opens a session back to the attacker's machine - it's been compromised. From 17:33 it starts sweeping the internal network - eleven hosts, seventy thousand flows - and from 18:04 it's the top talker, 2 000 to 5 000 flows a minute. Surprise goes to 15-50. The why panel shows what the model looked at: destination-port spread up, and which earlier windows it attended to." |
 | | stage ribbon over the sweep | "The ribbon shows the model calling this reconnaissance, where our ground truth says lateral movement. They're the same technique - network service discovery, T1046 - seen from inside instead of outside. We split them by source address (D-012); the model hasn't learned that split. We'd rather show it than hide it." |
-| **2:45-3:15** | the forecast cone on a sweep window | "This cone is the rollout: ten steps imagined in latent space, with Monte-Carlo bands. That's what makes it a world model rather than a classifier. From step 2 on, it predicts the next state better than just repeating the current one. At step 1 it doesn't, and we report that too." |
+| **2:45-3:15** | the forecast cone on a sweep window | "This cone is the rollout: ten steps imagined in latent space, with Monte-Carlo bands. That's what makes it a world model rather than a classifier. Averaged over steps 2-10, it predicts the next state better than just repeating the current one. At step 1 it doesn't, and we report that too." |
 | **3:15-4:00** | model card | "On the full held-out day: F1 0.576 at a 2.7 % false-positive rate, precision 0.78. The logistic regression the problem statement asks us to beat scores 0.011 on the same features at its own threshold. On this slice, 24 of the 26 alarms land on attack windows. You'll also see nothing fired between 17:18 and 18:23: at a 10 % alert budget, the model spends its alarms on the loudest phase, the sweep." |
 | **4:00-4:45** | slide 5 (S-6) | **The forecasting gap - verbatim, below.** |
 | **4:45-5:00** | dashboard | "Everything here - features, model, dashboard - runs on one laptop with no network. Code, decisions and every number's source are in the repo." |
@@ -89,7 +89,7 @@ flows. It wasn't one."
 
 | figure | value | source |
 |---|---|---|
-| held-out Thursday, `p_max`, 10 % budget | F1 0.576 · FPR 0.027 · precision 0.776 · PR-AUC 0.640 | E14, D-024 |
+| held-out Thursday, `p_max`, 10 % budget | F1 0.576 (0.43-0.57 over 3 seeds) · FPR 0.027 · precision 0.776 · PR-AUC 0.640 | E14, D-024 |
 | logistic regression, same features and fold | F1 0.011 at its own threshold | E3 |
 | rollout vs persistence | better from k = 2, worse at k = 1 | E5 |
 | E14's early warning against the null | 1 of 4, p = 0.412 - withdrawn | E15a |

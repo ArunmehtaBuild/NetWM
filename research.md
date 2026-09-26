@@ -13,7 +13,7 @@ how it changed the build.
 | [research/state-normalisation.md](research/state-normalisation.md) | Why a train-fitted z-score loses the signal under day-to-day shift; the rank-based inverse normal transform; why whole-capture ranking leaks the future into a lead-time claim and the causal variant does not (S-4, D-025) |
 | [research/ctu13.md](research/ctu13.md) | CTU-13 Dataset Transfer Evaluation: Scenarios, schemas, and adapter plan for M2 |
 
-## The five findings that shaped the design
+## The eight findings that shaped the design
 
 1. **The dataset most IDS papers use is wrong in ways that matter to us.** CICFlowMeter
    mis-terminates TCP flows and the original labelling is purely time-window based, so attack
@@ -33,6 +33,9 @@ how it changed the build.
 5. **CIC-IDS2017 has no real exfiltration stage.** The infiltration day ends in an internal NMAP
    portscan from the compromised host — i.e. lateral movement/discovery — so the exfiltration stage
    is heuristic in M1 and gets real ground truth from CTU-13 in M2 (→ D-003).
+6. **Seed spread is the real margin (E10).** An ablation effect size of 0.01 F1 means nothing inside a 0.14 seed-to-seed variance on the F1 baseline. If an architectural component cannot consistently overcome the variance of the initialization seed (as the stochastic latent and multi-step rollout failed to do), it is not carrying its weight.
+7. **Pre-registration drift is a silent failure mode (E10).** When an ablation experiment fails to beat the bar, the temptation is to drift the metric or the success condition (e.g. from an 'AND' gate to an 'OR' gate) to accommodate it. Fixing the criteria strictly before running is the only defense.
+8. **Calibration does not transfer to unseen days if positives are isolated (E17).** A temperature fitted on a day with no positives, or fitted in-sample on the day being tested, yields probabilities that are worse than a constant baseline on a held-out day. The alert budget remains the only safe deployable threshold.
 
 ## Sources
 
