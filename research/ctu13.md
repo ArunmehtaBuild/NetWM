@@ -11,14 +11,14 @@ The dataset contains 13 distinct capture scenarios, spanning different botnet fa
 | 1 | Neris | IRC, SPAM, ClickFraud |
 | 2 | Neris | IRC, SPAM, ClickFraud |
 | 3 | Rbot | IRC, PortScan |
-| 4 | Rbot | IRC, PortScan |
+| 4 | Rbot | IRC, DDoS |
 | 5 | Virut | SPAM, PortScan |
 | 6 | Menti | PortScan |
-| 7 | Sogou | HTTP, SPAM |
+| 7 | Sogou | HTTP |
 | 8 | Murlo | IRC, PortScan |
-| 9 | Neris | IRC, SPAM, ClickFraud |
-| 10 | Rbot | IRC, PortScan |
-| 11 | Rbot | IRC, PortScan |
+| 9 | Neris | IRC, SPAM, ClickFraud, PortScan |
+| 10 | Rbot | IRC, DDoS |
+| 11 | Rbot | IRC, DDoS |
 | 12 | NSIS.ay | P2P |
 | 13 | Virut | SPAM, PortScan |
 
@@ -30,21 +30,22 @@ The original label scheme assigns one of three labels per flow:
 
 For our MITRE ATT&CK progression (D-003):
 - Background/Normal mapping to `Benign`.
-- `Botnet` flows will be decomposed contextually into `Command & Control` (e.g., IRC, HTTP beaconing), `Reconnaissance` (PortScans), and `Impact` (DDoS/Spam). Since CTU-13 features concurrent attacks (C2 + scanning), the multi-label stage vector (D-010) is fully exercised here.
+- `Botnet` flows will be decomposed contextually. We use the dataset's own C&C labels for the Command & Control stage instead of a heuristic. Since CTU-13 features concurrent attacks (C2 + scanning), the multi-label stage vector (D-010) is fully exercised here.
 
 ## Flow Format and Schema Mapping
 The dataset is distributed in Argus `binetflow` format, not CICFlowMeter.
 We must map `binetflow` columns to our canonical `src/netwm/data/base.py` schema:
-- `StartTime` -> `timestamp`
+- `StartTime` -> `ts`
 - `SrcAddr`, `Sport`, `DstAddr`, `Dport`, `Proto` -> canonical 5-tuple
 - `TotPkts`, `TotBytes`, `SrcBytes` -> basic sizing
 - `State`, `Dir` -> flow flags
 
-Features relying strictly on CICFlowMeter internals (like specific standard deviations or packet length histograms not present in `binetflow`) will require a subset/intersection feature space or re-extraction from the original CTU PCAPs (if available) via `pcap_features.py`.
+The dataset page says the public PCAPs are botnet-only. The full captures with background traffic were never released. So `pcap_features.py` can't rebuild our features, and the state has to come from the Argus flow files with fewer features. **M2 is therefore a new model, not a transfer test of r2.**
 
 ## Sizes
 - ~20 million flows total across the 13 scenarios.
-- The largest scenario (Scenario 10) is ~5.1M flows, while the smallest (Scenario 6) is ~550K flows.
+- The largest scenario is 3 (about 4.7 M flows).
+- The smallest scenario is 11 (about 107 K flows).
 
 ## Scenario-Held-Out Design (Pre-registered)
 To evaluate transferability, we adopt a **leave-one-family-out** cross-validation design:
@@ -55,5 +56,5 @@ To evaluate transferability, we adopt a **leave-one-family-out** cross-validatio
 ## Adapter Plan for `src/netwm/data/ctu13.py`
 1. **Loader**: Implement a `DatasetAdapter` for reading `binetflow` files. 
 2. **Harmonization**: Map `binetflow` columns to the canonical schema. We must declare monitored internal prefixes explicitly to satisfy D-012 (refine scan direction), since CTU-13 mixes subnets differently.
-3. **Labeling**: Apply a heuristic or signature-based mapper to subdivide the `Botnet` label into specific MITRE stages, leveraging D-010.
+3. **Labeling**: Apply the dataset's own C&C labels to subdivide the `Botnet` label into specific MITRE stages, leveraging D-010.
 4. **Validation**: Test the adapter in `tests/test_flow_features.py` to guarantee windowing correctly handles the mapped schema.

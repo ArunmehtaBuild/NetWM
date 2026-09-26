@@ -951,11 +951,13 @@ in a single synthetic week.
 **Decision.** The ablation study (E10) tests two components against the r2 baseline (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`): the stochastic latent space (`model_no_stochastic.yaml`) and the multi-step rollout loss (`model_no_multistep.yaml`).
 
 **What "earns its place" means (Pre-registered Bar).** 
-Before any number exists, a component is deemed necessary if its removal worsens the model's performance on the following criteria:
-1. **Multi-step loss**: Removing the multi-step loss must worsen k >= 2 rollout NLL against the persistence baseline (E5) on both test folds (Thursday and Friday), on >= 2 of 3 seeds (42, 43, 44).
-2. **Detection performance**: Both ablations are compared on E14's `p_max` statistic at the 10 % alert budget. The full model must outperform the ablated models on this metric to justify the added complexity.
+For each ablation (`model_no_stochastic.yaml` and `model_no_multistep.yaml`), its removal must worsen the model's performance on **both** of these metrics:
+1. **Rollout**: E5 rollout NLL against the persistence baseline from step 2 onward must be worse in the ablated model than the full model, on both folds (Thursday and Friday), on ≥2 of 3 seeds.
+2. **Detection**: E14 `p_max` F1 at the 10 % alert budget must be worse in the ablated model than the full model, on both folds (Thursday and Friday), on ≥2 of 3 seeds.
 
-**Why.** We must ensure that the stochastic latent space and multi-step rollout loss actually contribute to the model's performance. If they do not meet the pre-registered criteria, they will be marked as unsupported components in `docs/architecture.md`.
+If the full model is worse than (or equivalent to) the ablated model on these metrics, we conclude that the component does not justify its added complexity, and it will be marked as unsupported in `docs/architecture.md`.
+
+**Why.** The stochastic latent has no test of its own. Without a strict seed rule and margin, variance can mask failures (E16 showed one seed in three can collapse). We must test whether each component actually earns its place before we claim it does.
 
 ---
 
