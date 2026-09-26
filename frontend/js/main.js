@@ -49,7 +49,7 @@ function renderGlobal(state) {
   if (thresholdPill) {
     const policyDesc = explainThresholdPolicy(payload.threshold, payload.threshold_policy);
     thresholdPill.textContent = `Threshold: ${formatFloat(payload.threshold, 4)} (${policyDesc})`;
-    thresholdPill.title = `Alarm statistic: ${payload.alarm_statistic || "p_max"} >= ${payload.threshold} · Policy: ${payload.threshold_policy}`;
+    thresholdPill.title = `Alarm statistic: ${payload.alarm_statistic || "p_max"} >= ${payload.threshold} · Policy: ${payload.threshold_policy} · ranked against this capture's alert budget, not a calibrated probability (E17)`;
   }
 
   const horizonPill = document.getElementById("horizonPill");
@@ -111,7 +111,7 @@ function renderGlobal(state) {
     const w = payload.timeline[selectedWindow];
     const alarmBadge = w.alarm ? `<span style="color:var(--danger); font-weight:600;">[ALARM ACTIVE]</span>` : "";
     const surpriseStr = (w.surprise !== undefined && w.surprise !== null) ? formatFloat(w.surprise, 2) : "--";
-    selectedWindowEl.innerHTML = `Selected: <strong>t=${w.t}</strong> (${formatIsoTime(w.ts)}) · Risk: <strong>${formatPercent(w.p_max)}</strong> · Surprise: <strong style="color:#38bdf8;">${surpriseStr}</strong> ${alarmBadge}`;
+    selectedWindowEl.innerHTML = `Selected: <strong>t=${w.t}</strong> (${formatIsoTime(w.ts)}) · <span title="ranked against this capture's alert budget, not a calibrated probability (E17)">Risk Score: <strong>${formatPercent(w.p_max)}</strong></span> · Surprise: <strong style="color:#38bdf8;">${surpriseStr}</strong> ${alarmBadge}`;
   }
 }
 

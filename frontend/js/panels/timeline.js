@@ -352,7 +352,7 @@ export class TimelinePanel {
             },
             title: {
               display: true,
-              text: "Forecasted Risk / Probability",
+              text: "Risk Score (p_max / p_cum) · Uncalibrated (E17)",
               color: "#65707d",
               font: { size: 11 },
             },
@@ -413,6 +413,8 @@ export class TimelinePanel {
             borderWidth: 1,
             titleColor: "#e6edf3",
             bodyColor: "#8b98a5",
+            footerColor: "#65707d",
+            footerFont: { size: 9, style: "italic" },
             padding: 10,
             callbacks: {
               title: (items) => {
@@ -428,7 +430,7 @@ export class TimelinePanel {
 
                 if (dIdx === 0) {
                   const alarmText = w.alarm ? "  ⚠️ [ALARM ACTIVE]" : "";
-                  return `Historical p_max: ${formatFloat(w.p_max, 4)} (${formatPercent(w.p_max, 1)})${alarmText}`;
+                  return `Historical Risk (p_max): ${formatFloat(w.p_max, 4)} (${formatPercent(w.p_max, 1)})${alarmText}`;
                 }
                 if (dIdx === 1) {
                   return `Threshold: ${formatFloat(thresholdValue, 4)} (${thresholdExplanation})`;
@@ -438,13 +440,13 @@ export class TimelinePanel {
                   const hi = cone.upper[idx];
                   const loStr = lo !== null ? formatPercent(lo, 1) : "--";
                   const hiStr = hi !== null ? formatPercent(hi, 1) : "--";
-                  return `K-step Forecast (p_cum): ${formatFloat(context.parsed.y, 4)} [90% CI: ${loStr} - ${hiStr}]`;
+                  return `K-step Forecast Risk (p_cum): ${formatFloat(context.parsed.y, 4)} [90% CI: ${loStr} - ${hiStr}]`;
                 }
                 if (dIdx === 5 && context.parsed.y !== null) {
-                  return `Attack Progression: ${formatFloat(context.parsed.y, 4)} (${formatPercent(context.parsed.y, 1)})`;
+                  return `Attack Progression Score: ${formatFloat(context.parsed.y, 4)} (${formatPercent(context.parsed.y, 1)})`;
                 }
                 if (dIdx === 6 && context.parsed.y !== null) {
-                  return `Stage Escalation: ${formatFloat(context.parsed.y, 4)} (${formatPercent(context.parsed.y, 1)})`;
+                  return `Stage Escalation Score: ${formatFloat(context.parsed.y, 4)} (${formatPercent(context.parsed.y, 1)})`;
                 }
                 if (dIdx === 7 && context.parsed.y !== null) {
                   return `Surprise (NLL): ${formatFloat(context.parsed.y, 2)}`;
@@ -467,6 +469,7 @@ export class TimelinePanel {
                 }
                 return lines;
               },
+              footer: () => "ranked against this capture's alert budget, not a calibrated probability (E17)",
             },
           },
         },
