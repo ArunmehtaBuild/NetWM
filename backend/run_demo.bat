@@ -18,8 +18,8 @@ echo [3/4] Starting Frontend static server on 127.0.0.1:8080...
 start "NetWM Frontend" cmd /k "python -m http.server 8080 --directory frontend --bind 127.0.0.1"
 
 echo [4/4] Waiting for backend readiness...
-python -c "import time, urllib.request; [time.sleep(0.5) for _ in range(20) if not getattr(urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=1), 'status', 0) == 200]" 2>nul
-timeout /t 1 /nobreak >nul
+rem A cold start imports torch and takes ~8 s; opening the browser earlier shows the mock fallback.
+python backend\wait_ready.py --timeout 45
 
 echo Opening dashboard in browser...
 start http://127.0.0.1:8080
