@@ -27,7 +27,7 @@ SAMPLES: tuple[tuple[str, str, str, str, str], ...] = (
         "thursday",
         "2017-07-06 16:40",
         "2017-07-06 18:50",
-        "39 min of ordinary traffic, then the Meterpreter session at 17:19 and the internal sweep",
+        "a 14 s external port scan at 17:00, the Meterpreter session at 17:19 and the internal sweep from 17:33",
     ),
     (
         "friday_botnet_c2",
@@ -48,14 +48,14 @@ SAMPLES: tuple[tuple[str, str, str, str, str], ...] = (
         "monday",
         "2017-07-03 13:00",
         "2017-07-03 15:00",
-        "two quiet hours - the false-positive test",
+        "two quiet hours - a training day for every checkpoint, so not a held-out false-positive test",
     ),
     (
         "wednesday_dos",
         "wednesday",
         "2017-07-05 12:30",
         "2017-07-05 14:40",
-        "four DoS tools in sequence - Impact, never a compromise",
+        "four DoS tools in sequence - Impact, never a compromise (a training day for every checkpoint)",
     ),
 )
 
