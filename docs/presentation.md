@@ -1,24 +1,23 @@
-# Technical Presentation - NetWM
+# Technical Presentation - NetWM (SIH PS 26153)
 
-## Slide 1: NetWM - Intrusion Detection via World Models
-- **Project:** NetWM (SIH 2026, PS 26153)
-- **Goal:** Real-time network intrusion detection using world models.
-- **Approach:** Modeling network state transitions rather than classifying individual flows.
+## Slide 1: AI based Network Attack Forecasting
+- **Problem:** Traditional classifiers map single flows in isolation, discarding temporal and causal structure.
+- **Solution (NetWM):** A world-model-based AI system that learns network state transition dynamics, anticipating attacker progression and supporting proactive cyber defence.
 
-## Slide 2: The World Model Architecture
-- **Concept:** Predicts how the network's state moves from one 30-second window to the next.
-- **Rollout:** Rolls forward 10 steps in latent space without seeing more traffic.
-- **Advantage:** From step 2 onwards, it predicts the next state better than simply repeating the current one. 
+## Slide 2: Input Data & World Model Architecture
+- **Input Data:** Ingests both flow-level (NetFlow) and packet-level (PCAP) features to capture aggregate behaviour and sequence patterns.
+- **Architecture:** Sequence model learning the transition dynamics P(S_t+1 | S_t).
+- **Forward Simulation:** Rolls out K steps ahead in latent space to output an **infiltration probability score** before compromise completes.
 
-## Slide 3: Live Detection and Features
-- **Features:** 70+ features including volume, spread (fanout, unique ports/IPs), flags, and per-host channels.
-- **Surprise Score:** The model's negative log-likelihood of the next window. High surprise indicates abnormal network movement.
-- **Alert Budget:** 10% budget used to avoid false positives and focus alarms on the loudest phase (e.g., lateral movement sweep).
+## Slide 3: Infiltration Prediction & Explainability
+- **Attack Stage Mapping:** Maps predicted behavior to MITRE ATT&CK phases (Reconnaissance, Lateral Movement, etc.) based on predicted future state.
+- **Explainability:** Uses **attention weights** and the "why panel" to highlight the driving traffic features (e.g. destination-port spread) contributing to predictions.
+- **Offline Interface:** The prediction engine and interactive dashboard run fully offline without cloud API dependencies.
 
-## Slide 4: Real-World Performance
+## Slide 4: Real-World Performance vs Baseline
 - **Evaluation:** Tested on held-out days the model never saw during training.
-- **Results:** F1 0.576 at a 2.7% false-positive rate, precision 0.78.
-- **Baseline Comparison:** The problem statement's logistic regression baseline scores 0.011 on the same features.
+- **Results:** F1 0.576 at a 2.7% false-positive rate, precision 0.78 at a 10% alert budget.
+- **Benchmark:** Demonstrates measurable improvement; the PS's logistic regression baseline scores 0.011 on the same features.
 
 ## Slide 5: What we measured that did not work
 What it does not do yet is warn *before* the attacker gets in. We tested that properly: against a
