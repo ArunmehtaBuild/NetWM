@@ -33,9 +33,9 @@ how it changed the build.
 5. **CIC-IDS2017 has no real exfiltration stage.** The infiltration day ends in an internal NMAP
    portscan from the compromised host — i.e. lateral movement/discovery — so the exfiltration stage
    is heuristic in M1 and gets real ground truth from CTU-13 in M2 (→ D-003).
-6. **Seed spread is the real margin (E10).** An ablation effect size of 0.01 F1 means nothing inside a 0.14 seed-to-seed variance on the F1 baseline. If an architectural component cannot consistently overcome the variance of the initialization seed (as the stochastic latent and multi-step rollout failed to do), it is not carrying its weight.
-7. **Pre-registration drift is a silent failure mode (E10).** When an ablation experiment fails to beat the bar, the temptation is to drift the metric or the success condition (e.g. from an 'AND' gate to an 'OR' gate) to accommodate it. Fixing the criteria strictly before running is the only defense.
-8. **Calibration does not transfer to unseen days if positives are isolated (E17).** A temperature fitted on a day with no positives, or fitted in-sample on the day being tested, yields probabilities that are worse than a constant baseline on a held-out day. The alert budget remains the only safe deployable threshold.
+6. **Seed spread is the real margin (E10).** The full model's Thursday F1 spans 0.43-0.57 over three seeds, so a 0.01 effect is noise unless it repeats across seeds. The stochastic latent never cleared that; the multi-step loss did, on detection only. The headline F1 always travels with its range (D-032).
+7. **A pre-registration must be scoreable (E10).** D-030 named a metric the pipeline never recorded (rollout NLL; E5 records MSE), offered an either/or gate, and had a clause the reference model could not pass. All three were fixed before any number was read. Before a run, check that every metric exists in the outputs, that each claim has one gate, and that the reference can pass it.
+8. **Calibration does not transfer to an unseen day (E17).** With compromise positives on only two days, the temperature can only be fitted in-sample, on the checkpoint's training days. Applied to held-out Friday, the result is worse than a constant forecast. The alert budget stays the deployable threshold, and outputs are called risk scores.
 
 ## Sources
 

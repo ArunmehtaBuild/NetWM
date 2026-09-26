@@ -141,15 +141,45 @@ fixes ours as all non-precursor windows, because that is what the LR floors use.
 
 ## 7. Seed spread as the real margin (E10)
 
-E10 defined a strict pre-registered bar for the stochastic latent and multi-step rollout: they must improve metrics by 0.01 on $\ge$ 2 of 3 seeds to earn their place. What we found was that the F1 score itself varied from 0.43 to 0.57 across seeds — a 0.14 spread. Testing a 0.01 effect size inside a 0.14 spread without seed-level tracking means you are reading noise. If a component's presence cannot consistently overcome the variance of the initialization seed, it is not actually carrying its weight.
+E10's pre-registered bar (D-030) counts a component as earning its place on a metric if removing it
+makes that metric worse by more than 0.01 on >= 2 of 3 seeds, paired by seed. The full model's own
+Thursday F1 ranges from 0.43 to 0.57 across those seeds, a 0.14 spread. So a 0.01 margin is far
+inside the noise, and the >= 2-of-3 rule is what actually guards against it. One lesson: **size the
+margin from the seed spread, or at least report the spread beside every effect.** The stochastic
+latent never cleared it. The multi-step loss did, on detection: 0.21 and 0.17 F1 on two seeds, larger
+than the spread. That is why E10 calls it a detection component rather than dead weight. The same
+spread is why the headline F1 always travels with its range (D-032).
 
-## 8. Pre-registration drift is a silent failure mode (E10)
+## 8. A pre-registration must be scoreable (E10)
 
-Twice during the ablation studies, our pre-registered criteria drifted before they were executed. The rollout metric was originally specified as cross-entropy, then drifted to NLL, and the success criteria drifted from "improves both" to "an either/or gate". This drift creates a silent failure mode where you lower the bar to accommodate the experiment rather than holding the component accountable. We had to halt and explicitly amend D-030 to fix the either/or gate before any numbers could be trusted.
+D-030 was fixed twice after the runs finished but **before any E10 number was read**. The outputs
+stayed unpushed and unopened until each amendment was on main. Neither fix was a bar moving after a
+result; both were defects in how the bar was written:
 
-## 9. Calibration cannot be held out when positives live on one day (E17)
+- **A metric that was never recorded.** The bar named rollout *NLL* against persistence, but E5
+  records rollout *MSE* per k. The wording came from the orchestrator's own task card, and nobody
+  checked it against the pipeline's outputs. Changed to E5's MSE.
+- **Two alternative gates.** One amendment allowed "Thursday F1 **or** PR-AUC on both folds". An
+  either/or gate lets the scorer choose after seeing the numbers. Resolved to one gate: Thursday F1,
+  with PR-AUC reported only.
 
-E17 tested whether temperature scaling transfers to unseen days. It does not. Because all positives for the tested family live on Thursday, the temperature must be fitted on Thursday (in-sample) or Monday/Tuesday (where positives are absent). Fitting on Monday/Tuesday and applying to Friday yielded probabilities worse than a constant baseline. Without positives distributed across multiple held-out folds, calibration does not transfer, and reporting a "calibrated probability" on a new day is dishonest. The only safe operating point is a relative alert budget (e.g. top 10%).
+A third defect was caught the same way: "worse on both folds" could not be met, because the reference
+model's Friday F1 is 0.000. The rule: **before any run, check that every metric in the bar exists in
+the outputs, that each claim has exactly one gate, and that the gate can be passed by the reference
+model at all.**
+
+## 9. Calibration cannot be held out when positives live on two days (E17)
+
+Only Thursday and Friday carry compromise positives, and each leave-one-day-out fold tests one of
+them. A temperature fitted on a *held-out* training day would need positives on that day, and
+holding out the other attack day leaves training with none. So E17 fitted each fold's temperature on
+that checkpoint's own training days, which is in-sample. It asked whether an in-sample temperature
+transfers to the unseen day. It does not reliably: held-out Thursday improved (ECE 0.077 -> 0.061,
+Brier 0.097 against 0.142 for a constant forecast), while held-out Friday got worse (ECE 0.245 ->
+0.270). On Friday the forecast was worse than a constant (Brier 0.280 against 0.114) and badly
+over-forecast (mean 0.274 against a 0.131 base rate). Calling these outputs calibrated probabilities
+on a new day would not be honest. The alert budget (D-017, D-020) stays the deployable threshold, and
+the dashboard calls them risk scores.
 
 ## Sources
 
