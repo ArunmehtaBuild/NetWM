@@ -129,3 +129,30 @@ def test_demo_job_lifecycle_and_results() -> None:
             if len(lines) >= 6:
                 break
         assert any("event: window" in l for l in lines)
+
+
+def test_sse_stream_replay_with_from_parameter() -> None:
+    """Task R-9: Verify SSE replay stream can start from any window index without stutter."""
+    from backend.jobs import job_store
+    from backend.config import settings
+
+    job = job_store.create_job(
+        kind="demo",
+        filename="thursday.json",
+        enqueue=False,
+    )
+    job.state = "done"
+    job.result_path = settings.fixtures_dir / "thursday.json"
+
+    # Stream starting from window 50 at high speed
+    with client.stream("GET", f"/api/jobs/{job.id}/stream?speed=100&from=50") as stream_resp:
+        assert stream_resp.status_code == 200
+        first_event = None
+        for line in stream_resp.iter_lines():
+            if line and line.startswith("data: "):
+                data_str = line[len("data: "):]
+                if data_str.strip() != "{}":
+                    first_event = json.loads(data_str)
+                    break
+        assert first_event is not None
+        assert first_event.get("t") == 50

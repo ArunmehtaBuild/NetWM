@@ -2,6 +2,7 @@
  "payload_version": "1.1",
  "alarm_statistic": "p_max (mean path)",
  "threshold_policy": "fixed-override",
+ "in_sample": false,
  "source": {
   "flows": 362076,
   "windows": 972,

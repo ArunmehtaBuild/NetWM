@@ -2,6 +2,7 @@
  "payload_version": "1.1",
  "alarm_statistic": "p_max (mean path)",
  "threshold_policy": "self-budget-10pct",
+ "in_sample": false,
  "source": {
   "flows": 362076,
   "windows": 972,

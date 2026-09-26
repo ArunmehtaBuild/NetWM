@@ -183,6 +183,7 @@ class SourceItem(BaseContractModel):
     t0: str
     window_s: float
     stride_s: float
+    in_sample: Optional[bool] = None
 
 
 class AnalysisResultPayload(BaseContractModel):
@@ -201,6 +202,7 @@ class AnalysisResultPayload(BaseContractModel):
     mock: Optional[bool] = None
     dev_only: Optional[bool] = None
     note: Optional[str] = None
+    in_sample: Optional[bool] = None
 
 
 class FlowItem(BaseContractModel):
