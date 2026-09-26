@@ -79,19 +79,5 @@
       "DoS GoldenEye - Attempted": 80
     },
     "file": "wednesday_dos.csv"
-  },
-  {
-    "id": "small_scan_demo",
-    "day": "custom",
-    "start": "2026-09-26 10:00",
-    "end": "2026-09-26 10:10",
-    "description": "A synthesized 5 MB PCAP containing a clean sequential port scan story.",
-    "flows": 120,
-    "size_mb": 4.5,
-    "labels": {
-      "BENIGN": 20,
-      "Portscan": 100
-    },
-    "file": "small_scan.pcap"
   }
 ]

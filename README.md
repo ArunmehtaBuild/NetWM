@@ -70,42 +70,62 @@ python scripts/sync_fixtures.py && cd frontend && python -m http.server 8080
 Everything runs offline. With no checkpoint present the API still serves `fixtures/api/*.json`
 marked `"mock": true`, so the dashboard is never undemoable.
 
-## Setup for a Fresh Machine
+## Setup for a fresh machine
 
-Follow these exact steps from a clean clone to get the dashboard running locally.
+Follow these steps from a clean clone to get the dashboard running locally, on live inference rather
+than fixtures.
 
-**1. Clone the repository and install dependencies:**
+**1. Clone and install:**
 
 ```bash
-git clone https://github.com/your-org/netwm.git
-cd netwm
+git clone https://github.com/ArunmehtaBuild/smart2nd.git
+cd smart2nd
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scriptsctivate
 pip install -r requirements.txt
 ```
 
-*(Torch is installed separately for CUDA, e.g., `pip install torch --index-url https://download.pytorch.org/whl/cu121`)*
-
-**2. Fetch the dataset:**
-
-This downloads ~328 MB and extracts it to `data/raw/cicids2017_improved/`. We use the **corrected** CIC-IDS2017 re-extraction (see decisions.md D-001).
+Torch is installed separately for CUDA (GTX 1650 / CUDA 12.1). Without a GPU, the CPU build that
+`requirements.txt` pulls in runs the demo fine:
 
 ```bash
-python scripts/get_data.py
+pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
-**3. Build the feature matrices:**
+**2. Fetch the dataset:** one command, ~328 MB download, ~1.1 GB extracted into
+`data/raw/cicids2017_improved/` (gitignored).
 
 ```bash
-python scripts/build_features.py --config configs/cicids2017.yaml
+python scripts/get_data.py          # download + sha256 verify + extract
+python scripts/get_data.py --check  # report what is on disk, download nothing
 ```
 
-**4. Run the demo:**
+This fetches the **corrected** CIC-IDS2017 re-extraction, not the CIC original - the original
+mis-terminates TCP flows and mislabels attack onsets, and onset time is the quantity we predict
+(decisions.md D-001, research/cicids2017.md). The checksum is pinned: every published number in
+`results.md` assumes that exact archive.
 
-This starts both the FastAPI backend on `:5000` and the frontend dashboard on `:8080`.
+**3. Cut the demo slices.** They are gitignored, and the demo endpoint returns `503 no_model` without them:
+
+```bash
+python scripts/make_demo_samples.py
+```
+
+**4. Run the demo:** the FastAPI backend on `:5000`, the dashboard on `:8080`. The submission
+checkpoints (`models/e4e7-worldmodel-r2/`) are in the repo, so no training is needed.
 
 ```bash
 run_demo.bat
 ```
 
-Everything runs completely offline. You can also upload PCAP captures (like the included 5MB demo PCAP) directly in the dashboard UI!
+Everything runs offline. The dashboard also accepts `.pcap` / `.pcapng` uploads; a PCAP carries no
+labels, so its payload reports ground truth as unavailable.
+
+**Training and evaluation only** (not needed for the demo) - build the state matrices:
+
+```bash
+python scripts/build_features.py --config configs/cicids2017.yaml
+```
+
+Training and evaluation commands are in `results.md` (every entry carries its command),
+`plan.md` and `docs/architecture.md`.

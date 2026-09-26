@@ -320,7 +320,10 @@ def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:
             raise NotImplementedError(
                 "PCAP ingestion needs netwm.features.flow_aggregator.pcap_to_flows"
             ) from exc
-        flows = pcap_to_flows(path)
+        # A capture carries no ground truth. The aggregator fills label/stage with BENIGN/0 to satisfy
+        # the canonical schema, and a stage column is what marks a payload as labelled, so without
+        # this the dashboard would report "no attacks" as the truth for any PCAP.
+        flows = pcap_to_flows(path).drop(columns=["label", "stage", "attempted"], errors="ignore")
     else:
         raise ValueError(f"unsupported file type: {path.suffix}")
     payload = analyze_flows(flows, ckpt, **kwargs)
