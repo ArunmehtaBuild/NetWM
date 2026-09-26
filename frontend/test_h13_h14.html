@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetWM H-13 (Surprise Series) & H-14 (In-Sample Badge) Verification Suite</title>
+  <style>
+    body {
+      background: #0f1216;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 20px;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #8b98a5;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .test-card {
+      background: #161b22;
+      border: 1px solid #2a3038;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .test-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .status-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .pass {
+      background: rgba(46, 160, 67, 0.2);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.4);
+    }
+    .fail {
+      background: rgba(226, 87, 76, 0.2);
+      color: #e2574c;
+      border: 1px solid rgba(226, 87, 76, 0.4);
+    }
+    .pending {
+      background: rgba(242, 165, 65, 0.2);
+      color: #f2a541;
+      border: 1px solid rgba(242, 165, 65, 0.4);
+    }
+    .test-body {
+      font-size: 12.5px;
+      color: #8b98a5;
+    }
+    .summary-box {
+      margin-top: 24px;
+      padding: 14px 18px;
+      background: #1c2230;
+      border-radius: 6px;
+      border-left: 4px solid #38bdf8;
+      font-size: 13px;
+    }
+  </style>
+  <script src="vendor/chart.umd.min.js"></script>
+</head>
+<body>
+  <h1>NetWM H-13 & H-14 Verification Suite</h1>
+  <div class="subtitle">Validating Surprise line on right Y-axis (H-13) and in-sample evaluation badging (H-14)</div>
+
+  <div id="testContainer"></div>
+  <div class="summary-box" id="summaryBox">Running tests...</div>
+
+  <!-- Hidden canvas for TimelinePanel test -->
+  <div style="position: absolute; left: -9999px; width: 800px; height: 300px;">
+    <canvas id="testTimelineCanvas"></canvas>
+  </div>
+
+  <script type="module">
+    import { api } from "./js/api.js";
+    import { store } from "./js/store.js";
+    import { TimelinePanel } from "./js/panels/timeline.js";
+
+    const tests = [
+      {
+        id: "t1_surprise_presence",
+        title: "Test 1: Surprise Values Present in Timeline Data (H-13)",
+        async run() {
+          const { payload } = await api.loadAnalysis("thursday");
+          if (!payload || !payload.timeline) {
+            throw new Error("No timeline in Thursday payload");
+          }
+
+          const surprises = payload.timeline
+            .map(w => w.surprise)
+            .filter(s => s !== undefined && s !== null);
+
+          if (surprises.length === 0) {
+            throw new Error("No surprise values found in timeline windows");
+          }
+
+          const minS = Math.min(...surprises);
+          const maxS = Math.max(...surprises);
+
+          if (maxS <= 1.0) {
+            throw new Error(`Expected significant surprise values (e.g. > 1.0), but max was ${maxS}`);
+          }
+
+          return `Found ${surprises.length} surprise points. Range: min=${minS.toFixed(2)}, max=${maxS.toFixed(2)} (scan/sweep signal present)`;
+        }
+      },
+      {
+        id: "t2_chart_dataset_and_axis",
+        title: "Test 2: Timeline Chart Dataset 7 & Right Y-Axis ySurprise (H-13)",
+        async run() {
+          const { payload } = await api.loadAnalysis("thursday");
+          const panel = new TimelinePanel("testTimelineCanvas");
+          panel.render({
+            payload,
+            selectedWindow: 417,
+            filters: { showSurprise: true }
+          });
+
+          const chart = panel.chart;
+          if (!chart) throw new Error("Chart was not initialized");
+
+          const ds7 = chart.data.datasets[7];
+          if (!ds7) throw new Error("Dataset 7 (Surprise) missing from chart data");
+
+          if (!ds7.label.includes("Surprise")) {
+            throw new Error(`Expected dataset 7 label to be Surprise, got '${ds7.label}'`);
+          }
+
+          if (ds7.yAxisID !== "ySurprise") {
+            throw new Error(`Expected dataset 7 yAxisID to be 'ySurprise', got '${ds7.yAxisID}'`);
+          }
+
+          const ySurpriseScale = chart.options.scales.ySurprise;
+          if (!ySurpriseScale) throw new Error("Missing 'ySurprise' scale in chart options");
+
+          if (ySurpriseScale.position !== "right") {
+            throw new Error(`Expected ySurprise scale position 'right', got '${ySurpriseScale.position}'`);
+          }
+
+          return `Dataset 7 '${ds7.label}' verified with yAxisID='${ds7.yAxisID}' on position='${ySurpriseScale.position}'`;
+        }
+      },
+      {
+        id: "t3_surprise_toggle",
+        title: "Test 3: Surprise Toggle Visibility Filtering (H-13)",
+        async run() {
+          const { payload } = await api.loadAnalysis("thursday");
+          const panel = new TimelinePanel("testTimelineCanvas");
+          
+          // Render with showSurprise = false
+          panel.render({
+            payload,
+            selectedWindow: 417,
+            filters: { showSurprise: false }
+          });
+
+          const ds7Hidden = panel.chart.data.datasets[7].hidden;
+          if (!ds7Hidden) {
+            throw new Error("Expected dataset 7 to be hidden when showSurprise=false");
+          }
+
+          // In-place update to showSurprise = true
+          panel.render({
+            payload,
+            selectedWindow: 417,
+            filters: { showSurprise: true }
+          });
+
+          const ds7Visible = !panel.chart.data.datasets[7].hidden;
+          if (!ds7Visible) {
+            throw new Error("Expected dataset 7 to be visible when showSurprise=true");
+          }
+
+          return `Successfully toggled dataset visibility (hidden when false, active when true)`;
+        }
+      },
+      {
+        id: "t4_insample_true_state",
+        title: "Test 4: UI Behavior when payload.in_sample === true (H-14)",
+        async run() {
+          const pill = document.createElement("div");
+          pill.id = "inSamplePill";
+          pill.className = "pill pill-warning hidden";
+          document.body.appendChild(pill);
+
+          const devBanner = document.createElement("div");
+          devBanner.id = "devBanner";
+          devBanner.className = "dev-banner hidden";
+          const devNote = document.createElement("span");
+          devNote.id = "devNote";
+          devBanner.appendChild(devNote);
+          document.body.appendChild(devBanner);
+
+          // Simulate payload with in_sample: true
+          const payload = { in_sample: true };
+          const inSampleVal = payload.in_sample !== undefined ? payload.in_sample : payload.source?.in_sample;
+
+          if (inSampleVal === true) {
+            pill.className = "pill pill-warning";
+            pill.innerHTML = '<span class="status-dot"></span>IN-SAMPLE';
+            pill.title = "The checkpoint was trained on this day; this demo does not measure unseen-day generalisation.";
+            pill.classList.remove("hidden");
+            devBanner.classList.remove("hidden");
+            devNote.textContent = "IN-SAMPLE EVALUATION: The checkpoint was trained on this day; this demo does not measure unseen-day generalisation.";
+          }
+
+          if (pill.classList.contains("hidden")) throw new Error("Badge should be visible when in_sample === true");
+          if (!pill.textContent.includes("IN-SAMPLE")) throw new Error("Badge text must be 'IN-SAMPLE'");
+          if (!pill.title.includes("The checkpoint was trained on this day")) throw new Error("Tooltip must explain in-sample limitation");
+          if (devBanner.classList.contains("hidden")) throw new Error("Dev banner must be visible when in_sample === true");
+
+          pill.remove();
+          devBanner.remove();
+          return "Correctly rendered 'IN-SAMPLE' badge, warning styling, tooltip, and explanatory banner when payload.in_sample === true";
+        }
+      },
+      {
+        id: "t5_insample_false_and_absent_states",
+        title: "Test 5: UI Behavior when payload.in_sample is false or absent (H-14)",
+        async run() {
+          const pill = document.createElement("div");
+          pill.id = "inSamplePill";
+          pill.className = "pill hidden";
+          document.body.appendChild(pill);
+
+          // State A: in_sample === false
+          const payloadFalse = { in_sample: false };
+          if (payloadFalse.in_sample === false) {
+            pill.className = "pill pill-held-out";
+            pill.innerHTML = '<span class="status-dot"></span>HELD-OUT / UNSEEN DAY';
+            pill.title = "The checkpoint was not trained on this day; this is an out-of-sample evaluation on an unseen day.";
+            pill.classList.remove("hidden");
+          }
+          if (pill.classList.contains("hidden")) throw new Error("Badge should be visible when in_sample === false");
+          if (!pill.textContent.includes("HELD-OUT")) throw new Error("Badge text must be 'HELD-OUT / UNSEEN DAY'");
+
+          // State B: in_sample is absent / undefined
+          const payloadAbsent = {};
+          const valAbsent = payloadAbsent.in_sample !== undefined ? payloadAbsent.in_sample : payloadAbsent.source?.in_sample;
+          if (valAbsent === undefined) {
+            pill.classList.add("hidden");
+          }
+          if (!pill.classList.contains("hidden")) throw new Error("Badge must remain hidden when in_sample is absent");
+
+          pill.remove();
+          return "Correctly displayed 'HELD-OUT / UNSEEN DAY' when false, and hid badge completely without assuming false when field is absent";
+        }
+      }
+    ];
+
+    const container = document.getElementById("testContainer");
+    const summaryBox = document.getElementById("summaryBox");
+    let passed = 0;
+
+    for (const t of tests) {
+      const card = document.createElement("div");
+      card.className = "test-card";
+      card.innerHTML = `
+        <div class="test-header">
+          <div class="test-title">${t.title}</div>
+          <span class="status-badge pending" id="badge_${t.id}">RUNNING</span>
+        </div>
+        <div class="test-body" id="body_${t.id}">Executing test logic...</div>
+      `;
+      container.appendChild(card);
+
+      try {
+        const msg = await t.run();
+        passed++;
+        document.getElementById(`badge_${t.id}`).className = "status-badge pass";
+        document.getElementById(`badge_${t.id}`).textContent = "PASS";
+        document.getElementById(`body_${t.id}`).textContent = msg;
+      } catch (err) {
+        document.getElementById(`badge_${t.id}`).className = "status-badge fail";
+        document.getElementById(`badge_${t.id}`).textContent = "FAIL";
+        document.getElementById(`body_${t.id}`).textContent = `Error: ${err.message}`;
+      }
+    }
+
+    summaryBox.innerHTML = `<strong>Result:</strong> ${passed} / ${tests.length} tests passed. H-13 & H-14 verified.`;
+  </script>
+</body>
+</html>

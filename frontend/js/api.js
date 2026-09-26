@@ -12,6 +12,9 @@ export class ApiClient {
   constructor() {
     this.apiBase = API_BASE;
     this.useMock = USE_MOCK;
+    this._activeUploadXhr = null;
+    this._activePollController = null;
+    this._mockAbortController = null;
   }
 
   /**
@@ -83,7 +86,15 @@ export class ApiClient {
       method: "POST",
     });
     if (!res.ok) {
-      throw new Error(`POST /api/analyze/demo/${demoId} returned ${res.status}`);
+      let errData = null;
+      try {
+        errData = await res.json();
+      } catch {
+        errData = null;
+      }
+      const err = new Error(errData?.error?.message || `POST /api/analyze/demo/${demoId} returned ${res.status}`);
+      err.code = errData?.error?.code || "bad_file";
+      throw err;
     }
     const { job_id } = await res.json();
     return this._pollJob(job_id, onProgress);
@@ -93,13 +104,43 @@ export class ApiClient {
    * Load fixture from local mock folder
    */
   async _loadMock(scenario = "thursday") {
-    const filename = scenario.endsWith(".json") ? scenario : `${scenario}.json`;
+    const rawName = (scenario || "thursday").replace(".json", "");
+    const baseFilename = `${rawName}.json`;
+
     // Resolve against this module, not the page, so frontend/dev/ harnesses find fixtures too.
-    const mockUrl = new URL(`../mock/${filename}`, import.meta.url).href;
+    const mockUrl = new URL(`../mock/${baseFilename}`, import.meta.url).href;
+
+    // Node unit-testing environment support (Node fetch does not support file:// scheme)
+    if (mockUrl.startsWith("file:") && typeof process !== "undefined" && process.versions?.node) {
+      try {
+        const fs = await import("node:fs/promises");
+        const { fileURLToPath } = await import("node:url");
+        try {
+          const content = await fs.readFile(fileURLToPath(mockUrl), "utf-8");
+          return { payload: JSON.parse(content), isMock: true };
+        } catch {
+          const fallbackPath = fileURLToPath(new URL("../mock/thursday.json", import.meta.url).href);
+          const content = await fs.readFile(fallbackPath, "utf-8");
+          return { payload: JSON.parse(content), isMock: true };
+        }
+      } catch {
+        // Fall through to browser fetch
+      }
+    }
     
-    const res = await fetch(mockUrl);
-    if (!res.ok) {
-      throw new Error(`Failed to load mock fixture at ${mockUrl} (${res.status} ${res.statusText})`);
+    let res;
+    try {
+      res = await fetch(mockUrl);
+    } catch {
+      // Fallback to thursday.json if scenario fixture file does not exist locally
+      res = await fetch(new URL("../mock/thursday.json", import.meta.url).href);
+    }
+
+    if (!res || !res.ok) {
+      res = await fetch(new URL("../mock/thursday.json", import.meta.url).href);
+      if (!res.ok) {
+        throw new Error(`Failed to load mock fixture at ${mockUrl} (${res.status} ${res.statusText})`);
+      }
     }
 
     const payload = await res.json();
@@ -158,8 +199,43 @@ export class ApiClient {
   }
 
   /**
+   * Cancel in-flight upload request or stop waiting for backend analysis polling.
+   */
+  cancelUpload() {
+    let handled = false;
+    if (this._activeUploadXhr) {
+      try {
+        this._activeUploadXhr.abort();
+      } catch (e) {
+        console.warn("Error aborting XHR:", e);
+      }
+      this._activeUploadXhr = null;
+      handled = true;
+    }
+
+    if (this._activePollController) {
+      try {
+        this._activePollController.abort();
+      } catch (e) {
+        console.warn("Error aborting poll controller:", e);
+      }
+      this._activePollController = null;
+      handled = true;
+    }
+
+    if (this._mockAbortController) {
+      this._mockAbortController.aborted = true;
+      handled = true;
+    }
+
+    return handled;
+  }
+
+  /**
    * Upload and analyze capture file (.csv or .pcap)
-   * Real backend: POST /api/analyze -> poll GET /api/jobs/<id> -> GET /api/jobs/<id>/result
+   * Real backend: POST /api/analyze (via XMLHttpRequest with real upload byte progress)
+   *               -> poll GET /api/jobs/<id> (with polling abort support)
+   *               -> GET /api/jobs/<id>/result
    * Offline/Mock: Realistic simulated progress pipeline and fixture synthesis
    */
   async uploadCapture(file, onProgress = null) {
@@ -172,47 +248,148 @@ export class ApiClient {
 
     // Try live API if not forced mock
     if (!this.useMock) {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        onProgress?.({
-          state: "uploading",
-          progress: 0.1,
-          stage_text: `Uploading ${file.name} (${formatBytes(file.size)})...`,
-        });
-
-        const res = await fetch(`${this.apiBase}/api/analyze`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (res.ok) {
-          const { job_id } = await res.json();
-          return await this._pollJob(job_id, onProgress);
-        } else {
-          let errData;
-          try {
-            errData = await res.json();
-          } catch {
-            errData = null;
-          }
-          if (errData?.error) {
-            const err = new Error(errData.error.message || "Upload rejected");
-            err.code = errData.error.code || "bad_file";
-            throw err;
-          }
-        }
-      } catch (err) {
-        if (err.code && err.code !== "internal" && err.code !== "network") {
-          throw err;
-        }
-        // Network/backend unreachable: fall back to mock simulation
-      }
+      return await this._uploadCaptureLive(file, onProgress);
     }
 
     // Deterministic mock analysis simulation
     return await this._simulateMockAnalysis(file, onProgress);
+  }
+
+  /**
+   * Live upload using XMLHttpRequest for real byte-level progress reporting
+   * followed by backend job polling.
+   */
+  async _uploadCaptureLive(file, onProgress = null) {
+    // Phase 1: Uploading file over network via XMLHttpRequest
+    let jobId;
+    try {
+      jobId = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        this._activeUploadXhr = xhr;
+
+        // Byte-level progress callback (mapped to 0.0 -> 0.45 total progress)
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const bytePct = e.loaded / e.total;
+            const progress = bytePct * 0.45;
+            onProgress?.({
+              state: "uploading",
+              progress,
+              stage_text: `Uploading ${file.name} (${formatBytes(e.loaded)} / ${formatBytes(e.total)} · ${Math.round(bytePct * 100)}%)...`,
+              bytesLoaded: e.loaded,
+              bytesTotal: e.total,
+            });
+          } else {
+            onProgress?.({
+              state: "uploading",
+              progress: 0.15,
+              stage_text: `Uploading ${file.name} (${formatBytes(file.size)})...`,
+            });
+          }
+        };
+
+        xhr.onload = () => {
+          this._activeUploadXhr = null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data && data.job_id) {
+                resolve(data.job_id);
+              } else {
+                const err = new Error("Invalid response format from server: missing job_id");
+                err.code = "internal";
+                reject(err);
+              }
+            } catch (pErr) {
+              const err = new Error("Failed to parse server response: " + pErr.message);
+              err.code = "internal";
+              reject(err);
+            }
+          } else {
+            // Structured error response from backend register_error_handlers
+            let errData = null;
+            try {
+              errData = JSON.parse(xhr.responseText);
+            } catch {
+              errData = null;
+            }
+
+            const code =
+              errData?.error?.code ||
+              (xhr.status === 413
+                ? "too_large"
+                : xhr.status === 415
+                ? "unsupported_format"
+                : xhr.status === 400
+                ? "bad_file"
+                : xhr.status === 503
+                ? "no_model"
+                : "internal");
+            const msg =
+              errData?.error?.message ||
+              `Server rejected upload (${xhr.status} ${xhr.statusText || ""})`.trim();
+            const err = new Error(msg);
+            err.code = code;
+            err.status = xhr.status;
+            reject(err);
+          }
+        };
+
+        xhr.onerror = () => {
+          this._activeUploadXhr = null;
+          const err = new Error(
+            `Failed to connect to backend server at ${this.apiBase}. Verify the backend server is running.`
+          );
+          err.code = "network";
+          reject(err);
+        };
+
+        xhr.onabort = () => {
+          this._activeUploadXhr = null;
+          const err = new Error("Upload cancelled by user.");
+          err.code = "cancelled";
+          err.wasUploading = true;
+          reject(err);
+        };
+
+        // Initial 0% progress notification
+        onProgress?.({
+          state: "uploading",
+          progress: 0.0,
+          stage_text: `Uploading ${file.name} (${formatBytes(file.size)})...`,
+          bytesLoaded: 0,
+          bytesTotal: file.size,
+        });
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.open("POST", `${this.apiBase}/api/analyze`);
+        xhr.send(formData);
+      });
+    } catch (uploadErr) {
+      this._activeUploadXhr = null;
+      throw uploadErr;
+    }
+
+    // Phase 2: Analyzing / Server Job Polling (0.45 -> 1.0 total progress)
+    onProgress?.({
+      state: "queued",
+      progress: 0.45,
+      stage_text: "Upload received. Queued for RSSM analysis on backend...",
+      jobId,
+    });
+
+    return await this._pollJob(jobId, (pollState) => {
+      // Map server job progress (0.0 -> 1.0) into overall UI progress (0.45 -> 1.0)
+      const mappedProgress = 0.45 + (pollState.progress || 0) * 0.55;
+      onProgress?.({
+        state: pollState.state === "running" ? "analyzing" : pollState.state,
+        progress: mappedProgress,
+        stage_text: pollState.stage_text ? `Analyzing: ${pollState.stage_text}` : "Analyzing capture telemetry...",
+        jobId,
+      });
+    });
   }
 
   /**
@@ -226,6 +403,9 @@ export class ApiClient {
         try {
           return await this._startDemoJob(liveId, onProgress);
         } catch (err) {
+          if (err.code === "cancelled" || err.code === "stopped_waiting") {
+            throw err;
+          }
           console.warn(`Live demo '${liveId}' failed, falling back to fixture:`, err);
         }
       }
@@ -253,34 +433,101 @@ export class ApiClient {
    */
   async _pollJob(jobId, onProgress = null) {
     const pollInterval = 750;
-    while (true) {
-      const res = await fetch(`${this.apiBase}/api/jobs/${jobId}`);
-      if (!res.ok) {
-        throw new Error(`Job poll failed with status ${res.status}`);
-      }
-      const job = await res.json();
-      onProgress?.({
-        state: job.state,
-        progress: job.progress || 0,
-        stage_text: job.stage_text || "",
-      });
+    this._activePollController = new AbortController();
+    const signal = this._activePollController.signal;
 
-      if (job.state === "done") {
-        const resultRes = await fetch(`${this.apiBase}/api/jobs/${jobId}/result`);
-        if (!resultRes.ok) {
-          throw new Error(`Failed to retrieve job results (${resultRes.status})`);
+    try {
+      while (true) {
+        if (signal.aborted) {
+          const err = new Error(
+            "Stopped waiting for server analysis job. (The server had already accepted the upload; client stopped waiting.)"
+          );
+          err.code = "stopped_waiting";
+          err.wasAnalyzing = true;
+          err.jobId = jobId;
+          throw err;
         }
-        const payload = await resultRes.json();
-        // The result should echo job_id; guarantee it so /flows and /stream hit this job.
-        payload.job_id = payload.job_id || jobId;
-        return { payload, isMock: false };
-      } else if (job.state === "error") {
-        const err = new Error(job.error?.message || "Job analysis failed");
-        err.code = job.error?.code || "internal";
-        throw err;
-      }
 
-      await new Promise((r) => setTimeout(r, pollInterval));
+        let res;
+        try {
+          res = await fetch(`${this.apiBase}/api/jobs/${jobId}`, { signal });
+        } catch (fetchErr) {
+          if (signal.aborted) {
+            const err = new Error(
+              "Stopped waiting for server analysis job. (The server had already accepted the upload; client stopped waiting.)"
+            );
+            err.code = "stopped_waiting";
+            err.wasAnalyzing = true;
+            err.jobId = jobId;
+            throw err;
+          }
+          const err = new Error(`Failed to poll job status: ${fetchErr.message}`);
+          err.code = "network";
+          throw err;
+        }
+
+        if (!res.ok) {
+          let errData = null;
+          try {
+            errData = await res.json();
+          } catch {
+            errData = null;
+          }
+          const err = new Error(errData?.error?.message || `Job poll failed with status ${res.status}`);
+          err.code = errData?.error?.code || (res.status === 404 ? "job_not_found" : "internal");
+          throw err;
+        }
+
+        const job = await res.json();
+        onProgress?.({
+          state: job.state,
+          progress: job.progress || 0,
+          stage_text: job.stage_text || "",
+          jobId,
+        });
+
+        if (job.state === "done") {
+          const resultRes = await fetch(`${this.apiBase}/api/jobs/${jobId}/result`, { signal });
+          if (!resultRes.ok) {
+            let resErrData = null;
+            try {
+              resErrData = await resultRes.json();
+            } catch {
+              resErrData = null;
+            }
+            const err = new Error(resErrData?.error?.message || `Failed to retrieve job results (${resultRes.status})`);
+            err.code = resErrData?.error?.code || "internal";
+            throw err;
+          }
+          const payload = await resultRes.json();
+          payload.job_id = payload.job_id || jobId;
+          return { payload, isMock: false };
+        } else if (job.state === "error") {
+          const err = new Error(job.error?.message || "Job analysis failed");
+          err.code = job.error?.code || "internal";
+          throw err;
+        }
+
+        await new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(resolve, pollInterval);
+          signal.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(timeoutId);
+              const err = new Error(
+                "Stopped waiting for server analysis job. (The server had already accepted the upload; client stopped waiting.)"
+              );
+              err.code = "stopped_waiting";
+              err.wasAnalyzing = true;
+              err.jobId = jobId;
+              reject(err);
+            },
+            { once: true }
+          );
+        });
+      }
+    } finally {
+      this._activePollController = null;
     }
   }
 
@@ -288,50 +535,70 @@ export class ApiClient {
    * High-fidelity offline simulation of the NetWM ML ingestion pipeline
    */
   async _simulateMockAnalysis(file, onProgress = null, explicitFixture = null) {
+    const mockAbort = { aborted: false };
+    this._mockAbortController = mockAbort;
+
     const stages = [
-      { progress: 0.12, text: `Reading ${file.name} (${formatBytes(file.size)})...` },
-      { progress: 0.28, text: "Validating capture format and network flow timestamps..." },
-      { progress: 0.48, text: "Extracting 70-dimensional flow features across 60s windows..." },
-      { progress: 0.72, text: "Rolling out RSSM world model forward dynamics (K=10 horizon)..." },
-      { progress: 0.88, text: "Evaluating risk heads (p_max, p_cum) and computing attribution..." },
-      { progress: 1.00, text: "Finalizing detection and forecasting payload..." },
+      { progress: 0.12, state: "uploading", text: `Uploading ${file.name} (${formatBytes(file.size)})...` },
+      { progress: 0.28, state: "uploading", text: "Validating capture format and network flow timestamps..." },
+      { progress: 0.48, state: "analyzing", text: "Extracting 70-dimensional flow features across 60s windows..." },
+      { progress: 0.72, state: "analyzing", text: "Rolling out RSSM world model forward dynamics (K=10 horizon)..." },
+      { progress: 0.88, state: "analyzing", text: "Evaluating risk heads (p_max, p_cum) and computing attribution..." },
+      { progress: 1.00, state: "analyzing", text: "Finalizing detection and forecasting payload..." },
     ];
 
-    for (const step of stages) {
-      onProgress?.({ state: "running", progress: step.progress, stage_text: step.text });
-      await new Promise((r) => setTimeout(r, 420));
-    }
-
-    const lower = (file.name || "").toLowerCase();
-    let baseScenario = explicitFixture;
-    if (!baseScenario) {
-      if (lower.includes("friday") || lower.includes("botnet") || lower.includes("ddos") || lower.includes("portscan")) {
-        baseScenario = "friday";
-      } else if (lower.includes("oracle")) {
-        baseScenario = "thursday_oracle";
-      } else {
-        baseScenario = "thursday";
+    try {
+      for (const step of stages) {
+        if (mockAbort.aborted) {
+          const err = new Error("Analysis cancelled by user.");
+          err.code = "cancelled";
+          err.wasUploading = true;
+          throw err;
+        }
+        onProgress?.({ state: step.state, progress: step.progress, stage_text: step.text });
+        await new Promise((r) => setTimeout(r, 420));
       }
+
+      if (mockAbort.aborted) {
+        const err = new Error("Analysis cancelled by user.");
+        err.code = "cancelled";
+        err.wasUploading = true;
+        throw err;
+      }
+
+      const lower = (file.name || "").toLowerCase();
+      let baseScenario = explicitFixture;
+      if (!baseScenario) {
+        if (lower.includes("friday") || lower.includes("botnet") || lower.includes("ddos") || lower.includes("portscan")) {
+          baseScenario = "friday";
+        } else if (lower.includes("oracle")) {
+          baseScenario = "thursday_oracle";
+        } else {
+          baseScenario = "thursday";
+        }
+      }
+
+      const { payload } = await this._loadMock(baseScenario);
+      const cloned = JSON.parse(JSON.stringify(payload));
+
+      const isPcap = lower.endsWith(".pcap") || lower.endsWith(".pcapng");
+      cloned.source = {
+        filename: file.name,
+        kind: isPcap ? "pcap" : "csv",
+        flows: cloned.source?.flows || 362076,
+        windows: cloned.timeline ? cloned.timeline.length : 972,
+        t0: cloned.source?.t0 || "2017-07-06T11:59:00Z",
+        window_s: 60,
+        stride_s: 30,
+        size_bytes: file.size,
+      };
+      cloned.job_id = `job_${Math.random().toString(36).substring(2, 8)}`;
+
+      onProgress?.({ state: "done", progress: 1.0, stage_text: "Ingestion and forecasting complete" });
+      return { payload: cloned, isMock: true };
+    } finally {
+      this._mockAbortController = null;
     }
-
-    const { payload } = await this._loadMock(baseScenario);
-    const cloned = JSON.parse(JSON.stringify(payload));
-
-    const isPcap = lower.endsWith(".pcap") || lower.endsWith(".pcapng");
-    cloned.source = {
-      filename: file.name,
-      kind: isPcap ? "pcap" : "csv",
-      flows: cloned.source?.flows || 362076,
-      windows: cloned.timeline ? cloned.timeline.length : 972,
-      t0: cloned.source?.t0 || "2017-07-06T11:59:00Z",
-      window_s: 60,
-      stride_s: 30,
-      size_bytes: file.size,
-    };
-    cloned.job_id = `job_${Math.random().toString(36).substring(2, 8)}`;
-
-    onProgress?.({ state: "done", progress: 1.0, stage_text: "Ingestion and forecasting complete" });
-    return { payload: cloned, isMock: true };
   }
 
   /**
@@ -462,8 +729,8 @@ export class ApiClient {
     let es = null;
     let timerId = null;
     let stopped = false;
-    let currentSpeed = Math.max(1, speed);
-    let currentT = fromWindow;
+    let currentSpeed = Math.max(0.1, Number(speed) || 4);
+    let currentT = Math.max(0, parseInt(fromWindow, 10) || 0);
 
     const stop = () => {
       stopped = true;
@@ -517,16 +784,30 @@ export class ApiClient {
       }, intervalMs);
     };
 
-    // Attempt live SSE connection if not in mock mode and jobId is present
-    if (!this.useMock && jobId) {
+    const startLiveSse = (startT = currentT, s = currentSpeed) => {
+      if (stopped) return;
+      if (es) {
+        try {
+          es.close();
+        } catch {}
+        es = null;
+      }
+
+      currentT = startT;
+      currentSpeed = s;
+
       try {
-        const streamUrl = `${this.apiBase}/api/jobs/${jobId}/stream?speed=${currentSpeed}&from=${currentT}`;
+        const streamUrl = `${this.apiBase}/api/jobs/${encodeURIComponent(jobId)}/stream?speed=${currentSpeed}&from=${currentT}`;
         es = new EventSource(streamUrl);
 
         es.addEventListener("window", (e) => {
           if (stopped) return;
           try {
             const winData = JSON.parse(e.data);
+            if (winData.t < startT) {
+              // Discard past frames if backend stream started before scrub position
+              return;
+            }
             currentT = winData.t;
             onWindow?.(winData);
           } catch (err) {
@@ -540,22 +821,20 @@ export class ApiClient {
         });
 
         es.onerror = (err) => {
-          if (es) {
-            try {
-              es.close();
-            } catch {
-              // ignore
-            }
-            es = null;
-          }
-          onError?.(err);
-          // Fall back gracefully to deterministic local fixture playback
-          runLocalMock(currentT);
+          if (stopped) return;
+          stop();
+          // Real error signaling without silent mock fallback
+          onError?.(err || new Error("Live SSE stream disconnected"));
         };
       } catch (err) {
+        stop();
         onError?.(err);
-        runLocalMock(currentT);
       }
+    };
+
+    // Attempt live SSE connection if not in mock mode and jobId is present
+    if (!this.useMock && jobId) {
+      startLiveSse(currentT, currentSpeed);
     } else {
       // Mock / Offline deterministic playback
       runLocalMock(currentT);
@@ -564,13 +843,21 @@ export class ApiClient {
     return {
       stop,
       setSpeed(newSpeed) {
-        currentSpeed = Math.max(1, newSpeed);
-        if (timerId) {
-          runLocalMock(currentT);
+        const s = Math.max(0.1, Number(newSpeed) || 4);
+        currentSpeed = s;
+        if (!stopped) {
+          if (!this.useMock && jobId && es) {
+            startLiveSse(currentT, currentSpeed);
+          } else if (timerId) {
+            runLocalMock(currentT);
+          }
         }
       },
       getCurrentT() {
         return currentT;
+      },
+      isLive() {
+        return Boolean(!this.useMock && jobId);
       },
     };
   }

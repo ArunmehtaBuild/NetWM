@@ -4,11 +4,12 @@
  * See frontend/PLAN.md
  */
 
-const params = new URLSearchParams(window.location.search);
+const search = typeof window !== "undefined" && window.location ? window.location.search : "";
+const params = new URLSearchParams(search);
 
 export const API_BASE =
   params.get("api") ??
-  window.NETWM_API_BASE ??
+  (typeof window !== "undefined" ? window.NETWM_API_BASE : null) ??
   "http://127.0.0.1:5000";
 
 // Force mock mode if ?mock is in the URL query string
