@@ -1,0 +1,14 @@
+friday    train-tuned          thr=0.559 f1=0.000 prec=0.000 rec=0.000 fpr=0.063 early=0/1 first-onset lead=0w
+friday    alert-budget-5pct    thr=0.118 f1=0.037 prec=0.044 rec=0.031 fpr=0.103 early=0/1 first-onset lead=0w
+friday    self-budget-10pct    thr=0.113 f1=0.036 prec=0.041 rec=0.031 fpr=0.111 early=0/1 first-onset lead=0w
+friday    self-budget-5pct     thr=0.692 f1=0.000 prec=0.000 rec=0.000 fpr=0.058 early=0/1 first-onset lead=0w
+friday    self-budget-2pct     thr=0.995 f1=0.000 prec=0.000 rec=0.000 fpr=0.024 early=0/1 first-onset lead=0w
+friday    oracle               thr=0.010 f1=0.220 prec=0.155 rec=0.378 fpr=0.310 early=1/1 first-onset lead=2w
+thursday  train-tuned          thr=0.961 f1=0.000 prec=0.000 rec=0.000 fpr=0.005 early=0/4 first-onset lead=0w
+thursday  alert-budget-5pct    thr=0.783 f1=0.000 prec=0.000 rec=0.000 fpr=0.032 early=0/4 first-onset lead=0w
+thursday  self-budget-10pct    thr=0.373 f1=0.227 prec=0.306 rec=0.181 fpr=0.084 early=0/4 first-onset lead=0w
+thursday  self-budget-5pct     thr=0.531 f1=0.000 prec=0.000 rec=0.000 fpr=0.061 early=0/4 first-onset lead=0w
+thursday  self-budget-2pct     thr=0.885 f1=0.000 prec=0.000 rec=0.000 fpr=0.025 early=0/4 first-onset lead=0w
+thursday  oracle               thr=0.137 f1=0.467 prec=0.459 rec=0.476 fpr=0.115 early=0/4 first-onset lead=0w
+
+wrote results/tables/e14_pmax_rescore_e10-no-multistep-s43.csv and results/figures/e14_*.png
