@@ -98,7 +98,8 @@ def main() -> None:
         )
         print(f"{name:26s} {len(slice_):>7,} flows  {path.stat().st_size/1e6:5.1f} MB  {labels}")
 
-    (out_dir / "index.json").write_text(json.dumps(index, indent=2), encoding="utf-8")
+    # trailing newline matches the committed file, so regenerating on a fresh clone leaves it clean
+    (out_dir / "index.json").write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
     print(f"\nwrote {out_dir}/*.csv + index.json")
 
 
