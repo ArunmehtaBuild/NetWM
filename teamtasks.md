@@ -4,47 +4,54 @@
 (Atharv). Task ids appear in commit messages; numbers live in `results.md`; modelling choices live in
 `decisions.md`.
 
-## Status - 2026-09-26
+## Status - 2026-09-26, evening
 
-**Merged:** #1 dashboard · #2 FastAPI backend · #3 live wiring · #4 S-track (trend, per-host, rank
-scaler) · #5 Y-scaffolding + S-3 · #6 PCAP extractor. Main runs end to end: a real CSV upload
-produces a real forecast in the browser, offline. 88 ML tests + 16 API tests.
+**Merged:** #1 dashboard · #2 FastAPI backend · #3 live wiring · #4 S-track · #5 Y-scaffolding + S-3
+· #6 PCAP extractor · Arun's `run_demo.bat` fix (`mehta`, with a readiness wait that actually waits).
+Main runs end to end: a real CSV upload produces a real forecast in the browser, offline.
+92 ML tests + 16 API tests.
 
-**Model status, frozen by the D-021 amendment:** detection is strong (Thursday F1 0.576 at 2.7 % FPR
-against the baseline's 0.011), forecasting is unproven (0 of 5 episodes; statistic, threshold, data
-and target all eliminated), `models/e4e7-worldmodel-r2/` is the submission checkpoint, and no
-early-warning claim is made anywhere.
+**Model status, final for the submission.** Detection is strong: Thursday F1 0.576 at 2.7 % FPR,
+against the baseline's 0.011. Forecasting is unproven. **E16 is in:** per-capture rank normalisation
+fails every clause of the D-023 bar and is unstable across training seeds. That makes five causes
+eliminated, one experiment each: statistic (E13), threshold (E14), data (E12), target (E15) and
+representation (E16). The signal dies in cross-day transfer: on Thursday, logistic regression on all
+70 features scores 0.604 and `uniq_dst_port` alone scores 0.607. `models/e4e7-worldmodel-r2/`
+remains the submission checkpoint, and no artefact claims early warning (D-021).
 
-**Two open gates:** PCAP ingestion (A-3 - no `flow_aggregator.py`, so a `.pcap` upload still raises)
-and the r4 result (Y-6 - the last live hypothesis, currently running).
+**One open gate:** PCAP ingestion (A-3). The demo script is written (`docs/demo_script.md`), so
+rehearsal can start today.
 
 ## Current tasks
 
 One table, one source of truth. A card closes when `results.md` carries numbers and the command that
 produced them, or when the thing it describes demonstrably works end to end - not when the code exists.
 
-Yash is running the r4 sweep (Y-6); it occupies one machine for ~90 min and gates only the results
-slide. Nothing else here waits on it.
-
 | person | id | task | done when |
 |---|---|---|---|
-| **Alok** | ~~A-2~~ | **Merged (PR #6)**: streaming extractor with Welford TTL stats, session cap, scan signatures, tests on a synthetic PCAP. A building block, not the capability |
-| | **A-3** | **Still the critical path.** `features/flow_aggregator.py` -> `pcap_to_flows(path)` returning the **canonical flow schema** (`src/netwm/data/base.py`: `ts`, `src_ip/port`, `dst_ip/port`, `protocol`, durations, per-direction counts, flag counts, IAT stats) with the A-2 packet columns riding along per flow. Two blockers this closes: the extractor currently has **no timestamps** (it summarises a whole capture per session, and `S_t` is a 60 s window at 30 s stride - D-002), and `analyze_file()` still raises `NotImplementedError` on `.pcap`. Do not build a parallel packet feature path - the canonical schema exists so windowing, features, the model, the API and the dashboard all work unchanged | `predict.py --input x.pcap` produces a v1.1 payload and a PCAP upload works in the browser |
-| | **A-1** | Record the PCAP-source decision in `decisions.md` (real capture or Scapy synthesis) - still unwritten, and the fallback needs to be chosen this week rather than in the last 48 hours | a decision entry either way |
-| | **A-5** | one small PCAP demo (< 5 MB, one clean story) registered in `data/demo/index.json` | the scenario picker offers a PCAP that runs in under 10 s |
-| **Arun** | **R-8** | `skipif` on missing `data/demo/*.csv` so a clean clone stays green | fresh clone: `pytest backend/tests` passes with no generated data |
-| | **R-9** | drive SSE replay from the dashboard - implemented, never exercised from the UI | a day replays in the browser without stutter |
-| | **R-11** | extend `test_upload_e2e.py` to the PCAP path as soon as A-3 lands; today, write it `skipif` on the aggregator being importable | the PCAP path has the same end-to-end test the CSV path got |
-| **Harshit** | **H-10** | replay against the live stream, fix whatever the integration shows | play/pause/scrub against the API, not a fixture |
-| | **H-12** | upload states for a large file: progress, cancel, and an honest error for an unreadable capture | a 200 MB upload never looks frozen |
-| **Sanchi** | **S-6** | the 5-slide deck. Slide 5 is **"what we measured that did not work"** - D-021 requires it, and the elimination chain (E12 -> E13 -> E14 -> E15 -> E16) is the strongest thing we have | draft reviewed by two teammates |
-| | **S-7** | extend `research/features.md` to the v2 trend block and the per-host channel - it covers v1 only | a reader can map every column in S_t v2 to a behaviour |
-| **Atharv** | **T-14** | the demo script: which capture, what is said at each beat, and the exact wording on the forecasting gap. Harshit cannot rehearse without it | a script that survives a judge's follow-up |
-| | **T-10** | promote `alarm_rate` / `eligible` / `confirm_before_onset` into `metrics.py` with a regression check | one lead-time implementation in the repo |
-| | **T-15** | submission gap-check against the PS deliverables list, top to bottom, and put the gaps on this board | every deliverable has an owner and a state |
+| **Yash** | **Y-6b** | A test for `windows_since_previous_attack`: strictly-quiet counting, first onset measured from the start of the capture, adjacent episodes. It feeds a published table (E16) and has no test | test in `tests/`, passing |
+| | **Y-7** | **Next GPU job.** Real leave-one-attack-family-out *with retraining* (D-006(b), `plan.md:43`). E16 names it as the next experiment, because the loss is in transfer across families, not in the features. E8 only approximates it by re-analysing the existing folds | E8 formalised in `results.md`: the null, the floors and per-onset rows, in E16's conventions |
+| | **Y-4b** | Run Y-4 on `S_t` v2 *levels* under the existing D-014 scaler. The Y-4 configs are merged but have never been run, and E16's floors favour v2: Thursday LR 0.626 against 0.604 | a results entry; any lead-time wording still needs the D-023 bar |
+| **Sanchi** | **S-6** | 5-slide deck. Slide 5, "what we measured that did not work", now carries five eliminations, "70 features score no better than 1", and onset 602 (a precursor's shape without its content, S-8). **The gap wording must match `docs/demo_script.md` word for word** | draft reviewed by two teammates |
+| | **S-7** | Extend `research/features.md` to the v2 trend block and the per-host channel. Record that slope and delta features carry no Thursday precursor signal (0.475-0.487 univariate, E16) | every v2 column maps to a behaviour |
+| **Alok** | **A-3** | **Critical path.** `features/flow_aggregator.py` -> `pcap_to_flows(path)`, returning the canonical flow schema (`src/netwm/data/base.py`) with the A-2 packet columns riding along per flow. It needs timestamps, so windowing (D-002) works unchanged. `analyze_file()` still raises on `.pcap` | `predict.py --input x.pcap` returns a v1.1 payload, and a PCAP upload works in the browser |
+| | **A-1** | PCAP-source decision entry in `decisions.md`: real capture or Scapy synthesis | a decision entry either way |
+| | **A-5** | One small PCAP demo (under 5 MB, one clean story) in `data/demo/index.json` | the demo picker runs it in under 10 s |
+| **Arun** | **R-12** (new) | Flag in-sample demos. `monday_benign` and `wednesday_dos` run on `thursday.pt`, which **trained on both days**. Add `in_sample: true` to the payload when the demo day is in the checkpoint's `train_days`, and note it in the contract | a contract test; the Monday demo reports in-sample |
+| | **R-8** | `skipif` when the generated `data/demo/*.csv` files are missing | a fresh clone passes `pytest backend/tests` with no generated data |
+| | **R-9** | Drive SSE replay from the dashboard | a full day replays in the browser without stutter |
+| | **R-11** | PCAP end-to-end test, `skipif` until A-3's aggregator is importable | the PCAP path has the same end-to-end test as the CSV path |
+| **Harshit** | **H-13** (new) | Plot surprise as a second timeline series. Today it lives only in a ribbon tooltip, yet it is the strongest live signal on the demo slice: benign median 0.15, 7.5 at the 17:00 scan, 15-52 during the sweep | visible without hovering |
+| | **H-14** (new) | Badge in-sample demos (pairs with R-12) | Monday shows the badge |
+| | **H-10** | Replay against the live stream (pairs with R-9) | play, pause and scrub against the API, not a fixture |
+| | **H-12** | Large-upload states: progress, cancel, and an honest error for an unreadable capture | a 200 MB upload never looks frozen |
+| | **H-15** (new) | Rehearse `docs/demo_script.md` twice against the live API, then record the video. Report anything on screen that disagrees with the script | a recorded run that follows the script |
+| **Atharv** | **T-13** | Refresh the results section of `docs/architecture.md` with E16 (unblocked) | it matches `results.md` |
+| | **T-10** | Promote `alarm_rate`, `eligible` and `confirm_before_onset` into `metrics.py`, with a regression check | one lead-time implementation in the repo |
+| | **T-15** | Submission gap-check against the PS deliverables list; put the gaps on this board | every deliverable has an owner and a state |
 
-**Blocked on r4 only:** the E16 write-up, the results slide's headline row, and the results section of
-`docs/architecture.md` (T-13). Everything else in this table can finish today.
+**Order that matters:** A-3 is the only thing that can still break the demo. H-13 and R-12 land before
+H-15 records. Y-7 takes the GPU next.
 
 ## Tracks and owners
 
@@ -54,7 +61,7 @@ slide. Nothing else here waits on it.
 | **Yash** | Model: make it forecast | training objectives, calibration, unseen-family evaluation |
 | **Sanchi** | State & features | feature matrix, trend/derivative features, per-host channels |
 | **Alok** | Packets & demo data | PCAP sourcing, packet features, PCAP->flows, demo slices |
-| **Arun** | Backend | Flask API, job runner, SSE replay, offline packaging |
+| **Arun** | Backend | FastAPI, job runner, SSE replay, offline packaging |
 | **Harshit** | Frontend | the SOC dashboard, replay, demo video |
 
 ## Repo structure and who owns what
@@ -130,5 +137,9 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | R-1..R-7 | FastAPI API, contract tests, SSE, offline lockdown, uploads reaching the model, real model card |
 | H-1..H-9 | dashboard, timeline + cone, ribbon, alarm log with the honest states, why panel, flows, upload, live scenario ids |
 | A-2 | streaming PCAP packet-feature extractor |
+| Y-6 | E16: rank normalisation fails the D-023 bar and is seed-unstable; representation eliminated |
+| T-14 | demo script, `docs/demo_script.md`, every figure checked against the live API |
+| T-16 | baseline harness ranks each capture on its own; no published number affected |
+| S-8 | onset 602 audit: no attempted traffic, rise carried by bystander hosts (`scripts/onset_audit.py`, under E16) |
 
-Merged scaffolding that still owes a run: **Y-1** (calibration script), **Y-4** (ablation configs).
+Merged scaffolding that still owes a run: **Y-1** (calibration script); **Y-4** now runs as Y-4b.
