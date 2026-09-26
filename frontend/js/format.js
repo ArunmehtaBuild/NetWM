@@ -9,8 +9,10 @@
 export function formatIsoTime(isoString) {
   if (!isoString) return "--:--:--";
   try {
+    // UTC, matching the payload and docs/demo_script.md - toTimeString() rendered the viewer's
+    // local zone (22:10 IST for a 16:40 UTC window), so the screen disagreed with the script.
     const d = new Date(isoString);
-    return d.toTimeString().split(" ")[0];
+    return d.toISOString().substring(11, 19);
   } catch {
     return isoString;
   }

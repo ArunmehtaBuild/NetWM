@@ -58,10 +58,10 @@
       <div class="control-group">
         <label for="demoSelector" style="color:var(--text-dim); font-size:11px; text-transform:uppercase; font-weight:600;">Scenario:</label>
         <select id="demoSelector" class="select-input">
-          <option value="thursday">Thursday-WorkingHours (Infiltration · 972 windows)</option>
-          <option value="friday">Friday-WorkingHours (Botnet / PortScan / DDoS · 968 windows)</option>
-          <option value="monday_benign">Monday-WorkingHours (Quiet Benign · 972 windows)</option>
-          <option value="wednesday_dos">Wednesday-WorkingHours (DoS Burst · 972 windows)</option>
+          <option value="thursday">Thursday · infiltration + internal sweep (held out)</option>
+          <option value="friday">Friday · botnet C2 (held out)</option>
+          <option value="monday_benign">Monday · quiet benign (training day)</option>
+          <option value="wednesday_dos">Wednesday · DoS burst (training day)</option>
           <option value="thursday_oracle">Thursday Oracle (Dev-Only · Hand-Tuned Lead Time)</option>
         </select>
         <button class="btn btn-action" id="btnUploadCapture" title="Upload PCAP or Flow CSV dataset">
