@@ -6,25 +6,16 @@ import math
 from netwm.data.base import CANONICAL_COLUMNS
 from netwm.features.pcap_features import PCAPFeatureExtractor
 
-def _get_flow_key(ip_src, ip_dst, sport, dport, proto):
-    """Return a canonical bidirectional flow key and direction."""
-    # To keep it simple, we just use the first packet's direction as forward.
-    # We will track first-seen directions in the aggregator.
-    return (ip_src, ip_dst, sport, dport, proto)
-
-def pcap_to_flows(pcap_path):
+def pcap_to_flows(pcap_path, max_sessions=100000):
     """
     Reads a PCAP file and aggregates packets into canonical bidirectional flows,
     merging with the streaming PCAP features from A-2.
+    Matches CICFlowMeter semantics.
     """
-    # Track bidirectional flows
     flows = {}
+    completed_flows = []
     
-    # Also run the streaming feature extractor (A-2)
-    extractor = PCAPFeatureExtractor()
-
-    # We will need to map unidirectional A-2 features to bidirectional flows.
-    # The A-2 extractor uses (src, dst, sport, dport, proto).
+    extractor = PCAPFeatureExtractor(max_sessions=max_sessions)
     
     with PcapReader(str(pcap_path)) as reader:
         for pkt in reader:
@@ -41,11 +32,13 @@ def pcap_to_flows(pcap_path):
                 dport = pkt[TCP].dport
                 payload_len = len(pkt[TCP].payload)
                 flags = pkt[TCP].flags
+                window = pkt[TCP].window
             elif UDP in pkt:
                 sport = pkt[UDP].sport
                 dport = pkt[UDP].dport
                 payload_len = len(pkt[UDP].payload)
                 flags = 0
+                window = 0
             else:
                 continue
                 
@@ -55,13 +48,26 @@ def pcap_to_flows(pcap_path):
             fwd_key = (ip.src, ip.dst, sport, dport, proto)
             bwd_key = (ip.dst, ip.src, dport, sport, proto)
             
+            # Check 120s idle timeout
+            is_fwd = True
+            key = None
             if fwd_key in flows:
-                key = fwd_key
-                is_fwd = True
+                if ts - flows[fwd_key]["last_ts"] > 120.0:
+                    completed_flows.append(flows.pop(fwd_key))
+                else:
+                    key = fwd_key
+                    is_fwd = True
             elif bwd_key in flows:
-                key = bwd_key
-                is_fwd = False
-            else:
+                if ts - flows[bwd_key]["last_ts"] > 120.0:
+                    completed_flows.append(flows.pop(bwd_key))
+                else:
+                    key = bwd_key
+                    is_fwd = False
+                    
+            if key is None:
+                if len(flows) >= max_sessions:
+                    # session cap reached, ignore new flow
+                    continue
                 key = fwd_key
                 is_fwd = True
                 flows[key] = {
@@ -86,24 +92,31 @@ def pcap_to_flows(pcap_path):
                     "cwr_cnt": 0,
                     "ece_cnt": 0,
                     "pkt_lengths": [],
-                    "fwd_iat": [],
-                    "last_fwd_ts": None,
+                    "flow_iat": [],
+                    "fwd_init_win": 0,
+                    "bwd_init_win": 0,
+                    "is_terminated": False,
                 }
                 
             f = flows[key]
+            
+            if f["last_ts"] != ts and f["last_ts"] < ts:
+                f["flow_iat"].append(ts - f["last_ts"])
+                
             f["last_ts"] = max(f["last_ts"], ts)
-            f["pkt_lengths"].append(len(pkt))
+            f["pkt_lengths"].append(payload_len)
             
             if is_fwd:
                 f["fwd_pkts"] += 1
                 f["fwd_bytes"] += payload_len
-                if f["last_fwd_ts"] is not None:
-                    f["fwd_iat"].append(ts - f["last_fwd_ts"])
-                f["last_fwd_ts"] = ts
+                if TCP in pkt and (flags & 0x02) and f["fwd_init_win"] == 0:
+                    f["fwd_init_win"] = window
             else:
                 f["bwd_pkts"] += 1
                 f["bwd_bytes"] += payload_len
-                
+                if TCP in pkt and (flags & 0x02) and f["bwd_init_win"] == 0:
+                    f["bwd_init_win"] = window
+                    
             if TCP in pkt:
                 if flags & 0x01: f["fin_cnt"] += 1
                 if flags & 0x02: f["syn_cnt"] += 1
@@ -113,19 +126,27 @@ def pcap_to_flows(pcap_path):
                 if flags & 0x20: f["urg_cnt"] += 1
                 if flags & 0x40: f["ece_cnt"] += 1
                 if flags & 0x80: f["cwr_cnt"] += 1
+                
+                # Flow termination on FIN or RST
+                if (flags & 0x01) or (flags & 0x04):
+                    f["is_terminated"] = True
+                    completed_flows.append(flows.pop(key))
+
+    # Add any remaining flows
+    completed_flows.extend(flows.values())
 
     a2_features = extractor.get_session_features()
     
     rows = []
-    for key, f in flows.items():
+    for f in completed_flows:
+        key = (f["src_ip"], f["dst_ip"], f["src_port"], f["dst_port"], f["protocol"])
         dur_us = (f["last_ts"] - f["first_ts"]) * 1e6
         
         plens = f["pkt_lengths"]
-        
-        iats = [iat * 1e6 for iat in f["fwd_iat"]]
+        iats = [iat * 1e6 for iat in f["flow_iat"]]
         
         row = {
-            "ts": f["ts"].replace(tzinfo=None), # Make timezone-naive as required
+            "ts": f["ts"].replace(tzinfo=None), 
             "src_ip": f["src_ip"],
             "dst_ip": f["dst_ip"],
             "src_port": f["src_port"],
@@ -156,19 +177,14 @@ def pcap_to_flows(pcap_path):
             "flow_iat_std": pd.Series(iats).std() if len(iats) > 1 else 0.0,
             
             "down_up_ratio": f["bwd_pkts"] / f["fwd_pkts"] if f["fwd_pkts"] > 0 else 0,
-            "fwd_init_win": 0,
-            "bwd_init_win": 0,
+            "fwd_init_win": f["fwd_init_win"],
+            "bwd_init_win": f["bwd_init_win"],
             "fwd_seg_size_min": 0,
             "active_mean": 0,
             "idle_mean": 0,
-            "label": "BENIGN",
-            "attempted": False,
-            "stage": 0,
         }
         
-        # Merge A-2 features. 
-        # A-2 tracks directionally. For bidirectional, we take the forward direction features
-        # or aggregate them. Here we just take the forward features.
+        # Merge A-2 features
         fwd_a2 = a2_features.get(key, {})
         for k, v in fwd_a2.items():
             row[f"a2_{k}"] = v
@@ -183,7 +199,7 @@ def pcap_to_flows(pcap_path):
             if col not in df.columns:
                 df[col] = 0
                 
-        # If any A-2 columns are missing because fwd_a2 was empty, fill with 0
+        # Fill A-2 keys if missing
         a2_keys = ["packet_count", "ttl_mean", "ttl_variance", "tcp_win_mean", 
                    "tcp_win_max", "ip_frag_count", "retrans_count", "payload_0_64", 
                    "payload_65_128", "payload_129_512", "payload_513_1024", "payload_gt_1024"]
@@ -193,7 +209,6 @@ def pcap_to_flows(pcap_path):
                 df[col_name] = 0
                 
     else:
-        # Create empty DataFrame with required columns
         df = pd.DataFrame(columns=CANONICAL_COLUMNS)
         
     return df
