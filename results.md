@@ -803,9 +803,11 @@ Thursday, `p_max` at self-budget 10 %, warned/3 seeds:
 | 708 | Lateral Movement | 20 | 0 / 3 |
 | 729 | Lateral Movement | 7 | 0 / 3 |
 
-**Onset 602 is never warned, on any seed.** It is the cleanest precursor in the dataset - first of
-the afternoon campaign, 394 quiet windows before it - and it is the one case where a lead-time claim
-would have meant what the PS asks. Pooling all folds and seeds, r4 warns on 8 of 78 onset-seed
+**Onset 602 is never warned, on any seed.** It has the longest quiet run-up in the dataset - first of
+the afternoon campaign, 394 windows - which is why it was the obvious place to look for a real
+precursor. **S-8 below shows it is not one:** the rise is carried by bystander hosts, so a model that
+warned there would have been right for the wrong reason, and r4's silence on it is not the failure
+this paragraph originally read it as. Pooling all folds and seeds, r4 warns on 8 of 78 onset-seed
 combinations, and they are *not* concentrated in the clean run-ups: 2 of 30 for gaps > 40 windows,
 5 of 27 for 11-40, 1 of 21 for <= 10. So the answer to "lost a precursor or lost campaign residue"
 is **neither** - r4 finds essentially nothing in either category.

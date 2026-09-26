@@ -38,7 +38,7 @@ produced them, or when the thing it describes demonstrably works end to end - no
 | | **Y-8** (research) | **Plan the experiment that can test transfer: M2, CTU-13.** E16 says what's learned on one family doesn't carry to another, and that needs *more* compromise families, not fewer. Write `research/ctu13.md`: <br>• the 13 scenarios and their botnet families <br>• the label scheme <br>• the flow format (Argus binetflow, not CICFlowMeter) mapped onto the canonical schema <br>• sizes <br>• a scenario-held-out design pre-registered under the D-023 bar <br>Then an adapter plan for `src/netwm/data/ctu13.py` | note indexed in `research.md`; the adapter plan reviewed by Atharv |
 | **Sanchi** | **S-6** | 5-slide deck. Slide 5, "what we measured that did not work", now carries five eliminations, "70 features score no better than 1", and onset 602 (a precursor's shape without its content, S-8). **The gap wording must match `docs/demo_script.md` word for word** | draft reviewed by two teammates |
 | | **S-7** | Extend `research/features.md` to the v2 trend block and the per-host channel. Record that slope and delta features carry no Thursday precursor signal (0.475-0.487 univariate, E16) | every v2 column maps to a behaviour |
-| **Alok** | **A-3** | **Critical path.** `features/flow_aggregator.py` -> `pcap_to_flows(path)`, returning the canonical flow schema (`src/netwm/data/base.py`) with the A-2 packet columns riding along per flow. It needs timestamps, so windowing (D-002) works unchanged. `analyze_file()` still raises on `.pcap` | `predict.py --input x.pcap` returns a v1.1 payload, and a PCAP upload works in the browser |
+| | **A-3** | **Critical path, do before S-6.** `features/flow_aggregator.py` -> `pcap_to_flows(path)`, returning the canonical flow schema (`src/netwm/data/base.py`) with the A-2 packet columns riding along per flow. It needs timestamps, so windowing (D-002) works unchanged. `analyze_file()` still raises on `.pcap` | `predict.py --input x.pcap` returns a v1.1 payload, and a PCAP upload works in the browser |
 | | **A-1** | PCAP-source decision entry in `decisions.md`: real capture or Scapy synthesis | a decision entry either way |
 | | **A-5** | One small PCAP demo (under 5 MB, one clean story) in `data/demo/index.json` | the demo picker runs it in under 10 s |
 | **Arun** | **R-12** (new) | Flag in-sample demos. `monday_benign` and `wednesday_dos` run on `thursday.pt`, which **trained on both days**. Add `in_sample: true` to the payload when the demo day is in the checkpoint's `train_days`, and note it in the contract | a contract test; the Monday demo reports in-sample |
@@ -58,14 +58,21 @@ produced them, or when the thing it describes demonstrably works end to end - no
 **Order that matters:** A-3 is the only thing that can still break the demo. H-13 and R-12 land before
 H-15 records. Yash starts on Y-6b and Y-1 (CPU); Y-4a must be finished before T-18 uses the GPU.
 
+**Reassignment, 2026-09-26 (directed, not drift).** Alok's three open cards and the README
+deliverable moved to Sanchi. She now holds the critical path (A-3) *and* the 5-slide deck (S-6), both
+submission-blocking, so the ordering above is no longer enough on its own: **A-3 before S-6**, and if
+both cannot land, A-3 wins - a deck can describe a CSV-only demo, but the PS mandates PCAP upload and
+Arun's R-11 and Harshit's H-15 are both waiting on the aggregator. Flagged for Atharv to rebalance if
+Sanchi cannot carry both.
+
 ## Tracks and owners
 
 | person | track | owns |
 |---|---|---|
 | **Atharv** | Orchestration + ML correctness | this board, decisions/results discipline, inference engine correctness, architecture doc |
 | **Yash** | Model evidence (CPU only) | calibration, ablation design and write-ups, unseen-family evaluation, M2 research |
-| **Sanchi** | State & features | feature matrix, trend/derivative features, per-host channels |
-| **Alok** | Packets & demo data | PCAP sourcing, packet features, PCAP->flows, demo slices |
+| **Sanchi** | State & features **+ packets & demo data** | feature matrix, trend/derivative features, per-host channels; PCAP sourcing, packet features, PCAP->flows, demo slices |
+| ~~Alok~~ | reassigned 2026-09-26 | all cards (A-1, A-3, A-5) and the README deliverable moved to Sanchi; see the note under Current tasks |
 | **Arun** | Backend | FastAPI, job runner, SSE replay, offline packaging |
 | **Harshit** | Frontend | the SOC dashboard, replay, demo video |
 
@@ -74,7 +81,7 @@ H-15 records. Yash starts on Y-6b and Y-1 (CPU); Y-4a must be finished before T-
 The backend and the frontend are **separate deployables** as of 21a9786 - pull before you start.
 
 ```
-src/netwm/        the ML: data adapters, features, labels, models, engine   (Sanchi, Yash, Alok)
+src/netwm/        the ML: data adapters, features, labels, models, engine   (Sanchi, Yash)
 scripts/          CLI entry points: build_features, train, predict, benchmark, sync_fixtures
 backend/          FastAPI JSON API - renders nothing                        (Arun)
                     uvicorn backend.server:app --host 127.0.0.1 --port 5000
@@ -90,7 +97,7 @@ results/ research/ models/ configs/                                          (as
 | features & state | `src/netwm/features/*`, `scripts/build_features.py`, `configs/features*.yaml` | Sanchi |
 | model & training | `src/netwm/models/world_model.py`, `src/netwm/train.py`, `src/netwm/engine/rollout.py`, `configs/model_*.yaml` | Yash |
 | metrics & explain | `src/netwm/metrics.py`, `src/netwm/evaluate.py`, `src/netwm/engine/explain.py`, `scripts/benchmark*.py` | Atharv |
-| packets & baselines | `src/netwm/features/pcap_features.py`, `flow_aggregator.py`, `src/netwm/models/baseline.py`, `scripts/make_demo_samples.py` | Alok |
+| packets & baselines | `src/netwm/features/pcap_features.py`, `flow_aggregator.py`, `src/netwm/models/baseline.py`, `scripts/make_demo_samples.py` | Sanchi (was Alok) |
 | backend | `backend/**` - server, schemas, jobs, inference, config, errors, tests | Arun |
 | frontend | `frontend/**` - index.html, css, js, vendor | Harshit |
 | inference entry point | `src/netwm/engine/predict.py`, `fixtures/api/*` | Atharv - Arun **consumes** it, does not edit it |
@@ -122,7 +129,7 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | deliverable | owner | status |
 |---|---|---|
 | Public GitHub repo link | Arun | [x] |
-| README with setup instructions a fresh machine can follow | Alok | [ ] |
+| README with setup instructions a fresh machine can follow | Sanchi | [ ] |
 | Architecture document (max 2 pages) | Atharv | [ ] |
 | Demo video (max 2 min), CSV **and** PCAP upload | Harshit | [ ] |
 | Technical presentation (max 5 slides) | Sanchi | [ ] |

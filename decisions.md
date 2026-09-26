@@ -916,8 +916,16 @@ and the first is the one that matches the LR floors in E15/E16.
 **Also closed, on the raw capture.** The pre-onset-602 elevation is not `- Attempted` traffic that
 D-009 removes from the stage label: all 4356 flows in windows 592-601 are `BENIGN` with
 `Attempted Category = -1`, and Thursday's 1997 attempted flows all carry `- Attempted` in the label
-and fall elsewhere. Thursday's one clean precursor is a genuine rise through benign-labelled traffic.
-D-009's revisit clause is not triggered; this question is answered and should not be reopened.
+and fall elsewhere. The rise is real and its traffic is benign-labelled, so D-009's revisit clause is
+not triggered and that question should not be reopened.
+
+*Amended the same day, on S-8.* Calling 602 a "clean precursor" was wrong and is withdrawn. S-8
+audited who carries the rise: `192.168.10.9` opening more ports on `.3`, with the hosts the attack
+touches flat - the scan target `.51` at +0.1, the host compromised at 17:19 at -0.4, and the scanner
+`172.16.0.1` absent entirely. The run-up has a precursor's *shape* without its *content*. This does
+not change the decision below, and it strengthens it: the one case that looked like a real
+early-warning opportunity was not one, and the circular-shift null of D-022 is what stops a model
+being credited for finding it.
 
 **Revisit if.** A leave-one-attack-family-out run with actual retraining (Y-3, not E8's re-analysis)
 shows the weights *do* transfer when families are held out deliberately - that would move the
