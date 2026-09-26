@@ -96,9 +96,17 @@
   background: var(--warning-dim);
 }
 
-.pill.pill-live {
+.pill.pill-warning,
+.pill.pill-in-sample {
+  color: var(--warning);
+  border-color: rgba(242, 165, 65, 0.4);
+  background: var(--warning-dim);
+}
+
+.pill.pill-live,
+.pill.pill-held-out {
   color: var(--success);
-  border-color: rgba(47, 168, 122, 0.3);
+  border-color: rgba(47, 168, 122, 0.35);
   background: var(--success-dim);
 }
 
@@ -1607,6 +1615,18 @@
   border: 1px solid var(--accent-border);
 }
 
+.badge-live {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.badge-error {
+  background: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
 .badge-paused {
   background: var(--surface-2);
   color: var(--text-dim);
@@ -1886,6 +1906,18 @@
   background: var(--success-dim);
   color: var(--success);
   border: 1px solid var(--success-border);
+}
+
+.pill-error {
+  background: rgba(226, 87, 76, 0.15);
+  color: var(--danger);
+  border: 1px solid rgba(226, 87, 76, 0.4);
+}
+
+.pill-cancelled {
+  background: rgba(242, 165, 65, 0.15);
+  color: var(--warning);
+  border: 1px solid rgba(242, 165, 65, 0.4);
 }
 
 /* Progress Container */

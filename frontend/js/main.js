@@ -68,13 +68,38 @@ function renderGlobal(state) {
     sourceStats.textContent = `${formatInt(payload.source.flows)} flows · ${formatInt(payload.source.windows)} windows`;
   }
 
-  // Dev Notice Banner (e.g. for thursday_oracle fixture)
+  // In-sample / Held-out Evaluation Badge (H-14, R-12)
+  // Strictly reads payload.in_sample or payload.source.in_sample without inferring from names.
+  const sampleStatusPill = document.getElementById("inSamplePill");
+  const inSampleVal = payload.in_sample !== undefined ? payload.in_sample : payload.source?.in_sample;
+
+  if (sampleStatusPill) {
+    if (inSampleVal === true) {
+      sampleStatusPill.className = "pill pill-warning";
+      sampleStatusPill.innerHTML = '<span class="status-dot"></span>IN-SAMPLE';
+      sampleStatusPill.title = "The checkpoint was trained on this day; this demo does not measure unseen-day generalisation.";
+      sampleStatusPill.classList.remove("hidden");
+    } else if (inSampleVal === false) {
+      sampleStatusPill.className = "pill pill-held-out";
+      sampleStatusPill.innerHTML = '<span class="status-dot"></span>HELD-OUT / UNSEEN DAY';
+      sampleStatusPill.title = "The checkpoint was not trained on this day; this is an out-of-sample evaluation on an unseen day.";
+      sampleStatusPill.classList.remove("hidden");
+    } else {
+      // Field absent: show no fake status and do not assume false
+      sampleStatusPill.classList.add("hidden");
+    }
+  }
+
+  // Dev Notice Banner (Shown for Dev/Oracle Fixtures or In-Sample evaluations)
   const devBanner = document.getElementById("devBanner");
   const devNote = document.getElementById("devNote");
   if (devBanner && devNote) {
     if (payload.dev_only) {
       devBanner.classList.remove("hidden");
       devNote.textContent = payload.note || "UI DEVELOPMENT ONLY: Hand-picked threshold fixture.";
+    } else if (inSampleVal === true) {
+      devBanner.classList.remove("hidden");
+      devNote.textContent = "IN-SAMPLE EVALUATION: The checkpoint was trained on this day; this demo does not measure unseen-day generalisation.";
     } else {
       devBanner.classList.add("hidden");
     }
@@ -85,7 +110,8 @@ function renderGlobal(state) {
   if (selectedWindowEl && payload.timeline && payload.timeline[selectedWindow]) {
     const w = payload.timeline[selectedWindow];
     const alarmBadge = w.alarm ? `<span style="color:var(--danger); font-weight:600;">[ALARM ACTIVE]</span>` : "";
-    selectedWindowEl.innerHTML = `Selected: <strong>t=${w.t}</strong> (${formatIsoTime(w.ts)}) · Risk: <strong>${formatPercent(w.p_max)}</strong> ${alarmBadge}`;
+    const surpriseStr = (w.surprise !== undefined && w.surprise !== null) ? formatFloat(w.surprise, 2) : "--";
+    selectedWindowEl.innerHTML = `Selected: <strong>t=${w.t}</strong> (${formatIsoTime(w.ts)}) · Risk: <strong>${formatPercent(w.p_max)}</strong> · Surprise: <strong style="color:#38bdf8;">${surpriseStr}</strong> ${alarmBadge}`;
   }
 }
 
@@ -94,10 +120,23 @@ function renderGlobal(state) {
  */
 async function loadScenario(scenarioName, targetWindow = null) {
   const loadingOverlay = document.getElementById("loadingOverlay");
-  if (loadingOverlay) loadingOverlay.classList.remove("hidden");
+  if (loadingOverlay) {
+    loadingOverlay.classList.remove("hidden");
+    loadingOverlay.innerHTML = `
+      <div class="spinner"></div>
+      <div id="loadingStatusText" style="font-size:12px; color:var(--text-muted); margin-top: 8px;">Loading capture telemetry...</div>
+    `;
+  }
 
   try {
-    const { payload, isMock } = await api.loadAnalysis(scenarioName);
+    const { payload, isMock } = await api.loadAnalysis(scenarioName, (p) => {
+      const statusText = document.getElementById("loadingStatusText");
+      if (statusText && p) {
+        const pct = Math.round((p.progress || 0) * 100);
+        const stage = p.stage_text || (p.state === "running" ? "Analyzing capture on PyTorch RSSM..." : "Loading demo scenario...");
+        statusText.textContent = `${stage} (${pct}%)`;
+      }
+    });
     
     // Choose appropriate default selected window (e.g. 417 for Thursday to showcase forecast cone, or 0)
     let defaultWindow = 0;
@@ -159,9 +198,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const initialWindow = params.has("window") ? parseInt(params.get("window"), 10) : null;
 
   // Wire Demo Selector dropdown
+  const initialScenario = params.get("scenario") || params.get("demo") || DEFAULT_DEMO;
   const demoSelector = document.getElementById("demoSelector");
   if (demoSelector) {
-    demoSelector.value = DEFAULT_DEMO;
+    demoSelector.value = initialScenario;
     demoSelector.addEventListener("change", (e) => {
       loadScenario(e.target.value);
     });
@@ -190,8 +230,19 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const toggleSurprise = document.getElementById("toggleSurpriseSeries");
+  if (toggleSurprise) {
+    if (params.has("surprise")) {
+      toggleSurprise.checked = params.get("surprise") !== "0";
+    }
+    store.set({ filters: { showSurprise: toggleSurprise.checked } });
+    toggleSurprise.addEventListener("change", (e) => {
+      store.set({ filters: { showSurprise: e.target.checked } });
+    });
+  }
+
   // Initial Scenario Load
-  loadScenario(DEFAULT_DEMO, initialWindow).then(() => {
+  loadScenario(initialScenario, initialWindow).then(() => {
     if (params.has("play")) {
       const speed = params.has("speed") ? parseInt(params.get("speed"), 10) : 4;
       store.set({ replay: { playing: true, speed } });

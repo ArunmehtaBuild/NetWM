@@ -118,22 +118,24 @@ export class TimelinePanel {
 
     const showAttack = Boolean(filters?.showAttack);
     const showEscalate = Boolean(filters?.showEscalate);
+    const showSurprise = filters?.showSurprise !== false; // Default true per H-13
 
     // Full rebuild on new payload or first load
     if (!this.chart || this.lastRenderedPayload !== payload) {
-      this._buildChart(payload, selectedWindow, { showAttack, showEscalate });
+      this._buildChart(payload, selectedWindow, { showAttack, showEscalate, showSurprise });
       this.lastRenderedPayload = payload;
       this.lastSelectedWindow = selectedWindow;
-      this.lastFilters = { showAttack, showEscalate };
+      this.lastFilters = { showAttack, showEscalate, showSurprise };
     } else if (
       this.lastSelectedWindow !== selectedWindow ||
       this.lastFilters?.showAttack !== showAttack ||
-      this.lastFilters?.showEscalate !== showEscalate
+      this.lastFilters?.showEscalate !== showEscalate ||
+      this.lastFilters?.showSurprise !== showSurprise
     ) {
       // In-place lightweight update
-      this._updateForecastCone(payload, selectedWindow, { showAttack, showEscalate });
+      this._updateForecastCone(payload, selectedWindow, { showAttack, showEscalate, showSurprise });
       this.lastSelectedWindow = selectedWindow;
-      this.lastFilters = { showAttack, showEscalate };
+      this.lastFilters = { showAttack, showEscalate, showSurprise };
     }
   }
 
@@ -141,6 +143,12 @@ export class TimelinePanel {
     if (this.chart) {
       this.chart.destroy();
       this.chart = null;
+    }
+    if (window.Chart && this.canvas) {
+      const existing = window.Chart.getChart(this.canvas);
+      if (existing) {
+        existing.destroy();
+      }
     }
 
     if (!window.Chart) {
@@ -153,6 +161,9 @@ export class TimelinePanel {
     const pMaxData = timeline.map((w) => w.p_max);
     const thresholdValue = Number(payload.threshold);
     const thresholdData = new Array(timeline.length).fill(thresholdValue);
+    const surpriseData = timeline.map((w) =>
+      w.surprise !== undefined && w.surprise !== null ? Number(w.surprise) : null
+    );
 
     // Compute initial forecast cone
     const cone = computeForecastCone(timeline, selectedWindow, payload.horizon_k, options);
@@ -277,6 +288,24 @@ export class TimelinePanel {
             hidden: !options.showEscalate,
             order: 1,
           },
+          // 7: Surprise Score (Model Negative Log-Likelihood / Predictive Error) (H-13)
+          {
+            label: "Surprise (NLL)",
+            data: surpriseData,
+            borderColor: "#38bdf8",
+            backgroundColor: hexToRgba("#38bdf8", 0.08),
+            borderWidth: 1.5,
+            yAxisID: "ySurprise",
+            fill: false,
+            tension: 0.08,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: "#38bdf8",
+            pointHoverBorderColor: "#ffffff",
+            spanGaps: true,
+            hidden: !options.showSurprise,
+            order: 2,
+          },
         ],
       },
       options: {
@@ -326,6 +355,28 @@ export class TimelinePanel {
               text: "Forecasted Risk / Probability",
               color: "#65707d",
               font: { size: 11 },
+            },
+          },
+          ySurprise: {
+            position: "right",
+            min: 0,
+            grid: {
+              display: false,
+            },
+            ticks: {
+              color: "#38bdf8",
+              maxTicksLimit: 6,
+              font: {
+                family: "ui-monospace, Consolas, monospace",
+                size: 10,
+              },
+              callback: (val) => formatFloat(val, 1),
+            },
+            title: {
+              display: true,
+              text: "Surprise / NLL",
+              color: "#38bdf8",
+              font: { size: 10 },
             },
           },
         },
@@ -395,6 +446,9 @@ export class TimelinePanel {
                 if (dIdx === 6 && context.parsed.y !== null) {
                   return `Stage Escalation: ${formatFloat(context.parsed.y, 4)} (${formatPercent(context.parsed.y, 1)})`;
                 }
+                if (dIdx === 7 && context.parsed.y !== null) {
+                  return `Surprise (NLL): ${formatFloat(context.parsed.y, 2)}`;
+                }
                 return null;
               },
               afterBody: (items) => {
@@ -452,6 +506,9 @@ export class TimelinePanel {
     this.chart.data.datasets[5].hidden = !options.showAttack;
     this.chart.data.datasets[6].data = cone.escalate;
     this.chart.data.datasets[6].hidden = !options.showEscalate;
+    if (this.chart.data.datasets[7]) {
+      this.chart.data.datasets[7].hidden = !options.showSurprise;
+    }
 
     // Update overlay cursor window
     if (this.chart.options.plugins?.netwmTimelineOverlay) {

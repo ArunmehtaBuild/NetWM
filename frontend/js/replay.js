@@ -33,6 +33,7 @@ export class ReplayController {
     this.lastT = -1;
     this.lastSpeed = 4;
     this.isUserScrubbing = false;
+    this.hasError = false;
 
     this._bindUiEvents();
   }
@@ -43,6 +44,7 @@ export class ReplayController {
   _bindUiEvents() {
     if (this.btnPlayPause) {
       this.btnPlayPause.addEventListener("click", () => {
+        this.hasError = false;
         const state = store.getState();
         const replay = state.replay || { playing: false, t: 0, speed: 4 };
         const timeline = state.payload?.timeline || [];
@@ -67,6 +69,7 @@ export class ReplayController {
 
     if (this.btnReset) {
       this.btnReset.addEventListener("click", () => {
+        this.hasError = false;
         if (this.activeStream) {
           this.activeStream.stop();
           this.activeStream = null;
@@ -91,6 +94,7 @@ export class ReplayController {
     if (this.scrubber) {
       this.scrubber.addEventListener("input", (e) => {
         this.isUserScrubbing = true;
+        this.hasError = false;
         // Pause active stream while actively dragging
         if (this.activeStream) {
           this.activeStream.stop();
@@ -164,9 +168,13 @@ export class ReplayController {
 
     // 4. Update Status Badge & Time Text
     if (this.statusBadge) {
-      if (isPlaying) {
-        this.statusBadge.className = "replay-status-badge badge-playing";
-        this.statusBadge.textContent = `PLAYING (${speed} w/s)`;
+      if (this.hasError) {
+        this.statusBadge.className = "replay-status-badge badge-error";
+        this.statusBadge.textContent = "STREAM ERROR";
+      } else if (isPlaying) {
+        const isLive = Boolean(api.liveJobId(state));
+        this.statusBadge.className = `replay-status-badge badge-playing ${isLive ? "badge-live" : ""}`;
+        this.statusBadge.textContent = isLive ? `LIVE SSE (${speed} w/s)` : `PLAYING (${speed} w/s)`;
       } else if (currentT >= maxT) {
         this.statusBadge.className = "replay-status-badge badge-completed";
         this.statusBadge.textContent = "COMPLETED";
@@ -204,7 +212,9 @@ export class ReplayController {
       this.activeStream = null;
     }
 
-    const jobId = api.liveJobId(store.getState());
+    this.hasError = false;
+    const state = store.getState();
+    const jobId = api.liveJobId(state);
     const maxT = payload.timeline.length - 1;
 
     this.activeStream = api.createReplayStream({
@@ -213,6 +223,7 @@ export class ReplayController {
       fromWindow: fromT,
       payload,
       onWindow: (winData) => {
+        this.hasError = false;
         store.set({
           replay: { t: winData.t, playing: true },
           selectedWindow: winData.t,
@@ -226,7 +237,12 @@ export class ReplayController {
         });
       },
       onError: (err) => {
-        console.warn("Replay stream fallback to local mock playback:", err);
+        console.warn("Replay stream disconnected/error:", err);
+        this.activeStream = null;
+        this.hasError = true;
+        store.set({
+          replay: { playing: false },
+        });
       },
     });
   }

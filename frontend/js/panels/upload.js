@@ -1,8 +1,8 @@
 /**
  * NetWM Upload & Capture Ingestion Panel
  * Handles drag-drop file upload, format validation, demo scenario selection,
- * and live / simulated job progress tracking.
- * See frontend/PLAN.md (lines 30, 78-81) & docs/api_contract.md
+ * live XMLHttpRequest byte-level upload progress, cancel lifecycle, and honest error presentation.
+ * See frontend/PLAN.md & docs/api_contract.md
  */
 
 import { api } from "../api.js";
@@ -13,6 +13,8 @@ export class UploadPanel {
   constructor(modalId = "uploadModal") {
     this.modal = document.getElementById(modalId);
     this.isProcessing = false;
+    this._currentFileName = null;
+    this._currentFileSize = null;
 
     // Cache elements
     this.dropzone = document.getElementById("uploadDropzone");
@@ -49,27 +51,27 @@ export class UploadPanel {
       this.btnTrigger.addEventListener("click", () => this.open());
     }
 
-    // Close modal on close / cancel click
+    // Close or cancel on button clicks
     if (this.btnClose) {
-      this.btnClose.addEventListener("click", () => this.close());
+      this.btnClose.addEventListener("click", () => this.handleCancelOrClose());
     }
     if (this.btnCancel) {
-      this.btnCancel.addEventListener("click", () => this.close());
+      this.btnCancel.addEventListener("click", () => this.handleCancelOrClose());
     }
 
-    // Close on backdrop click (if not processing)
+    // Backdrop click
     if (this.modal) {
       this.modal.addEventListener("click", (e) => {
-        if (e.target === this.modal && !this.isProcessing) {
-          this.close();
+        if (e.target === this.modal) {
+          this.handleCancelOrClose();
         }
       });
     }
 
-    // Escape key closes modal
+    // Escape key closes or cancels
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.isOpen() && !this.isProcessing) {
-        this.close();
+      if (e.key === "Escape" && this.isOpen()) {
+        this.handleCancelOrClose();
       }
     });
 
@@ -162,14 +164,35 @@ export class UploadPanel {
   }
 
   close() {
-    if (this.isProcessing || !this.modal) return;
+    if (this.isProcessing) {
+      this.cancel();
+      return;
+    }
+    if (!this.modal) return;
     this.modal.classList.add("hidden");
     document.body.style.overflow = "";
     this.resetState();
   }
 
+  handleCancelOrClose() {
+    if (this.isProcessing) {
+      this.cancel();
+    } else {
+      this.close();
+    }
+  }
+
+  cancel() {
+    if (this.isProcessing) {
+      api.cancelUpload();
+    }
+  }
+
   resetState() {
     this.isProcessing = false;
+    this._currentFileName = null;
+    this._currentFileSize = null;
+
     if (this.fileInput) this.fileInput.value = "";
 
     // Show dropzone & demo choices
@@ -177,7 +200,7 @@ export class UploadPanel {
     const demoPresets = document.getElementById("uploadDemoPresets");
     if (demoPresets) demoPresets.classList.remove("hidden");
 
-    // Hide progress and error
+    // Hide progress, error, and file card
     if (this.progressContainer) this.progressContainer.classList.add("hidden");
     if (this.errorBanner) this.errorBanner.classList.add("hidden");
     if (this.fileInfoCard) this.fileInfoCard.classList.add("hidden");
@@ -190,13 +213,24 @@ export class UploadPanel {
     if (this.percentText) this.percentText.textContent = "0%";
     if (this.stageText) this.stageText.textContent = "Ready";
 
-    // Enable buttons
+    // Enable buttons and reset labels
     if (this.btnClose) this.btnClose.disabled = false;
-    if (this.btnCancel) this.btnCancel.disabled = false;
+    if (this.btnCancel) {
+      this.btnCancel.disabled = false;
+      this.btnCancel.textContent = "Cancel";
+    }
+    if (this.btnRetryUpload) {
+      this.btnRetryUpload.textContent = "Try Again";
+    }
+
+    const errCodeEl = document.getElementById("uploadErrorCode");
+    if (errCodeEl) errCodeEl.style.color = "";
   }
 
   showProcessing(fileName, fileSize) {
     this.isProcessing = true;
+    this._currentFileName = fileName;
+    this._currentFileSize = fileSize;
 
     // Hide dropzone and presets
     if (this.dropzone) this.dropzone.classList.add("hidden");
@@ -209,13 +243,30 @@ export class UploadPanel {
     if (this.fileInfoCard) this.fileInfoCard.classList.remove("hidden");
 
     if (this.fileNameText) this.fileNameText.textContent = fileName;
-    if (this.fileSizeText) this.fileSizeText.textContent = formatBytes(fileSize);
+    if (this.fileSizeText) this.fileSizeText.textContent = fileSize ? formatBytes(fileSize) : "--";
 
-    if (this.btnClose) this.btnClose.disabled = true;
-    if (this.btnCancel) this.btnCancel.disabled = true;
+    const statusPill = document.getElementById("uploadStatusPill");
+    if (statusPill) {
+      statusPill.className = "status-pill pill-uploading";
+      statusPill.textContent = "UPLOADING";
+    }
+
+    if (this.progressBarFill) {
+      this.progressBarFill.style.width = "0%";
+      this.progressBarFill.classList.remove("progress-fill-error", "progress-fill-done");
+    }
+    if (this.percentText) this.percentText.textContent = "0%";
+    if (this.stageText) this.stageText.textContent = `Preparing ${fileName}...`;
+
+    // Keep cancel and close buttons enabled so user can cancel
+    if (this.btnClose) this.btnClose.disabled = false;
+    if (this.btnCancel) {
+      this.btnCancel.disabled = false;
+      this.btnCancel.textContent = "Cancel Upload";
+    }
   }
 
-  updateProgress({ state, progress, stage_text }) {
+  updateProgress({ state, progress, stage_text, bytesLoaded, bytesTotal }) {
     const pct = Math.max(0, Math.min(100, Math.round((progress || 0) * 100)));
 
     if (this.progressBarFill) {
@@ -230,33 +281,115 @@ export class UploadPanel {
 
     const statusPill = document.getElementById("uploadStatusPill");
     if (statusPill) {
-      statusPill.className = `status-pill pill-${state}`;
-      statusPill.textContent = (state || "RUNNING").toUpperCase();
+      if (state === "uploading") {
+        statusPill.className = "status-pill pill-uploading";
+        statusPill.textContent = "UPLOADING";
+        if (this.btnCancel) this.btnCancel.textContent = "Cancel Upload";
+      } else if (state === "queued") {
+        statusPill.className = "status-pill pill-running";
+        statusPill.textContent = "QUEUED";
+        if (this.btnCancel) this.btnCancel.textContent = "Stop Waiting";
+      } else if (state === "done") {
+        statusPill.className = "status-pill pill-done";
+        statusPill.textContent = "COMPLETE";
+        if (this.btnCancel) this.btnCancel.textContent = "Cancel";
+      } else {
+        // running / analyzing
+        statusPill.className = "status-pill pill-running";
+        statusPill.textContent = "ANALYZING";
+        if (this.btnCancel) this.btnCancel.textContent = "Stop Waiting";
+      }
     }
   }
 
-  showError(err) {
+  showCancelled() {
+    this.isProcessing = false;
+    this.resetState();
+  }
+
+  showStoppedWaiting(message, jobId) {
     this.isProcessing = false;
     if (this.btnClose) this.btnClose.disabled = false;
-    if (this.btnCancel) this.btnCancel.disabled = false;
+    if (this.btnCancel) {
+      this.btnCancel.disabled = false;
+      this.btnCancel.textContent = "Close";
+    }
 
     if (this.progressContainer) this.progressContainer.classList.add("hidden");
     if (this.errorBanner) this.errorBanner.classList.remove("hidden");
 
     const errCodeEl = document.getElementById("uploadErrorCode");
     if (errCodeEl) {
-      errCodeEl.textContent = (err.code || "analysis_error").toUpperCase();
+      errCodeEl.textContent = "STOPPED_WAITING";
+      errCodeEl.style.color = "var(--warning)";
+    }
+    if (this.errorMessageText) {
+      this.errorMessageText.textContent =
+        message ||
+        `Stopped waiting for server analysis job (${jobId || "in-flight"}). Note: The capture was received by the backend; client has stopped polling.`;
+    }
+
+    const statusPill = document.getElementById("uploadStatusPill");
+    if (statusPill) {
+      statusPill.className = "status-pill pill-cancelled";
+      statusPill.textContent = "STOPPED";
+    }
+
+    if (this.btnRetryUpload) {
+      this.btnRetryUpload.textContent = "Start Over";
+    }
+  }
+
+  showError(err, fileName = null, fileSize = null) {
+    this.isProcessing = false;
+    if (this.btnClose) this.btnClose.disabled = false;
+    if (this.btnCancel) {
+      this.btnCancel.disabled = false;
+      this.btnCancel.textContent = "Close";
+    }
+
+    const targetFileName = fileName || this._currentFileName;
+    const targetFileSize = fileSize || this._currentFileSize;
+
+    // Show file card if filename is available
+    if (targetFileName) {
+      if (this.dropzone) this.dropzone.classList.add("hidden");
+      const demoPresets = document.getElementById("uploadDemoPresets");
+      if (demoPresets) demoPresets.classList.add("hidden");
+
+      if (this.fileInfoCard) this.fileInfoCard.classList.remove("hidden");
+      if (this.fileNameText) this.fileNameText.textContent = targetFileName;
+      if (this.fileSizeText) this.fileSizeText.textContent = targetFileSize ? formatBytes(targetFileSize) : "--";
+
+      const statusPill = document.getElementById("uploadStatusPill");
+      if (statusPill) {
+        statusPill.className = "status-pill pill-error";
+        statusPill.textContent = "ERROR";
+      }
+    }
+
+    if (this.progressContainer) this.progressContainer.classList.add("hidden");
+    if (this.errorBanner) this.errorBanner.classList.remove("hidden");
+
+    const errCodeEl = document.getElementById("uploadErrorCode");
+    if (errCodeEl) {
+      errCodeEl.textContent = (err.code || "ANALYSIS_ERROR").toUpperCase();
+      errCodeEl.style.color = "var(--danger)";
     }
     if (this.errorMessageText) {
       this.errorMessageText.textContent = err.message || "Capture analysis encountered an unexpected error.";
     }
+
+    if (this.btnRetryUpload) {
+      this.btnRetryUpload.textContent = "Try Again";
+    }
   }
 
   async processFile(file) {
-    // Validate first
+    // Client-side validation first
     const val = api.validateCaptureFile(file);
     if (!val.valid) {
-      this.showError(val);
+      this.showError(val, file.name, file.size);
       return;
     }
 
@@ -269,7 +402,13 @@ export class UploadPanel {
 
       this._handleSuccess(result, file.name);
     } catch (err) {
-      this.showError(err);
+      if (err.code === "cancelled") {
+        this.showCancelled();
+      } else if (err.code === "stopped_waiting") {
+        this.showStoppedWaiting(err.message, err.jobId);
+      } else {
+        this.showError(err, file.name, file.size);
+      }
     }
   }
 
@@ -283,7 +422,13 @@ export class UploadPanel {
 
       this._handleSuccess(result, `${demoId}.csv`);
     } catch (err) {
-      this.showError(err);
+      if (err.code === "cancelled") {
+        this.showCancelled();
+      } else if (err.code === "stopped_waiting") {
+        this.showStoppedWaiting(err.message, err.jobId);
+      } else {
+        this.showError(err, `${demoName} (.csv)`, 42800000);
+      }
     }
   }
 

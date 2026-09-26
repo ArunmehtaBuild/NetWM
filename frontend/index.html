@@ -34,13 +34,16 @@
         </div>
         <div class="pill pill-accent" id="thresholdPill">Threshold: --</div>
         <div class="pill" id="horizonPill">Horizon K=10</div>
+        <div class="pill pill-warning hidden" id="inSamplePill" title="The model checkpoint was trained on this day">
+          <span class="status-dot"></span>In-Sample Evaluation
+        </div>
         <div class="pill pill-mock" id="mockPill">
           <span class="status-dot"></span>Mock Fixture
         </div>
       </div>
     </header>
 
-    <!-- Dev Notice Banner (Shown for Dev/Oracle Fixtures) -->
+    <!-- Dev Notice Banner (Shown for Dev/Oracle Fixtures or In-Sample evaluations) -->
     <div class="dev-banner hidden" id="devBanner">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -55,8 +58,10 @@
       <div class="control-group">
         <label for="demoSelector" style="color:var(--text-dim); font-size:11px; text-transform:uppercase; font-weight:600;">Scenario:</label>
         <select id="demoSelector" class="select-input">
-          <option value="thursday">Thursday-WorkingHours (Infiltration · Real Deployable)</option>
-          <option value="friday">Friday-WorkingHours (Botnet / PortScan / DDoS)</option>
+          <option value="thursday">Thursday-WorkingHours (Infiltration · 972 windows)</option>
+          <option value="friday">Friday-WorkingHours (Botnet / PortScan / DDoS · 968 windows)</option>
+          <option value="monday_benign">Monday-WorkingHours (Quiet Benign · 972 windows)</option>
+          <option value="wednesday_dos">Wednesday-WorkingHours (DoS Burst · 972 windows)</option>
           <option value="thursday_oracle">Thursday Oracle (Dev-Only · Hand-Tuned Lead Time)</option>
         </select>
         <button class="btn btn-action" id="btnUploadCapture" title="Upload PCAP or Flow CSV dataset">
@@ -145,6 +150,10 @@
             <label class="toggle-control" title="Toggle K-step stage escalation forecast (p_cum_escalate)">
               <input type="checkbox" id="toggleEscalateSeries">
               <span>Escalation (p_cum_escalate)</span>
+            </label>
+            <label class="toggle-control" title="Toggle surprise score (model negative log-likelihood on secondary Y-axis)">
+              <input type="checkbox" id="toggleSurpriseSeries" checked>
+              <span style="color:#38bdf8;">Surprise (NLL)</span>
             </label>
             <div class="panel-tag">60s WINDOW · 30s STRIDE</div>
           </div>
