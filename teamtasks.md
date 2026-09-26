@@ -84,6 +84,28 @@ supposed to show a PCAP upload. This is now the single largest submission risk.
 independent. If Alok's track slips again, the fallback is a synthesised PCAP - decide that this week,
 not in the last 48 hours.
 
+## While r4 runs - parallel work (2026-09-26)
+
+Y-6 occupies one machine for ~90 minutes and gates only the results slide. Nothing below waits on it.
+
+| person | id | task | done when |
+|---|---|---|---|
+| **Alok** | **A-2/A-3** | in flight on `a2` - packet features + PCAP -> flows. **This is the critical path**: it gates the video, and the PS requires packet-level features | `predict.py --input x.pcap` works and a PCAP upload returns a v1.1 payload |
+| | **A-5** | one small PCAP demo (< 5 MB, one clean story) registered in `data/demo/index.json` | the scenario picker offers a PCAP that runs in under 10 s |
+| **Arun** | **R-8** | `skipif` on missing `data/demo/*.csv` so a clean clone stays green | fresh clone: `pytest backend/tests` passes with no generated data |
+| | **R-9** | drive SSE replay from the dashboard - implemented, never exercised from the UI | a day replays in the browser without stutter |
+| | **R-11** | extend `test_upload_e2e.py` to the PCAP path as soon as A-3 lands; today, write it `skipif` on the aggregator being importable | the PCAP path has the same end-to-end test the CSV path got |
+| **Harshit** | **H-10** | replay against the live stream, fix whatever the integration shows | play/pause/scrub against the API, not a fixture |
+| | **H-12** | upload states for a large file: progress, cancel, and an honest error for an unreadable capture | a 200 MB upload never looks frozen |
+| **Sanchi** | **S-6** | the 5-slide deck. Slide 5 is **"what we measured that did not work"** - D-021 requires it, and the elimination chain (E12 -> E13 -> E14 -> E15 -> E16) is the strongest thing we have | draft reviewed by two teammates |
+| | **S-7** | extend `research/features.md` to the v2 trend block and the per-host channel - it covers v1 only | a reader can map every column in S_t v2 to a behaviour |
+| **Atharv** | **T-14** | the demo script: which capture, what is said at each beat, and the exact wording on the forecasting gap. Harshit cannot rehearse without it | a script that survives a judge's follow-up |
+| | **T-10** | promote `alarm_rate` / `eligible` / `confirm_before_onset` into `metrics.py` with a regression check | one lead-time implementation in the repo |
+| | **T-15** | submission gap-check against the PS deliverables list, top to bottom, and put the gaps on this board | every deliverable has an owner and a state |
+
+**Blocked on r4 only:** the E16 write-up, the results slide's headline row, and the results section of
+`docs/architecture.md` (T-13). Everything else in this table can finish today.
+
 ## Repo structure and who owns what
 
 The backend and the frontend are **separate deployables** as of 21a9786 - pull before you start.
