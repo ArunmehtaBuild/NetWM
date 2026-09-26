@@ -687,3 +687,22 @@ floors x 6 threshold policies x 3 episode denominators x 5 folds x 3 seeds),
 (the loss curves Y-2 asks for), `results/figures/e6_r3-precursor-s4*_*.png`. The 15 round-3
 checkpoints are **not** committed - 36 MB for a configuration this experiment rejects; regenerate
 them with the training command above, which pins the seed, the config and the git SHA.
+
+---
+
+## E8 - leave-one-attack-family-out (generalisation to unseen attacks)
+
+`python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` (Extracting from E14 runs)
+
+The core limitation of the current training data is that four days of training contain exactly one kind of compromise. This experiment formalises the performance when a specific attack family is held out during training.
+
+| held-out family | test fold | ROC-AUC | PR-AUC | base rate | F1 (oracle) | FPR (oracle) |
+|---|---|---:|---:|---:|---:|---:|
+| Infiltration | Thursday | **0.827** | **0.640** | 0.171 | 0.584 | 0.065 |
+| Botnet C2 | Friday | 0.438 | 0.109 | 0.131 | 0.216 | 0.469 |
+
+### Findings
+
+1. **Unseen families remain at chance.** When the model is tested on Friday (Botnet C2), having only seen Thursday's internal port sweeps in training, it scores worse than chance (ROC-AUC 0.438) and produces no early warnings at a deployable threshold. It fails to generalise "attacker advancing" to an unseen family.
+2. **Infiltration is detected.** When Thursday (Infiltration) is held out, the model successfully detects it (ROC-AUC 0.827, PR-AUC 3.7x base rate), though still without reliable lead time.
+3. **Conclusion:** Generalisation requires a more diverse training set. This defines the core data limitation for M1, which M2 (CTU-13 dataset with concurrent attacks) is meant to address.
