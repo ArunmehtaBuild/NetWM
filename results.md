@@ -883,3 +883,18 @@ Artefacts: `results/tables/e16-precursor-r4-rank-3seeds{,_combined,_per_onset}.c
 `results/tables/e16d-precursor-r4-rank-whole-s42{,_combined,_per_onset}.csv`,
 `results/tables/r4-rank-s4*_training_curves.csv`, `results/runs/r4-rank-*/train.log`. The 20 round-4
 checkpoints are not committed (rejected configuration); the commands above pin seed, config and SHA.
+
+---
+
+## E17 - Calibration of e4e7-worldmodel-r2 on Held-out Days
+
+`python scripts/calibration_eval.py` · run: `ac4ec62` · 2026-09-26
+
+**Write-up (Y-1w):** E17 tests whether calibration transfers to unseen days. 
+
+- **Thursday (Held-out):** Brier score 0.097 against 0.142 for a constant base rate. ECE improved from 0.077 to 0.061 with temperature scaling.
+- **Friday (Held-out):** Brier score 0.280 against 0.114, which is *worse than a constant baseline*. ECE worsened from 0.245 to 0.270 with temperature scaling.
+
+**Conclusion:** Temperature scaling makes calibration worse on the Friday fold. Calibration does not transfer to unseen days, so probabilities cannot be quoted honestly. We must maintain the alert budget (D-017 stays) and ensure the dashboard labels p-values as "score", not "calibrated probability". 
+
+Artefacts: `results/tables/e17_*`, `results/figures/e17_reliability.png`. `scripts/calibrate.py` is marked superseded.
