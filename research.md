@@ -13,7 +13,7 @@ how it changed the build.
 | [research/state-normalisation.md](research/state-normalisation.md) | Why a train-fitted z-score loses the signal under day-to-day shift; the rank-based inverse normal transform; why whole-capture ranking leaks the future into a lead-time claim and the causal variant does not (S-4, D-025) |
 | [research/ctu13.md](research/ctu13.md) | CTU-13 Dataset Transfer Evaluation: Scenarios, schemas, and adapter plan for M2 |
 
-## The five findings that shaped the design
+## The eight findings that shaped the design
 
 1. **The dataset most IDS papers use is wrong in ways that matter to us.** CICFlowMeter
    mis-terminates TCP flows and the original labelling is purely time-window based, so attack
@@ -33,6 +33,9 @@ how it changed the build.
 5. **CIC-IDS2017 has no real exfiltration stage.** The infiltration day ends in an internal NMAP
    portscan from the compromised host — i.e. lateral movement/discovery — so the exfiltration stage
    is heuristic in M1 and gets real ground truth from CTU-13 in M2 (→ D-003).
+6. **Seed spread is the real margin (E10).** The full model's Thursday F1 spans 0.43-0.57 over three seeds, so a 0.01 effect is noise unless it repeats across seeds. The stochastic latent never cleared that; the multi-step loss did, on detection only. The headline F1 always travels with its range (D-032).
+7. **A pre-registration must be scoreable (E10).** D-030 named a metric the pipeline never recorded (rollout NLL; E5 records MSE), offered an either/or gate, and had a clause the reference model could not pass. All three were fixed before any number was read. Before a run, check that every metric exists in the outputs, that each claim has one gate, and that the reference can pass it.
+8. **Calibration does not transfer to an unseen day (E17).** With compromise positives on only two days, the temperature can only be fitted in-sample, on the checkpoint's training days. Applied to held-out Friday, the result is worse than a constant forecast. The alert budget stays the deployable threshold, and outputs are called risk scores.
 
 ## Sources
 

@@ -54,6 +54,15 @@ class JobStore:
         """Register the callable that runs inference for a job."""
         self._runner = runner
 
+    def _ensure_worker(self) -> None:
+        # Under the lock: two requests arriving after a worker death must not start two workers -
+        # inference stays on a single thread (torch blocks).
+        with self._lock:
+            if not self._worker_thread.is_alive():
+                logger.warning("Worker thread died, restarting worker...")
+                self._worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+                self._worker_thread.start()
+
     def create_job(
         self,
         kind: str,
@@ -68,6 +77,7 @@ class JobStore:
         Uploads pass ``enqueue=False`` and call :meth:`submit` once the file is on disk -
         enqueueing first let the worker pick the job up with ``file_path=None`` (R-5).
         """
+        self._ensure_worker()
         with self._lock:
             self._cleanup_locked()
             job_id = f"j_{uuid.uuid4().hex[:8]}"
@@ -91,6 +101,7 @@ class JobStore:
 
     def submit(self, job_id: str) -> None:
         """Hand a job registered with ``enqueue=False`` to the worker."""
+        self._ensure_worker()
         self._queue.put(job_id)
 
     def discard(self, job_id: str) -> None:

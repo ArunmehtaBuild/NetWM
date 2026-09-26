@@ -100,53 +100,59 @@ afterthought.
 
 ## 6. Results (held-out infiltration day; tables and commands in `results.md`)
 
-| Thursday fold | LR baseline (E3) | NetWM r1 | **NetWM r2** |
+Every NetWM number is the `p_max` alarm statistic at the 10 % alert budget (D-019, D-020). The
+shipped checkpoint is quoted with the range its method gives over three training seeds (D-032).
+
+| Thursday fold (base rate 0.171) | LR baseline (E3) | **NetWM r2, shipped** (E14) | same method, 3 seeds (E10) |
 |---|---:|---:|---:|
-| PR-AUC (base rate 0.171) | 0.139 | 0.473 | **0.675** |
-| ROC-AUC | 0.379 | 0.753 | **0.814** |
-| F1 at a deployable threshold | 0.011 | - | **0.576** (self-budget 10 %) |
-| FPR at that threshold | 0.608 (oracle) | - | **0.027** |
-| episodes warned early | 0 / 4 | 0 / 4 | 0 / 4 |
+| PR-AUC | 0.139 | **0.640** | 0.37-0.64 |
+| ROC-AUC | 0.379 | **0.827** | 0.73-0.83 |
+| F1 at a deployable threshold | 0.011 (own threshold) | **0.576** | 0.43-0.57 |
+| FPR at that threshold | 0.608 (oracle) | **0.027** | 0.03-0.05 |
+| episodes warned early | 0 / 4 | 0 / 4 | - |
 
-Open-loop rollout beats the persistence floor from k = 2 onward (NLL 2.05 vs 2.72 at k = 8) and loses
-at k = 1 - one step ahead, "nothing changes" is still the better guess (E5). Adding 2 minutes of
-history to the baseline does not help it: PR-AUC falls to 0.114 (E3b).
+Even the weakest seed (F1 0.43) is about 40x the baseline. Friday, whose only compromise is a C2
+family seen on no training day, is F1 0.000 on every seed.
 
-Round 3 (first-occurrence hazard + precursor heads, 3 seeds x 5 folds) is **a regression, not an
-improvement**: PR-AUC 0.35-0.45 against round 2's 0.640 on the same fold and threshold policy, for no
-gain in early warning (E15). The shipped checkpoints are therefore round 2. Per D-021 no
-early-warning claim enters this document, because none has survived a deployable threshold.
+Open-loop rollout beats the persistence floor averaged over steps 2-10, on both held-out days and
+every training seed (E10). It loses at k = 1: one step ahead, "nothing changes" is still the better
+guess (E5). Adding 2 minutes of history to the baseline does not help it: PR-AUC falls to 0.114 (E3b).
+
+Round 3 (first-occurrence hazard + precursor heads) was a regression: PR-AUC 0.35-0.45 against
+round 2's 0.640, with no gain in early warning (E15). Round 4 (per-capture rank normalisation) failed
+its bar and was unstable across seeds (E16). The shipped checkpoints are therefore round 2. Per D-021,
+no early-warning claim enters this document, because none has survived a deployable threshold and a
+null.
 
 ## 7. What does not work yet, and what it would take
 
-**No early warning - and the gap is now bounded on all four sides by experiments rather than by
-argument.** D-019 named four candidate causes; each has been tested and eliminated:
+**No early warning, and the gap is bounded by experiments rather than argument.** Five candidate
+causes, each tested and eliminated:
 
 | candidate cause | verdict | evidence |
 |---|---|---|
 | the rollout statistic | ruled out - six statistics, ranking insensitive | E13 |
 | the alarm threshold | ruled out - five policies, zero early warnings at every deployable one | E14 |
-| the two warnings that did survive an oracle threshold | **were chance** - p = 0.41 and p = 0.55 against a circular-shift null | E15a |
+| the two warnings that survived an oracle threshold | **were chance** - p = 0.41 and p = 0.55 against a circular-shift null | E15a |
 | the supervision target | ruled out - first-occurrence hazard + precursor heads fail every clause of a pre-registered bar, on 3 seeds | E15 |
+| the state representation | ruled out - per-capture rank normalisation fails every clause of its bar and is seed-unstable; slope features carry no precursor signal | E16 |
 
-The precursor signal is real but **within-day**: pre-onset windows separate from background at
-ROC-AUC 0.88-0.96 inside a day (E12), while leave-one-day-out the same label is ranked better by a
-single unscaled feature (`uniq_dst_port`, 0.607) than by anything the model produces (0.440-0.533).
-The round-3 heads learned their target - loss falls by two thirds - and carried none of it across a
-day boundary. Two independent runs have now shown the same failure mode: what the model learns about
-an attack is specific to the day it saw it on.
+**Where the signal dies: transfer across days.** Pre-onset windows separate from background at
+ROC-AUC 0.88-0.96 *within* a day (E12). Leave-one-day-out on Thursday, logistic regression over all 70
+features scores 0.604, and `uniq_dst_port` alone scores 0.607 (E16). What a model learns about one
+day's attack families does not carry to another's. The one Thursday onset with a clean quiet run-up
+(602) turns out to be bystander traffic, not the attack (S-8). Testing transfer properly needs more
+compromise families than CIC-IDS2017 has: two, each confined to one day, so leave-one-day-out already
+*is* leave-one-family-out (D-006 amendment).
 
-What remains untested is the **state representation, not the objective**: `S_t` is levels-only, with
-no trend or slope terms, network-wide rather than per-host, and a compromise that is 36 flows out of
-362,076 may simply not move a network-wide average. That is the next experiment, and it is honest to
-say it is a hypothesis rather than a plan that is known to work.
+**Outputs are risk scores, not calibrated probabilities (E17).** A temperature fitted on the training
+days improves held-out Thursday but makes held-out Friday worse than a constant forecast. The
+deployable threshold stays an alert budget (D-017).
 
-**Unseen families sit at chance.** Friday's botnet C2 is the only C2 in the week, so a model trained
-on the other four days has never seen an attacker advance that way. That is a dataset limitation,
-answered by CTU-13 rather than by tuning.
-
-**Roadmap.** M2 CTU-13 (scenario-held-out, real C2 and exfiltration labels), M3 CIC-IDS2018 (scale),
-M4 UNSW-NB15 (cross-domain transfer).
+**Roadmap.** M2 CTU-13: seven botnet families across 13 scenarios, the experiment that can test
+transfer. Its public PCAPs are botnet-only, so M2 is a new model on a reduced flow state, not a
+transfer test of this checkpoint (`research/ctu13.md`). M3 CIC-IDS2018 (scale), M4 UNSW-NB15
+(cross-domain).
 
 ## Deployment and reproducibility
 

@@ -29,28 +29,26 @@ produced them, or when the thing it describes demonstrably works end to end - no
 
 | person | id | task | done when |
 |---|---|---|---|
-| **Atharv** | **T-19** (decision, **first**) | **How the headline F1 is quoted.** E10: the full model's Thursday F1 is 0.568 / 0.432 / 0.470 over seeds 42/43/44. The 0.576 quoted everywhere is the seed-42 submission checkpoint, at the top of that range. Recommended: keep 0.576 as "the submission checkpoint" and always show "0.43-0.57 over three seeds" beside it. Record it as D-032. It gates Y-10, S-6b and H-15 | D-032 on main |
-| | **A-README** | Cold-test the README on a fresh clone: clone -> `get_data.py` -> `make_demo_samples.py` -> `run_demo.bat` | the dashboard shows `mock: false` from a fresh clone |
-| | **T-13** | Results section of `docs/architecture.md`: E16 (representation eliminated), E17 (calibration does not transfer), E10 (components unsupported; the multi-step loss is a detection component) | it matches `results.md` |
-| | **T-10** | Promote `alarm_rate`, `eligible` and `confirm_before_onset` into `metrics.py`, with a regression check | one lead-time implementation in the repo |
-| | **T-15** | Submission gap-check against the PS deliverables list | every deliverable has an owner and a state |
-| **Yash** | | **No GPU and no working Python on Yash's machine.** Numbers run on Atharv's machine; Yash designs, pre-registers and writes. Y-4b and Y-1x landed (`0092920`, `d74ea57`); corrections in `88cb8a3` | |
-| | **Y-10** (writing, after T-19) | **Claims audit.** Check every number and claim in `README.md`, `docs/architecture.md`, `docs/demo_script.md`, `docs/presentation.md` and the model card (`backend/inference.py`, D-024). Each must cite an experiment and not contradict what we now know: <br>• "probability" -> "risk score" (E17). <br>• "beats persistence from k = 2 onward" -> "averaged over steps 2-10, on both held-out days" (E10; r2 loses at k = 2 on Friday). <br>• The headline F1 quoted per D-032. <br>• Nothing implies warning *before* compromise (D-021). <br>• Stochastic latent and multi-step loss described as E10 found them | `docs/claims_audit.md` (claim -> source -> verdict) plus the text fixes, on main |
-| | **Y-11** (writing) | Fold E10 and E17 into `research/early-warning-nulls.md` and the findings list in `research.md`. <br>• Seed spread as the real margin: a 0.01 bar inside a 0.14 spread. <br>• Pre-registration drift, twice (the NLL metric; the either/or gate). <br>• Calibration that cannot be held out when positives live on one day | research notes updated and indexed |
-| **Sanchi** | **S-6b** | **Turn `docs/presentation.md` into the 5-slide deck, with the review fixes** (branch `s6-s7-features-presentation`, not merged). <br>• Slide 2: the model's state is *flow* features. PCAP ingestion exists, but packet features are not in `S_t`. Remove "before compromise completes" (D-021), and say "risk score", not "probability" (E17). Add the world-model evidence: the rollout beats persistence averaged over steps 2-10 (E10). <br>• Slide 3: stage mapping is shown, not validated. <br>• Slide 4: "the held-out infiltration day (Thursday)", not "held-out days" (Friday F1 is 0.000). Quote F1 per D-032. <br>• Slide 5: add E17 (probabilities don't transfer) and E10 (the components didn't earn their place; the multi-step loss drives detection) | an exported deck (PDF or PPTX, 5 slides) reviewed by two teammates; the gap wording still matches `docs/demo_script.md` |
-| **Alok** | **A-3b** | **Make the aggregator match CICFlowMeter semantics.** <br>• Packet lengths from payload, not `len(pkt)`. <br>• Flow IAT over both directions. <br>• FIN/RST and 120 s idle termination. <br>• Init windows from the SYN and SYN-ACK. <br>• A session cap; time a 100 MB file. <br>Extend `tests/test_pcap_ingest.py` | features from a PCAP of known flows match the CSV values for the same flows |
-| | **A-5b** | **Redo the demo PCAP** from a slice of the real Thursday flows. At least 50 min, fixed start time, the training address plan, in git via `!data/demo/*.pcap`, under 5 MB. Describe it from what the dashboard actually shows | the demo picker runs it in under 10 s; its description is measured |
-| **Arun** | **R-12** | `in_sample: true/false` in the payload when the demo day is / isn't in the checkpoint's `train_days`; note it in the contract. **The frontend is ready** (H-14 renders it) | a contract test; Monday shows IN-SAMPLE in the browser |
-| | **R-11** | PCAP end-to-end upload test. Unblocked: the aggregator exists | the PCAP path has the same end-to-end test as the CSV path |
+| **Atharv** | **G-2** (gap) | **The architecture document is about 1,750 words, roughly 4 pages; the PS allows 2.** Write the 2-page version the judges read, and keep `docs/architecture.md` as the reference it links to | a 2-page PDF in `docs/` |
+| | **G-3** (gap) | **The demo video is capped at 2 minutes, but `docs/demo_script.md` is timed for 5.** Cut it to 2: the Thursday slice, the 17:00 scan and surprise, the sweep with the why panel, the model card with D-032, the gap line. PCAP upload gets 10 s once A-5b lands | a 2-minute script; H-15 records from it |
+| | **G-6** (gap) | **One benchmark table** as the PS asks: F1, precision, recall and FPR for logistic regression vs NetWM, on Thursday and Friday, with the seed range. The numbers exist in E3, E14 and E10 but are spread across entries | the table in `results.md` and on slide 4 |
+| | **G-5** (gap, decision) | **Packet-level features are required, but `S_t` is flow-only.** PCAPs are parsed and packet features extracted, but the corrected CIC-IDS2017 release is CSV, so the model never trained on them. Decide how the submission says so (architecture doc, slide 2) and whether the dashboard shows packet stats for a PCAP upload | a decision entry; the wording is in the doc and the deck |
+| **Arun** | **G-1** (gap, **owner action**) | **The repo is PRIVATE.** The checklist had marked "public GitHub repo" done. Make it public, or confirm the evaluators will be given access, before submission | `gh repo view` shows PUBLIC, or access is confirmed in writing |
+| | **R-12** | `in_sample: true/false` in the payload when the demo day is / isn't in the checkpoint's `train_days`. The frontend badge (H-14) is ready | a contract test; Monday shows IN-SAMPLE in the browser |
+| | **R-11** | PCAP end-to-end upload test (the aggregator exists) | same coverage as the CSV path |
 | | **R-8** | `skipif` when the generated `data/demo/*.csv` files are missing | a fresh clone passes `pytest backend/tests` |
-| | **R-9** | H-10's SSE replay is merged. Verify a full day replays from the dashboard against the API, fix what breaks | a full day replays without stutter |
-| **Harshit** | **H-16** | Wherever `p_max` / `p_cum` is shown as a probability, call it a *risk score*, with a tooltip: "ranked against this capture's alert budget, not a calibrated probability (E17)" | no screen calls these numbers a probability |
-| | **H-17** (new) | In mock mode, an upload shows the Thursday fixture under the *uploaded* file's name, after fake stage texts ("Rolling out RSSM world model..."). If a presenter ever runs with `?mock`, the screen would claim to have analysed their file. Say "fixture shown, your file was not analysed", and drop the imitation stages | a mock upload cannot be mistaken for an analysis |
-| | **H-15** | Rehearse `docs/demo_script.md` twice against the live API, then record. Needs H-16 and R-12 first; the PCAP half needs A-5b | a recorded run that follows the script |
+| | **R-9** | Verify a full day replays over SSE from the dashboard (H-10 is merged) | a full day replays without stutter |
+| **Yash** | **G-4** (gap) | **E9, the MITRE stage confusion matrix, was planned and never run.** Stage mapping is a named PS output, and on the demo slice the stage head calls the internal sweep Reconnaissance where the truth is Lateral Movement. Design E9 (per-stage precision and recall on the held-out days, r2 checkpoint); Atharv runs it | E9 in `results.md`; slide 3 quotes it |
+| | **G-7** (gap) | **E11, the explainability sanity check, was planned and never run.** Do the top attributions on known attacks point at the known signature, e.g. port spread on the 17:00 scan and fan-out on the sweep? Design it; Atharv runs it | E11 in `results.md` |
+| **Sanchi** | **S-6b** | Deck from `docs/presentation.md` with the review fixes (branch `s6-s7-features-presentation`, unchanged since 18:49). Use D-032 for the headline, "risk score" not "probability", no "before compromise", flow-only `S_t`, and add E10/E17 to slide 5 | an exported 5-slide deck reviewed by two teammates |
+| **Alok** | **A-3b** | Aggregator to CICFlowMeter semantics: payload lengths, bidirectional IAT, FIN/RST and 120 s idle termination, init windows, a session cap | features from a PCAP of known flows match the CSV values |
+| | **A-5b** | Demo PCAP from real Thursday flows. **The branch `alok` isn't mergeable:** its catalogue entry claims 16,000 portscan flows in 16:40-17:30, where the data has 955. It includes no PCAP and no generator, and the commit is a copy of a board commit under Atharv's name. Commit the generator and the PCAP (`!data/demo/*.pcap`, under 5 MB) under your own name, with labels measured from the data | the demo picker runs it in under 10 s |
+| **Harshit** | **H-17** | In mock mode, an upload shows the fixture under the uploaded file's name after imitation stage texts. Say "fixture shown, your file was not analysed" | a mock upload cannot pass for an analysis |
+| | **H-15** | Rehearse and record from the **2-minute** script (G-3), after R-12. The PCAP half needs A-5b | a recorded run under 2 minutes that follows the script |
 
-**Order that matters:** T-19 first, because the headline number's wording gates the slides, the
-demo script and the model card. R-12 and H-16 land before H-15 records. A-5b gates the PCAP half of
-the video. Nothing on the model side still needs the GPU before submission.
+**Order that matters:** G-1 is a one-click owner action and cannot slip past submission. G-3 comes
+before H-15 records, because a 5-minute script cannot make a 2-minute video. G-4 and G-7 are the last
+two PS outputs with no measurement behind them. The model side needs no more GPU time.
 
 **Ownership, 2026-09-26.** Alok's cards moved to Atharv, then Alok delivered A-1/A-3/A-5 himself
 (PR #8). The follow-ups from that review (A-3b, A-5b) go back to **Alok**; the README cold test stays
@@ -117,15 +115,20 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 
 ## Submission checklist (PS 26153)
 
+T-15 gap check, 2026-09-26. The PS lists five deliverables; the rest are its indicative solution.
+
 | deliverable | owner | status |
 |---|---|---|
-| Public GitHub repo link | Arun | [x] |
-| README with setup instructions a fresh machine can follow | Atharv | [ ] |
-| Architecture document (max 2 pages) | Atharv | [ ] |
-| Demo video (max 2 min), CSV **and** PCAP upload | Harshit | [ ] |
-| Technical presentation (max 5 slides) | Sanchi | [ ] |
-| Benchmark table vs logistic regression | Atharv | [ ] |
-| Model weights + reproducible training config | Yash | [x] r2 checkpoints committed |
+| Source code link | Arun | [ ] **repo is PRIVATE** (G-1) |
+| README with setup instructions | Atharv | [x] cold-tested on a fresh clone (`c5680e7`) |
+| Architecture document (max 2 pages) | Atharv | [ ] content current (`04178b9`), but about 4 pages (G-2) |
+| Demo video (max 2 minutes), CSV and PCAP upload | Harshit | [ ] script is 5 minutes (G-3); PCAP demo pending (A-5b) |
+| Technical presentation (max 5 slides) | Sanchi | [ ] outline only (S-6b) |
+| Benchmark vs logistic regression (F1, precision, recall, FPR) | Atharv | [ ] numbers exist, one table missing (G-6) |
+| Flow **and** packet-level features | Atharv | [ ] packet features extracted but not model inputs (G-5) |
+| MITRE stage mapping, validated | Yash | [ ] E9 never run (G-4) |
+| Explainability output | Yash | [x] attention + IG; [ ] sanity check E11 (G-7) |
+| Model weights + reproducible training config | Yash | [x] r2 checkpoints and commands |
 | Everything runs offline, no cloud API calls | Arun | [x] |
 
 ## Closed
@@ -143,6 +146,8 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | A-1, A-3 | D-031 (Scapy synthesis); `pcap_to_flows` - a `.pcap` returns a v1.1 payload, with ground truth reported unavailable (PR #8 + fix-up) |
 | H-10, H-12, H-13, H-14 | live SSE replay, upload states, surprise series, in-sample badge (PR #9, verified live; follow-up `dc063e8`: dev files out of the site root, honest scenario labels, UTC times) |
 | Y-4b, Y-1x, S-7 | E10 and E17 written (`0092920`, `d74ea57`; corrections `88cb8a3`); features doc note (on Sanchi's branch) |
+| T-19, T-13, T-10, A-README, T-15 | D-032 (headline F1 with its seed range); architecture results on one statistic with E10/E16/E17; one lead-time implementation with a frozen-reference regression test; README cold-tested on a fresh clone; gap check -> G-1..G-7 (`04178b9`, `2211876`, `c5680e7`, `b186f08`) |
+| H-16, Y-10, Y-11 | risk-score labels (`8ef5657`, landed from `h16` without its stale files); claims audit and research notes (`357ebd9`, corrected in `04178b9`) |
 | T-18b | nine E10 runs scored; `results/tables/e10_ablation_summary.csv` via `scripts/e10_collect.py` (`a7909db`) |
 | T-18, Y-4d, Y-1w | E10 sweep (9 runs, all exit 0, released only after D-030 was fixed); D-030 amended by Yash (`6390d6b`) and clarified before any number was read (`93e96f9`: E5 MSE, Thursday F1 alone gates); E17 written (`6390d6b`) |
 | Y-4c, Y-8b | D-030 seed rule and a separate criterion for each ablation; CTU-13 note corrected (botnet-only PCAPs, scenario table, sizes) (`e5a7a45`) |

@@ -990,3 +990,30 @@ does react to the scan (33 against 0). The addresses (192.168.1.x, 10.0.0.5) sit
 training network's `internal_prefixes`. The synthesis choice stands; the capture must be long enough
 for the model's context and must use the training network's address plan. Note that the project
 downloads CSVs only; no CIC-IDS2017 PCAP is on disk (`scripts/get_data.py`).
+
+---
+
+### D-032 — The headline F1 is the submission checkpoint's, and it travels with its seed range
+*Date: 2026-09-26 · Status: accepted · Evidence: E10, E14, D-024 · Board: T-19*
+
+**Decision.** Every artefact quotes Thursday detection as **F1 0.576 for the submission checkpoint
+(`e4e7-worldmodel-r2`, seed 42), 0.43-0.57 over three training seeds**. The range always appears next
+to the number: slides, demo script, architecture doc, README and anywhere the model card is shown.
+Where only one number fits, say "0.576 on the checkpoint we ship". Never write "the model scores
+0.576" unqualified. The same applies to PR-AUC: 0.640 for the checkpoint, 0.37-0.64 over seeds.
+
+**Why.** E10 retrained the full model on seeds 42, 43 and 44. Thursday F1 was 0.568 / 0.432 / 0.470,
+and seed 42 reproduces the checkpoint (r2: 0.576). So the headline sits at the top of a 0.14 spread
+whose mean is about 0.49. Quoting the mean instead would describe models we don't ship. Quoting the
+checkpoint alone would present the luckiest seed as the method's result. The checkpoint number is
+the true figure for what is demonstrated; the range is what the method delivers. A judge who asks
+"is that one seed?" should find the answer already on the slide. This is the same discipline E16
+applied to r4, where one seed in three collapsed.
+
+**What does not change.** The comparison with logistic regression (0.011) holds at every seed: the
+worst seed, 0.43, is still about 40x the baseline. Friday detection is 0.000 on every seed and is
+reported as such (E14, E10).
+
+**Revisit if.** A later run replaces the submission checkpoint. Then quote that checkpoint, with its
+own seed range, in the same commit that changes `_E14_RUN` (D-024).
+

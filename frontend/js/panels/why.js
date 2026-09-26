@@ -60,7 +60,7 @@ export class WhyPanel {
           <div class="why-section-header">
             <div>
               <span class="why-section-title">Why This Forecast · Window t=${w.t}</span>
-              <span class="why-section-sub">(${formatIsoTime(w.ts)} · Risk p_max: ${formatPercent(w.p_max)})</span>
+              <span class="why-section-sub" title="Ranked against this capture's alert budget, not a calibrated probability (E17)">(${formatIsoTime(w.ts)} · Risk p_max: ${formatPercent(w.p_max)})</span>
             </div>
             <span class="why-section-badge">Local Integrated Gradients</span>
           </div>

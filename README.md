@@ -6,8 +6,8 @@ NetWM learns the *dynamics* of a network — how its state evolves from one time
 next — instead of classifying flows in isolation. From a stream of traffic telemetry it builds a
 state `S_t`, learns `P(S_{t+1} | S_t)`, rolls that model forward K steps, and answers:
 
-> *"Given what the network looks like right now, what is the probability that an infiltration
-> completes in the next K windows, which MITRE ATT&CK stage are we heading into, and which flags,
+> *"Given what the network looks like right now, what is the risk score for an infiltration
+> completing in the next K windows, which MITRE ATT&CK stage are we heading into, and which flags,
 > ports and flow statistics are driving that forecast?"*
 
 ```
