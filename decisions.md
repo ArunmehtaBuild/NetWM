@@ -932,3 +932,18 @@ shows the weights *do* transfer when families are held out deliberately - that w
 diagnosis back towards the features. Or if a capture set with more than one compromise family per
 fold becomes available, since every number here rests on 26 attack episodes and 5 compromise onsets
 in a single synthetic week.
+
+---
+
+### D-029 — PCAP demo source: Scapy synthesis
+*Date: 2026-09-26 · Status: accepted*
+
+**Decision.** The small PCAP demo (A-5) is synthesized using Scapy rather than extracted from a real
+capture.
+
+**Why.** The demo needs to be under 5 MB with one clean, easily explainable story (e.g., a sequential
+port scan) that the model can confidently flag. Extracting and anonymizing a clean 5 MB slice from
+the 30+ GB CIC-IDS2017 PCAPs while maintaining flow continuity and avoiding unrelated background
+noise is complex. Synthesizing it with Scapy guarantees the exact packets, timestamps, and sizes we
+need for a crisp demonstration of the `pcap_to_flows` pipeline and the dashboard UI, without
+accidental background traffic muddying the narrative.
