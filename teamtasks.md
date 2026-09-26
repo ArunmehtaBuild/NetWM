@@ -29,9 +29,13 @@ produced them, or when the thing it describes demonstrably works end to end - no
 
 | person | id | task | done when |
 |---|---|---|---|
-| **Yash** | **Y-6b** | A test for `windows_since_previous_attack`: strictly-quiet counting, first onset measured from the start of the capture, adjacent episodes. It feeds a published table (E16) and has no test | test in `tests/`, passing |
-| | **Y-7** | **Next GPU job.** Real leave-one-attack-family-out *with retraining* (D-006(b), `plan.md:43`). E16 names it as the next experiment, because the loss is in transfer across families, not in the features. E8 only approximates it by re-analysing the existing folds | E8 formalised in `results.md`: the null, the floors and per-onset rows, in E16's conventions |
-| | **Y-4b** | Run Y-4 on `S_t` v2 *levels* under the existing D-014 scaler. The Y-4 configs are merged but have never been run, and E16's floors favour v2: Thursday LR 0.626 against 0.604 | a results entry; any lead-time wording still needs the D-023 bar |
+| **Yash** | | **No GPU on Yash's machine.** Everything below runs on CPU or is writing and research. The one GPU job (the Y-4 ablation) is prepared by Yash, run by Atharv as T-18, and written up by Yash | |
+| | **Y-6b** | A test for `windows_since_previous_attack`: strictly-quiet counting, first onset measured from the start of the capture, adjacent episodes. It feeds a published table (E16) and has no test | test in `tests/`, passing |
+| | **Y-1** (CPU, do first) | **Measure calibration, don't assume it.** The PS asks for an infiltration *probability*, and the dashboard shows numbers that look like one. Score `e4e7-worldmodel-r2` on its held-out days; report reliability, ECE and Brier per fold, raw and temperature-scaled. Two traps: <br>• D-017's route (temperature on a *held-out* training day) can't work here. Only Thursday and Friday have compromise positives, and each fold tests one of them, so holding out the other leaves training with none. <br>• `scripts/calibrate.py` sets `val_day = train_days[-1]`, and the checkpoint trained on that day. Its temperature is fitted in-sample, so label the result "does in-sample calibration transfer to an unseen day", not "held-out calibration" | **E17** in `results.md`, plus D-017's status updated either way. If calibration does not transfer, that is the documented reason we quote alert budgets, and the dashboard's p-values get labelled as scores (tell Harshit) |
+| | **Y-4a** (CPU, before T-18) | **Prepare the ablation on the checkpoint we ship.** Base: r2 on v1 (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`). Not v2: Thursday LR 0.626 vs 0.604 is a 0.022 gap, and E16 calls 0.04 noise at about 8 episodes. Tasks: <br>• Rewrite `scripts/run_y4_ablation.bat`: three arms (full, `model_no_stochastic.yaml`, `model_no_multistep.yaml`) × seeds 42/43/44 × `--test-days thursday friday`. The current file uses v2, one seed and 20 epochs. <br>• Confirm each ablation config differs from r2 in **exactly one** field (`model_no_multistep.yaml` restates `kl`/`compromise`; check they equal r2's 0.5/2.0). <br>• `--smoke` each arm on CPU: `latent_dim: 0` may not be supported. <br>• Pre-register in `decisions.md` what "earns its place" means, before any number exists: removing the multi-step loss must worsen k >= 2 rollout NLL against persistence (E5) on both folds, on >= 2 of 3 seeds; detection is compared on E14's `p_max` at the 10 % budget | fixed `.bat` and the decision entry merged; every arm passes `--smoke` on CPU; handed to Atharv |
+| | **Y-4b** (writing, after T-18) | Write **E10**, the ablation table planned in `results.md`, from Atharv's runs. Report per-seed, not just means (E16's lesson). Correct `docs/architecture.md` wherever it claims a component earns its place and E10 does not show it | E10 in `results.md`; architecture claims match it |
+| | **Y-3c** (writing) | **Close D-006(b) with evidence instead of a run.** On CIC-IDS2017 every compromise family is confined to one day (infiltration Thursday, botnet Friday; `meta.json`: compromise positives Mon/Tue/Wed 0, Thu 166, Fri 127). So leave-one-day-out *is* leave-one-family-out for compromise. The proposed "drop Friday's botnet from the Thursday fold" would leave the hazard head with zero positives. Write it as a D-006 amendment, with the day -> family table, and tick `plan.md:43` pointing to it | amendment merged; `plan.md:43` closed |
+| | **Y-8** (research) | **Plan the experiment that can test transfer: M2, CTU-13.** E16 says what's learned on one family doesn't carry to another, and that needs *more* compromise families, not fewer. Write `research/ctu13.md`: <br>• the 13 scenarios and their botnet families <br>• the label scheme <br>• the flow format (Argus binetflow, not CICFlowMeter) mapped onto the canonical schema <br>• sizes <br>• a scenario-held-out design pre-registered under the D-023 bar <br>Then an adapter plan for `src/netwm/data/ctu13.py` | note indexed in `research.md`; the adapter plan reviewed by Atharv |
 | **Sanchi** | **S-6** | 5-slide deck. Slide 5, "what we measured that did not work", now carries five eliminations, "70 features score no better than 1", and onset 602 (a precursor's shape without its content, S-8). **The gap wording must match `docs/demo_script.md` word for word** | draft reviewed by two teammates |
 | | **S-7** | Extend `research/features.md` to the v2 trend block and the per-host channel. Record that slope and delta features carry no Thursday precursor signal (0.475-0.487 univariate, E16) | every v2 column maps to a behaviour |
 | **Alok** | **A-3** | **Critical path.** `features/flow_aggregator.py` -> `pcap_to_flows(path)`, returning the canonical flow schema (`src/netwm/data/base.py`) with the A-2 packet columns riding along per flow. It needs timestamps, so windowing (D-002) works unchanged. `analyze_file()` still raises on `.pcap` | `predict.py --input x.pcap` returns a v1.1 payload, and a PCAP upload works in the browser |
@@ -46,19 +50,20 @@ produced them, or when the thing it describes demonstrably works end to end - no
 | | **H-10** | Replay against the live stream (pairs with R-9) | play, pause and scrub against the API, not a fixture |
 | | **H-12** | Large-upload states: progress, cancel, and an honest error for an unreadable capture | a 200 MB upload never looks frozen |
 | | **H-15** (new) | Rehearse `docs/demo_script.md` twice against the live API, then record the video. Report anything on screen that disagrees with the script | a recorded run that follows the script |
-| **Atharv** | **T-13** | Refresh the results section of `docs/architecture.md` with E16 (unblocked) | it matches `results.md` |
+| **Atharv** | **T-18** (new, GPU) | Run the Y-4 ablation from Yash's fixed `run_y4_ablation.bat`: 3 arms × 3 seeds × 2 test days, about 2 h. Hand the run folders back for Y-4b | 18 run folders under `results/runs/`, with training curves |
+| | **T-13** | Refresh the results section of `docs/architecture.md` with E16 (unblocked) | it matches `results.md` |
 | | **T-10** | Promote `alarm_rate`, `eligible` and `confirm_before_onset` into `metrics.py`, with a regression check | one lead-time implementation in the repo |
 | | **T-15** | Submission gap-check against the PS deliverables list; put the gaps on this board | every deliverable has an owner and a state |
 
 **Order that matters:** A-3 is the only thing that can still break the demo. H-13 and R-12 land before
-H-15 records. Y-7 takes the GPU next.
+H-15 records. Yash starts on Y-6b and Y-1 (CPU); Y-4a must be finished before T-18 uses the GPU.
 
 ## Tracks and owners
 
 | person | track | owns |
 |---|---|---|
 | **Atharv** | Orchestration + ML correctness | this board, decisions/results discipline, inference engine correctness, architecture doc |
-| **Yash** | Model: make it forecast | training objectives, calibration, unseen-family evaluation |
+| **Yash** | Model evidence (CPU only) | calibration, ablation design and write-ups, unseen-family evaluation, M2 research |
 | **Sanchi** | State & features | feature matrix, trend/derivative features, per-host channels |
 | **Alok** | Packets & demo data | PCAP sourcing, packet features, PCAP->flows, demo slices |
 | **Arun** | Backend | FastAPI, job runner, SSE replay, offline packaging |
@@ -142,4 +147,4 @@ or work in a separate git worktree. Never `git add -A` in a shared tree.
 | T-16 | baseline harness ranks each capture on its own; no published number affected |
 | S-8 | onset 602 audit: no attempted traffic, rise carried by bystander hosts (`scripts/onset_audit.py`, under E16) |
 
-Merged scaffolding that still owes a run: **Y-1** (calibration script); **Y-4** now runs as Y-4b.
+Merged scaffolding that still owed a run: **Y-1** and **Y-4** are now live cards (Y-1, Y-4a/T-18/Y-4b).
