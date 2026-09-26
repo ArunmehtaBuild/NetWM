@@ -34,20 +34,41 @@ why it was made, [research.md](research.md) for the literature/dataset research 
 ## Layout
 
 ```
-configs/           experiment configs (YAML)
-data/raw|interim|processed
-scripts/           download, build features, train, benchmark (CLI entry points)
-src/netwm/
+src/netwm/         the ML
   data/            dataset adapters (cicids2017, ctu13, ...)
-  features/        flow + packet feature extraction, windowing, scaling
+  features/        flow features, trend block, per-host channel, windowing, scaler
   labels/          MITRE ATT&CK stage mapping
-  models/          world model, baselines
-  engine/          rollout, explainability, inference
-app/               offline Flask demo (vanilla JS + vendored Chart.js)
-research/          research notes  →  indexed by research.md
-results/           figures + CSVs  →  indexed by results.md
-tests/
+  models/          world model, baselines, targets, lead-time null
+  engine/          rollout, explainability, inference (predict.analyze_file)
+scripts/           get_data, build_features, train, predict, benchmark, eval, sync_fixtures
+backend/           FastAPI JSON API - renders nothing
+                     uvicorn backend.server:app --host 127.0.0.1 --port 5000
+frontend/          static dashboard - no build step, no backend needed to develop
+                     python -m http.server 8080
+fixtures/api/      the canonical payloads shared by the API, the UI and the contract tests
+configs/           feature + model configs (v1 frozen; trend, hosts, r3, r4 are separate)
+docs/              api_contract.md, architecture.md, submission artefacts
+research/          research notes  ->  indexed by research.md
+results/           figures + CSVs + per-run metrics  ->  indexed by results.md
+models/            checkpoints (r2 is the submission checkpoint)
+tests/             ML tests · backend/tests/ API + contract + offline tests
 ```
+
+## Run the demo
+
+```bash
+run_demo.bat                 # starts the API on :5000 and the dashboard on :8080
+```
+
+Or separately:
+
+```bash
+uvicorn backend.server:app --host 127.0.0.1 --port 5000
+python scripts/sync_fixtures.py && cd frontend && python -m http.server 8080
+```
+
+Everything runs offline. With no checkpoint present the API still serves `fixtures/api/*.json`
+marked `"mock": true`, so the dashboard is never undemoable.
 
 ## Setup
 
