@@ -924,3 +924,17 @@ shows the weights *do* transfer when families are held out deliberately - that w
 diagnosis back towards the features. Or if a capture set with more than one compromise family per
 fold becomes available, since every number here rests on 26 attack episodes and 5 compromise onsets
 in a single synthetic week.
+
+---
+
+### D-029 — Pre-registration for Y-4 Ablation (E10)
+*Date: 2026-09-26 · Status: accepted*
+
+**Decision.** The ablation study (E10) tests two components against the r2 baseline (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`): the stochastic latent space (`model_no_stochastic.yaml`) and the multi-step rollout loss (`model_no_multistep.yaml`).
+
+**What "earns its place" means (Pre-registered Bar).** 
+Before any number exists, a component is deemed necessary if its removal worsens the model's performance on the following criteria:
+1. **Multi-step loss**: Removing the multi-step loss must worsen k >= 2 rollout NLL against the persistence baseline (E5) on both test folds (Thursday and Friday), on >= 2 of 3 seeds (42, 43, 44).
+2. **Detection performance**: Both ablations are compared on E14's `p_max` statistic at the 10 % alert budget. The full model must outperform the ablated models on this metric to justify the added complexity.
+
+**Why.** We must ensure that the stochastic latent space and multi-step rollout loss actually contribute to the model's performance. If they do not meet the pre-registered criteria, they will be marked as unsupported components in `docs/architecture.md`.
