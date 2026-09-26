@@ -40,7 +40,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] K-step MC rollout in `models/world_model.forecast` -> cumulative curve + bands + stage path
 - [x] `metrics.py` - F1 / precision / recall / FPR / PR-AUC / lead time
 - [x] `evaluate.py`, `scripts/benchmark_baselines.py`, `rescore_pmax.py`, `precursor_eval.py` - leave-one-day-out with null calibration
-- [ ] E8 formalised as its own leave-one-attack-family-out experiment (Y-3)
+- [x] E8 formalised as its own leave-one-attack-family-out experiment (Y-3) - *Closed by D-006 amendment*
 - [x] `engine/explain.py` - attention weights + Integrated Gradients (SHAP for the LR baseline pending)
 - [ ] E10 ablations (Y-4, after the r4 feature-transform result)
 

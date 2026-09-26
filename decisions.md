@@ -129,6 +129,16 @@ train/test temporally disjoint. The attack-family holdout is the PS's explicit "
 unseen attack patterns" requirement, and lead time is the metric that distinguishes forecasting
 from detection — a classifier scores 0 on it by construction.
 
+**AMENDMENT (2026-09-26, Task Y-3c): Closing D-006(b) with evidence.**
+On CIC-IDS2017, every compromise family is confined to one day. According to `meta.json`, the compromise positives are:
+| Day | Family | Positives |
+|---|---|---|
+| Mon/Tue/Wed | None | 0 |
+| Thursday | Infiltration | 166 |
+| Friday | Botnet C2 | 127 |
+
+Because families do not span multiple days, *leave-one-day-out is exactly leave-one-family-out for compromise*. Proposing a run like "drop Friday's botnet from the Thursday fold" would leave the hazard head with zero positives in the training set. Therefore, D-006(b) is satisfied by the leave-one-day-out runs (D-006(a)), and no separate family-holdout runs are possible on this dataset without a multi-family dataset like CTU-13.
+
 ---
 
 ### D-007 — Explainability: attention + Integrated Gradients, with SHAP for the baseline
@@ -932,3 +942,17 @@ shows the weights *do* transfer when families are held out deliberately - that w
 diagnosis back towards the features. Or if a capture set with more than one compromise family per
 fold becomes available, since every number here rests on 26 attack episodes and 5 compromise onsets
 in a single synthetic week.
+
+---
+
+### D-029 — Pre-registration for Y-4 Ablation (E10)
+*Date: 2026-09-26 · Status: accepted*
+
+**Decision.** The ablation study (E10) tests two components against the r2 baseline (`configs/cicids2017.yaml`, `--epochs 25 --samples 16`): the stochastic latent space (`model_no_stochastic.yaml`) and the multi-step rollout loss (`model_no_multistep.yaml`).
+
+**What "earns its place" means (Pre-registered Bar).** 
+Before any number exists, a component is deemed necessary if its removal worsens the model's performance on the following criteria:
+1. **Multi-step loss**: Removing the multi-step loss must worsen k >= 2 rollout NLL against the persistence baseline (E5) on both test folds (Thursday and Friday), on >= 2 of 3 seeds (42, 43, 44).
+2. **Detection performance**: Both ablations are compared on E14's `p_max` statistic at the 10 % alert budget. The full model must outperform the ablated models on this metric to justify the added complexity.
+
+**Why.** We must ensure that the stochastic latent space and multi-step rollout loss actually contribute to the model's performance. If they do not meet the pre-registered criteria, they will be marked as unsupported components in `docs/architecture.md`.

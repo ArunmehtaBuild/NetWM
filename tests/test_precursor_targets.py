@@ -16,6 +16,7 @@ from netwm.models.targets import (
     episode_onsets,
     onset_flags,
     precursor_flags,
+    windows_since_previous_attack,
 )
 
 # stages: benign until 6, a short attack, a quiet gap, then a second attack at 14
@@ -68,6 +69,17 @@ def test_compromise_source_reproduces_the_stricter_onset_definition():
 def test_unknown_onset_source_raises_rather_than_guessing():
     with pytest.raises(ValueError):
         episode_labels(STAGES, horizon=10, source="whatever")
+
+
+def test_windows_since_previous_attack_counts_strictly_quiet_windows():
+    attack = np.zeros(30, dtype=bool)
+    attack[10:12] = True
+    attack[18:20] = True
+    
+    # First onset is at 10, measured from the start of the capture -> 10 windows (0 to 9)
+    # Second onset is at 18, previous attack ended at 11 -> 6 quiet windows (12 to 17)
+    gaps = windows_since_previous_attack([10, 18], attack)
+    assert gaps == [10, 6]
 
 
 def test_strict_lead_times_matches_the_published_metric_when_both_guards_are_off():
