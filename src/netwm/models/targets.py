@@ -102,6 +102,25 @@ def precursor_flags(
     return out
 
 
+def windows_since_previous_attack(onsets: "list[int]", attack: np.ndarray) -> "list[int]":
+    """Quiet windows between the end of the previous attack run and each onset.
+
+    A post-hoc diagnostic for E16 (D-025 discussion, 2026-09-26). An onset with a long quiet run-up
+    is a genuine "before they got in" case; an onset 8 windows after the previous episode sits inside
+    traffic that has already raised the whole trailing hour, so a score crediting it may be detecting
+    a campaign under way rather than forecasting a new one. Those read oppositely for a forecasting
+    claim, and an aggregate cannot tell them apart.
+
+    The first onset of a capture is measured from the start of the capture.
+    """
+    attack = np.asarray(attack, dtype=bool)
+    out: list[int] = []
+    for onset in onsets:
+        prior = np.flatnonzero(attack[:onset])
+        out.append(int(onset - prior[-1] - 1) if prior.size else int(onset))
+    return out
+
+
 def episode_labels(
     stages: pd.Series,
     horizon: int,

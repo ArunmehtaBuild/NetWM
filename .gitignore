@@ -13,6 +13,9 @@ models/*.joblib
 # Round-3 precursor checkpoints: E15 measured them as a regression on detection and says not to
 # ship them (36 MB for a rejected config). Regenerate with the command in results.md, E15.
 models/r3-precursor-*/
+# Round-4 rank checkpoints: E16 failed the D-023 bar and found a one-in-three seed collapse, so they
+# never ship (D-029). Regenerate with the command in results.md, E16.
+models/r4-rank-*/
 
 # python
 .venv/

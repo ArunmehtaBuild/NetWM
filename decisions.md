@@ -858,3 +858,69 @@ signal. The next cut is then *sticky* slots, where a host keeps its slot while i
 N. If the channel does help, per-host episodes are the natural way to enlarge the 26-episode
 denominator D-022 is limited by.
 
+
+---
+
+### D-029 — Rank normalisation is not adopted; the forecasting gap is cross-day transfer
+*Date: 2026-09-26 · Status: accepted · Evidence: E16, E16D, and the floor measurements in this entry*
+
+**Decision.** `mode="rank"` stays in `StateScaler` as an option and keeps its tests, but **no shipped
+configuration uses it**. D-014 (`log_standard`) remains the default and the submission scaler.
+`configs/model_r4_rank.yaml` and `configs/model_r4_rank_wholecapture.yaml` are kept as the
+reproduction path for E16, not as candidates.
+
+**Why.** E16 ran the transform D-025 nominated, on the round-2 heads, 3 training seeds x 5 folds,
+against the bar pre-registered in D-023. It failed every clause (0 of 4 folds exceeding the null's
+p95, best Fisher p 0.715), it ranks the precursor label at chance on the two folds that matter
+(Thursday 0.490, Wednesday 0.495), and it loses to a single unscaled column on all four folds.
+
+**The disqualifying finding is variance, not the mean.** On Thursday detection, r4 matches round 2 on
+two seeds (F1 0.591 and 0.553 against 0.576) and collapses on the third (F1 0.023, PR-AUC 0.221).
+Round 3 was a uniform regression and could have been traded off; a one-in-three catastrophic training
+seed cannot be, for a system that has to be demonstrated live. This is the clause of the D-021
+amendment that required *training*-seed stability rather than Monte-Carlo spread, and it is the clause
+that caught this - a single-seed run would have reported r4 as matching round 2, or as broken, and
+either would have been a third of the truth.
+
+**What the whole-capture variant changes: nothing, and that is worth recording.** It reached
+Thursday p = 0.054, the best early-warning p-value this project has produced, and D-025 had already
+ruled it inadmissible before it ran because its scale is set partly by windows *after* the onset. It
+is reported as E16D under its own experiment id so it cannot be read as a row of the registered
+comparison. Also: whole-capture rank is *univariately identical* to `log_standard` by construction,
+since a monotone map cannot reorder a single column - any effect it has is multivariate only.
+
+**Where the signal dies.** On Thursday, logistic regression over all 70 features scores 0.604 on the
+precursor label while `uniq_dst_port` alone scores 0.607. A 70-input model gains nothing from 69
+extra features when trained on other days' attack families and scored on web attacks and
+infiltration; under rank the same comparison is 0.497 against 0.573, i.e. actively worse. **The
+weights do not transfer across attack families.** That, not the feature transform, is the live
+hypothesis for the forecasting gap, and it reframes D-021's "representation" branch.
+
+**Measurement convention, fixed here to stop two incomparable numbers circulating.** A univariate or
+LR score on the precursor label is reported with **all non-precursor windows as negatives**.
+Restricting negatives to non-attack windows raises the same figures materially (`uniq_dst_port`
+0.607 -> 0.678, `uniq_dst_ip` 0.578 -> 0.633, `fanout_mean` 0.585 -> 0.629) and E12's quiet-background
+convention raises it further (0.739). All three are defensible; mixing them in one comparison is not,
+and the first is the one that matches the LR floors in E15/E16.
+
+**Candidates closed, so they are not re-proposed.**
+
+| candidate | status |
+|---|---|
+| causal rank, window 120 | run - fails the bar, seed-unstable (E16) |
+| whole-capture rank | inadmissible for a lead-time claim (D-025); univariately identical to level |
+| level + rank concatenated | not supported - Thursday LR 0.560 vs 0.604; with ~8 effective episodes a 0.04 gap is noise |
+| rank on the v2 trend features | out - `uniq_dst_port` slope_5 / slope_10 / delta score 0.487 / 0.480 / 0.475 univariately before any rank; no rise exists for a slope to re-express |
+| reference CDF fitted on training days | out by construction - monotone, so it preserves within-day ordering and cannot beat `log_standard` on a day-level shift |
+
+**Also closed, on the raw capture.** The pre-onset-602 elevation is not `- Attempted` traffic that
+D-009 removes from the stage label: all 4356 flows in windows 592-601 are `BENIGN` with
+`Attempted Category = -1`, and Thursday's 1997 attempted flows all carry `- Attempted` in the label
+and fall elsewhere. Thursday's one clean precursor is a genuine rise through benign-labelled traffic.
+D-009's revisit clause is not triggered; this question is answered and should not be reopened.
+
+**Revisit if.** A leave-one-attack-family-out run with actual retraining (Y-3, not E8's re-analysis)
+shows the weights *do* transfer when families are held out deliberately - that would move the
+diagnosis back towards the features. Or if a capture set with more than one compromise family per
+fold becomes available, since every number here rests on 26 attack episodes and 5 compromise onsets
+in a single synthetic week.

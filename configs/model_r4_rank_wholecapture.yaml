@@ -1,0 +1,19 @@
+# Round 4, whole-capture rank - the UPPER BOUND ONLY (decisions.md D-025).
+#
+# Identical to configs/model_r4_rank.yaml except that each column is ranked against the entire
+# capture instead of a trailing window. That lets the windows *after* an onset set the scale of the
+# windows before it, so a pre-onset value depends on the attack that follows.
+#
+# D-025 is explicit: this variant may be reported, labelled as an upper bound, and **no lead-time
+# claim may rest on it**. It exists to answer one question cheaply - if even the leaky variant does
+# not clear the floors, the representation hypothesis is dead and the causal variant cannot save it.
+#
+#   python scripts/train.py --config configs/cicids2017.yaml \
+#       --model-config configs/model_r4_rank_wholecapture.yaml \
+#       --test-days tuesday wednesday thursday friday monday \
+#       --run r4-rank-whole-s42 --epochs 25 --seed 42
+
+scaler:
+  mode: rank
+  rank_window: null       # whole capture - NOT causal, diagnostic only
+  rank_min_periods: 10

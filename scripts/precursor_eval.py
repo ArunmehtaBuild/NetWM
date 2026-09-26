@@ -30,7 +30,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from netwm.data.processed import ProcessedDataset
 from netwm.metrics import best_threshold, forecast_metrics, summarise_lead
 from netwm.models.leadtime import alarm_rate, circular_shift_null, fisher_combine, strict_lead_times
-from netwm.models.targets import episode_labels
+from netwm.features.windowing import attack_flags
+from netwm.models.targets import episode_labels, windows_since_previous_attack
 from netwm.utils import RUNS, TABLES, ensure_dirs, save_run, set_seed
 
 #: Raw features that already produce "warned early" counts on their own. If the model cannot beat
@@ -127,6 +128,32 @@ def score_rows(
     return rows
 
 
+def per_onset_rows(
+    day: str, statistic: str, score: np.ndarray, threshold: float, policy: str,
+    ds: ProcessedDataset, sets: dict, run: str,
+) -> list[dict]:
+    """One row per onset: family, quiet run-up, and whether this score warned.
+
+    Post-hoc diagnostic (not part of the D-023 bar). An r4-vs-r2 gap on Thursday can mean "lost a
+    precursor" or "lost campaign residue"; those read oppositely for a forecasting claim and an
+    aggregate cannot distinguish them.
+    """
+    labels = sets["attack"]
+    gaps = windows_since_previous_attack(labels.onsets, attack_flags(ds.frame(day)["stage"]))
+    lead_rows = strict_lead_times(
+        score, labels.onsets, threshold, ds.horizon, persistence=2, eligible=labels.eligible
+    )
+    return [
+        {
+            "run": run, "test_day": day, "statistic": statistic, "threshold_mode": policy,
+            "onset": r["onset"], "family": fam, "quiet_windows_before": gap,
+            "warned_early": int(r["detected_early"]), "lead_windows": r["lead_windows"],
+            "first_alarm": r["first_alarm"], "eligible_windows": r["eligible_windows"],
+        }
+        for r, fam, gap in zip(lead_rows, labels.families, gaps)
+    ]
+
+
 def load_published_scores(run_id: str) -> dict:
     """Read the exact score arrays and thresholds a previous run wrote, so nothing is re-sampled."""
     path = RUNS / run_id / "metrics.json"
@@ -195,20 +222,27 @@ def forecast_all(
     return out
 
 
-def logreg_precursor_score(ds: ProcessedDataset, day: str, seed: int) -> np.ndarray:
+def logreg_precursor_score(
+    ds: ProcessedDataset, day: str, seed: int, scaler_kwargs: dict | None = None
+) -> np.ndarray:
     """Logistic regression on S_t, trained leave-one-day-out on the *same* precursor label.
 
     This is the baseline E12 does not provide. E12's 0.88-0.96 probe is cross-validated within a
     single day with a scaler fitted on that day - it shows a signal exists, not that a model trained
     on other days finds it. That is the entire question round 3 is asking, so it needs a baseline
     measured the same way the world model is.
+
+    ``scaler_kwargs`` selects the feature transform, so the floor can be matched to whichever
+    representation the model under test used (D-025): the default reproduces E15's row, and
+    ``{"mode": "rank", "rank_window": 120}`` is the like-for-like floor for r4. Each day is
+    transformed on its own, so rank mode keeps its per-capture property without needing ``groups``.
     """
     from sklearn.linear_model import LogisticRegression
 
     from netwm.features.scaler import StateScaler
 
     train_days = [d for d in ds.splits if d != day]
-    scaler = StateScaler().fit(ds.concat(train_days)[ds.feature_names])
+    scaler = StateScaler(**(scaler_kwargs or {})).fit(ds.concat(train_days)[ds.feature_names])
     x_train = np.vstack([scaler.transform(ds.states(d)) for d in train_days])
     y_train = np.concatenate([
         episode_labels(ds.frame(d)["stage"], ds.horizon, source="attack").precursor
@@ -229,12 +263,19 @@ def floor_rows(
     y = ds.target(day)
     rows: list[dict] = []
 
-    lr = logreg_precursor_score(ds, day, seed)
-    rows.extend(score_rows(
-        day, "logreg:precursor", lr,
-        {f"self-budget-{p}pct": float(np.quantile(lr, 1 - p / 100)) for p in (10, 5, 2)},
-        ds, sets, experiment, run, n_shifts, seed,
-    ))
+    # Two logistic floors: log_standard keeps E15's row comparable, rank is the like-for-like
+    # floor for a rank-normalised model (D-025). If rank helps the linear model but not the world
+    # model, the problem is the model; if it helps neither, the transform is not the answer.
+    for name, kwargs in (
+        ("logreg:precursor", None),
+        ("logreg:precursor-rank", {"mode": "rank", "rank_window": 120, "rank_min_periods": 10}),
+    ):
+        lr = logreg_precursor_score(ds, day, seed, kwargs)
+        rows.extend(score_rows(
+            day, name, lr,
+            {f"self-budget-{p}pct": float(np.quantile(lr, 1 - p / 100)) for p in (10, 5, 2)},
+            ds, sets, experiment, run, n_shifts, seed,
+        ))
 
     for name in FLOOR_FEATURES:
         if name not in frame.columns:
@@ -294,12 +335,19 @@ def main() -> None:
             for run in args.run
         }
 
+    onset_rows: list[dict] = []
     for run, per_day in sources.items():
         for day, payload in sorted(per_day.items()):
             sets = episode_sets(ds, day)
             for statistic, score in payload["scores"].items():
                 rows.extend(score_rows(day, statistic, score, payload["thresholds"], ds, sets,
                                        experiment, run, args.n_shifts, args.seed))
+                for policy in ("self-budget-10pct", "self-budget-5pct"):
+                    if policy in payload["thresholds"]:
+                        onset_rows.extend(per_onset_rows(
+                            day, statistic, score, payload["thresholds"][policy], policy,
+                            ds, sets, run,
+                        ))
             if not args.no_floors:
                 rows.extend(floor_rows(day, ds, sets, experiment, run, args.n_shifts, args.seed))
 
@@ -329,6 +377,7 @@ def main() -> None:
             "mean_precursor_roc_auc": round(float(valid["precursor_roc_auc"].mean()), 4),
         })
     pd.DataFrame(combined).to_csv(TABLES / f"{run_id}_combined.csv", index=False)
+    pd.DataFrame(onset_rows).to_csv(TABLES / f"{run_id}_per_onset.csv", index=False)
     save_run(run_id, {"rows": rows, "combined": combined}, config=vars(args))
 
     show = table[table["threshold_mode"].isin(["self-budget-10pct", "oracle"])]

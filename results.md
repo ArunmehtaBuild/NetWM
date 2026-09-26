@@ -713,3 +713,154 @@ The core limitation of the current training data is that four days of training c
 1. **Unseen families remain at chance.** When the model is tested on Friday (Botnet C2), having only seen Thursday's internal port sweeps in training, it scores worse than chance (ROC-AUC 0.438) and produces no early warnings at a deployable threshold. It fails to generalise "attacker advancing" to an unseen family.
 2. **Infiltration is detected.** When Thursday (Infiltration) is held out, the model successfully detects it (ROC-AUC 0.827, PR-AUC 3.7x base rate), though still without reliable lead time.
 3. **Conclusion:** Generalisation requires a more diverse training set. This defines the core data limitation for M1, which M2 (CTU-13 dataset with concurrent attacks) is meant to address.
+
+---
+
+## E16 - rank normalisation (Y-6, round 4): representation is not the cause either
+
+```
+python scripts/train.py --config configs/cicids2017.yaml \
+    --model-config configs/model_r4_rank.yaml \
+    --test-days tuesday wednesday thursday friday monday \
+    --run r4-rank-s42 --epochs 25 --seed 42          # and s43/44 with --seed 43/44
+python scripts/precursor_eval.py --run r4-rank-s42 r4-rank-s43 r4-rank-s44 \
+    --deterministic --n-shifts 2000 --experiment E16
+```
+run: `results/runs/e16-precursor-r4-rank-3seeds/` · 3 training seeds x 5 leave-one-day-out folds ·
+**round-2 heads**, causal `rank_window: 120`, so the feature transform is the only variable (D-025) ·
+scored against the bar pre-registered in D-023.
+
+### The bar, and the answer
+
+**Failed on every clause, on every seed, on every episode denominator.**
+
+| clause of the D-023 bar | required | best observed |
+|---|---|---|
+| folds exceeding the null's 95th percentile | >= 2 of 4 | **0 of 4**, all three seeds |
+| Fisher-combined p across folds | < 0.05 | **0.715** (`p_max`, seed 43, all attack episodes) |
+| holds with Impact excluded | yes | 0 of 4 folds |
+| stable over >= 3 training seeds | yes | see the detection collapse below |
+
+### Ranking on the precursor label, leave-one-day-out (ROC-AUC, mean of 3 seeds)
+
+| statistic | Tuesday | Wednesday | Thursday | Friday |
+|---|---:|---:|---:|---:|
+| `p_max` - **r4's own channel 0**, the within-run control | 0.575 | 0.495 | **0.490** | 0.570 |
+| logistic regression, `log_standard` (floor) | 0.686 | 0.574 | 0.604 | 0.556 |
+| logistic regression, `rank_window: 120` (matched floor) | 0.556 | **0.802** | 0.497 | 0.568 |
+| `uniq_dst_port`, unscaled (floor) | 0.745 | 0.542 | 0.607 | 0.558 |
+| `uniq_dst_ip`, unscaled (floor) | 0.570 | 0.675 | 0.578 | 0.560 |
+| `fanout_mean`, unscaled (floor) | 0.540 | 0.670 | 0.585 | 0.558 |
+
+r4 is at chance on Thursday (0.490) and Wednesday (0.495), and loses to a **single unscaled column**
+on all four folds. For comparison, r3's `p_max` scored 0.533 / 0.652 / 0.663 / 0.630 on the same
+label: r4 ranks *worse* than r3, which itself ranked worse than r2.
+
+**The one number that goes up.** Logistic regression on rank features scores **0.802 on Wednesday**,
+the highest precursor ROC-AUC anywhere in this project. Read it with the denominator: 6 of
+Wednesday's 7 onsets are Impact (DoS), and rank normalisation asks "is this window unusual for this
+capture", which is exactly the question a DoS ramp answers loudest. It is not evidence about
+infiltration, and it does not transfer - the same floor scores 0.497 on Thursday.
+
+### The cost: detection survives on two seeds and collapses on the third
+
+`p_max` on the held-out Thursday, self-budget 10 %, the E14-comparable configuration:
+
+| run | F1 | precision | FPR | PR-AUC | ROC-AUC |
+|---|---:|---:|---:|---:|---:|
+| round 2 (E14) | 0.576 | 0.776 | 0.027 | **0.640** | **0.827** |
+| round 3 (E15, 3 seeds) | 0.439-0.523 | 0.592-0.704 | 0.036-0.050 | 0.353-0.445 | 0.697-0.754 |
+| round 4, seed 42 | **0.591** | **0.796** | **0.025** | 0.607 | 0.827 |
+| round 4, seed 43 | 0.553 | 0.745 | 0.031 | 0.629 | 0.810 |
+| round 4, **seed 44** | **0.023** | **0.031** | 0.118 | 0.221 | 0.597 |
+
+This is a different failure from round 3. Round 3 was a uniform regression; round 4 **matches round 2
+on two seeds out of three and then collapses on the third**. Rank normalisation does not cost
+detection on average - it makes it unstable, and a one-in-three catastrophic seed is
+disqualifying on its own for a system that has to be demonstrated live. Friday is worse than round 2
+on every seed (ROC-AUC 0.299-0.411 against 0.438). Only a three-seed run could see this; a single
+seed would have reported r4 as matching r2 (seed 42) or as broken (seed 44), and both would have been
+one third of the truth.
+
+### Per-onset diagnostic (added after the run; not part of the bar)
+
+`results/tables/e16-precursor-r4-rank-3seeds_per_onset.csv`. A gap of 7 windows since the previous
+attack and a gap of 394 mean opposite things: the first sits inside traffic that has already raised
+the whole trailing hour, so crediting it is closer to detecting a campaign under way than to
+forecasting a new one. Quiet run-up counts strictly-quiet windows, so they sit one below an
+inclusive count.
+
+Thursday, `p_max` at self-budget 10 %, warned/3 seeds:
+
+| onset | family | quiet windows before | warned |
+|---|---|---:|---:|
+| 39 | Initial Access | 39 | 0 / 3 |
+| 153 | Initial Access | 31 | 0 / 3 |
+| 201 | Initial Access | 7 | 0 / 3 |
+| **602** | **Reconnaissance** | **394** | **0 / 3** |
+| 639 | Lateral Movement | 35 | 1 / 3 |
+| 658 | Lateral Movement | 17 | 0 / 3 |
+| 708 | Lateral Movement | 20 | 0 / 3 |
+| 729 | Lateral Movement | 7 | 0 / 3 |
+
+**Onset 602 is never warned, on any seed.** It is the cleanest precursor in the dataset - first of
+the afternoon campaign, 394 quiet windows before it - and it is the one case where a lead-time claim
+would have meant what the PS asks. Pooling all folds and seeds, r4 warns on 8 of 78 onset-seed
+combinations, and they are *not* concentrated in the clean run-ups: 2 of 30 for gaps > 40 windows,
+5 of 27 for 11-40, 1 of 21 for <= 10. So the answer to "lost a precursor or lost campaign residue"
+is **neither** - r4 finds essentially nothing in either category.
+
+Also settled on the raw capture: the pre-602 elevation is **not** attempted traffic that D-009
+zeroes out. All 4356 flows in windows 592-601 are labelled `BENIGN` with `Attempted Category = -1`;
+Thursday's 1997 attempted flows all carry `- Attempted` in the label and none fall in that block.
+The one clean precursor on Thursday is a genuine rise in `uniq_dst_port` through traffic the
+corrected dataset labels benign. D-009's revisit clause is not triggered.
+
+### Diagnostic arm: whole-capture rank (E16D, excluded from the bar)
+
+`results/tables/e16d-precursor-r4-rank-whole-s42.csv`, one seed. Reported per D-025, which forbids a
+lead-time claim resting on it: ranking against the whole capture lets windows *after* an onset set
+the scale of the windows before it.
+
+Thursday: 3 of 8 episodes warned, null p95 3, **p = 0.054**. That is the best early-warning p-value
+this project has produced, and it is not admissible - it is also the number that would have ended up
+on a slide had the arm not been labelled before it was run. Its precursor ROC-AUC is 0.585, still
+below `uniq_dst_port` at 0.607.
+
+One identity worth recording: whole-capture rank **must** equal `log_standard` univariately, because
+a rank is monotone within the capture and cannot reorder a single column. Any difference it makes is
+multivariate only - it makes columns commensurable, nothing more.
+
+### What this settles
+
+Four causes were already eliminated: statistic (E13), threshold (E14), data (E12), target (E15).
+**E16 eliminates the representation**, on the transform D-025 nominated, with the floors on the same
+table. Every candidate rank variant is now either measured or argued out:
+
+| candidate | status |
+|---|---|
+| causal `rank_window: 120` | **run: fails the bar, unstable across seeds (this entry)** |
+| whole-capture rank | diagnostic only, inadmissible by D-025; univariately identical to level |
+| level + rank concatenated | not supported - Thursday LR 0.560 vs 0.604 for level alone, and with ~8 effective episodes a 0.04 gap is inside the noise |
+| rank on the v2 trend features | out - `uniq_dst_port_slope_5/_10/_delta` score 0.487 / 0.480 / 0.475 univariately *before* any rank, so there is no rise for a slope to re-express |
+| reference CDF fitted on the training days | out by construction - a monotone map preserves within-day ordering, so it cannot be more robust to a day-level shift than `log_standard` |
+
+**Where the signal actually dies: cross-day transfer, not the transform.** On Thursday, logistic
+regression over all 70 features scores 0.604 while `uniq_dst_port` alone scores 0.607 - a 70-input
+model gains *nothing* from 69 extra features when it is trained on other days' attack families and
+scored on web attacks and infiltration. The same comparison under rank is 0.497 against 0.573, i.e.
+actively worse. The weights do not carry across families. (Both sets of numbers use all non-precursor
+windows as negatives; restricting negatives to non-attack windows raises the univariate figures to
+0.678 / 0.633 / 0.629 without changing the comparison, and the two conventions must not be mixed.)
+
+That points the next experiment at generalisation across families rather than at features:
+**Y-3's real leave-one-attack-family-out with retraining** - dropping Friday's botnet windows from a
+Thursday-test fold - which E8 currently approximates by re-analysing the existing folds. And
+**Y-4 on `S_t` v2 levels**, where the floors already favour the trend block under the *existing*
+D-014 scaler: LR scores 0.626 on Thursday with v2 levels against 0.604 with v1, the best
+level-representation figure measured so far.
+
+Artefacts: `results/tables/e16-precursor-r4-rank-3seeds{,_combined,_per_onset}.csv`,
+`results/tables/e16d-precursor-r4-rank-whole-s42{,_combined,_per_onset}.csv`,
+`results/tables/r4-rank-s4*_training_curves.csv`, `results/runs/r4-rank-*/train.log`. The 20 round-4
+checkpoints are not committed (rejected configuration); the commands above pin seed, config and SHA.
