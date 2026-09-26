@@ -692,7 +692,14 @@ them with the training command above, which pins the seed, the config and the gi
 
 ## E8 - leave-one-attack-family-out (generalisation to unseen attacks)
 
-`python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` (Extracting from E14 runs)
+`python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` · **a re-analysis of the E14 checkpoints,
+not a new training run**
+
+Read it as framing, not as new evidence: the leave-one-day-out folds *are* family holdouts for these
+two families, because infiltration occurs only on Thursday and the ARES botnet only on Friday, so a
+model tested on either has never seen that family in training. No model was retrained for this
+section and the numbers are E14's. A genuine family holdout that retrains - e.g. dropping Friday's
+botnet windows from a Thursday-test fold - is a separate experiment we have not run.
 
 The core limitation of the current training data is that four days of training contain exactly one kind of compromise. This experiment formalises the performance when a specific attack family is held out during training.
 
