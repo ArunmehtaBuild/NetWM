@@ -25,7 +25,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [ ] `features/pcap_features.py` - TTL variance, window size, fragments, payload histogram,
       retransmissions, scan signatures (streaming Scapy reader)
 - [ ] `features/flow_aggregator.py` - PCAP -> flows, so the demo accepts a raw PCAP
-- [x] `features/windowing.py` + `scaler.py` (log1p + z-score, train-only fit)
+- [x] `features/windowing.py` + `scaler.py` (log1p + z-score; per-capture rank mode from S-4)
+- [x] S_t v2 trend block (94 features) and per-host channel (82) behind their own configs
 - [x] `labels/mitre_map.py` - label -> stage, ordered scale, scan-direction refinement
 - [x] `scripts/build_features.py` -> parquet feature matrix + meta.json
 
@@ -33,20 +34,22 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] `models/baseline.py` - logistic regression (PS-mandated) + persistence baseline (E2, E3)
 - [x] `models/world_model.py` - encoder, causal attention, RSSM, decoder, stage + compromise heads
 - [x] `train.py` - losses (NLL + KL free bits + imagination + CE + BCE), checkpoints
-- [~] E2-E3 done; E4-E5 (one-step NLL, rollout fidelity) running
+- [x] E2-E15 run: baselines, world model r1/r2, precursor r3 (rejected), null calibration
 
 ### P4. Forecasting, evaluation, explainability
 - [x] K-step MC rollout in `models/world_model.forecast` -> cumulative curve + bands + stage path
 - [x] `metrics.py` - F1 / precision / recall / FPR / PR-AUC / lead time
-- [ ] `evaluate.py` + `scripts/benchmark.py` - leave-one-day-out, leave-one-family-out (E6-E9)
+- [x] `evaluate.py`, `scripts/benchmark_baselines.py`, `rescore_pmax.py`, `precursor_eval.py` - leave-one-day-out with null calibration
+- [ ] E8 formalised as its own leave-one-attack-family-out experiment (Y-3)
 - [x] `engine/explain.py` - attention weights + Integrated Gradients (SHAP for the LR baseline pending)
-- [ ] E10 ablations
+- [ ] E10 ablations (Y-4, after the r4 feature-transform result)
 
 ### P5. Demo + deliverables
-- [x] `engine/predict.py` + `scripts/predict.py` - one entry point shared by CLI and the Flask API
-- [ ] Flask app: upload CSV/PCAP, probability timeline, stage ribbon, flagged flows, explanations
-- [ ] Demo sample files (small CSV + PCAP clipped from a test day)
-- [ ] README setup instructions, architecture document (2 pages), 5 slides, 2-minute demo video
+- [x] `engine/predict.py` + `scripts/predict.py` - one entry point shared by the CLI and the API
+- [x] FastAPI backend (R-1..R-7) + static dashboard (H-1..H-9): upload, timeline, cone, stage ribbon,
+      alarm log with lead time, attribution, attention, flows table, SSE replay
+- [~] Demo CSV slices exist (`data/demo/`, index.json); the PCAP slice waits on A-2/A-3
+- [~] README + `docs/architecture.md` drafted; slides and the 2-minute video outstanding
 
 ## M2 - CTU-13: scenario-held-out temporal evaluation
 - [ ] `data/ctu13.py` adapter (bidirectional NetFlow, botnet scenarios)
