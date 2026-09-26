@@ -55,6 +55,13 @@ supposed to show a PCAP upload. This is now the single largest submission risk.
 
 ## Next tasks
 
+> **Scaffolding is not a result (PR #5, 2026-09-26).** Y-1, Y-4 and Y-6 merged as scripts and configs
+> with no runs behind them, and the E16 section was held back because it was a table of `*fill*`
+> cells for an experiment that has not happened. Y-3 was relabelled as a re-analysis of the E14
+> checkpoints, which is what it is. A card closes when `results.md` carries numbers and the command
+> that produced them - not when the runner exists.
+
+
 | person | id | task | done when |
 |---|---|---|---|
 | **Alok** | **A-1/A-2/A-3** | The overdue one. Record the PCAP-source decision (mirror or Scapy synthesis - either is fine, the open question is not), then `features/pcap_features.py` (TTL variance, window size, fragments, payload histogram, retransmissions, scan signatures) and `features/flow_aggregator.py` (PCAP -> canonical flows) | `python scripts/predict.py --input x.pcap` and a PCAP upload in the UI both work |
