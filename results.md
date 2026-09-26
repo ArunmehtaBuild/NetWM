@@ -24,6 +24,7 @@ the commentary column.
 | E13 | rollout scoring rules | r2 checkpoints | `python scripts/scoring_rules.py --run e4e7-worldmodel-r2` | `results/tables/e13_scoring_rules_*.csv` | ranking insensitive to the rule; only max-over-horizon warns early (2/4, oracle) |
 | E14 | p_max + threshold policies | r2 checkpoints | `python scripts/rescore_pmax.py --run e4e7-worldmodel-r2` | `results/tables/e14_pmax_rescore_*.csv`, `results/figures/e14_*.png` | **deployable point: F1 0.576 @ 2.7 % FPR** (self-budget); lead time still 0 - thresholding ruled out |
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
+| E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves in-sample but fails on held-out Friday (worse than constant); budget stays |
 
 ## Planned experiment set (M1)
 
@@ -890,10 +891,12 @@ checkpoints are not committed (rejected configuration); the commands above pin s
 
 `python scripts/calibration_eval.py` · run: `ac4ec62` · 2026-09-26
 
-**Write-up (Y-1w):** E17 tests whether calibration transfers to unseen days. 
+**Write-up (Y-1w / Y-1x):** E17 tests whether calibration transfers to unseen days. 
 
+- **What was scored:** `p_cum[:, K-1]` (P(compromise within K)) against `y_within_K`.
+- **The in-sample caveat:** The temperature was fitted on the checkpoint's own training days, because no held-out training day with positives exists. So E17 answers "does an in-sample temperature transfer".
 - **Thursday (Held-out):** Brier score 0.097 against 0.142 for a constant base rate. ECE improved from 0.077 to 0.061 with temperature scaling.
-- **Friday (Held-out):** Brier score 0.280 against 0.114, which is *worse than a constant baseline*. ECE worsened from 0.245 to 0.270 with temperature scaling.
+- **Friday (Held-out):** Brier score 0.280 against 0.114, which is *worse than a constant baseline*. ECE worsened from 0.245 to 0.270 with temperature scaling. Furthermore, Friday severely over-forecasts: the mean forecast is 0.274 against a 0.131 base rate, and its most confident bins are nearly always wrong.
 
 **Conclusion:** Temperature scaling makes calibration worse on the Friday fold. Calibration does not transfer to unseen days, so probabilities cannot be quoted honestly. We must maintain the alert budget (D-017 stays) and ensure the dashboard labels p-values as "score", not "calibrated probability". 
 
