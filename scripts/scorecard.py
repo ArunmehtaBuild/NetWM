@@ -38,7 +38,7 @@ from netwm.data.processed import ProcessedDataset
 from netwm.features.windowing import attack_flags
 from netwm.metrics import causal_threshold, forecast_metrics
 from netwm.models.leadtime import circular_shift_null, fisher_combine, strict_lead_times
-from netwm.models.targets import episode_labels
+from netwm.models.targets import episode_labels, windows_since_previous_attack
 from netwm.utils import RUNS, TABLES, ensure_dirs, save_run
 
 BINS = {"0-2min": (1, 4), "2-4min": (5, 8), "4-6min": (9, 12), "6-10min": (13, 20)}
@@ -130,6 +130,10 @@ def score_run(run: str, ds: ProcessedDataset, n_shifts: int) -> dict:
     # ---- S2 / S4 (threat, non-Impact attack onsets) and the compromise table (comp)
     pooled = {b: [] for b in BINS}
     pooled_comp = {b: [] for b in BINS}
+    # diagnostic, not part of the bar: onsets with a quiet run-up of >= REF_GAP windows, so a raised
+    # score cannot be the tail of the previous episode (the E16 per-onset concern)
+    pooled_isolated = {b: [] for b in BINS}
+    n_isolated = 0
     p_values, above_p95, warned, episodes = [], 0, 0, 0
     for day in ATTACK_DAYS:
         if day not in scores:
@@ -142,6 +146,11 @@ def score_run(run: str, ds: ProcessedDataset, n_shifts: int) -> dict:
         per_day = percentiles(scores[day]["threat"], non_impact.onsets, eligible, ref)
         for b in BINS:
             pooled[b] += per_day[b]
+        quiet = windows_since_previous_attack(non_impact.onsets, attack_flags(frame["stage"]))
+        isolated = [o for o, q in zip(non_impact.onsets, quiet) if q >= REF_GAP]
+        n_isolated += len(isolated)
+        for b, v in percentiles(scores[day]["threat"], isolated, eligible, ref).items():
+            pooled_isolated[b] += v
         gating = [v for b in GATING_BINS for v in per_day[b]]
         row[f"S4_{day}"] = round(float(np.mean([np.mean(per_day[b]) for b in GATING_BINS if per_day[b]])), 4) \
             if gating else None
@@ -168,6 +177,9 @@ def score_run(run: str, ds: ProcessedDataset, n_shifts: int) -> dict:
         row[f"S2_n_{b}"] = len(pooled[b])
         row[f"comp_S2_{b}"] = round(float(np.mean(pooled_comp[b])), 4) if pooled_comp[b] else None
     row["S2_star"] = round(float(np.mean([row[f"S2_{b}"] for b in GATING_BINS])), 4)
+    iso = [np.mean(pooled_isolated[b]) for b in GATING_BINS if pooled_isolated[b]]
+    row["diag_S2_star_isolated"] = round(float(np.mean(iso)), 4) if iso else None
+    row["diag_isolated_onsets"] = n_isolated
     day_vals = [row[f"S4_{d}"] for d in ATTACK_DAYS if row.get(f"S4_{d}") is not None]
     row["S4_worst_day"] = round(float(min(day_vals)), 4) if day_vals else None
     fisher = fisher_combine(p_values)
