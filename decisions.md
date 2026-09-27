@@ -1243,3 +1243,44 @@ CTU-13 run.
 - The five PCAPs cannot be obtained. Then E20r is reported as not run.
 - E19 reproduces the r2 numbers poorly, with Thursday `comp` PR-AUC outside the E10 seed range
   (0.37-0.64). That would mean the harness changed, not the model.
+
+---
+
+### D-036 — CTU-13 flows become MITRE stages by their own labels; Argus-only state (E25)
+*Date: 2026-09-27 · Status: accepted, fixed before any CTU-13 model was trained · Evidence: the label vocabulary of scenarios 1-3 (164 distinct botnet labels), `src/netwm/data/ctu13.py`*
+
+**Decision.** `Background` and `Normal` flows are benign. `From-Botnet` flows map by keyword, first
+match wins:
+
+| label contains | stage | why |
+|---|---|---|
+| `CC` | Command and Control | the dataset's own C&C labels (`CC1-HTTP-Not-Encrypted`, `CC69-Custom-Encryption`, ...) |
+| `SPAM`, `DDoS`, `Flood`, `ICMP`, `-Ad-`, `ClickFraud`, `Proxy` | Impact | abuse of the host's resources: spam relay, ad fraud, floods (T1496, T1498) |
+| `Attempt`, `Scan` | Reconnaissance | unanswered connection attempts, which is what a scanning bot produces |
+| anything else (`DNS`, `Established`, `HTTP-Google-Net`, ...) | Command and Control | the infected host's own channel; CTU-13 does not tag every C&C flow `CC` |
+
+`To-Botnet` flows and flows towards an infected host are benign. They are replies or background
+traffic, and labelling them hostile would mark the victim's legitimate peers as attackers.
+
+The compromise onset is the first window at or past Lateral Movement (D-011), which here means the
+bot's first C2 window.
+
+**State.** Argus records the 5-tuple, start, duration, total packets, total and source bytes, and a
+`State` string of TCP flags per side. It records no inter-arrival, packet-length, initial-window,
+segment-size or active/idle statistics. The 14 S_t v1 features built from those fields are dropped
+from E25's inputs (`CIC_ONLY_FEATURES`), leaving 56. The E20 packet block needs the same missing fields
+and is absent. Packets are split between directions in proportion to bytes. A flow with no recorded
+reply is one-way, including the 91 ICMP flows in scenario 11 that have no `State` at all.
+
+**Why this and not a transfer test of the CIC model.** The public CTU-13 PCAPs are botnet-only
+(research/ctu13.md), so neither the CIC state nor the CIC checkpoint can be rebuilt on it. E25 is
+therefore a new model with the same architecture and training budget, evaluated leave-one-family-out.
+It tests whether *the method* transfers across families, not whether one set of weights does.
+
+**Known weakness, stated before the result.** Several captures are almost entirely botnet: Murlo
+96 % of windows C2, Virut s13 99.5 %, Menti 98 %. Several onsets fall in the first minutes of a
+capture: s06 at window 1, s08 at window 1, s03 at window 2. Those scenarios test detection, not
+anticipation, and S2 has few eligible pre-onset windows there.
+
+**Revisit if.** A labelled full-traffic CTU capture appears, or a label turns out to be misrouted by
+the keyword rule. The first match wins, so `Attempt-SPAM` is Impact, not Reconnaissance, by design.
