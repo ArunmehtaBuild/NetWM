@@ -76,6 +76,7 @@ def extract_day(pcap: Path, day: str, ds: ProcessedDataset) -> dict:
         "integrity": md5,
         "packets": int(len(packets["ts"])),
         "frames_skipped": int(packets["skipped"]),
+        "duplicate_frames_dropped": int(packets["duplicates"]),
         "first_packet_utc": str(pd.to_datetime(packets["ts"].min(), unit="s")),
         "last_packet_utc": str(pd.to_datetime(packets["ts"].max(), unit="s")),
         "read_seconds": round(float(packets["seconds"]), 1),

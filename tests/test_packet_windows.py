@@ -34,8 +34,9 @@ def _capture(path: Path) -> Path:
           for i in range(10)],
     ]
     frames = []
-    for t, p in sorted(pkts, key=lambda tp: tp[0]):
+    for i, (t, p) in enumerate(sorted(pkts, key=lambda tp: tp[0])):
         p.time = EPOCH + t
+        p[IP].id = 100 + i  # real stacks vary the IP ID; identical IP packets are capture duplicates
         frames.append(p)
     wrpcap(str(path), frames)
     return path
@@ -65,11 +66,42 @@ def test_window_features_land_on_the_flow_grid(tmp_path):
     assert feats.loc[3].sum() == 0                                        # nothing after 90 s
 
 
-def test_rejects_pcapng(tmp_path):
-    p = tmp_path / "x.pcapng"
-    p.write_bytes(b"\x0a\x0d\x0d\x0a" + b"\x00" * 60)
+def test_capture_duplicates_are_dropped_but_real_retransmissions_kept(tmp_path):
+    a, b = "192.168.10.8", "192.168.10.50"
+    seg = IP(src=a, dst=b, ttl=128, id=7) / TCP(sport=50000, dport=80, flags="PA", seq=1001) / (b"x" * 100)
+    resent = IP(src=a, dst=b, ttl=128, id=8) / TCP(sport=50000, dport=80, flags="PA", seq=1001) / (b"x" * 100)
+    frames = [seg, seg.copy(), resent]            # the mirror's copy, then a genuine retransmission
+    for i, f in enumerate(frames):
+        f.time = EPOCH + i * 0.5
+    wrpcap(str(tmp_path / "d.pcap"), frames)
+    pk = read_packets(tmp_path / "d.pcap")
+    assert len(pk["ts"]) == 2 and int(pk["duplicates"]) == 1 and pk["retrans"].tolist() == [False, True]
+
+
+def test_pcapng_reads_the_same_as_pcap(tmp_path):
+    """The CIC-IDS2017 day captures are pcapng (mergecap) despite the .pcap name."""
+    from scapy.utils import PcapNgWriter, rdpcap
+
+    classic = _capture(tmp_path / "t.pcap")
+    ng = tmp_path / "t.pcapng"
+    writer = PcapNgWriter(str(ng))
+    for pkt in rdpcap(str(classic)):
+        writer.write(pkt)
+    writer.close()
+    a, b = read_packets(classic), read_packets(ng)
+    for key in ("ts", "ttl", "proto", "frag", "flags", "win", "payload", "retrans"):
+        assert np.allclose(a[key], b[key]), key
+
+
+def test_rejects_other_and_corrupt_files(tmp_path):
+    junk = tmp_path / "x.bin"
+    junk.write_bytes(b"not a capture" * 10)
     with pytest.raises(ValueError):
-        read_packets(p)
+        read_packets(junk)
+    corrupt = tmp_path / "x.pcapng"   # a zero block length must fail, not spin
+    corrupt.write_bytes(b"\x0a\x0d\x0d\x0a" + b"\x00" * 60)
+    with pytest.raises(ValueError):
+        read_packets(corrupt)
 
 
 DEMO = ROOT / "data" / "demo" / "thursday_demo.pcap"
@@ -79,6 +111,6 @@ DEMO = ROOT / "data" / "demo" / "thursday_demo.pcap"
 def test_demo_capture_packet_counts_match_the_flow_reader():
     from netwm.features.flow_aggregator import pcap_to_flows
 
-    pk = read_packets(DEMO)
+    pk = read_packets(DEMO, dedupe=False)  # synthesised: every packet has IP ID 1
     flows = pcap_to_flows(DEMO)
     assert len(pk["ts"]) == int(flows["fwd_pkts"].sum() + flows["bwd_pkts"].sum())

@@ -19,7 +19,8 @@ packets. Records are read straight from the file with ``struct``, one Python ste
 per-window statistics are computed afterwards with numpy on 30-second buckets. A packet belongs to the
 two windows that cover it, exactly as ``expand_to_windows`` assigns flows.
 
-Only classic libpcap files are read (the CIC-IDS2017 captures are); pcapng raises.
+Both classic libpcap and pcapng are read. The CIC-IDS2017 day captures are pcapng despite their
+``.pcap`` name (written by ``mergecap``).
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from __future__ import annotations
 import struct
 import time
 from array import array
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -59,13 +61,16 @@ _MAGIC = {
 }
 _SYN, _RST, _ACK = 0x02, 0x04, 0x10
 _CHUNK = 1 << 24  # 16 MB reads
+DEDUP_WINDOW = 64  # frames back in which an identical IP packet counts as a capture duplicate
 
 
-def read_packets(path: Path | str, progress=None) -> dict[str, np.ndarray]:
-    """Per-packet header fields of every IPv4 TCP/UDP/other packet in a classic pcap.
+def read_packets(path: Path | str, progress=None, dedupe: bool = True) -> dict[str, np.ndarray]:
+    """Per-packet header fields of every IPv4 packet in a pcap or pcapng capture.
 
     Returns arrays: ts (float64, epoch s), ttl, proto, frag (bool), tcp_flags, win, payload,
-    retrans (bool; TCP data already sent in that direction), and the count of frames skipped.
+    retrans (bool; TCP data already sent in that direction), and the counts of frames skipped and
+    of capture duplicates dropped. ``dedupe=False`` keeps duplicates - only for synthesised captures,
+    whose packets reuse one IP ID and so look identical when they are not.
     """
     path = Path(path)
     started = time.perf_counter()
@@ -73,38 +78,24 @@ def read_packets(path: Path | str, progress=None) -> dict[str, np.ndarray]:
     ts, win, payload = array("d"), array("i"), array("i")
     ttl, proto, frag, flags, retrans = (array("B") for _ in range(5))
     seq_end: dict[tuple, int] = {}
-    skipped = 0
+    skipped = duplicates = 0
+    # The CIC-IDS2017 captures record most packets twice (a mirror port seeing both copies, ~2 us
+    # apart; 59 % of Friday's first 11 k frames). A real retransmission carries a new IP ID, so an IP
+    # packet byte-identical to one of the last few is a capture duplicate. Left in, every copy would
+    # count as a TCP retransmission and double every rate's denominator.
+    recent: deque = deque(maxlen=DEDUP_WINDOW)
     with open(path, "rb") as fh:
-        header = fh.read(24)
-        if header[:4] not in _MAGIC:
-            raise ValueError(f"{path.name}: not a classic libpcap file (pcapng is not supported)")
-        endian, tick = _MAGIC[header[:4]]
-        linktype = struct.unpack(endian + "I", header[20:24])[0]
-        rec = struct.Struct(endian + "IIII")
-        buf, pos, done_bytes = b"", 0, 24
-        while True:
-            if len(buf) - pos < 16 + 65535:
-                more = fh.read(_CHUNK)
-                buf = buf[pos:] + more
-                pos = 0
-                if not more and len(buf) < 16:
-                    break
-            if len(buf) - pos < 16:
-                break
-            sec, frac, incl, _ = rec.unpack_from(buf, pos)
-            start = pos + 16
-            if len(buf) - start < incl:
-                more = fh.read(_CHUNK)
-                if not more:
-                    break
-                buf = buf[pos:] + more
-                pos = 0
-                continue
-            pos = start + incl
+        for tstamp, buf, start, incl, linktype in _frames(fh, path.name):
             off = _ip_offset(buf, start, incl, linktype)
             if off is None:
                 skipped += 1
                 continue
+            if dedupe:
+                digest = hash(buf[off:start + incl])
+                if digest in recent:
+                    duplicates += 1
+                    continue
+                recent.append(digest)
             vihl = buf[off]
             if vihl >> 4 != 4:
                 skipped += 1
@@ -128,7 +119,7 @@ def read_packets(path: Path | str, progress=None) -> dict[str, np.ndarray]:
                         seq_end[key] = end
             elif p == 17 and l4 + 8 <= start + incl:
                 pl = max(0, struct.unpack_from("!H", buf, l4 + 4)[0] - 8)
-            ts.append(sec + frac * tick)
+            ts.append(tstamp)
             ttl.append(t)
             proto.append(p)
             frag.append(fr)
@@ -145,8 +136,93 @@ def read_packets(path: Path | str, progress=None) -> dict[str, np.ndarray]:
         "flags": np.frombuffer(flags, dtype=np.uint8).astype(np.int16),
         "win": np.frombuffer(win, dtype=np.int32), "payload": np.frombuffer(payload, dtype=np.int32),
         "retrans": np.frombuffer(retrans, dtype=np.uint8).astype(bool),
-        "skipped": np.asarray(skipped), "seconds": np.asarray(time.perf_counter() - started),
+        "skipped": np.asarray(skipped), "duplicates": np.asarray(duplicates),
+        "seconds": np.asarray(time.perf_counter() - started),
     }
+
+
+def _frames(fh, name: str):
+    """Yield ``(timestamp_s, buffer, start, captured_len, linktype)`` for every packet in the file.
+
+    The buffer is shared and refilled in 16 MB chunks; ``start`` and ``captured_len`` locate the frame.
+    """
+    magic = fh.read(4)
+    fh.seek(0)
+    if magic in _MAGIC:
+        yield from _classic_frames(fh)
+    elif magic == b"\x0a\x0d\x0d\x0a":
+        yield from _pcapng_frames(fh)
+    else:
+        raise ValueError(f"{name}: neither pcap nor pcapng")
+
+
+def _refill(fh, buf: bytes, pos: int, need: int) -> tuple[bytes, int, bool]:
+    """Make at least ``need`` bytes available from ``pos``; returns (buf, pos, eof_and_short)."""
+    if len(buf) - pos >= need:
+        return buf, pos, False
+    more = fh.read(max(_CHUNK, need))
+    buf = buf[pos:] + more
+    return buf, 0, len(buf) < need
+
+
+def _classic_frames(fh):
+    header = fh.read(24)
+    endian, tick = _MAGIC[header[:4]]
+    linktype = struct.unpack(endian + "I", header[20:24])[0]
+    rec = struct.Struct(endian + "IIII")
+    buf, pos = b"", 0
+    while True:
+        buf, pos, short = _refill(fh, buf, pos, 16)
+        if short:
+            return
+        sec, frac, incl, _ = rec.unpack_from(buf, pos)
+        buf, pos, short = _refill(fh, buf, pos, 16 + incl)
+        if short:
+            return
+        yield sec + frac * tick, buf, pos + 16, incl, linktype
+        pos += 16 + incl
+
+
+def _pcapng_frames(fh):
+    """Section header, interface descriptions (link type, ``if_tsresol``), enhanced/simple packets."""
+    buf, pos = b"", 0
+    endian = "<"
+    interfaces: list[tuple[int, float]] = []   # (linktype, seconds per tick)
+    while True:
+        buf, pos, short = _refill(fh, buf, pos, 12)
+        if short:
+            return
+        if buf[pos:pos + 4] == b"\x0a\x0d\x0d\x0a":                 # section header: byte order
+            endian = "<" if buf[pos + 8:pos + 12] == b"\x4d\x3c\x2b\x1a" else ">"
+            interfaces = []
+        btype, blen = struct.unpack_from(endian + "II", buf, pos)
+        if blen < 12 or blen % 4:
+            # a block is at least type + two lengths, 4-byte aligned; anything else is corrupt, and
+            # a zero length would otherwise never advance
+            raise ValueError(f"corrupt pcapng block (type {btype:#x}, length {blen})")
+        buf, pos, short = _refill(fh, buf, pos, blen)
+        if short:
+            return
+        if btype == 1:                                                  # interface description
+            linktype = struct.unpack_from(endian + "H", buf, pos + 8)[0]
+            tick = 1e-6
+            opt, end = pos + 16, pos + blen - 4
+            while opt + 4 <= end:
+                code, olen = struct.unpack_from(endian + "HH", buf, opt)
+                if code == 0:
+                    break
+                if code == 9 and olen >= 1:                              # if_tsresol
+                    r = buf[opt + 4]
+                    tick = 2.0 ** -(r & 0x7F) if r & 0x80 else 10.0 ** -r
+                opt += 4 + ((olen + 3) & ~3)
+            interfaces.append((linktype, tick))
+        elif btype == 6:                                                # enhanced packet
+            iface, hi, lo, incl = struct.unpack_from(endian + "IIII", buf, pos + 8)
+            linktype, tick = interfaces[iface]
+            yield ((hi << 32) | lo) * tick, buf, pos + 28, incl, linktype
+        elif btype == 3:                                                # simple packet: no timestamp
+            pass
+        pos += blen
 
 
 def _ip_offset(buf: bytes, start: int, incl: int, linktype: int) -> int | None:
