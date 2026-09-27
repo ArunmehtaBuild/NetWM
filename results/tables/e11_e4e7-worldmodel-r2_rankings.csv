@@ -1,0 +1,421 @@
+episode,rank,feature,mean_abs_attribution,in_signature
+Thu 17:00 external port scan,1,ports_per_pair_max,0.02530723065137863,True
+Thu 17:00 external port scan,2,tiny_flow_rate,0.01878851093351841,True
+Thu 17:00 external port scan,3,uniq_dst_port,0.017008310183882713,True
+Thu 17:00 external port scan,4,is_inbound_rate,0.012987512163817883,False
+Thu 17:00 external port scan,5,svc_rdp_rate,0.012689514085650444,False
+Thu 17:00 external port scan,6,proto_udp_rate,0.010265877470374107,False
+Thu 17:00 external port scan,7,is_outbound_rate,0.008967316709458828,False
+Thu 17:00 external port scan,8,ephemeral_dst_rate,0.007616275921463966,False
+Thu 17:00 external port scan,9,fwd_seg_size_min_mean,0.007544223219156265,False
+Thu 17:00 external port scan,10,pkt_len_mean_mean,0.0073685310781002045,False
+Thu 17:00 external port scan,11,has_rst_rate,0.00639058044180274,True
+Thu 17:00 external port scan,12,duration_s_mean,0.006095946300774813,False
+Thu 17:00 external port scan,13,svc_db_rate,0.005293731112033129,False
+Thu 17:00 external port scan,14,pkts_mean,0.005135142710059881,False
+Thu 17:00 external port scan,15,flows_per_s,0.003914258908480406,False
+Thu 17:00 external port scan,16,dst_port_entropy,0.003774994518607855,True
+Thu 17:00 external port scan,17,dst_ip_entropy,0.003592508379369974,False
+Thu 17:00 external port scan,18,svc_dns_rate,0.003569238353520632,False
+Thu 17:00 external port scan,19,port_fanout_max,0.0034040510654449463,True
+Thu 17:00 external port scan,20,has_fin_rate,0.003201295854523778,False
+Thu 17:00 external port scan,21,top_talker_share,0.0028373710811138153,False
+Thu 17:00 external port scan,22,n_flows,0.0027410509064793587,False
+Thu 17:00 external port scan,23,syn_cnt_sum,0.0027015795931220055,True
+Thu 17:00 external port scan,24,rst_cnt_sum,0.0026405355893075466,True
+Thu 17:00 external port scan,25,pkt_len_std_mean,0.002617121208459139,False
+Thu 17:00 external port scan,26,idle_mean_mean,0.0023671179078519344,False
+Thu 17:00 external port scan,27,svc_https_rate,0.0022669238969683647,False
+Thu 17:00 external port scan,28,svc_http_rate,0.0021779939997941256,False
+Thu 17:00 external port scan,29,is_internal_rate,0.0020892734173685312,False
+Thu 17:00 external port scan,30,uniq_src_ip,0.0020815653260797262,False
+Thu 17:00 external port scan,31,seq_port_ratio,0.002030713018029928,True
+Thu 17:00 external port scan,32,fwd_init_win_mean,0.0019306314643472433,False
+Thu 17:00 external port scan,33,beacon_score,0.001842918572947383,False
+Thu 17:00 external port scan,34,one_way_rate,0.0017265931237488985,True
+Thu 17:00 external port scan,35,priv_port_rate,0.001426942297257483,False
+Thu 17:00 external port scan,36,fanout_max,0.0013710163766518235,False
+Thu 17:00 external port scan,37,pkts_per_s,0.0012875666143372655,False
+Thu 17:00 external port scan,38,ack_cnt_sum,0.0011356028262525797,False
+Thu 17:00 external port scan,39,down_up_ratio_mean,0.001130186370573938,False
+Thu 17:00 external port scan,40,uniq_src_port,0.001096513937227428,False
+Thu 17:00 external port scan,41,bytes_per_s,0.0009615238523110747,False
+Thu 17:00 external port scan,42,inbound_bytes,0.0008721206686459482,False
+Thu 17:00 external port scan,43,proto_tcp_rate,0.0008625481859780848,False
+Thu 17:00 external port scan,44,syn_no_ack_rate,0.0007681325660087168,True
+Thu 17:00 external port scan,45,bytes_mean,0.0007501515792682767,False
+Thu 17:00 external port scan,46,byte_asymmetry,0.0007478442275896668,False
+Thu 17:00 external port scan,47,flow_iat_max_max,0.0007285545580089092,False
+Thu 17:00 external port scan,48,active_mean_mean,0.0007194749196060002,False
+Thu 17:00 external port scan,49,src_ip_entropy,0.0006450119544751942,False
+Thu 17:00 external port scan,50,flow_iat_mean_mean,0.0005706919473595917,False
+Thu 17:00 external port scan,51,svc_ftp_rate,0.0005012819892726839,False
+Thu 17:00 external port scan,52,svc_ssh_rate,0.00041320890886709094,False
+Thu 17:00 external port scan,53,uniq_dst_ip,0.0003876755654346198,False
+Thu 17:00 external port scan,54,bwd_init_win_mean,0.00038374107680283487,False
+Thu 17:00 external port scan,55,pkt_len_max_max,0.00036945362808182836,False
+Thu 17:00 external port scan,56,bytes_total,0.00034925105865113437,False
+Thu 17:00 external port scan,57,duration_s_max,0.0002992447989527136,False
+Thu 17:00 external port scan,58,flow_iat_std_mean,0.0002817146305460483,False
+Thu 17:00 external port scan,59,pkts_total,0.0002811078738886863,False
+Thu 17:00 external port scan,60,psh_cnt_sum,0.000279415980912745,False
+Thu 17:00 external port scan,61,svc_smtp_rate,0.0001399979810230434,False
+Thu 17:00 external port scan,62,bytes_max,0.00011689366510836408,False
+Thu 17:00 external port scan,63,proto_icmp_rate,0.0001128439762396738,False
+Thu 17:00 external port scan,64,fwd_init_win_std,9.074674744624645e-05,False
+Thu 17:00 external port scan,65,fanout_mean,8.105283632175997e-05,False
+Thu 17:00 external port scan,66,svc_smb_rate,8.066716691246256e-05,False
+Thu 17:00 external port scan,67,fin_cnt_sum,7.349546649493277e-05,False
+Thu 17:00 external port scan,68,outbound_bytes,5.379466529120691e-05,False
+Thu 17:00 external port scan,69,flow_iat_min_min,8.539244845451321e-06,False
+Thu 17:00 external port scan,70,urg_cnt_sum,0.0,False
+Thu internal sweep,1,urg_cnt_sum,0.06830305606126785,False
+Thu internal sweep,2,one_way_rate,0.04899992048740387,False
+Thu internal sweep,3,uniq_dst_port,0.04839553311467171,True
+Thu internal sweep,4,ports_per_pair_max,0.037881772965192795,True
+Thu internal sweep,5,svc_db_rate,0.030829906463623047,False
+Thu internal sweep,6,dst_port_entropy,0.02307516150176525,True
+Thu internal sweep,7,port_fanout_max,0.021176397800445557,True
+Thu internal sweep,8,syn_cnt_sum,0.018316006287932396,False
+Thu internal sweep,9,priv_port_rate,0.017477335408329964,False
+Thu internal sweep,10,svc_rdp_rate,0.015582803636789322,False
+Thu internal sweep,11,syn_no_ack_rate,0.012516180984675884,True
+Thu internal sweep,12,pkt_len_std_mean,0.009486609138548374,False
+Thu internal sweep,13,src_ip_entropy,0.009023082442581654,False
+Thu internal sweep,14,has_rst_rate,0.008972507901489735,True
+Thu internal sweep,15,uniq_src_ip,0.008062123320996761,False
+Thu internal sweep,16,svc_dns_rate,0.008026313968002796,False
+Thu internal sweep,17,pkt_len_mean_mean,0.007952917367219925,False
+Thu internal sweep,18,tiny_flow_rate,0.00765218073502183,True
+Thu internal sweep,19,svc_http_rate,0.007389604579657316,False
+Thu internal sweep,20,fwd_seg_size_min_mean,0.006690282374620438,False
+Thu internal sweep,21,dst_ip_entropy,0.006317660678178072,True
+Thu internal sweep,22,flow_iat_mean_mean,0.005991087760776281,False
+Thu internal sweep,23,idle_mean_mean,0.005966862663626671,False
+Thu internal sweep,24,top_talker_share,0.005955986212939024,True
+Thu internal sweep,25,pkt_len_max_max,0.005835705902427435,False
+Thu internal sweep,26,duration_s_mean,0.005591677036136389,False
+Thu internal sweep,27,fanout_mean,0.00549408420920372,True
+Thu internal sweep,28,bytes_mean,0.005294033791869879,False
+Thu internal sweep,29,seq_port_ratio,0.005120939575135708,False
+Thu internal sweep,30,proto_tcp_rate,0.004993785638362169,False
+Thu internal sweep,31,svc_https_rate,0.004892324097454548,False
+Thu internal sweep,32,ephemeral_dst_rate,0.0048058717511594296,False
+Thu internal sweep,33,active_mean_mean,0.004632276948541403,False
+Thu internal sweep,34,beacon_score,0.004282208625227213,False
+Thu internal sweep,35,fin_cnt_sum,0.004065647721290588,False
+Thu internal sweep,36,fwd_init_win_std,0.0039121960289776325,False
+Thu internal sweep,37,uniq_src_port,0.0037925641518086195,False
+Thu internal sweep,38,bytes_max,0.0037801184225827456,False
+Thu internal sweep,39,rst_cnt_sum,0.003776622237637639,False
+Thu internal sweep,40,bwd_init_win_mean,0.0036477039102464914,False
+Thu internal sweep,41,is_internal_rate,0.00356382061727345,True
+Thu internal sweep,42,pkts_mean,0.0034428571816533804,False
+Thu internal sweep,43,bytes_total,0.0032568005844950676,False
+Thu internal sweep,44,proto_udp_rate,0.0032419099006801844,False
+Thu internal sweep,45,flows_per_s,0.0031003255862742662,True
+Thu internal sweep,46,fwd_init_win_mean,0.003085397882387042,False
+Thu internal sweep,47,bytes_per_s,0.0030161861795932055,False
+Thu internal sweep,48,is_outbound_rate,0.002674840157851577,False
+Thu internal sweep,49,down_up_ratio_mean,0.002592923119664192,False
+Thu internal sweep,50,flow_iat_std_mean,0.002536047948524356,False
+Thu internal sweep,51,fanout_max,0.0024650893174111843,True
+Thu internal sweep,52,has_fin_rate,0.002340019913390279,False
+Thu internal sweep,53,n_flows,0.002222310984507203,True
+Thu internal sweep,54,is_inbound_rate,0.0019284336594864726,False
+Thu internal sweep,55,flow_iat_max_max,0.0018805153667926788,False
+Thu internal sweep,56,pkts_total,0.001821607700549066,False
+Thu internal sweep,57,ack_cnt_sum,0.001751974574290216,False
+Thu internal sweep,58,svc_ssh_rate,0.0015785902505740523,False
+Thu internal sweep,59,svc_ftp_rate,0.0013119233772158623,False
+Thu internal sweep,60,svc_smtp_rate,0.001214787713252008,False
+Thu internal sweep,61,proto_icmp_rate,0.0011770148994401097,False
+Thu internal sweep,62,inbound_bytes,0.0011314073344692588,False
+Thu internal sweep,63,psh_cnt_sum,0.0010898184264078736,False
+Thu internal sweep,64,outbound_bytes,0.0010011603590101004,False
+Thu internal sweep,65,uniq_dst_ip,0.0009877629345282912,True
+Thu internal sweep,66,pkts_per_s,0.0009854520903900266,False
+Thu internal sweep,67,duration_s_max,0.0007281284779310226,False
+Thu internal sweep,68,byte_asymmetry,0.00072210788493976,False
+Thu internal sweep,69,svc_smb_rate,0.0006581220659427345,False
+Thu internal sweep,70,flow_iat_min_min,0.000498647044878453,False
+Thu web attacks,1,uniq_src_ip,0.00128314143512398,False
+Thu web attacks,2,src_ip_entropy,0.0006209370330907404,False
+Thu web attacks,3,one_way_rate,0.00039099124842323363,False
+Thu web attacks,4,svc_dns_rate,0.00036095594987273216,False
+Thu web attacks,5,top_talker_share,0.0003545993531588465,True
+Thu web attacks,6,bwd_init_win_mean,0.0003219244536012411,False
+Thu web attacks,7,seq_port_ratio,0.00031261969706974924,False
+Thu web attacks,8,bytes_max,0.0002894265635404736,False
+Thu web attacks,9,beacon_score,0.00028437486616894603,False
+Thu web attacks,10,n_flows,0.00028316795942373574,True
+Thu web attacks,11,priv_port_rate,0.00027667710673995316,False
+Thu web attacks,12,fanout_max,0.0002594006073195487,False
+Thu web attacks,13,proto_tcp_rate,0.00025399684091098607,False
+Thu web attacks,14,fwd_init_win_std,0.00025192907196469605,False
+Thu web attacks,15,uniq_dst_port,0.00024999273591674864,False
+Thu web attacks,16,has_fin_rate,0.0002433008630760014,False
+Thu web attacks,17,rst_cnt_sum,0.000239851520746015,False
+Thu web attacks,18,proto_udp_rate,0.0002156138652935624,False
+Thu web attacks,19,syn_cnt_sum,0.0002101052668876946,False
+Thu web attacks,20,dst_ip_entropy,0.00020851891895290464,False
+Thu web attacks,21,port_fanout_max,0.00020642469462472945,False
+Thu web attacks,22,flow_iat_mean_mean,0.00019776838598772883,False
+Thu web attacks,23,pkt_len_max_max,0.00019124255049973726,True
+Thu web attacks,24,fwd_seg_size_min_mean,0.0001902141229948029,False
+Thu web attacks,25,has_rst_rate,0.00017573819786775857,False
+Thu web attacks,26,is_outbound_rate,0.00017502899572718889,False
+Thu web attacks,27,active_mean_mean,0.00017445511184632778,False
+Thu web attacks,28,ports_per_pair_max,0.00017401482909917831,False
+Thu web attacks,29,pkts_mean,0.00016195024363696575,False
+Thu web attacks,30,svc_smtp_rate,0.0001604058052180335,False
+Thu web attacks,31,down_up_ratio_mean,0.00015875692770350724,False
+Thu web attacks,32,pkt_len_mean_mean,0.00015725806588307023,True
+Thu web attacks,33,fanout_mean,0.00015094010450411588,False
+Thu web attacks,34,uniq_src_port,0.00014997848484199494,False
+Thu web attacks,35,is_inbound_rate,0.00014717345766257495,True
+Thu web attacks,36,fin_cnt_sum,0.00014709820970892906,False
+Thu web attacks,37,duration_s_mean,0.0001435544982086867,False
+Thu web attacks,38,flows_per_s,0.00013873794523533434,True
+Thu web attacks,39,bytes_mean,0.00012905387848149985,True
+Thu web attacks,40,fwd_init_win_mean,0.00012069259537383914,False
+Thu web attacks,41,svc_ssh_rate,0.00011914030619664118,False
+Thu web attacks,42,inbound_bytes,0.00011424667900428176,False
+Thu web attacks,43,svc_http_rate,0.00011415904737077653,True
+Thu web attacks,44,flow_iat_max_max,0.00011368560808477923,False
+Thu web attacks,45,byte_asymmetry,0.00011215519771212712,False
+Thu web attacks,46,uniq_dst_ip,0.00011173271195730194,False
+Thu web attacks,47,flow_iat_std_mean,0.00010776798444567248,False
+Thu web attacks,48,is_internal_rate,0.00010231058695353568,False
+Thu web attacks,49,svc_ftp_rate,9.908783249557018e-05,False
+Thu web attacks,50,svc_https_rate,9.45270003285259e-05,False
+Thu web attacks,51,svc_smb_rate,9.323033009422943e-05,False
+Thu web attacks,52,outbound_bytes,8.816690387902781e-05,False
+Thu web attacks,53,dst_port_entropy,8.780339703662321e-05,False
+Thu web attacks,54,pkt_len_std_mean,8.460183744318783e-05,False
+Thu web attacks,55,syn_no_ack_rate,8.339620399056002e-05,False
+Thu web attacks,56,ephemeral_dst_rate,7.859041215851903e-05,False
+Thu web attacks,57,pkts_per_s,7.696980173932388e-05,False
+Thu web attacks,58,duration_s_max,7.320049917325377e-05,False
+Thu web attacks,59,bytes_total,7.177179213613272e-05,False
+Thu web attacks,60,tiny_flow_rate,6.359212420647964e-05,False
+Thu web attacks,61,ack_cnt_sum,6.037050115992315e-05,False
+Thu web attacks,62,psh_cnt_sum,5.847977809025906e-05,True
+Thu web attacks,63,pkts_total,5.716920713894069e-05,False
+Thu web attacks,64,idle_mean_mean,5.335134846973233e-05,False
+Thu web attacks,65,proto_icmp_rate,5.2549876272678375e-05,False
+Thu web attacks,66,bytes_per_s,4.567819996736944e-05,False
+Thu web attacks,67,svc_rdp_rate,4.0041417378233746e-05,False
+Thu web attacks,68,flow_iat_min_min,3.909476436092518e-05,False
+Thu web attacks,69,svc_db_rate,1.9635152057162486e-05,False
+Thu web attacks,70,urg_cnt_sum,0.0,False
+Fri botnet C2 (Ares),1,flow_iat_mean_mean,0.026210153475403786,True
+Fri botnet C2 (Ares),2,bytes_max,0.019072214141488075,False
+Fri botnet C2 (Ares),3,bytes_total,0.01847812533378601,False
+Fri botnet C2 (Ares),4,duration_s_mean,0.018363112583756447,True
+Fri botnet C2 (Ares),5,seq_port_ratio,0.018030909821391106,False
+Fri botnet C2 (Ares),6,src_ip_entropy,0.018009794875979424,False
+Fri botnet C2 (Ares),7,syn_cnt_sum,0.017992472276091576,False
+Fri botnet C2 (Ares),8,outbound_bytes,0.017694443464279175,True
+Fri botnet C2 (Ares),9,bwd_init_win_mean,0.016709011048078537,False
+Fri botnet C2 (Ares),10,ack_cnt_sum,0.01647438295185566,False
+Fri botnet C2 (Ares),11,dst_port_entropy,0.01642555370926857,False
+Fri botnet C2 (Ares),12,fanout_max,0.014499574899673462,False
+Fri botnet C2 (Ares),13,top_talker_share,0.01322069764137268,False
+Fri botnet C2 (Ares),14,svc_https_rate,0.012851125560700893,False
+Fri botnet C2 (Ares),15,uniq_src_ip,0.012727763503789902,False
+Fri botnet C2 (Ares),16,pkt_len_max_max,0.012386891059577465,False
+Fri botnet C2 (Ares),17,bytes_mean,0.012351836077868938,False
+Fri botnet C2 (Ares),18,proto_icmp_rate,0.012262786738574505,False
+Fri botnet C2 (Ares),19,uniq_dst_ip,0.011865717358887196,False
+Fri botnet C2 (Ares),20,proto_udp_rate,0.011675386689603329,False
+Fri botnet C2 (Ares),21,svc_http_rate,0.011300540529191494,True
+Fri botnet C2 (Ares),22,flow_iat_max_max,0.011111575178802013,False
+Fri botnet C2 (Ares),23,pkt_len_std_mean,0.010637417435646057,False
+Fri botnet C2 (Ares),24,svc_smtp_rate,0.010227787308394909,False
+Fri botnet C2 (Ares),25,proto_tcp_rate,0.010057228617370129,False
+Fri botnet C2 (Ares),26,fanout_mean,0.009546921588480473,False
+Fri botnet C2 (Ares),27,uniq_dst_port,0.008704844862222672,False
+Fri botnet C2 (Ares),28,active_mean_mean,0.008680933155119419,False
+Fri botnet C2 (Ares),29,priv_port_rate,0.00856715813279152,False
+Fri botnet C2 (Ares),30,rst_cnt_sum,0.008470303378999233,False
+Fri botnet C2 (Ares),31,fwd_init_win_mean,0.008307386189699173,False
+Fri botnet C2 (Ares),32,is_internal_rate,0.007958735339343548,False
+Fri botnet C2 (Ares),33,ports_per_pair_max,0.007919210009276867,False
+Fri botnet C2 (Ares),34,port_fanout_max,0.0076280017383396626,False
+Fri botnet C2 (Ares),35,n_flows,0.007394963409751654,False
+Fri botnet C2 (Ares),36,byte_asymmetry,0.007070941384881735,True
+Fri botnet C2 (Ares),37,svc_ftp_rate,0.006987908389419317,False
+Fri botnet C2 (Ares),38,pkts_mean,0.006961541716009378,False
+Fri botnet C2 (Ares),39,fin_cnt_sum,0.006829844322055578,False
+Fri botnet C2 (Ares),40,uniq_src_port,0.006826022174209356,False
+Fri botnet C2 (Ares),41,inbound_bytes,0.006669687107205391,False
+Fri botnet C2 (Ares),42,is_outbound_rate,0.006498731207102537,True
+Fri botnet C2 (Ares),43,is_inbound_rate,0.00637073116376996,False
+Fri botnet C2 (Ares),44,has_rst_rate,0.006004290655255318,False
+Fri botnet C2 (Ares),45,fwd_init_win_std,0.0059408643282949924,False
+Fri botnet C2 (Ares),46,pkts_total,0.005814775824546814,False
+Fri botnet C2 (Ares),47,dst_ip_entropy,0.00581195717677474,False
+Fri botnet C2 (Ares),48,urg_cnt_sum,0.00539238890632987,False
+Fri botnet C2 (Ares),49,flow_iat_std_mean,0.00535941869020462,True
+Fri botnet C2 (Ares),50,flows_per_s,0.005260160658508539,False
+Fri botnet C2 (Ares),51,duration_s_max,0.005162024404853582,False
+Fri botnet C2 (Ares),52,bytes_per_s,0.005061135161668062,False
+Fri botnet C2 (Ares),53,pkts_per_s,0.005040780175477266,False
+Fri botnet C2 (Ares),54,beacon_score,0.004945120308548212,True
+Fri botnet C2 (Ares),55,fwd_seg_size_min_mean,0.004701182711869478,False
+Fri botnet C2 (Ares),56,one_way_rate,0.0043829516507685184,False
+Fri botnet C2 (Ares),57,pkt_len_mean_mean,0.004228364676237106,False
+Fri botnet C2 (Ares),58,svc_dns_rate,0.004161432385444641,False
+Fri botnet C2 (Ares),59,tiny_flow_rate,0.0037065772339701653,False
+Fri botnet C2 (Ares),60,psh_cnt_sum,0.0036763984244316816,False
+Fri botnet C2 (Ares),61,svc_rdp_rate,0.003555122995749116,False
+Fri botnet C2 (Ares),62,svc_ssh_rate,0.0029760515317320824,False
+Fri botnet C2 (Ares),63,syn_no_ack_rate,0.0029692724347114563,False
+Fri botnet C2 (Ares),64,idle_mean_mean,0.0024563840124756098,False
+Fri botnet C2 (Ares),65,down_up_ratio_mean,0.0020482114050537348,False
+Fri botnet C2 (Ares),66,ephemeral_dst_rate,0.0017909468151628971,False
+Fri botnet C2 (Ares),67,svc_smb_rate,0.001652856939472258,False
+Fri botnet C2 (Ares),68,has_fin_rate,0.0015867453766986728,False
+Fri botnet C2 (Ares),69,svc_db_rate,0.0010937451152130961,False
+Fri botnet C2 (Ares),70,flow_iat_min_min,0.0006036502891220152,False
+Fri port scan,1,proto_tcp_rate,0.02957000397145748,False
+Fri port scan,2,svc_db_rate,0.02922961302101612,False
+Fri port scan,3,svc_rdp_rate,0.027204975485801697,False
+Fri port scan,4,is_inbound_rate,0.027060501277446747,False
+Fri port scan,5,flow_iat_mean_mean,0.025878382846713066,False
+Fri port scan,6,uniq_dst_port,0.02536667324602604,True
+Fri port scan,7,proto_udp_rate,0.02357831411063671,False
+Fri port scan,8,priv_port_rate,0.023522138595581055,False
+Fri port scan,9,dst_port_entropy,0.02270452491939068,True
+Fri port scan,10,bytes_mean,0.019358456134796143,False
+Fri port scan,11,tiny_flow_rate,0.019071167334914207,True
+Fri port scan,12,has_rst_rate,0.018772533163428307,True
+Fri port scan,13,pkt_len_std_mean,0.018377384170889854,False
+Fri port scan,14,syn_cnt_sum,0.016721593216061592,True
+Fri port scan,15,flows_per_s,0.015415097586810589,False
+Fri port scan,16,uniq_src_ip,0.01516485121101141,False
+Fri port scan,17,duration_s_mean,0.014711410738527775,False
+Fri port scan,18,is_internal_rate,0.013793427497148514,False
+Fri port scan,19,proto_icmp_rate,0.013542350381612778,False
+Fri port scan,20,bytes_total,0.013195068575441837,False
+Fri port scan,21,ports_per_pair_max,0.012538962997496128,True
+Fri port scan,22,top_talker_share,0.012080593965947628,False
+Fri port scan,23,seq_port_ratio,0.01197738666087389,True
+Fri port scan,24,dst_ip_entropy,0.011315450072288513,False
+Fri port scan,25,ephemeral_dst_rate,0.011307180859148502,False
+Fri port scan,26,src_ip_entropy,0.010661139152944088,False
+Fri port scan,27,outbound_bytes,0.010438243858516216,False
+Fri port scan,28,port_fanout_max,0.010158360004425049,True
+Fri port scan,29,bwd_init_win_mean,0.009425290860235691,False
+Fri port scan,30,flow_iat_std_mean,0.0093573909252882,False
+Fri port scan,31,bytes_max,0.008832712657749653,False
+Fri port scan,32,beacon_score,0.008576463907957077,False
+Fri port scan,33,fanout_max,0.0074030146934092045,False
+Fri port scan,34,fwd_seg_size_min_mean,0.007026223000138998,False
+Fri port scan,35,uniq_dst_ip,0.006811946164816618,False
+Fri port scan,36,ack_cnt_sum,0.006800269708037376,False
+Fri port scan,37,svc_dns_rate,0.0067850095219910145,False
+Fri port scan,38,is_outbound_rate,0.006566986907273531,False
+Fri port scan,39,n_flows,0.006320825312286615,False
+Fri port scan,40,pkt_len_mean_mean,0.006005129311233759,False
+Fri port scan,41,has_fin_rate,0.005874427501112223,False
+Fri port scan,42,pkts_total,0.005602099001407623,False
+Fri port scan,43,fwd_init_win_std,0.005454451311379671,False
+Fri port scan,44,rst_cnt_sum,0.005409151315689087,True
+Fri port scan,45,fin_cnt_sum,0.005374628584831953,False
+Fri port scan,46,flow_iat_max_max,0.005338745191693306,False
+Fri port scan,47,svc_http_rate,0.005282754078507423,False
+Fri port scan,48,pkts_per_s,0.004782034084200859,False
+Fri port scan,49,bytes_per_s,0.004765142221003771,False
+Fri port scan,50,svc_https_rate,0.004709563683718443,False
+Fri port scan,51,svc_ftp_rate,0.004590984899550676,False
+Fri port scan,52,one_way_rate,0.004495853092521429,True
+Fri port scan,53,uniq_src_port,0.0041744289919734,False
+Fri port scan,54,byte_asymmetry,0.00403231056407094,False
+Fri port scan,55,pkts_mean,0.004018053878098726,False
+Fri port scan,56,urg_cnt_sum,0.003927723970264196,False
+Fri port scan,57,down_up_ratio_mean,0.0035198235418647528,False
+Fri port scan,58,pkt_len_max_max,0.003369877114892006,False
+Fri port scan,59,fanout_mean,0.0031974499579519033,False
+Fri port scan,60,svc_ssh_rate,0.002980140969157219,False
+Fri port scan,61,fwd_init_win_mean,0.002737888367846608,False
+Fri port scan,62,psh_cnt_sum,0.002712044632062316,False
+Fri port scan,63,inbound_bytes,0.0026561517734080553,False
+Fri port scan,64,idle_mean_mean,0.0026474222540855408,False
+Fri port scan,65,active_mean_mean,0.0024215595331043005,False
+Fri port scan,66,duration_s_max,0.0023566142190247774,False
+Fri port scan,67,svc_smtp_rate,0.0020703941117972136,False
+Fri port scan,68,syn_no_ack_rate,0.001976392697542906,True
+Fri port scan,69,svc_smb_rate,0.001583042205311358,False
+Fri port scan,70,flow_iat_min_min,0.00033566277124918997,False
+Fri DDoS LOIC,1,is_inbound_rate,0.057552520185709,True
+Fri DDoS LOIC,2,syn_cnt_sum,0.029592998325824738,True
+Fri DDoS LOIC,3,proto_udp_rate,0.029244504868984222,False
+Fri DDoS LOIC,4,svc_http_rate,0.028254007920622826,True
+Fri DDoS LOIC,5,is_internal_rate,0.027715226635336876,False
+Fri DDoS LOIC,6,ports_per_pair_max,0.024102265015244484,False
+Fri DDoS LOIC,7,dst_ip_entropy,0.022625232115387917,False
+Fri DDoS LOIC,8,has_rst_rate,0.022092798724770546,False
+Fri DDoS LOIC,9,outbound_bytes,0.020970916375517845,False
+Fri DDoS LOIC,10,fin_cnt_sum,0.018549682572484016,False
+Fri DDoS LOIC,11,rst_cnt_sum,0.017645709216594696,False
+Fri DDoS LOIC,12,pkt_len_std_mean,0.01664588414132595,False
+Fri DDoS LOIC,13,has_fin_rate,0.0154682956635952,False
+Fri DDoS LOIC,14,dst_port_entropy,0.015121892094612122,False
+Fri DDoS LOIC,15,proto_tcp_rate,0.013511673547327518,False
+Fri DDoS LOIC,16,uniq_dst_port,0.013403549790382385,False
+Fri DDoS LOIC,17,bytes_total,0.012671180069446564,False
+Fri DDoS LOIC,18,duration_s_mean,0.012366008944809437,False
+Fri DDoS LOIC,19,port_fanout_max,0.010988502763211727,False
+Fri DDoS LOIC,20,uniq_src_ip,0.010986939072608948,False
+Fri DDoS LOIC,21,src_ip_entropy,0.010186861269176006,False
+Fri DDoS LOIC,22,fwd_seg_size_min_mean,0.010078893974423409,False
+Fri DDoS LOIC,23,ack_cnt_sum,0.009261754341423512,False
+Fri DDoS LOIC,24,pkt_len_max_max,0.008744279853999615,False
+Fri DDoS LOIC,25,is_outbound_rate,0.0086759552359581,False
+Fri DDoS LOIC,26,byte_asymmetry,0.007710746023803949,False
+Fri DDoS LOIC,27,flow_iat_mean_mean,0.007086268160492182,False
+Fri DDoS LOIC,28,pkts_total,0.005765307229012251,False
+Fri DDoS LOIC,29,tiny_flow_rate,0.004959447775036097,False
+Fri DDoS LOIC,30,fwd_init_win_std,0.004864067304879427,False
+Fri DDoS LOIC,31,bytes_max,0.0047068363055586815,False
+Fri DDoS LOIC,32,pkt_len_mean_mean,0.004445898812264204,False
+Fri DDoS LOIC,33,pkts_per_s,0.004355661105364561,True
+Fri DDoS LOIC,34,svc_ftp_rate,0.003859924152493477,False
+Fri DDoS LOIC,35,top_talker_share,0.003742001950740814,True
+Fri DDoS LOIC,36,fanout_max,0.003590538166463375,False
+Fri DDoS LOIC,37,flows_per_s,0.003460364416241646,True
+Fri DDoS LOIC,38,uniq_dst_ip,0.0033277764450758696,False
+Fri DDoS LOIC,39,proto_icmp_rate,0.0031239271629601717,False
+Fri DDoS LOIC,40,psh_cnt_sum,0.0030834961216896772,False
+Fri DDoS LOIC,41,down_up_ratio_mean,0.0024034171365201473,False
+Fri DDoS LOIC,42,uniq_src_port,0.0022900437470525503,True
+Fri DDoS LOIC,43,svc_https_rate,0.0019247002201154828,False
+Fri DDoS LOIC,44,bytes_per_s,0.0018878501141443849,True
+Fri DDoS LOIC,45,bwd_init_win_mean,0.0018786535365507007,False
+Fri DDoS LOIC,46,flow_iat_max_max,0.0018533607944846153,False
+Fri DDoS LOIC,47,n_flows,0.0018455870449543,True
+Fri DDoS LOIC,48,one_way_rate,0.0017961292760446668,False
+Fri DDoS LOIC,49,urg_cnt_sum,0.0017441175878047943,False
+Fri DDoS LOIC,50,svc_dns_rate,0.0016897316090762615,False
+Fri DDoS LOIC,51,inbound_bytes,0.0016265936428681016,False
+Fri DDoS LOIC,52,syn_no_ack_rate,0.0014524869620800018,False
+Fri DDoS LOIC,53,fwd_init_win_mean,0.0013554309261962771,False
+Fri DDoS LOIC,54,svc_ssh_rate,0.0013462603092193604,False
+Fri DDoS LOIC,55,bytes_mean,0.0013091695727780461,False
+Fri DDoS LOIC,56,active_mean_mean,0.0012323249829933047,False
+Fri DDoS LOIC,57,beacon_score,0.0011597535340115428,False
+Fri DDoS LOIC,58,duration_s_max,0.001126062823459506,False
+Fri DDoS LOIC,59,pkts_mean,0.001005259808152914,False
+Fri DDoS LOIC,60,svc_smb_rate,0.000978986732661724,False
+Fri DDoS LOIC,61,seq_port_ratio,0.0008798148483037949,False
+Fri DDoS LOIC,62,priv_port_rate,0.0007176988874562085,False
+Fri DDoS LOIC,63,ephemeral_dst_rate,0.0006804995355196297,False
+Fri DDoS LOIC,64,fanout_mean,0.0006482328753918409,False
+Fri DDoS LOIC,65,svc_rdp_rate,0.0005826740525662899,False
+Fri DDoS LOIC,66,svc_smtp_rate,0.0004849894903600216,False
+Fri DDoS LOIC,67,svc_db_rate,0.00037173149758018553,False
+Fri DDoS LOIC,68,flow_iat_min_min,0.0002902142587117851,False
+Fri DDoS LOIC,69,idle_mean_mean,0.00014390410797204822,False
+Fri DDoS LOIC,70,flow_iat_std_mean,6.926400965312496e-05,False

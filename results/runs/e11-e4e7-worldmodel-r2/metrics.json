@@ -1,0 +1,110 @@
+{
+  "run_id": "e11-e4e7-worldmodel-r2",
+  "timestamp_utc": "2026-09-27T03:47:34+00:00",
+  "git_sha": "529289d",
+  "config": {
+    "run": "e4e7-worldmodel-r2",
+    "data": "data/processed/cicids2017",
+    "seed": 42,
+    "top": 8
+  },
+  "metrics": {
+    "verdict": {
+      "episodes_passing": 1,
+      "episodes": 6,
+      "e11_passes": false
+    },
+    "episodes": [
+      {
+        "episode": "Thu 17:00 external port scan",
+        "test_day": "thursday",
+        "windows": 2,
+        "signature_size": 11,
+        "ig_hits_top8": 3,
+        "ig_p": 0.1051,
+        "passes": false,
+        "chance_hits": 1.26,
+        "value_hits_top8": 5,
+        "value_p": 0.0017,
+        "spearman_ig_vs_value": 0.808,
+        "ig_top8": "ports_per_pair_max, tiny_flow_rate, uniq_dst_port, is_inbound_rate, svc_rdp_rate, proto_udp_rate, is_outbound_rate, ephemeral_dst_rate",
+        "value_top8": "svc_rdp_rate, svc_db_rate, port_fanout_max, ports_per_pair_max, uniq_dst_port, priv_port_rate, dst_port_entropy, tiny_flow_rate"
+      },
+      {
+        "episode": "Thu internal sweep",
+        "test_day": "thursday",
+        "windows": 24,
+        "signature_size": 15,
+        "ig_hits_top8": 4,
+        "ig_p": 0.0585,
+        "passes": false,
+        "chance_hits": 1.71,
+        "value_hits_top8": 4,
+        "value_p": 0.0585,
+        "spearman_ig_vs_value": 0.792,
+        "ig_top8": "urg_cnt_sum, one_way_rate, uniq_dst_port, ports_per_pair_max, svc_db_rate, dst_port_entropy, port_fanout_max, syn_cnt_sum",
+        "value_top8": "urg_cnt_sum, port_fanout_max, svc_db_rate, svc_rdp_rate, ports_per_pair_max, uniq_dst_port, syn_no_ack_rate, priv_port_rate"
+      },
+      {
+        "episode": "Thu web attacks",
+        "test_day": "thursday",
+        "windows": 24,
+        "signature_size": 9,
+        "ig_hits_top8": 1,
+        "ig_p": 0.6881,
+        "passes": false,
+        "chance_hits": 1.03,
+        "value_hits_top8": 2,
+        "value_p": 0.2721,
+        "spearman_ig_vs_value": 0.458,
+        "ig_top8": "uniq_src_ip, src_ip_entropy, one_way_rate, svc_dns_rate, top_talker_share, bwd_init_win_mean, seq_port_ratio, bytes_max",
+        "value_top8": "fanout_max, uniq_dst_ip, top_talker_share, src_ip_entropy, svc_dns_rate, seq_port_ratio, fanout_mean, flows_per_s"
+      },
+      {
+        "episode": "Fri botnet C2 (Ares)",
+        "test_day": "friday",
+        "windows": 24,
+        "signature_size": 8,
+        "ig_hits_top8": 3,
+        "ig_p": 0.0428,
+        "passes": true,
+        "chance_hits": 0.91,
+        "value_hits_top8": 1,
+        "value_p": 0.6418,
+        "spearman_ig_vs_value": 0.45,
+        "ig_top8": "flow_iat_mean_mean, bytes_max, bytes_total, duration_s_mean, seq_port_ratio, src_ip_entropy, syn_cnt_sum, outbound_bytes",
+        "value_top8": "pkt_len_max_max, uniq_dst_ip, byte_asymmetry, fanout_mean, src_ip_entropy, top_talker_share, fanout_max, flow_iat_max_max"
+      },
+      {
+        "episode": "Fri port scan",
+        "test_day": "friday",
+        "windows": 24,
+        "signature_size": 11,
+        "ig_hits_top8": 1,
+        "ig_p": 0.7651,
+        "passes": false,
+        "chance_hits": 1.26,
+        "value_hits_top8": 4,
+        "value_p": 0.0176,
+        "spearman_ig_vs_value": 0.769,
+        "ig_top8": "proto_tcp_rate, svc_db_rate, svc_rdp_rate, is_inbound_rate, flow_iat_mean_mean, uniq_dst_port, proto_udp_rate, priv_port_rate",
+        "value_top8": "svc_db_rate, svc_rdp_rate, tiny_flow_rate, priv_port_rate, is_inbound_rate, ports_per_pair_max, port_fanout_max, uniq_dst_port"
+      },
+      {
+        "episode": "Fri DDoS LOIC",
+        "test_day": "friday",
+        "windows": 24,
+        "signature_size": 9,
+        "ig_hits_top8": 3,
+        "ig_p": 0.0604,
+        "passes": false,
+        "chance_hits": 1.03,
+        "value_hits_top8": 2,
+        "value_p": 0.2721,
+        "spearman_ig_vs_value": 0.804,
+        "ig_top8": "is_inbound_rate, syn_cnt_sum, proto_udp_rate, svc_http_rate, is_internal_rate, ports_per_pair_max, dst_ip_entropy, has_rst_rate",
+        "value_top8": "is_inbound_rate, svc_http_rate, has_rst_rate, byte_asymmetry, pkt_len_std_mean, pkt_len_mean_mean, has_fin_rate, is_internal_rate"
+      }
+    ]
+  }
+}
