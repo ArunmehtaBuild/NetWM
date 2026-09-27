@@ -125,6 +125,9 @@ def main() -> None:
 
     set_seed(args.seed)
     ensure_dirs()
+    # The code this process runs is the code at start-up; commits made while a sweep runs must not
+    # relabel its checkpoints (D-037: E19's folds carried three different save-time SHAs).
+    start_sha = git_sha()
     cfg = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
     ds = ProcessedDataset(args.data or cfg["processed_dir"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -169,7 +172,8 @@ def main() -> None:
         print(f"\n== fold: {fold} test={held_out}  train={train_days}  device={device}")
         # an absent `scaler:` block is the D-014 log-standardiser, i.e. round 2 exactly (D-025)
         ckpt_path = model_root / f"{test_day}.pt"
-        if args.resume and ckpt_path.exists():
+        resumed = bool(args.resume and ckpt_path.exists())
+        if resumed:
             saved = torch.load(ckpt_path, map_location=device, weights_only=False)
             model = build_model(WorldModelConfig(**saved["model_config"])).to(device)
             model.load_state_dict(saved["model_state"])
@@ -198,26 +202,27 @@ def main() -> None:
             rows.extend(fold_rows)
             per_day[held] = {k: v for k, v in extras.items() if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
 
-        torch.save(
-            {
-                "model_state": model.state_dict(),
-                "model_config": model_cfg.as_dict(),
-                "train_config": train_cfg.__dict__,
-                "feature_names": ds.feature_names,
-                "scaler": scaler,
-                "train_days": train_days,
-                "test_day": test_day,
-                "test_days": list(held_out),
-                "git_sha": git_sha(),
-                "horizon_k": ds.horizon,
-                "stride_s": ds.stride_s,
-                "threshold": extras["threshold_train"],
-                # so precursor_eval.py never has to guess which logit is which
-                "risk_columns": list(train_cfg.risk_columns),
-                "onset_source": train_cfg.onset_source,
-            },
-            model_root / f"{test_day}.pt",
-        )
+        if not resumed:  # a resumed checkpoint keeps the git SHA and threshold it was trained with
+            torch.save(
+                {
+                    "model_state": model.state_dict(),
+                    "model_config": model_cfg.as_dict(),
+                    "train_config": train_cfg.__dict__,
+                    "feature_names": ds.feature_names,
+                    "scaler": scaler,
+                    "train_days": train_days,
+                    "test_day": test_day,
+                    "test_days": list(held_out),
+                    "git_sha": start_sha,
+                    "horizon_k": ds.horizon,
+                    "stride_s": ds.stride_s,
+                    "threshold": extras["threshold_train"],
+                    # so precursor_eval.py never has to guess which logit is which
+                    "risk_columns": list(train_cfg.risk_columns),
+                    "onset_source": train_cfg.onset_source,
+                },
+                model_root / f"{test_day}.pt",
+            )
         # Namespaced by run id: these filenames used to be run-independent, so any training run
         # silently overwrote the published E5/E6 figures of a previous one.
         if not args.no_figures:
@@ -233,14 +238,15 @@ def main() -> None:
             print("   " + json.dumps({k: row[k] for k in keys if k in row}))
         # after every fold, so an interrupted run keeps what it finished
         save_run(run_id, {"rows": rows, "per_day": per_day, "complete": False},
-                 config={**vars(args), "model": model_cfg.as_dict()})
+                 config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
 
     table = pd.DataFrame(rows)
     table.to_csv(TABLES / f"{run_id}_forecast.csv", index=False)
     pd.DataFrame(
         [{"test_day": d, **h} for d, hist in histories.items() for h in hist]
     ).to_csv(TABLES / f"{run_id}_training_curves.csv", index=False)
-    save_run(run_id, {"rows": rows, "per_day": per_day}, config={**vars(args), "model": model_cfg.as_dict()})
+    save_run(run_id, {"rows": rows, "per_day": per_day, "complete": True},
+             config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
     print(f"\nwrote {model_root}/*.pt, results/tables/{run_id}_*.csv, results/figures/e5_*, e6_*")
 
 

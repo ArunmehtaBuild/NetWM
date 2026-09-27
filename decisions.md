@@ -1302,3 +1302,128 @@ runs `m1v2-e22-s4*`). **S3 was met by no run**, so no early-warning claim follow
 checkpoint stays r2 until the team decides otherwise. The E22 stack trades Thursday detection
 (PR-AUC 0.389 against r2's 0.640) for cross-day anticipation, which a demo would have to explain.
 
+---
+
+### D-037 — Pre-registration: do E22 and real packets compose? (E26), CTU-13 completion (E25b), and the ship rule
+*Date: 2026-09-28 · Status: accepted, written and pushed before E26 was trained and before E25 seeds 43/44 or
+any LR baseline ran · Follows the evaluators' 10-step plan, with the five amendments listed at the end*
+
+**Reference point (Step 1).** `results/runs/reference-m1-2026-09-28/manifest.json` records every
+reference model. For each it gives the configs, the feature schema (a hash of the ordered names), the
+scaler mode, seeds, parameter count, the SHA each checkpoint was trained at, the split, the threshold
+policy and the scorecard numbers. It is generated from the artefacts by `scripts/reference_manifest.py`.
+
+| reference | role | what it is |
+|---|---|---|
+| r2 | the shipped detection model | Thursday + Friday folds, seed 42; E18 causal Thursday F1 0.608, PR-AUC 0.640 |
+| E19 | the r2 method on the D-035 contract | 5 folds x 3 seeds, 70 features: **the flow-only row of every comparison** |
+| E22 | reference anticipation model | RSSM + factorised target, 87 features, S2\* 0.704 |
+| E20r | reference packet model | round-2 heads, 105 features (flow + CSV packet + real packets), Thursday PR-AUC 0.564 |
+| E24a | world-model control | Model A, no latent dynamics |
+| E25 | CTU-13 | seed 42, leave-one-family-out |
+
+**E26, the combined candidate (Step 2).** It is the E22 configuration, with the E22 architecture and
+target unchanged. Two things change: the 18 `pcap_` features are added (the E20r ones), plus one
+`has_pcap` input. That makes 87 + 18 + 1 = 106 inputs.
+
+**Packet availability** is handled like this, fixed now:
+- `has_pcap` = 1 when the window's packet features were measured from a capture, and 0 otherwise. A
+  CSV-only window has every `pcap_` value set to 0 in raw feature space and `has_pcap` = 0, and then
+  goes through the **same fitted scaler**.
+- **Packet dropout in training: each training sequence is presented in its CSV form with probability
+  0.3.** It is an otherwise identical sequence of real data. Without this, a CSV input at inference
+  would be a state the model has never seen, and the "one model, both inputs" claim would be untested.
+- The scaler is fitted on the training days with packets present.
+- **Inference parity is part of the step:**
+  - a PCAP upload gets the same 17 CSV-packet columns (the flow converter is extended to emit the
+    8 per-packet fields they need) and the same 18 `pcap_` features, computed by the same function as
+    training;
+  - a CSV upload gets `pcap_` = 0 and `has_pcap` = 0;
+  - a test checks, on real data, that the inference path's state equals the training matrix.
+
+**Training and scoring (Step 3).** Seeds 42/43/44; the same five leave-one-day-out folds, 25 epochs,
+the causal expanding q90 and the D-035 scorecard. **Every held-out day is scored twice: in PCAP mode
+(packets present) and in CSV mode (the same windows with packets masked).**
+
+**The composition bar (Step 5).** This is fixed now. The D-035 bar asks a step to *raise*
+anticipation, and E20r already showed packets do not. Applied unchanged, it would reject a
+combination that keeps E22's anticipation and adds E20r's detection, which is the very question
+being asked. Every clause below uses 3-seed means, paired by seed, in PCAP mode, against E22:
+
+| clause | requirement |
+|---|---|
+| **(a) anticipation preserved** | S2\* >= E22's S2\* - 0.03 |
+| **(b) detection added** | Thursday `comp` PR-AUC >= E22's + 0.05, and higher on >= 2 of 3 seeds |
+| **(c) alarm cost** | S1 precision falls < 0.05, S1 FPR rises < 0.02 |
+| **(d) stability** | no seed with Thursday PR-AUC < 0.20, in either mode |
+| **(e) still a world model** | open-loop rollout MSE below persistence, averaged over k = 2..10, on the Thursday and Friday folds, on >= 2 of 3 seeds (E10's form) |
+
+**Ship rule, fixed now.** There are four outcomes:
+1. **(a)-(e) hold, and CSV mode also meets (d): ship E26** as the one model for both inputs. The model
+   card quotes PCAP-mode and CSV-mode numbers separately.
+2. **(a)-(e) hold, but CSV mode collapses:** E26 serves PCAP uploads and is documented as not serving
+   CSV. For CSV, r2 stays shipped. The "one model" claim is not made.
+3. **(a) fails:** the two gains do not compose. **r2 stays shipped**, E22 and E20r stay as separate
+   references, and the failure is diagnosed (which clause, which days, which seeds), with no tuning
+   sweep.
+4. **(b) fails:** packets add nothing on top of E22. **r2 stays shipped**, and E22 remains the
+   anticipation reference.
+
+No threshold, seed, split, metric or anticipation definition changes after the result. S3 is reported.
+If it passes, that is a new claim and goes through D-021.
+
+**The ablation matrix (Step 4).** It will contain:
+- LR flow-only;
+- E19 (the r2 method, flow-only);
+- E22 (flow + CSV packet, factorised);
+- E20r (flow + packets, round-2 heads);
+- E26 in PCAP mode and in CSV mode;
+- E24a for the world-model control.
+
+Every row reports S1, S2 by bin, S2\*, S3, S4, Thursday/Friday PR-AUC and causal F1, the seed range,
+and rollout-vs-persistence where the model has dynamics. **LR baseline:** `LogisticForecaster` (E3's
+definition: balanced classes, C = 1, no lags) on the log-standardised S_t v1, one model per target:
+`y_within_K` as `comp` and `y_attack_within_K` as `threat`. It uses the same folds and is scored by
+the same scorecard. It is deterministic, so it gets one row, not a seed range.
+
+**E25b, CTU-13 completion (Steps 6-7).**
+- **Seeds 43 and 44** use exactly seed 42's definition (`configs/m1v2/e25_ctu13.yaml`,
+  `configs/ctu13_folds.yaml`, a 250-step budget), in run folders `e25-ctu13-s43/s44`, marked
+  `completion of E25` in their metadata.
+- **The CTU-13 LR baseline** uses the same 56 features, folds, targets, scaler and scorecard.
+- **The family matrix** reports, per held-out scenario and per family: world model vs LR on detection
+  (ROC-AUC, PR-AUC, causal F1) and anticipation (S2, only where a scenario contributes >= 20
+  pre-onset cells), plus the S3 count.
+- A family is **"transfers"** when the world model's ROC-AUC is >= 0.70 on >= 2 of 3 seeds for every
+  one of its scenarios. It is **"inverted"** when ROC-AUC is < 0.50 on >= 2 of 3 seeds for any of
+  them. Everything else is "partial".
+- No pooled average is quoted without this matrix beside it.
+- CTU-13 has no mixed-traffic PCAPs, so M2 claims cover cross-family temporal behaviour on Argus flow
+  state only.
+
+**Claims (Step 8), fixed now:**
+- S3 not met -> "ranks pre-attack windows above background", never "warns before attacks".
+- E17 stands -> "risk score", not a probability.
+- E9 -> the stage output is "the model's estimate", shown with the measured confusion.
+- E11 -> "feature contributions", not causal explanations.
+
+**Step 10.** No GNN, larger model or hyperparameter sweep until E26 and E25b show a concrete failure
+mode that such a change is designed to fix.
+
+**Amendments to the evaluators' plan, and why:**
+1. The "r2 flow-only" row is **E19**, because r2 itself has two folds and one seed. r2's E14/E18
+   numbers are listed beside it.
+2. E26 is judged by the **composition bar** above, not by D-035's raise-anticipation bar, which would
+   reject a successful combination by construction.
+3. A `has_pcap` mask alone does not make CSV inference honest: it needs **packet dropout in
+   training**, and the model needs **evaluating in CSV mode**.
+4. The PCAP upload path **did not produce the CSV packet block's input columns**. Fixing that is part
+   of Step 2.
+5. The 2-minute **video recording** and making the **repository public** (G-1) are human actions. This
+   work prepares the script and the checklist.
+
+**Provenance fixes recorded here:**
+- `train.py` stamps checkpoints with the SHA at process start. Previously the SHA at save time was
+  used, so commits made during a sweep relabelled folds; E19's checkpoints carry three SHAs.
+- `--resume` no longer rewrites a checkpoint. The five resumed E25 folds were re-stamped `df2c6ef`,
+  and the manifest reads their true training SHA, `bb36594`, from the interrupted log.
