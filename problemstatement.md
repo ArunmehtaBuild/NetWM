@@ -137,15 +137,15 @@ A software-based, fully open-source solution is expected. The solution may inclu
 
 ## How this repo maps to the requirements
 
-| PS requirement | Where it lives | State (T-15 gap check, 2026-09-26) |
+| PS requirement | Where it lives | State (updated 2026-09-27, after D-035 / E19-E25) |
 |---|---|---|
 | Feature extraction, flow level | `src/netwm/features/flow_features.py`, `windowing.py`, `scripts/build_features.py` | done - 70-feature `S_t` from the corrected CIC-IDS2017 CSVs |
-| Feature extraction, packet level (PCAP via Scapy) | `src/netwm/features/pcap_features.py`, `flow_aggregator.py` | **partial** - PCAPs are parsed and packet features extracted, but they are not model inputs: the corrected dataset ships CSVs, so `S_t` is flow-only |
-| World model, P(S_t+1 given S_t) | `src/netwm/models/world_model.py`, `src/netwm/train.py`, `configs/` | done - Transformer encoder + RSSM latent; rollout beats persistence averaged over steps 2-10 (E5, E10) |
-| Generalise to unseen attack patterns | leave-one-day-out = leave-one-family-out (D-006) | **not achieved** - Friday's unseen C2 family: F1 0.000 (E14, E10) |
+| Feature extraction, packet level (PCAP via Scapy) | `src/netwm/features/packet_windows.py`, `scripts/build_packet_features.py`, `flow_features.PACKET_CSV_FEATURES`, `flow_aggregator.py` | **done and measured** - 18 features from the five real day captures (TTL, fragments, retransmissions, windows, payload histogram, timing, SYN/RST) plus 17 CSV packet statistics. They help detection (Thursday PR-AUC 0.43 -> 0.56, E20r), not anticipation. The shipped checkpoint is still flow-only (needs a `has_pcap` mask) |
+| World model, P(S_t+1 given S_t) | `src/netwm/models/world_model.py`, `src/netwm/train.py`, `configs/` | done - Transformer encoder + RSSM latent; rollout beats persistence averaged over steps 2-10 (E5, E10); **the latent dynamics beat a same-encoder model without them at anticipation on every seed (E24)** |
+| Generalise to unseen attack patterns | leave-one-day-out (CIC-IDS2017), leave-one-family-out (CTU-13, E25) | **partial** - pre-onset windows rank above background on held-out days (S2\* 0.70, E22), but no early warning beats a shuffled-time baseline; on CTU-13 anticipation does not transfer across botnet families (0.55) and detection transfers to 3 of 7 families |
 | K-step forward simulation + infiltration score | `src/netwm/engine/predict.py`, `models/world_model.forecast` | done - reported as a risk score, not a calibrated probability (E17) |
-| MITRE ATT&CK stage mapping | `src/netwm/labels/mitre_map.py`, `research/mitre-mapping.md`, stage head | produced, **not validated** - E9 (stage confusion matrix) never run |
-| Explainability (attention + attribution) | `src/netwm/engine/explain.py` | done - attention + Integrated Gradients; E11 sanity check never run |
+| MITRE ATT&CK stage mapping | `src/netwm/labels/mitre_map.py`, `research/mitre-mapping.md`, stage head | produced and **measured (E9)** - high recall only where a relative family was in training (DDoS 0.99); 0 for Lateral Movement and C2, which no training fold contains; the internal sweep is recognised as T1046 at precision 0.885 |
+| Explainability (attention + attribution) | `src/netwm/engine/explain.py` | done, **sanity check fails (E11)** - the known signature is in the top 8 attributions on 1 of 6 episodes; the panel is labelled "features pushing the compromise score" |
 | Offline demo interface, CSV or PCAP upload | `backend/` (FastAPI) + `frontend/` (static), `run_demo.bat` | done - CSV live; PCAP runs, demo PCAP pending (A-5b) |
 | Benchmark vs logistic regression (F1, precision, recall, FPR) | `scripts/benchmark_baselines.py`, `scripts/rescore_pmax.py`, `results.md` E3/E14/E10 | numbers exist; **one consolidated table** still to write |
 | Reproducible training config + weights | `configs/`, `models/e4e7-worldmodel-r2/`, commands in `results.md` | done |

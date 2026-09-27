@@ -20,12 +20,28 @@ Traffic is aggregated into **60 s windows at 30 s stride**; `S_t` is a 70-dimens
 window, not a per-flow row, because a world model needs a state that *evolves* and consecutive flow
 records are not consecutive states (D-002).
 
-Flow-level (NetFlow / IPFIX): TCP flag ratios (SYN-without-ACK, RST, PSH, URG), protocol and service
-mix, bytes/packets per flow, duration, flow IAT statistics, bidirectional ratios, unique IPs and
-ports, destination-port entropy, per-host fan-out, ports-per-pair. Packet-level (PCAP): TTL variance,
-TCP initial window size, fragment flags, payload-size distribution, retransmissions, scan signatures -
-with a `has_pcap` mask so CSV-only input works unchanged. Heavy-tailed columns are `log1p`-compressed,
-then standardised by a scaler fitted on **training days only** (D-014).
+Flow-level (NetFlow / IPFIX), the 70 features of S_t v1:
+- TCP flag ratios (SYN-without-ACK, RST, PSH, URG);
+- protocol and service mix;
+- bytes and packets per flow, duration, flow IAT statistics, bidirectional ratios;
+- unique IPs and ports, destination-port entropy, per-host fan-out, ports per pair.
+
+**Packet-level, in two forms (D-035):**
+- **17 per-packet statistics that the flow meter recorded and S_t v1 never read (E20).** These are the
+  TCP initial-window distribution, a packet-weighted payload histogram, per-direction payload and
+  timing spread, the IAT coefficient of variation (the slow-scan signal), directional RST, SYN-only
+  probes, and header bytes per packet.
+- **18 features measured from the five real day captures (E20r, 53.7 M packets).** These are TTL
+  statistics, fragment rate, TCP retransmissions, zero windows, the true per-packet payload histogram,
+  inter-packet timing, and SYN-only and RST shares. The captures are pcapng and record most packets
+  twice, so capture duplicates are removed first.
+
+Measured result: packet features **do not improve anticipation**, but real packets **do improve
+detection** (Thursday PR-AUC 0.43 -> 0.56). A model that reads the `pcap_` features needs a PCAP, so
+the shipped checkpoint stays flow-only until a `has_pcap` mask lets one model serve both inputs.
+
+Heavy-tailed columns are `log1p`-compressed, then standardised by a scaler fitted on **training days
+only** (D-014).
 
 **Data.** CIC-IDS2017 in its *corrected* re-extraction (Engelen et al.): the original mis-terminates
 TCP flows and mislabels attack onsets, and onset time is exactly what we predict (D-001). Our audit
@@ -48,6 +64,15 @@ An RSSM-style latent world model (~0.6 M parameters, ~5 min per fold on a GTX 16
   a usable predictor. *E10: removing the stochastic latent has no consistent effect on rollout or detection across three seeds, so the ablation does not support it. It is kept because the submission checkpoint uses it and the Monte-Carlo bands come from it*;
 - heads reading any real *or imagined* state: next-state decoder, MITRE stage, and three risk logits -
   `compromise`, `attack`, `escalate_step` (D-016).
+
+**The latent dynamics earn anticipation (E24).** A Model A with the same encoder and attention, but
+predicting "within K" directly with no latent transition, ranks pre-onset windows clearly worse on
+all three seeds (S2\* 0.61 against 0.70) and detects worse. This is the measured reason NetWM is a
+world model rather than a sequence classifier.
+
+**Factorised risk (E22, the one target change that passed its bar).** `P(compromise) = P(threat) x
+P(compromise stage | hostile)`: the threat factor learns from every attack family of every training
+day, instead of from one compromise family per fold.
 
 Training combines next-state NLL, KL with free bits, a multi-step open-loop rollout loss, stage
 cross-entropy and risk BCE. *E10: the multi-step loss earns its place on **detection** (removing it costs 0.17-0.21 Thursday F1 on two of three seeds), not on rollout fidelity (Thursday rollout is better without it on all three seeds).* Three risk heads rather than one because the week holds exactly two
@@ -169,10 +194,31 @@ compromise families than CIC-IDS2017 has: two, each confined to one day, so leav
 days improves held-out Thursday but makes held-out Friday worse than a constant forecast. The
 deployable threshold stays an alert budget (D-017).
 
-**Roadmap.** M2 CTU-13: seven botnet families across 13 scenarios, the experiment that can test
-transfer. Its public PCAPs are botnet-only, so M2 is a new model on a reduced flow state, not a
-transfer test of this checkpoint (`research/ctu13.md`). M3 CIC-IDS2018 (scale), M4 UNSW-NB15
-(cross-domain).
+**Anticipation, measured the right way (D-035).** Thursday F1 moves with the threshold rule alone
+(E18), so model changes are now judged on a pre-registered scorecard:
+- anticipation: the percentile of pre-onset windows among a day's quiet ones, 2-10 minutes ahead,
+  over 19 attack onsets on four held-out days;
+- alarm cost at the causal threshold;
+- significance against a shuffled-time baseline;
+- the worst held-out day.
+
+The world model ranks pre-onset windows above background on held-out days (0.65, where chance is
+0.5), and the factorised target raises that to 0.70 (E22). **No configuration turns this into early
+warnings that beat the shuffled-time baseline**, so the D-021 position stands.
+
+**Tested and not adopted:**
+- causal percentile/delta/slope inputs with per-host-relative features (E21): better alarm cost,
+  no anticipation gain;
+- a precursor curriculum (E23): destabilised training.
+
+**M2, CTU-13 (E25).** Seven botnet families, leave-one-family-out, the same stack on a 56-feature
+Argus flow state:
+- **Anticipation does not transfer across botnet families**: 0.551, near chance.
+- Detection transfers to some families (Neris, NSIS, Virut: ROC-AUC 0.85-0.99) and inverts on others
+  (Murlo, Sogou).
+- This confirms, on seven families, the cross-family transfer gap CIC-IDS2017 could only show with two.
+
+**Next:** M3 CIC-IDS2018 (scale), M4 UNSW-NB15 (cross-domain).
 
 ## Deployment and reproducibility
 
@@ -189,4 +235,4 @@ uvicorn backend.server:app --port 5000                              # API; serve
 
 Every number carries an experiment id, threshold policy, seed and git SHA in
 `results/runs/<id>/metrics.json`; every modelling choice carries its reason in `decisions.md`
-(D-001 … D-023).
+(D-001 … D-036).
