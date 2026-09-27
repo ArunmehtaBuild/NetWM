@@ -67,7 +67,7 @@ def test_zero_network_calls_guarantee(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.skipif(
-    not (Path("data/demo/thursday_infiltration.csv").exists()),
+    not (Path(__file__).resolve().parents[2] / "data" / "demo" / "thursday_infiltration.csv").exists(),
     reason="Demo slice thursday_infiltration.csv missing (clean checkout without generated data)",
 )
 def test_demo_execution_offline(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -120,6 +120,8 @@ def test_upload_pcap_runs_real_inference() -> None:
     assert len(payload["timeline"]) > 0
     assert payload["source"]["filename"] == "upload_test.pcap"
     assert payload["source"]["kind"] == "pcap"
+    # a capture carries no labels: the payload must not claim all-benign ground truth
+    assert payload["ground_truth"]["available"] is False
 
 
 @needs_model

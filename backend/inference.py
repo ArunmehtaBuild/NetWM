@@ -186,10 +186,10 @@ def _load_fallback_fixture(day_or_name: str = "thursday") -> dict[str, Any]:
     with open(fixture_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     data["mock"] = True
-    in_sample = any(d in day_or_name.lower() for d in ["monday", "tuesday", "wednesday"])
-    data["in_sample"] = in_sample
-    if "source" in data and isinstance(data["source"], dict):
-        data["source"]["in_sample"] = in_sample
+    # ``in_sample`` describes the data actually served, and a fallback always serves the Thursday or
+    # Friday fixture - both held-out days - whatever name was requested. The fixture files carry
+    # ``"in_sample": false`` themselves; guessing from the requested name would badge Thursday data
+    # as a training day whenever "monday" was asked for (R-12 review).
     return data
 
 

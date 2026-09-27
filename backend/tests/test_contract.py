@@ -104,29 +104,53 @@ def test_engine_output_contract_compliance(tmp_path: Path) -> None:
 
 
 def test_in_sample_flag_contract_semantics() -> None:
-    """Task R-12: in_sample flag contract test.
+    """Task R-12: ``in_sample`` describes the data served, never the name requested.
 
-    Verifies that:
-    1. Static evaluation fixtures (Thursday/Friday) are marked in_sample = False (held-out days).
-    2. Fallback fixtures and demo payloads evaluate in_sample = True for training days (e.g. Monday),
-       and in_sample = False for held-out evaluation days (Thursday, Friday).
+    Every fallback serves the Thursday or Friday fixture, both held-out days, so it is always
+    ``False`` - including when "monday" was requested, which still serves Thursday's data.
     """
     from backend.inference import _load_fallback_fixture
 
-    # Held-out days evaluate to in_sample = False
-    thu_data = _load_fallback_fixture("thursday")
-    assert thu_data.get("in_sample") is False
-    thu_payload = AnalysisResultPayload.model_validate(thu_data)
-    assert thu_payload.in_sample is False
+    for requested in ("thursday", "friday", "monday", "wednesday_dos", "upload.csv"):
+        data = _load_fallback_fixture(requested)
+        assert data.get("in_sample") is False, requested
+        assert AnalysisResultPayload.model_validate(data).in_sample is False
 
-    fri_data = _load_fallback_fixture("friday")
-    assert fri_data.get("in_sample") is False
-    fri_payload = AnalysisResultPayload.model_validate(fri_data)
-    assert fri_payload.in_sample is False
 
-    # Training days evaluate to in_sample = True
-    mon_data = _load_fallback_fixture("monday")
-    assert mon_data.get("in_sample") is True
-    mon_payload = AnalysisResultPayload.model_validate(mon_data)
-    assert mon_payload.in_sample is True
+_SLICES = settings.repo_root / "data" / "demo"
 
+
+@pytest.mark.skipif(
+    not ((_SLICES / "monday_benign.csv").exists() and (_SLICES / "thursday_infiltration.csv").exists()),
+    reason="demo slices not generated (python scripts/make_demo_samples.py)",
+)
+def test_in_sample_flag_on_the_real_demo_path() -> None:
+    """Task R-12 on the path that matters: the payload the API returns for a live demo.
+
+    Monday runs on ``thursday.pt``, which trained on Monday, so it is in-sample; the Thursday slice
+    runs on the same checkpoint, which never saw Thursday.
+    """
+    import time
+
+    from fastapi.testclient import TestClient
+
+    from backend.server import app
+
+    client = TestClient(app)
+    for demo_id, expected in (("monday_benign", True), ("thursday_infiltration", False)):
+        resp = client.post(f"/api/analyze/demo/{demo_id}")
+        if resp.status_code == 503:
+            pytest.skip("no checkpoint available")
+        assert resp.status_code == 202, resp.text
+        job_id = resp.json()["job_id"]
+        deadline = time.time() + 300
+        while time.time() < deadline:
+            state = client.get(f"/api/jobs/{job_id}").json()["state"]
+            if state in {"done", "error"}:
+                break
+            time.sleep(0.2)
+        assert state == "done", demo_id
+        payload = client.get(f"/api/jobs/{job_id}/result").json()
+        assert payload["mock"] is False
+        assert payload["in_sample"] is expected, demo_id
+        assert payload["source"]["in_sample"] is expected, demo_id
