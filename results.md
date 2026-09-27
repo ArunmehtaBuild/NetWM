@@ -28,6 +28,13 @@ the commentary column.
 | E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves held-out Thursday and fails held-out Friday (worse than a constant forecast); budget stays |
 | E9 | MITRE stage confusion (G-4) | r2, held-out Thu + Fri | `python scripts/stage_confusion.py --run e4e7-worldmodel-r2` (D-035) | `results/tables/e9_*`, `results/figures/e9_*.png`, `results/runs/e9-*` | the stage that matters on each held-out day never occurs in its training days (Thu Lateral Movement, Fri C2): recall 0 on both; web attacks all called benign; merged as T1046 the sweep is found at precision 0.885 |
 | E11 | explanation sanity (G-7) | r2, 6 held-out episodes | `python scripts/explain_sanity.py --run e4e7-worldmodel-r2` (D-035) | `results/tables/e11_*`, `results/figures/e11_*.png`, `results/runs/e11-*` | **fails its bar: 1 of 6 episodes** put the known signature in the top 8 (bar >= 4); on both port scans a plain |value| ranking does better than IG |
+| F4 | feature build, M1 v2 | same, 93 features/window | `python scripts/build_features.py --config configs/features_m1v2.yaml` | `results/runs/f4-m1v2-build/`, `data/processed/cicids2017_m1v2/` | v1 + 17 CSV packet statistics + 6 host-relative; v1 columns and labels bit-identical to F1 |
+| F5 | packet build, real captures | the five CIC-IDS2017 day PCAPs (pcapng, 52.4 GB) | `python scripts/build_packet_features.py --pcap-dir <dir>` | `results/runs/f5-pcap-build-*`, `data/processed/cicids2017_m1v2p/` | 53.7 M IPv4 packets after 2.24 M capture duplicates; 18 `pcap_` features; per-window counts track the CSV flows (corr 0.86-0.92) |
+| F6 | CTU-13 build | 13 scenarios, Argus flows | `python scripts/build_ctu13.py` | `results/runs/f6-ctu13-build/`, `data/processed/ctu13/` | 20.0 M flows, 16,008 windows, chunked (== single pass) |
+| E19-E23 | M1 v2 stack, step by step | 5 folds x 3 seeds | `bash scripts/run_m1v2.sh <exp> <config>` + `scripts/scorecard.py` (D-035) | `results/tables/scorecard_e19..e23.csv` | anticipation above chance before any change (S2\* 0.651); **only the factorised target (E22) passes the bar** (S2\* 0.704); packet block non-inferior; causal representation improves alarm cost only; curriculum collapses; no early warning (S3) on any run |
+| E24 | Model A vs Model B | E22 stack, 3 seeds | `run_m1v2.sh e24a ...` + scorecard | `results/tables/scorecard_e24.csv` | **the latent dynamics earn anticipation**: B beats A on all seeds (S2\* +0.096, precision +0.20) |
+| E20r | flow-only vs flow + real packets | 5 folds x 3 seeds | `run_m1v2.sh e20r ... data/processed/cicids2017_m1v2p` | `results/tables/scorecard_e20r.csv` | packets do **not** help anticipation (S2\* 0.642 vs 0.651); they **do** help detection: Thursday PR-AUC 0.56 [0.42-0.71] vs 0.43 |
+| E25 | M2, CTU-13 leave-one-family-out | 7 folds, seed 42 | `train.py --data data/processed/ctu13 --group-folds configs/ctu13_folds.yaml` | `results/tables/scorecard_e25.csv` | anticipation does **not** transfer across botnet families (S2\* 0.551); detection transfers to Neris/NSIS/Virut (ROC-AUC 0.85-0.99) and inverts on Murlo/Sogou |
 | E18 | causal alert budget (G-8) | r2 + E10 seeds, published scores | `python scripts/threshold_eval.py` (D-034) | `results/tables/e18_*`, `results/figures/e18_*` | the causal expanding q90 keeps the signal (Thursday F1 0.608, 0.52-0.61 over seeds) but alarms 16.8 % of windows at FPR 0.078; the non-causal 0.576 is an upper bound only; the 5 % precision 0.959 does not survive |
 
 ## Planned experiment set (M1)
@@ -1156,3 +1163,235 @@ compromise score", not "why this is an attack". The claims audit carries this.
 Artefacts: `results/tables/e11_e4e7-worldmodel-r2_{episodes,rankings}.csv`,
 `results/figures/e11_e4e7-worldmodel-r2.png`, `results/runs/e11-e4e7-worldmodel-r2/metrics.json`.
 
+---
+
+## E19-E23 - the M1 v2 programme, scored on the D-035 scorecard (not on Thursday F1)
+
+```
+python scripts/build_features.py --config configs/features_m1v2.yaml          # F4: v1 + pkt_ + hostrel_
+bash scripts/run_m1v2.sh <exp> configs/m1v2/<exp>.yaml                          # 5 folds x seeds 42/43/44
+python scripts/scorecard.py --variant BASE=... --variant CAND=... --compare CAND:BASE --tag <exp>
+```
+Everything below was pre-registered in D-035 (`529289d`) before any of it was trained. Each step
+was run once, in order, and compared with the stack as it stood.
+
+**The scorecard.**
+- **S1** is alarm cost: `comp` at the causal expanding q90 (D-034), pooled over Thursday and Friday.
+- **S2** is anticipation: the `threat` score's percentile, among the same day's quiet reference
+  windows, of the eligible windows 0-2, 2-4, 4-6 and 6-10 minutes before each of the 19 non-Impact
+  attack onsets. 0.5 is chance. **S2\*** is the mean of the three bins from 2 to 10 minutes.
+- **S3** is early-warning significance against the circular null.
+- **S4** is the worst held-out day.
+
+The bar has three clauses:
+1. S2\* rises by at least 0.03 and rises on at least 2 of 3 seeds.
+2. S1 precision falls by less than 0.05 and S1 FPR rises by less than 0.02.
+3. No seed has Thursday PR-AUC below 0.20.
+
+### The stack, step by step (mean over seeds 42/43/44; range in brackets)
+
+| exp | step | S1 precision | S1 FPR | S2 bins 0-2 / 2-4 / 4-6 / 6-10 min | **S2\*** | isolated onsets (diag.) | worst day | Thu PR-AUC | Thu F1, causal | verdict |
+|---|---|---:|---:|---|---:|---:|---:|---:|---:|---|
+| **E19** | round 2, S_t v1 | 0.325 [0.31-0.35] | 0.120 | 0.69 / 0.69 / 0.66 / 0.60 | **0.651** [0.63-0.68] | 0.631 | 0.566 | 0.434 [0.41-0.47] | 0.514 | baseline |
+| **E20** | + CSV packet block | 0.350 [0.30-0.44] | 0.137 | 0.68 / 0.71 / 0.68 / 0.59 | **0.658** [0.59-0.70] | 0.631 | 0.599 | 0.414 | 0.541 | clause 1 fails (+0.008); **carried forward** as non-inferior (PS requirement) |
+| **E21** | + causal representation + host-relative | 0.416 [0.40-0.45] | 0.110 | 0.66 / 0.69 / 0.70 / 0.61 | **0.667** [0.62-0.71] | 0.636 | 0.635 | 0.465 | 0.561 | clause 1 fails (+0.008) - **not adopted** |
+| **E22** | + factorised target | 0.322 [0.31-0.33] | 0.115 | 0.76 / 0.75 / 0.70 / 0.65 | **0.704** [0.66-0.75] | 0.670 | 0.644 | 0.389 | 0.499 | **adopted**: +0.045 (+0.019 / +0.162 / -0.046), precision -0.028, FPR -0.023 |
+| **E23** | + precursor curriculum | 0.137 [0.02-0.25] | 0.128 | 0.64 / 0.69 / 0.64 / 0.58 | **0.634** [0.61-0.66] | 0.622 | 0.568 | 0.223 [0.19-0.29] | 0.152 | **fails every clause**: -0.070, precision -0.185, two seeds collapse |
+
+**Early warning (S3) was significant on no run.** The best Fisher p was 0.011 (E23 seed 42). It rests
+on one fold, Tuesday 3 of 3, from a seed whose alarms have precision 0.02. S3 needs at least 2 of 4
+folds above the null's p95, so it is not met. Per fold, the warned-early counts at the causal
+threshold stay near their nulls: Tuesday 1-3 of 3, Wednesday 0 of 1, Thursday 0-1 of 8, Friday 1-4 of 7.
+
+### What the programme shows
+
+1. **The world model ranks pre-onset windows above quiet ones, across days, before any change.**
+   E19's S2\* is 0.651, and 0.631 on the 13 onsets with a quiet run-up of at least 10 minutes, so it
+   is not only the tail of the previous episode. This is the first cross-day anticipation measurement
+   in the project that is day-normalised and threshold-free. Thursday F1 could not show it.
+2. **It is not an alarm yet.** At a causal 10 % budget, the ranking does not turn into warnings that
+   beat a shuffled-time baseline on any run (S3). The gap between "ranked above background" and
+   "worth waking an analyst" is the one D-021 describes, and it is still open.
+3. **Only the factorised target moved anticipation** (E22, +0.045). It learns "is something hostile
+   happening" from every attack family of every training day, instead of learning compromise from
+   one family per fold. That is exactly the cross-family transfer failure D-029 diagnosed. It pays
+   with a little Thursday detection (PR-AUC 0.41 -> 0.39), which the scorecard is built to trade.
+   Its gain rests mostly on one seed (+0.162), so it is adopted on the pre-registered rule, not
+   presented as robust.
+4. **Packet statistics from the flow CSVs are neutral for anticipation** (E20). They are kept
+   because the PS requires packet-level features and they cost nothing (clause 2).
+5. **The causal representation improved alarm cost, not anticipation** (E21: precision 0.35 -> 0.42,
+   FPR 0.137 -> 0.110, worst day 0.60 -> 0.64). The pre-registered bar gates on anticipation, so it
+   is not carried forward. It is the strongest candidate for a future run whose question is alarm
+   quality rather than lead time.
+6. **Training on pre-onset histories hurt** (E23). The imagined 20-step futures from 10 minutes out
+   are mostly quiet, and the extra loss pulls the risk heads towards quiet. Two of three seeds lose
+   detection almost entirely.
+
+**Procedure notes.** E23 seed 42 crashed silently in its first fold while three E9 GPU jobs shared
+the 7 GB machine. Its log is kept as `m1v2-e23-s42.crashed.log`, and it was re-run alone and
+unchanged, as D-035 requires. E19's Thursday PR-AUC (0.41-0.47) sits inside E10's seed range, so the
+new harness reproduces round 2.
+
+Artefacts:
+- `results/tables/scorecard_e19.csv` ... `scorecard_e23.csv`, one row per run with every S-column,
+  the per-day S3 and S4, and the compromise-onset table.
+- `results/runs/scorecard-*/metrics.json` (with the bar verdicts), `results/runs/m1v2-e*-s*/`,
+  `results/runs/m1v2-sweep-logs/`.
+
+---
+
+## E24 - do the latent dynamics earn lead time? Model A vs Model B (D-035)
+
+```
+bash scripts/run_m1v2.sh e24a configs/m1v2/e24_modelA_nocurr.yaml       # Model A; Model B = the E22 runs
+python scripts/scorecard.py --variant A=m1v2-e24a-s42,... --variant B=m1v2-e22-s42,... --compare B:A --tag e24
+```
+Model A keeps Model B's observation encoder and causal attention, then predicts each risk channel
+"within the next K windows" straight from the attention context. It has no GRU, no stochastic latent,
+no decoder and no imagination. Model B is the final stack as built (E20 packet block + E22 factorised
+target). Both use the factorised target and the same features, seeds, folds and epoch count.
+
+| | S1 precision | S1 FPR | S2 bins 0-2 / 2-4 / 4-6 / 6-10 min | **S2\*** | isolated | worst day | Thu PR-AUC |
+|---|---:|---:|---|---:|---:|---:|---:|
+| **A**, no latent dynamics | 0.119 [0.03-0.22] | 0.125 | 0.65 / 0.64 / 0.64 / 0.55 | **0.608** [0.58-0.65] | 0.574 | 0.509 | 0.222 [0.18-0.27] |
+| **B**, RSSM (E22) | 0.322 [0.31-0.33] | 0.115 | 0.76 / 0.75 / 0.70 / 0.65 | **0.704** [0.66-0.75] | 0.670 | 0.644 | 0.389 [0.38-0.39] |
+
+**B beats A on every clause:**
+- S2\* is +0.096 higher, on all three seeds (+0.116, +0.159, +0.012).
+- Precision is +0.20 higher and FPR 0.010 lower.
+- A collapses on one seed (Thursday PR-AUC 0.18).
+
+**The latent transition earns anticipation, not only reconstruction.** Given the same inputs, the
+model that learns how the network state moves and imagines it forward ranks pre-onset windows higher
+at every lead bin, most clearly at 6-10 minutes (0.65 against 0.55, where A is barely above chance).
+It also detects better. This is the evidence for calling NetWM a world model rather than a sequence
+classifier. It holds on this dataset, with the caveat already on record: S3 is not met, so this is
+ranking, not alarm-grade early warning.
+
+---
+
+## E20r - FLOW-ONLY vs FLOW+PACKET, with packets from the real captures (D-035)
+
+```
+python scripts/build_packet_features.py --pcap-dir D:/CIC-2017-PCAP            # F5: all five days
+bash scripts/run_m1v2.sh e20r configs/m1v2/e20r_pcap.yaml data/processed/cicids2017_m1v2p
+python scripts/scorecard.py --data data/processed/cicids2017_m1v2p --variant E19=... --variant E20=... \
+    --variant E20r=... --compare E20r:E20 --compare E20r:E19 --tag e20r
+```
+
+**F5, the packet build.** The five UNB day captures (52.4 GB) each match UNB's md5. They are pcapng
+written by `mergecap`, despite the `.pcap` name, and they record most packets twice (a mirror port
+seeing both copies about 2 us apart). An IP packet byte-identical to one of the previous 64 frames is
+dropped as a capture duplicate: 2.24 M frames over the week. A real TCP retransmission carries a new IP
+ID and is kept. What remains is 53.7 M IPv4 packets. Per-window packet counts track the corrected flow
+CSVs on the same grid on every day (log correlation 0.86-0.92, packet ratio 0.94-0.97), so the clocks
+and window grid agree.
+
+The 18 `pcap_` features measure what no flow CSV has:
+- TTL: mean, std, distinct values, and the share below 60;
+- the IP fragment rate;
+- the TCP retransmission rate;
+- the zero-window rate and the spread of advertised windows;
+- the true per-packet payload histogram;
+- the spread and coefficient of variation of inter-packet gaps;
+- the SYN-only and RST shares.
+
+**Descriptive check on Friday (within-day ROC-AUC, not a test).** The features react strongly to the
+loud attacks:
+- DDoS: SYN-only share 0.97, RST 0.98, zero-payload 0.98, timing CV 0.96.
+- Port scan: distinct TTLs 0.83, RST 0.80.
+
+They barely react to the botnet's C2, where nothing exceeds 0.68. Fragmentation is essentially absent
+all week (at most 0.8 % of packets in any window).
+
+| run (mean of 3 seeds) | inputs | S1 precision | S1 FPR | **S2\*** | worst day | **Thu PR-AUC** | **Thu F1, causal** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| E19, flow only | 70 | 0.325 | 0.120 | 0.651 [0.63-0.68] | 0.566 | 0.434 [0.41-0.47] | 0.514 [0.48-0.57] |
+| E20, + CSV packet statistics | 87 | 0.350 | 0.137 | 0.658 [0.59-0.70] | 0.599 | 0.414 [0.39-0.43] | 0.541 [0.50-0.56] |
+| **E20r, + real packets** | 105 | **0.376** | 0.122 | 0.642 [0.60-0.68] | **0.601** | **0.564 [0.42-0.71]** | **0.618 [0.53-0.70]** |
+
+**The PS asked whether packet-level information helps early forecasting. On CIC-IDS2017 it does not.**
+- S2\* changes by -0.016 against E20 and -0.009 against flow-only, inside seed noise. Clause 1 fails
+  both comparisons.
+- **It helps detection.** Thursday PR-AUC rises from 0.43 to 0.56 and causal F1 from 0.51 to 0.62.
+  Seed 44 reaches PR-AUC 0.71, the best Thursday ranking the project has produced; the shipped r2 has
+  0.640.
+- It is non-inferior on alarm cost: precision +0.05 against flow-only at the same FPR.
+
+The detection gain fits the Friday check. TTL, RST and SYN-only shares are exactly what distinguishes
+Thursday's internal sweep, and they say nothing about a quiet run-up.
+
+**What this means for the product.** A model that reads `pcap_` features needs a PCAP. A flow-CSV
+upload has none, so such a checkpoint would need a `has_pcap` mask (planned in the original design)
+before it can serve both inputs. E20r was compared with E20 as pre-registered. The final stack (E22)
+was built before all five captures arrived, so E22 + real packets is the untrained combination this
+result points to.
+
+---
+
+## E25 - M2: the final stack on CTU-13, leave-one-botnet-family-out (D-035, D-036)
+
+```
+python scripts/build_ctu13.py --config configs/ctu13.yaml                          # F6: 13 scenarios
+python scripts/train.py --data data/processed/ctu13 --model-config configs/m1v2/e25_ctu13.yaml \
+    --group-folds configs/ctu13_folds.yaml --run e25-ctu13-s42 --seed 42 --no-figures [--resume]
+python scripts/scorecard.py --data data/processed/ctu13 --variant E25=e25-ctu13-s42 --tag e25
+```
+
+**Setup.** The stack is the final M1 stack (RSSM + factorised target), fixed in
+`configs/m1v2/e25_ctu13.yaml` before any CTU-13 run. It reads 56 features: S_t v1 without the 14 that
+Argus cannot supply. The data is 13 scenarios, 20.0 M flows and 16,008 windows (F6). There are seven
+folds, each holding out a whole botnet family, and each trains for a CIC fold's 250 steps.
+
+*Procedure note:* a machine restart stopped the run after 5 of 7 folds. It was resumed with `--resume`,
+which evaluated the five saved checkpoints unchanged and trained only Murlo and NSIS. The interrupted
+log is kept.
+
+| held-out scenario | family | windows | base rate | **ROC-AUC** (comp) | PR-AUC | causal F1 | pre-onset cells in S2 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| s01 | Neris | 737 | 0.79 | **0.942** | 0.982 | 0.298 | 16 |
+| s02 | Neris | 505 | 0.85 | 0.597 | 0.905 | 0.382 | 30 |
+| s09 | Neris | 677 | 0.56 | 0.608 | 0.703 | 0.372 | 62 |
+| s03 | Rbot | 8,019 | 0.19 | 0.714 | 0.402 | 0.408 | 892 |
+| s04 | Rbot | 539 | 0.47 | 0.595 | 0.644 | 0.226 | 197 |
+| s10 | Rbot | 618 | 0.25 | 0.671 | 0.421 | 0.487 | 216 |
+| s11 | Rbot | 34 | 0.41 | **0.082** | 0.268 | 0.000 | 0 |
+| s05 | Virut | 61 | 0.84 | 0.847 | 0.967 | 0.500 | 14 |
+| s13 | Virut | 1,967 | 0.995 | 0.439 | 0.996 | 0.171 | 2 |
+| s06 | Menti | 260 | 0.98 | 0.770 | 0.992 | 0.656 | 10 |
+| s07 | Sogou | 44 | 0.41 | **0.015** | 0.252 | 0.000 | 3 |
+| s08 | Murlo | 2,339 | 0.96 | **0.204** | 0.932 | 0.170 | 54 |
+| s12 | NSIS.ay | 208 | 0.65 | **0.985** | 0.991 | 0.514 | 16 |
+
+Pooled scorecard, seed 42:
+- **S1:** precision 0.522, FPR 0.199.
+- **S2** by bin (0-2 / 2-4 / 4-6 / 6-10 min): 0.57 / 0.57 / 0.54 / 0.55, so **S2\* = 0.551**; 0.521 on
+  the 72 isolated onsets.
+- **S3:** 24 of 112 warned early, Fisher p 0.98, not met.
+
+### What E25 shows
+
+1. **Anticipation does not transfer across botnet families.** S2\* is 0.551, near chance, and 0.521
+   on isolated onsets, against 0.704 for the same stack across CIC-IDS2017 days. What the model learns
+   about the run-up to an attack in one family does not carry to another family's. This is D-029's
+   diagnosis confirmed on a dataset with seven families instead of two.
+2. **Detection transfers to some families and fails badly on others.**
+   - Held-out Neris s01 (0.94), NSIS (0.985) and Virut s05 (0.85) are detected well.
+   - Rbot and the other Neris scenarios sit at 0.60-0.71.
+   - Murlo (0.20), Sogou (0.015) and Rbot s11 (0.08) are *inverted*: the model scores the bot's
+     traffic lower than the background. Their C2 looks more like the other families' benign traffic
+     than their attacks.
+   - PR-AUC flatters every capture that is mostly botnet (base rates of 0.8-0.995), so ROC-AUC is the
+     honest detection number here.
+3. **Most CTU-13 scenarios cannot test forecasting.** Several onsets fall in a capture's first minutes
+   (s06, s08, s13), and four scenarios contribute fewer than 15 pre-onset windows. The pooled S2 rests
+   mostly on Rbot s03 (892 of 1,512 cells). Per-scenario S4 values of 0 come from scenarios with a
+   single reference window and carry no information.
+4. **One seed.** D-035 ran seed 42 first. The seed spread CIC-IDS2017 showed (S2\* +/- 0.05) is
+   larger than nothing here, but not large enough to lift 0.551 into the range CIC-IDS2017 reached.
+
+Artefacts:
+- `results/tables/scorecard_e25.csv` and `results/runs/scorecard-e25/`;
+- `results/runs/e25-ctu13-s42/`, `models/e25-ctu13-s42/<family>.pt`;
+- `results/runs/m1v2-sweep-logs/e25-ctu13-s42{,.interrupted}.log`, `results/runs/f6-ctu13-build/build.log`.

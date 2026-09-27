@@ -1284,3 +1284,21 @@ anticipation, and S2 has few eligible pre-onset windows there.
 
 **Revisit if.** A labelled full-traffic CTU capture appears, or a label turns out to be misrouted by
 the keyword rule. The first match wins, so `Attempt-SPAM` is Impact, not Reconnaissance, by design.
+
+**D-035 OUTCOME (2026-09-27, E19-E25; recorded after every pre-registered run was scored).**
+
+| step | verdict under the bar | carried forward? |
+|---|---|---|
+| E20 CSV packet block | clause 1 fails (+0.008); non-inferior | **yes**, under the PS-requirement rule |
+| E20r real packets | clause 1 fails vs E20 and vs flow-only; non-inferior; Thursday PR-AUC 0.43 -> 0.56 | not in the final stack (the captures arrived after E22-E24 had run); the next model to train |
+| E21 causal representation + host-relative | clause 1 fails (+0.008); alarm cost better | **no** |
+| E22 factorised target | **passes all three** (+0.045) | **yes** |
+| E23 precursor curriculum | fails all three; two seeds collapse | **no** |
+| E24 Model B (RSSM) vs Model A (no latent dynamics) | **B passes all three** (+0.096, all seeds) | **yes**: the latent dynamics stay |
+
+**Final M1 stack:** RSSM + factorised target, on S_t v1 + the CSV packet block (`configs/m1v2/e22_factorized.yaml`,
+runs `m1v2-e22-s4*`). **S3 was met by no run**, so no early-warning claim follows. D-021 is unchanged.
+**E25 (CTU-13):** anticipation does not transfer across botnet families (S2\* 0.551). The shipped
+checkpoint stays r2 until the team decides otherwise. The E22 stack trades Thursday detection
+(PR-AUC 0.389 against r2's 0.640) for cross-day anticipation, which a demo would have to explain.
+
