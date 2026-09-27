@@ -148,5 +148,6 @@ def test_model_card_metrics_come_from_results() -> None:
     assert metrics["f1"] == pytest.approx(0.608, abs=1e-3)
     assert metrics["fpr"] == pytest.approx(0.078, abs=1e-3)
     assert metrics["pr_auc"] == pytest.approx(0.640, abs=1e-3)
-    assert metrics["baseline_f1"] == pytest.approx(0.011, abs=1e-3)
+    # LR at the same causal threshold (benchmark-final, G-6); E3's 0.011 used LR's own threshold
+    assert metrics["baseline_f1"] == pytest.approx(0.112, abs=1e-3)
     assert metrics["mean_lead_time_windows"] == 0.0

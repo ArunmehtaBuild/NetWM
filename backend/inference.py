@@ -82,7 +82,9 @@ def get_checkpoint(name: Optional[str] = None) -> Optional[dict[str, Any]]:
 # API can never drift from them.
 _E18_RUN = "e18-causal-threshold-e4e7-worldmodel-r2"
 _E14_RUN = "e14-pmax-rescore-e4e7-worldmodel-r2"
-_E3_RUN = "e2e3-baselines-lags0"
+# The PS baseline at the same causal threshold as the model (G-6, D-037): like for like. E3's 0.011
+# was at LR's own train-tuned threshold, a different policy from the model's.
+_BENCHMARK_RUN = "benchmark-final"
 
 
 def _find_row(run_id: str, **match: Any) -> Optional[dict[str, Any]]:
@@ -113,8 +115,7 @@ def load_headline_metrics() -> dict[str, float]:
     ranking = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
     if ranking:
         metrics["pr_auc"] = round(ranking["pr_auc"], 3)
-    base = _find_row(_E3_RUN, experiment="E3", target="forecast",
-                     test_day="thursday", threshold_mode="train-tuned")
+    base = _find_row(_BENCHMARK_RUN, model="Logistic regression (PS baseline)", day="thursday")
     if base:
         metrics["baseline_f1"] = round(base["f1"], 3)
     return metrics
