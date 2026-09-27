@@ -35,6 +35,7 @@ import pandas as pd
 from scapy.utils import RawPcapReader
 
 from netwm.data.base import CANONICAL_COLUMNS
+from netwm.features.flow_features import PACKET_CSV_COLUMNS as PACKET_STAT_COLUMNS
 from netwm.features.pcap_features import PCAPFeatureExtractor
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,15 @@ def _new_flow(ts, src, dst, sport, dport, proto) -> dict:
         "bwd_bytes": 0, "flag_counts": [0] * 8, "lengths": [], "iats": [], "fwd_init_win": -1,
         "bwd_init_win": -1, "fwd_seg_min": None, "fin_fwd": False, "fin_bwd": False,
         "start_active": ts, "end_active": ts, "active": [], "idle": [],
+        # per-direction statistics behind the CSV packet block (D-037: a PCAP upload must build the
+        # same 17 pkt_ features the model trained on from the CSVs)
+        "fwd_len": [], "bwd_len": [], "fwd_last": None, "bwd_last": None, "fwd_iat": [], "bwd_iat": [],
+        "fwd_rst": 0, "bwd_rst": 0, "fwd_hdr": 0, "fwd_data": 0,
     }
+
+
+def _sample_std(values: list) -> float:
+    return float(np.std(values, ddof=1)) if len(values) > 1 else 0.0
 
 
 def _finish(f: dict) -> dict:
@@ -163,10 +172,17 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
             f["end_active"] = ts
             f["last_ts"] = ts
             f["lengths"].append(plen)
+            side = "fwd" if fwd else "bwd"
+            f[f"{side}_len"].append(plen)
+            if f[f"{side}_last"] is not None:
+                f[f"{side}_iat"].append(ts - f[f"{side}_last"])
+            f[f"{side}_last"] = ts
             if fwd:
                 f["fwd_pkts"] += 1
                 f["fwd_bytes"] += plen
                 f["fwd_seg_min"] = hdr if f["fwd_seg_min"] is None else min(f["fwd_seg_min"], hdr)
+                f["fwd_hdr"] += hdr
+                f["fwd_data"] += int(plen > 0)
             else:
                 f["bwd_pkts"] += 1
                 f["bwd_bytes"] += plen
@@ -180,6 +196,7 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
                 if flags & FIN:
                     f["fin_fwd" if fwd else "fin_bwd"] = True
                 if flags & RST:
+                    f["fwd_rst" if fwd else "bwd_rst"] += 1
                     done.append(_finish(open_flows.pop(key)))
     finally:
         reader.close()
@@ -216,13 +233,22 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
             "fwd_seg_size_min": f["fwd_seg_min"] or 0,
             "active_mean": float(np.mean(f["active"]) * 1e6) if f["active"] else 0.0,
             "idle_mean": float(np.mean(f["idle"]) * 1e6) if f["idle"] else 0.0,
+            # the CSV packet block's inputs, with CICFlowMeter's definitions: sample std of payload
+            # lengths and of same-direction gaps (us), RST counts, transport-header bytes and data
+            # packets in the forward direction
+            "fwd_pkt_len_std": _sample_std(f["fwd_len"]),
+            "bwd_pkt_len_std": _sample_std(f["bwd_len"]),
+            "fwd_iat_std": _sample_std(f["fwd_iat"]) * 1e6,
+            "bwd_iat_std": _sample_std(f["bwd_iat"]) * 1e6,
+            "fwd_rst_cnt": f["fwd_rst"], "bwd_rst_cnt": f["bwd_rst"],
+            "fwd_hdr_bytes": f["fwd_hdr"], "fwd_data_pkts": f["fwd_data"],
         }
         for k in A2_KEYS:
             row[f"a2_{k}"] = a2.get(key, {}).get(k, 0)
         rows.append(row)
 
     cols = [c for c in CANONICAL_COLUMNS if c not in ("label", "attempted", "stage")]
-    df = pd.DataFrame(rows, columns=cols + [f"a2_{k}" for k in A2_KEYS])
+    df = pd.DataFrame(rows, columns=cols + list(PACKET_STAT_COLUMNS) + [f"a2_{k}" for k in A2_KEYS])
     df = df.sort_values("ts", kind="stable").reset_index(drop=True)
     df.attrs["dropped_packets"] = dropped
     return df

@@ -24,6 +24,7 @@ from netwm.features.windowing import (
     onset_windows,
     window_stages,
 )
+from netwm.features.packet_windows import HAS_PCAP, read_packets, window_packet_features, with_packets
 from netwm.metrics import CAUSAL_WARMUP, causal_threshold, lead_times
 from netwm.models.leadtime import circular_shift_null
 from netwm.labels.mitre_map import (
@@ -96,6 +97,28 @@ def read_flow_csv(path: Path | str) -> pd.DataFrame:
     return df
 
 
+def state_matrix(flows: pd.DataFrame, names: "list[str]", spec: WindowSpec,
+                 pcap_path: Path | str | None = None):
+    """The raw (unscaled) state a checkpoint with feature ``names`` reads, built from a flow table.
+
+    Rebuilds exactly the blocks the checkpoint was trained on (v1, trend, host slots, CSV packet
+    statistics, host-relative - read off its names) and, for a packet model, the packet block from
+    ``pcap_path`` or its absent form (D-037). Returns ``(features, expanded, t0, n_windows)``.
+    ``scripts/parity_check.py`` compares this with the training matrix on real days.
+    """
+    expanded, t0 = expand_to_windows(flows, spec)
+    n_windows = int(expanded["w"].max()) + 1
+    feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
+                            **feature_flags_from_names(names))
+    if HAS_PCAP in names:
+        packet_feats = None
+        if pcap_path is not None:
+            packet_feats = window_packet_features(read_packets(pcap_path), t0, n_windows,
+                                                  spec.length_s, spec.stride_s)
+        feats = with_packets(feats, packet_feats)
+    return feats, expanded, t0, n_windows
+
+
 def analyze_flows(
     flows: pd.DataFrame,
     ckpt: dict,
@@ -106,8 +129,14 @@ def analyze_flows(
     threshold_override: float | None = None,
     override_note: str | None = None,
     progress=None,
+    pcap_path: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Run the world model over a flow table and build the API result payload."""
+    """Run the world model over a flow table and build the API result payload.
+
+    ``pcap_path``: the capture the flows came from. A checkpoint that reads packet features (D-037)
+    gets them from it, measured by the same functions that built its training data; without one
+    (a flow-CSV upload) they are absent and ``has_pcap`` = 0, exactly as in its CSV-mode training.
+    """
     model, device = ckpt["model"], ckpt["device"]
     scaler, names = ckpt["scaler"], ckpt["feature_names"]
     horizon, stride_s = int(ckpt["horizon_k"]), float(ckpt["stride_s"])
@@ -119,11 +148,8 @@ def analyze_flows(
         policy = "expanding-" + policy.rsplit("-", 1)[-1]
     spec = WindowSpec(2 * stride_s, stride_s)
 
-    expanded, t0 = expand_to_windows(flows, spec)
-    n_windows = int(expanded["w"].max()) + 1
-    # rebuild exactly the state the checkpoint was trained on - v1 for r2, v2 if it has trend columns
-    feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
-                            **feature_flags_from_names(names))
+    feats, expanded, t0, n_windows = state_matrix(flows, names, spec, pcap_path)
+    packets_used = HAS_PCAP in names
     x = scaler.transform(feats[names])
     # what the model's inputs are called: the feature names, or four views of each (D-035, E21)
     input_names = scaler.output_names() if hasattr(scaler, "output_names") else list(names)
@@ -226,6 +252,9 @@ def analyze_flows(
         "source": {
             "flows": int(len(flows)),
             "windows": int(n_windows),
+            # D-037: whether the model read packet features, and whether they were measured
+            "packet_features": ("measured from the capture" if pcap_path is not None else "absent (flow input)")
+            if packets_used else "not used by this model",
             "t0": t0.isoformat() + "Z",
             "window_s": spec.length_s,
             "stride_s": spec.stride_s,
@@ -358,6 +387,7 @@ def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:
         # the canonical schema, and a stage column is what marks a payload as labelled, so without
         # this the dashboard would report "no attacks" as the truth for any PCAP.
         flows = pcap_to_flows(path).drop(columns=["label", "stage", "attempted"], errors="ignore")
+        kwargs.setdefault("pcap_path", path)
     else:
         raise ValueError(f"unsupported file type: {path.suffix}")
     payload = analyze_flows(flows, ckpt, **kwargs)

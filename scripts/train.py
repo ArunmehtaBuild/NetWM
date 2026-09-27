@@ -29,6 +29,7 @@ from netwm.data.processed import ProcessedDataset
 from netwm.evaluate import evaluate_fold
 from netwm.data.ctu13 import CIC_ONLY_FEATURES
 from netwm.features.flow_features import HOST_RELATIVE_FEATURES, PACKET_CSV_FEATURES
+from netwm.features.packet_windows import HAS_PCAP, PACKET_INPUTS
 from netwm.features.scaler import RELATIVE_VIEWS, StateScaler
 from netwm.models.world_model import WorldModelConfig, build_model
 from netwm.train import TrainConfig, prepare_days, train_model
@@ -89,6 +90,7 @@ FEATURE_BLOCKS: dict[str, tuple[str, ...]] = {
     "host_relative": HOST_RELATIVE_FEATURES,
     # E25: S_t v1 columns built from fields Argus does not record - dropped, never learned as constants
     "cic_only": CIC_ONLY_FEATURES,
+    "pcap": PACKET_INPUTS,
 }
 
 
@@ -161,6 +163,9 @@ def main() -> None:
     model_root.mkdir(parents=True, exist_ok=True)
 
     rows, per_day, histories = [], {}, {}
+    # D-037: a model with the has_pcap input is also scored with packets masked (its CSV form)
+    csv_mode = HAS_PCAP in ds.feature_names
+    rows_csv, per_day_csv = [], {}
     # one fold per held-out day, or one per group of splits held out together (D-035, E25)
     folds = (yaml.safe_load(Path(args.group_folds).read_text(encoding="utf-8")) if args.group_folds
              else {d: [d] for d in test_days})
@@ -182,6 +187,29 @@ def main() -> None:
         else:
             scaler = StateScaler(**overrides.get("scaler", {})).fit(ds.concat(train_days)[ds.feature_names])
             model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
+
+        def fold_checkpoint(threshold):
+            return {
+                "model_state": model.state_dict(),
+                "model_config": model_cfg.as_dict(),
+                "train_config": train_cfg.__dict__,
+                "feature_names": ds.feature_names,
+                "scaler": scaler,
+                "train_days": train_days,
+                "test_day": test_day,
+                "test_days": list(held_out),
+                "git_sha": start_sha,
+                "horizon_k": ds.horizon,
+                "stride_s": ds.stride_s,
+                "threshold": threshold,
+                # so precursor_eval.py never has to guess which logit is which
+                "risk_columns": list(train_cfg.risk_columns),
+                "onset_source": train_cfg.onset_source,
+            }
+
+        if not resumed:
+            # saved as soon as training ends, so a power cut during evaluation keeps the weights
+            torch.save(fold_checkpoint(None), ckpt_path)
         histories[test_day] = history
 
         prepared = prepare_days(ds, ds.splits, scaler, train_cfg.risk_columns,
@@ -201,28 +229,23 @@ def main() -> None:
             )
             rows.extend(fold_rows)
             per_day[held] = {k: v for k, v in extras.items() if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
+            if csv_mode:
+                held_csv = prepare_days(ds, [held], scaler, train_cfg.risk_columns, train_cfg.onset_source,
+                                        train_cfg.onset_gap, csv_mode=True)[held]
+                csv_rows, csv_extras = evaluate_fold(
+                    model, {d: prepared[d] for d in train_days}, held, held_csv, ds.horizon, ds.stride_s,
+                    device, n_samples=4 if args.smoke else args.samples, train_cache=train_cache,
+                )
+                rows_csv.extend({**r, "input_mode": "csv"} for r in csv_rows)
+                per_day_csv[held] = {k: v for k, v in csv_extras.items()
+                                     if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
 
-        if not resumed:  # a resumed checkpoint keeps the git SHA and threshold it was trained with
-            torch.save(
-                {
-                    "model_state": model.state_dict(),
-                    "model_config": model_cfg.as_dict(),
-                    "train_config": train_cfg.__dict__,
-                    "feature_names": ds.feature_names,
-                    "scaler": scaler,
-                    "train_days": train_days,
-                    "test_day": test_day,
-                    "test_days": list(held_out),
-                    "git_sha": start_sha,
-                    "horizon_k": ds.horizon,
-                    "stride_s": ds.stride_s,
-                    "threshold": extras["threshold_train"],
-                    # so precursor_eval.py never has to guess which logit is which
-                    "risk_columns": list(train_cfg.risk_columns),
-                    "onset_source": train_cfg.onset_source,
-                },
-                model_root / f"{test_day}.pt",
-            )
+        if not resumed:
+            torch.save(fold_checkpoint(extras["threshold_train"]), ckpt_path)
+        elif saved.get("threshold") is None:
+            # trained, then interrupted before evaluation: add the threshold, keep its provenance
+            saved["threshold"] = extras["threshold_train"]
+            torch.save(saved, ckpt_path)
         # Namespaced by run id: these filenames used to be run-independent, so any training run
         # silently overwrote the published E5/E6 figures of a previous one.
         if not args.no_figures:
@@ -239,6 +262,10 @@ def main() -> None:
         # after every fold, so an interrupted run keeps what it finished
         save_run(run_id, {"rows": rows, "per_day": per_day, "complete": False},
                  config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
+        if csv_mode:
+            save_run(f"{run_id}-csvmode", {"rows": rows_csv, "per_day": per_day_csv, "complete": False,
+                                           "input_mode": "csv (pcap_ = 0, has_pcap = 0)"},
+                     config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
 
     table = pd.DataFrame(rows)
     table.to_csv(TABLES / f"{run_id}_forecast.csv", index=False)
@@ -247,6 +274,10 @@ def main() -> None:
     ).to_csv(TABLES / f"{run_id}_training_curves.csv", index=False)
     save_run(run_id, {"rows": rows, "per_day": per_day, "complete": True},
              config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
+    if csv_mode:
+        save_run(f"{run_id}-csvmode", {"rows": rows_csv, "per_day": per_day_csv, "complete": True,
+                                       "input_mode": "csv (pcap_ = 0, has_pcap = 0)"},
+                 config={**vars(args), "model": model_cfg.as_dict(), "git_sha_at_start": start_sha})
     print(f"\nwrote {model_root}/*.pt, results/tables/{run_id}_*.csv, results/figures/e5_*, e6_*")
 
 

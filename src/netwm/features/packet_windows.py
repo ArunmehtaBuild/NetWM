@@ -310,3 +310,37 @@ def window_packet_features(
     out["pcap_syn_only_rate"] = count(tcp & ((flags & _SYN) > 0) & ((flags & _ACK) == 0)) / safe_tcp
     out["pcap_rst_rate"] = count(tcp & ((flags & _RST) > 0)) / safe_tcp
     return out[list(PCAP_WINDOW_FEATURES)].fillna(0.0).astype(np.float64)
+
+
+#: D-037: 1 when a window's pcap_ features were measured from a capture, 0 when they are absent (a
+#: flow-CSV input). A model that reads packets reads this too, so "no packets" is a state it has seen.
+HAS_PCAP = "has_pcap"
+PACKET_INPUTS: tuple[str, ...] = (*PCAP_WINDOW_FEATURES, HAS_PCAP)
+
+
+def with_packets(features: pd.DataFrame, packet_features: pd.DataFrame | None) -> pd.DataFrame:
+    """Attach the packet block to a window feature frame: measured values and ``has_pcap`` = 1 when a
+    capture is available, else every ``pcap_`` value 0 and ``has_pcap`` = 0 (raw space, before
+    scaling). The one function training dropout, CSV-mode evaluation and the engine all use."""
+    out = features.copy()
+    if packet_features is None:
+        for col in PCAP_WINDOW_FEATURES:
+            out[col] = 0.0
+        out[HAS_PCAP] = 0.0
+        return out
+    joined = packet_features.reindex(out.index)[list(PCAP_WINDOW_FEATURES)].fillna(0.0)
+    for col in PCAP_WINDOW_FEATURES:
+        out[col] = joined[col].to_numpy(dtype=np.float64)
+    out[HAS_PCAP] = 1.0
+    return out
+
+
+def mask_packets(frame: pd.DataFrame) -> pd.DataFrame:
+    """The CSV form of a frame that has packet columns: the same windows with packets absent."""
+    out = frame.copy()
+    for col in PCAP_WINDOW_FEATURES:
+        if col in out.columns:
+            out[col] = 0.0
+    if HAS_PCAP in out.columns:
+        out[HAS_PCAP] = 0.0
+    return out

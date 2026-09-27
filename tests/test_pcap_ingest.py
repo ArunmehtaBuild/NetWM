@@ -166,3 +166,25 @@ def test_pcap_payload_reports_no_ground_truth(tmp_path):
     payload = analyze_file(_handshake_and_dns(tmp_path / "t.pcap"), load_checkpoint(CKPT))
     assert payload["source"]["kind"] == "pcap"
     assert payload["ground_truth"] == {"available": False}
+
+
+def test_pcap_flows_carry_the_csv_packet_block_inputs(tmp_path):
+    """D-037: a PCAP upload must build the 17 pkt_ features from the same 8 per-flow columns the
+    CSVs give, with CICFlowMeter's definitions."""
+    a, b = "192.168.10.8", "192.168.10.50"
+    pkts = [
+        IP(src=a, dst=b) / TCP(sport=50000, dport=80, flags="S"),                       # fwd, hdr 20
+        IP(src=b, dst=a) / TCP(sport=80, dport=50000, flags="SA"),                      # bwd
+        IP(src=a, dst=b) / TCP(sport=50000, dport=80, flags="PA") / (b"x" * 100),       # fwd data
+        IP(src=a, dst=b) / TCP(sport=50000, dport=80, flags="PA") / (b"x" * 300),       # fwd data
+        IP(src=b, dst=a) / TCP(sport=80, dport=50000, flags="RA"),                      # bwd RST
+    ]
+    times = [0.0, 0.1, 0.5, 1.5, 1.6]
+    for p, t in zip(pkts, times):
+        p.time, p._t = T0 + t, True
+    row = pcap_to_flows(_write(tmp_path / "t.pcap", pkts)).iloc[0]
+    assert (row["fwd_data_pkts"], row["fwd_hdr_bytes"]) == (2, 60)
+    assert (row["fwd_rst_cnt"], row["bwd_rst_cnt"]) == (0, 1)
+    assert row["fwd_pkt_len_std"] == pytest.approx(pd.Series([0, 100, 300]).std())      # sample std
+    assert row["fwd_iat_std"] == pytest.approx(pd.Series([0.5e6, 1.0e6]).std())         # us
+    assert row["bwd_iat_std"] == 0.0                                                    # one gap only

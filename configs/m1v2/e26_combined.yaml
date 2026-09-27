@@ -1,0 +1,10 @@
+# E26 (D-037): E22 (RSSM + factorised target, S_t v1 + CSV packet block) + the 18 real-capture pcap_
+# features + has_pcap, trained with packet dropout 0.3 so one model serves PCAP and CSV inputs.
+# Reads data/processed/cicids2017_m1v2p (106 inputs). Scored in PCAP mode and CSV mode.
+#   bash scripts/run_m1v2.sh e26 configs/m1v2/e26_combined.yaml data/processed/cicids2017_m1v2p
+features:
+  exclude_blocks: [host_relative]
+model:
+  hazard: factorized
+train:
+  packet_dropout: 0.3

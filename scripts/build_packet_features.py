@@ -32,7 +32,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from netwm.data.processed import ProcessedDataset
-from netwm.features.packet_windows import PCAP_WINDOW_FEATURES, read_packets, window_packet_features
+from netwm.features.packet_windows import HAS_PCAP, PCAP_WINDOW_FEATURES, read_packets, window_packet_features
 from netwm.utils import git_sha, save_run
 
 CACHE = Path("data/interim/packets")
@@ -96,9 +96,10 @@ def merge(ds: ProcessedDataset, out_dir: Path, stats: list[dict]) -> None:
     for day in ds.splits:
         pcap = pd.read_parquet(CACHE / f"{day}.parquet")
         frame = ds.frame(day).join(pcap, on="w")
+        frame[HAS_PCAP] = 1.0  # every window of these days was measured from its capture (D-037)
         frame.to_parquet(out_dir / f"{day}.parquet", index=False)
     meta = json.loads(json.dumps(ds.meta))
-    meta["feature_names"] = [*ds.feature_names, *PCAP_WINDOW_FEATURES]
+    meta["feature_names"] = [*ds.feature_names, *PCAP_WINDOW_FEATURES, HAS_PCAP]
     meta["n_features"] = len(meta["feature_names"])
     meta["packet_build"] = {"git_sha": git_sha(), "days": stats}
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
@@ -112,11 +113,12 @@ def main() -> None:
     ap.add_argument("--out", default="data/processed/cicids2017_m1v2p")
     ap.add_argument("--days", nargs="*", default=None)
     ap.add_argument("--extract-only", action="store_true", help="cache the days given; do not merge")
+    ap.add_argument("--merge-only", action="store_true", help="rebuild the merged dataset from the cache")
     args = ap.parse_args()
 
     ds = ProcessedDataset(args.data)
     stats = []
-    for day in args.days or ds.splits:
+    for day in ([] if args.merge_only else (args.days or ds.splits)):
         # UNB's names are not consistent ("Wednesday-workingHours"), so match case-insensitively
         found = [f for f in Path(args.pcap_dir).glob("*.pcap") if f.name.lower() == f"{day}-workinghours.pcap"]
         pcap = found[0] if found else Path(args.pcap_dir) / f"{day.capitalize()}-WorkingHours.pcap"

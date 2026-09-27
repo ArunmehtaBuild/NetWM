@@ -15,6 +15,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 from netwm.data.processed import ProcessedDataset
+from netwm.features.packet_windows import HAS_PCAP, mask_packets
 from netwm.features.scaler import StateScaler
 from netwm.models.targets import episode_labels
 from netwm.models.world_model import NetWorldModel, WorldModelConfig, build_model
@@ -64,23 +65,33 @@ class CurriculumSequences(Dataset):
 
 
 class WindowSequences(Dataset):
-    """Overlapping fixed-length slices of consecutive windows, never crossing a day boundary."""
+    """Overlapping fixed-length slices of consecutive windows, never crossing a day boundary.
 
-    def __init__(self, days: dict[str, dict], seq_len: int, stride: int) -> None:
-        self.items: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+    ``packet_dropout`` (D-037): with that probability a sequence is served in its CSV form - the
+    same windows with every packet feature absent and ``has_pcap`` = 0 (``day["x_csv"]``) - so a
+    flow-CSV input at inference is a state the model has trained on.
+    """
+
+    def __init__(self, days: dict[str, dict], seq_len: int, stride: int, packet_dropout: float = 0.0) -> None:
+        self.items: list[tuple] = []
+        self.packet_dropout = packet_dropout
         for day in days.values():
             x, stage, comp = day["x"], day["stage"], day["risk"]
+            x_csv = day.get("x_csv")
             for start in range(0, max(1, len(x) - seq_len + 1), stride):
                 end = start + seq_len
                 if end > len(x):
                     break
-                self.items.append((x[start:end], stage[start:end], comp[start:end]))
+                alt = x_csv[start:end] if x_csv is not None else None
+                self.items.append((x[start:end], stage[start:end], comp[start:end], alt))
 
     def __len__(self) -> int:
         return len(self.items)
 
     def __getitem__(self, i: int):
-        x, stage, risk = self.items[i]
+        x, stage, risk, alt = self.items[i]
+        if alt is not None and self.packet_dropout > 0 and float(torch.rand(())) < self.packet_dropout:
+            x = alt
         return (
             torch.from_numpy(x).float(),
             torch.from_numpy(stage).long(),
@@ -106,6 +117,8 @@ class TrainConfig:
     # E25: train for this many optimiser steps, whatever the fold's size (D-035: CTU-13 folds get a
     # CIC-IDS2017 fold's step budget, not its epoch count). None = `epochs` epochs.
     target_steps: int | None = None
+    # E26 (D-037): probability a training sequence is shown in its CSV form (packets absent)
+    packet_dropout: float = 0.0
 
     def __post_init__(self) -> None:
         self.risk_columns = tuple(self.risk_columns)
@@ -140,6 +153,8 @@ def prepare_days(
     risk_columns: "tuple[str, ...]" = RISK_COLUMNS[:3],
     onset_source: str = "attack",
     onset_gap: int = 4,
+    csv_mode: bool = False,
+    with_csv_view: bool = False,
 ) -> dict[str, dict]:
     """Scaled states plus every supervision target, one entry per day.
 
@@ -163,8 +178,13 @@ def prepare_days(
             ],
             axis=1,
         )
+        states = frame[ds.feature_names]
+        # csv_mode: the day as a flow-CSV input would present it (D-037); the scaler is the same
+        x = scaler.transform(mask_packets(states) if csv_mode else states)
         out[day] = {
-            "x": scaler.transform(frame[ds.feature_names]),
+            "x": x,
+            **({"x_csv": scaler.transform(mask_packets(states))}
+               if with_csv_view and HAS_PCAP in ds.feature_names else {}),
             "stage": frame["stage"].to_numpy().astype(np.int64),
             "compromise": frame["compromise"].to_numpy().astype(np.float32),
             "risk": risk,
@@ -220,8 +240,11 @@ def train_model(
             f"n_risk={model_cfg.n_risk} but {len(cfg.risk_columns)} risk columns "
             f"{cfg.risk_columns} - the head width and its supervision must agree"
         )
-    days = prepare_days(ds, train_days, scaler, cfg.risk_columns, cfg.onset_source, cfg.onset_gap)
-    dataset = WindowSequences(days, cfg.seq_len, cfg.stride)
+    days = prepare_days(ds, train_days, scaler, cfg.risk_columns, cfg.onset_source, cfg.onset_gap,
+                        with_csv_view=cfg.packet_dropout > 0)
+    if cfg.packet_dropout > 0 and HAS_PCAP not in ds.feature_names:
+        raise ValueError("packet_dropout needs the has_pcap input (data/processed/cicids2017_m1v2p)")
+    dataset = WindowSequences(days, cfg.seq_len, cfg.stride, packet_dropout=cfg.packet_dropout)
     loader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, drop_last=False)
 
     stage_w, pos_w = class_weights(days, model_cfg.n_stages, cfg.risk_columns)
