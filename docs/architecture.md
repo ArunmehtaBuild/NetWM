@@ -64,9 +64,12 @@ between runs of the same checkpoint on the same file.
 
 The alarm statistic is `max_k P(compromised at t+k)` rather than the cumulative union, because the
 compromise head predicts a state *property* that persists, which the union over-counts (D-019). The
-deployable threshold is an **alert budget** - the top 10 % of scores in the capture being analysed,
-set without labels - because F1-optimal thresholds from training days are ~100x too high on a
-held-out day and fire zero alarms (D-017, D-020).
+deployable threshold is a **causal alert budget**: each window's threshold is the 90th percentile of
+the scores seen so far in the capture, with no alarm in the first 10 minutes, and never uses windows
+still to come (D-034). F1-optimal thresholds from training days are ~100x too high on a held-out day
+and fire zero alarms (D-017, D-020). The dashboard runs exactly the rule E18 measured, through one
+shared function, and draws the threshold as a curve (G-9). Its lead-time panel carries the same
+circular-shift null as the evaluation, so a chance-level early warning is labelled as chance.
 
 ## 4. Explainability
 
@@ -75,6 +78,18 @@ model worried") and Integrated Gradients over the input features ("which flags, 
 statistics drove it"). IG runs on alarm windows plus a regular sample rather than all ~970 windows of
 a day, keeping an interactive request interactive (D-018); the logistic-regression baseline is
 explained with exact linear SHAP, so the two are comparable.
+
+**Checked, and weaker than it looks (E11).** Against signature sets written down before looking, the
+top-8 attributions contain the attack's known signature at p < 0.05 on only 1 of 6 held-out episodes
+(Friday C2). On both port scans, a plain ranking by "which features are unusual" does better than IG,
+because IG explains the *compromise* score and a scan is not a compromise. The why panel is therefore
+labelled as "features pushing the compromise score", not "why this is an attack".
+
+**Stage mapping (E9).** On each held-out day the stage that matters is a class the fold never trained
+on (Thursday Lateral Movement, Friday C2), so the stage head scores 0 recall on both by construction.
+Merged into one technique, T1046 network service discovery, the internal sweep is recognised at
+precision 0.885. Validating stage mapping on compromise needs a dataset with more than one family per
+stage: that is M2.
 
 ## 5. Evaluation methodology
 

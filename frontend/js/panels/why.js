@@ -59,7 +59,7 @@ export class WhyPanel {
         <div class="why-section">
           <div class="why-section-header">
             <div>
-              <span class="why-section-title">Why This Forecast · Window t=${w.t}</span>
+              <span class="why-section-title" title="Integrated Gradients of the compromise score. On held-out attacks these match the attack's known signature on only 1 of 6 episodes (E11), so read them as what moved this score, not as a diagnosis">Features Pushing the Compromise Score · Window t=${w.t}</span>
               <span class="why-section-sub" title="Ranked against this capture's alert budget, not a calibrated probability (E17)">(${formatIsoTime(w.ts)} · Risk p_max: ${formatPercent(w.p_max)})</span>
             </div>
             <span class="why-section-badge">Local Integrated Gradients</span>
