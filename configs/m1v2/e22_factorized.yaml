@@ -1,0 +1,6 @@
+# E22 (D-035): the stack (E20: S_t v1 + CSV packet block; E21 not adopted) with the factorised
+# target: P(compromise) = P(threat) x P(compromise stage | hostile). Nothing else changes.
+features:
+  exclude_blocks: [host_relative]
+model:
+  hazard: factorized

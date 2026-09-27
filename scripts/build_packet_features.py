@@ -47,8 +47,8 @@ def md5_of(path: Path) -> str:
 
 
 def check_md5(pcap: Path) -> str:
-    md5_file = pcap.with_suffix(".md5")
-    if not md5_file.exists():
+    md5_file = next((f for f in pcap.parent.glob("*.md5") if f.stem.lower() == pcap.stem.lower()), None)
+    if md5_file is None:
         return "no .md5 beside the capture"
     expected = md5_file.read_text(encoding="utf-8", errors="ignore").split()[0].strip().lower()
     got = md5_of(pcap)
@@ -117,7 +117,9 @@ def main() -> None:
     ds = ProcessedDataset(args.data)
     stats = []
     for day in args.days or ds.splits:
-        pcap = Path(args.pcap_dir) / f"{day.capitalize()}-WorkingHours.pcap"
+        # UNB's names are not consistent ("Wednesday-workingHours"), so match case-insensitively
+        found = [f for f in Path(args.pcap_dir).glob("*.pcap") if f.name.lower() == f"{day}-workinghours.pcap"]
+        pcap = found[0] if found else Path(args.pcap_dir) / f"{day.capitalize()}-WorkingHours.pcap"
         if not pcap.exists():
             print(f"{day}: {pcap} not found - skipped")
             continue
