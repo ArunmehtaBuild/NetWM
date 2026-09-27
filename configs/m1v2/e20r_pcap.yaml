@@ -1,0 +1,6 @@
+# E20r (D-035): the E20 stack (S_t v1 + CSV packet block) + the 18 pcap_ features measured from the
+# real day captures (TTL, fragmentation, retransmissions, zero windows, per-packet payload histogram,
+# inter-packet timing, SYN-only / RST shares). Reads data/processed/cicids2017_m1v2p. Compared with
+# E20 on the same seeds (and with E19 for the plain flow-only vs flow+packet question).
+features:
+  exclude_blocks: [host_relative]
