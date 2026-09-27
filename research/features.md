@@ -36,6 +36,8 @@ Rather than just looking at the absolute numbers above, the model also looks at 
 - **`*_slope_2`, `*_slope_5`, `*_slope_10`**: The average rate of change over 2, 5, or 10 minutes. Captures the *acceleration* of an attack (e.g. a slow, sneaky port scan escalating into a full breach).
 - **`*_zscore`**: How abnormal the current minute is compared to a 2-hour baseline. This automatically accounts for the fact that an office network is naturally busier at 2 PM than at 2 AM.
 
+*Note (E16): Slope and delta features carry no Thursday precursor signal (0.475-0.487 univariate).*
+
 ## 7. Per-Host Channel (Top Talkers)
 *Capturing silent, isolated infections.*
 - **Top Talkers Sub-vector**: Rather than looking at the whole network as a giant aggregate blob, this tracks the busiest individual computers. If one single computer gets infected and starts silently moving laterally, this channel catches it even if the overall network seems quiet.
