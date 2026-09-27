@@ -39,8 +39,7 @@ produced them, or when the thing it describes demonstrably works end to end - no
 | **Arun** | **G-1** (gap, **owner action**) | **The repo is PRIVATE.** The checklist had marked "public GitHub repo" done. Make it public, or confirm the evaluators will be given access, before submission | `gh repo view` shows PUBLIC, or access is confirmed in writing |
 | **Sanchi** | **S-6b** | Deck from `docs/presentation.md` with the review fixes (branch `s6-s7-features-presentation`, unchanged since 18:49). Use D-032 for the headline, "risk score" not "probability", no "before compromise", flow-only `S_t`, and add E10/E17 to slide 5 | an exported 5-slide deck reviewed by two teammates |
 | **Alok** | | No open cards: A-3c and A-5c were finished on main (`0b22d98`, `a9ff68a`). Next assignment comes from the gap list | |
-| **Harshit** | **H-17** | In mock mode, an upload shows the fixture under the uploaded file's name after imitation stage texts. Say "fixture shown, your file was not analysed" | a mock upload cannot pass for an analysis |
-| | **H-15** | Rehearse and record from the **2-minute** script (G-3), after R-12. The PCAP half needs A-5b | a recorded run under 2 minutes that follows the script |
+| **Harshit** | **H-15** | Rehearse and record from the **2-minute** script (G-3), after R-12. The PCAP half needs A-5b | a recorded run under 2 minutes that follows the script |
 
 ### Open after D-035 - not yet assigned
 
@@ -141,6 +140,7 @@ T-15 gap check, 2026-09-26. The PS lists five deliverables; the rest are its ind
 
 | id | outcome |
 |---|---|
+| H-17 | a mock upload says "fixture shown, your file was not analysed" throughout: stage texts, payload identity, success state (Yash `77eaf96`, completed `527daf4`; PR #14 closed with review, its G-9 spline and re-carried PR #13 files not taken) |
 | G-9 | the dashboard, model card and fixtures run E18's causal rule through one function (`f2bb6de`); the alarm panel carries the D-022 null ("not distinguishable from chance", p = 0.331) |
 | G-4 (E9) | stage recall is high only where a relative family was in training (DDoS 0.99); 0 for Lateral Movement and C2; T1046 technique view 0.885 precision on the sweep (`59838be`, five-fold `14277fb`). Yash's PR #13 reproduced the matrices once fixed; closed with review |
 | G-7 (E11) | fails its bar: 1 of 6 episodes; the why panel relabelled (`59838be`, `9893362`) |
