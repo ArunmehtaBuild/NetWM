@@ -57,19 +57,29 @@ def evaluate_fold(
     stride_s: float,
     device: torch.device,
     n_samples: int = 16,
+    train_cache: dict | None = None,
 ) -> tuple[list[dict], dict]:
-    """Metrics for one leave-one-day-out fold, with the threshold tuned on the training days."""
+    """Metrics for one leave-one-day-out fold, with the threshold tuned on the training days.
+
+    ``train_cache`` (a dict the caller keeps per fold) holds the training-day scores after the first
+    call, so a fold with several held-out splits (E25's family folds) forecasts its training days once.
+    """
     # The alarm statistic is max-over-horizon, not the cumulative union (D-019). Until 2026-09-25
     # these in-training rows scored p_cum[:, -1] while E14 and the engine scored p_max, so the E6
     # rows and the E14 table disagreed on the same checkpoints - any of those numbers reaching a
     # slide would have been wrong.
-    train_scores, train_labels = [], []
-    for day in train_days.values():
-        out = forecast_day(model, day["x"], horizon, max(4, n_samples // 4), device)
-        train_scores.append(out["p_max"])
-        train_labels.append(day["y_within_K"])
-    train_score = np.concatenate(train_scores)
-    thr_train = best_threshold(np.concatenate(train_labels), train_score)
+    if train_cache is not None and "score" in train_cache:
+        train_score, train_y = train_cache["score"], train_cache["labels"]
+    else:
+        train_scores, train_labels = [], []
+        for day in train_days.values():
+            out = forecast_day(model, day["x"], horizon, max(4, n_samples // 4), device)
+            train_scores.append(out["p_max"])
+            train_labels.append(day["y_within_K"])
+        train_score, train_y = np.concatenate(train_scores), np.concatenate(train_labels)
+        if train_cache is not None:
+            train_cache.update(score=train_score, labels=train_y)
+    thr_train = best_threshold(train_y, train_score)
     # Alert budget: the threshold that fires on 5 % of *training* windows. Absolute probabilities do
     # not transfer across days (E4-E7 round 1: 0.843 on train vs 0.059 on test), but "the noisiest
     # 5 % of windows" is a setting a SOC can actually live with (D-016).

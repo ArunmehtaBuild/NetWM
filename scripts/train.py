@@ -182,6 +182,7 @@ def main() -> None:
 
         prepared = prepare_days(ds, ds.splits, scaler, train_cfg.risk_columns,
                                 train_cfg.onset_source, train_cfg.onset_gap)
+        train_cache: dict = {}
         for held in held_out:
             fold_rows, extras = evaluate_fold(
                 model,
@@ -192,6 +193,7 @@ def main() -> None:
                 ds.stride_s,
                 device,
                 n_samples=4 if args.smoke else args.samples,
+                train_cache=train_cache,
             )
             rows.extend(fold_rows)
             per_day[held] = {k: v for k, v in extras.items() if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
