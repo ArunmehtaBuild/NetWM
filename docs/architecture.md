@@ -65,10 +65,17 @@ An RSSM-style latent world model (~0.6 M parameters, ~5 min per fold on a GTX 16
 - heads reading any real *or imagined* state: next-state decoder, MITRE stage, and three risk logits -
   `compromise`, `attack`, `escalate_step` (D-016).
 
-**The latent dynamics earn anticipation (E24).** A Model A with the same encoder and attention, but
-predicting "within K" directly with no latent transition, ranks pre-onset windows clearly worse on
-all three seeds (S2\* 0.61 against 0.70) and detects worse. This is the measured reason NetWM is a
-world model rather than a sequence classifier.
+**What the latent dynamics earn (E24, E26).** Model A has the same encoder and attention, but
+predicts "within K" directly with no latent transition. It ranks pre-onset windows worse on all
+three seeds (S2\* 0.61 against 0.70) and detects much worse (Thursday PR-AUC 0.22 against 0.39).
+
+The honest comparison also includes logistic regression, which ranks pre-onset windows at **0.66**.
+That is level with the round-2 world model (0.65) and above Model A. So anticipation *as a ranking*
+does not need a world model. What the world model adds is:
+- detection at a usable alarm cost: precision 0.32-0.38 against LR's 0.12, and PR-AUC 0.39-0.56
+  against 0.14;
+- the anticipation gain of the factorised target (0.70);
+- open-loop rollouts that beat persistence.
 
 **Factorised risk (E22, the one target change that passed its bar).** `P(compromise) = P(threat) x
 P(compromise stage | hostile)`: the threat factor learns from every attack family of every training
