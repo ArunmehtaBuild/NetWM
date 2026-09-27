@@ -30,7 +30,7 @@ from netwm.evaluate import evaluate_fold
 from netwm.data.ctu13 import CIC_ONLY_FEATURES
 from netwm.features.flow_features import HOST_RELATIVE_FEATURES, PACKET_CSV_FEATURES
 from netwm.features.scaler import RELATIVE_VIEWS, StateScaler
-from netwm.models.world_model import WorldModelConfig
+from netwm.models.world_model import WorldModelConfig, build_model
 from netwm.train import TrainConfig, prepare_days, train_model
 from netwm.utils import FIGURES, TABLES, ensure_dirs, git_sha, run_dir, save_run, set_seed
 
@@ -118,6 +118,9 @@ def main() -> None:
     ap.add_argument("--smoke", action="store_true", help="2 epochs, first test day only")
     ap.add_argument("--no-figures", action="store_true",
                     help="skip the per-fold E5/E6 PNGs (sweeps: the scorecard is the result)")
+    ap.add_argument("--resume", action="store_true",
+                    help="a fold whose checkpoint already exists is loaded and evaluated, not retrained "
+                         "(recovery after an interrupted run; the weights are the ones that run trained)")
     args = ap.parse_args()
 
     set_seed(args.seed)
@@ -165,8 +168,16 @@ def main() -> None:
         train_days = [d for d in ds.splits if d not in held_out]
         print(f"\n== fold: {fold} test={held_out}  train={train_days}  device={device}")
         # an absent `scaler:` block is the D-014 log-standardiser, i.e. round 2 exactly (D-025)
-        scaler = StateScaler(**overrides.get("scaler", {})).fit(ds.concat(train_days)[ds.feature_names])
-        model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
+        ckpt_path = model_root / f"{test_day}.pt"
+        if args.resume and ckpt_path.exists():
+            saved = torch.load(ckpt_path, map_location=device, weights_only=False)
+            model = build_model(WorldModelConfig(**saved["model_config"])).to(device)
+            model.load_state_dict(saved["model_state"])
+            scaler, history = saved["scaler"], []
+            print(f"  resumed: {ckpt_path} (trained at {saved.get('git_sha')}), evaluating only")
+        else:
+            scaler = StateScaler(**overrides.get("scaler", {})).fit(ds.concat(train_days)[ds.feature_names])
+            model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
         histories[test_day] = history
 
         prepared = prepare_days(ds, ds.splits, scaler, train_cfg.risk_columns,
@@ -218,6 +229,9 @@ def main() -> None:
             keys = ("target", "threshold_mode", "f1", "precision", "recall", "fpr", "pr_auc",
                     "roc_auc", "warned_early", "episodes", "mean_lead_windows")
             print("   " + json.dumps({k: row[k] for k in keys if k in row}))
+        # after every fold, so an interrupted run keeps what it finished
+        save_run(run_id, {"rows": rows, "per_day": per_day, "complete": False},
+                 config={**vars(args), "model": model_cfg.as_dict()})
 
     table = pd.DataFrame(rows)
     table.to_csv(TABLES / f"{run_id}_forecast.csv", index=False)
