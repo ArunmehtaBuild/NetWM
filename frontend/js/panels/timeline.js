@@ -211,7 +211,7 @@ export class TimelinePanel {
             borderColor: "rgba(226, 87, 76, 0.8)",
             borderWidth: 1.5,
             borderDash: [5, 4],
-            stepped: hasSeries ? "before" : false,
+            tension: 0.4,
             spanGaps: false,
             fill: false,
             pointRadius: 0,
