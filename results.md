@@ -1049,3 +1049,24 @@ Artefacts:
   days x policies).
 - `results/figures/e18_{thursday,friday}_thresholds.png`, `results/figures/e18_score_distributions.png`.
 
+
+---
+
+## E9 - MITRE stage confusion matrix
+
+*Script designed by Yash, to be run by Atharv.*
+`python scripts/e9_confusion_matrix.py`
+
+This experiment evaluates the per-stage precision and recall on the held-out days (Thursday and Friday), using the r2 checkpoint.
+*(Results to be added once run).*
+
+---
+
+## E11 - Explainability sanity check
+
+*Script designed by Yash, to be run by Atharv.*
+`python scripts/e11_explain_sanity.py`
+
+This sanity check verifies whether the top attributions on known attacks point at their known signatures, such as the port spread on the 17:00 scan (Reconnaissance) and the fan-out on the internal sweep (Lateral Movement).
+*(Results to be added once run).*
+
