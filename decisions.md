@@ -389,6 +389,12 @@ failure mode visible rather than hidden.
 **Revisit if.** Calibration (temperature scaling on a held-out training day) brings train and test
 score distributions together - then an absolute probability threshold becomes honest again.
 
+**AMENDMENT (2026-09-27, E18): the budget as specified is not causal.** "The quantile of the model's
+scores on the capture being analysed" uses windows *after* the one being judged, so "a sensor can
+set it from its live stream" was false. D-034 replaces it with the expanding budget (q90 of the
+capture so far). Measured in E18: Thursday F1 0.608 at 16.8 % of windows alarmed and FPR 0.078. The
+0.576 at 2.7 % FPR above is a non-causal upper bound.
+
 ---
 
 ### D-021 — How we present the system if Y-2 returns another honest negative
@@ -1016,6 +1022,11 @@ reported as such (E14, E10).
 
 **Revisit if.** A later run replaces the submission checkpoint. Then quote that checkpoint, with its
 own seed range, in the same commit that changes `_E14_RUN` (D-024).
+
+**AMENDMENT (2026-09-27, D-034 / E18).** The 0.576 above used the non-causal whole-day threshold.
+The quoted deployable number is now **F1 0.608 for the submission checkpoint, 0.52-0.61 over three
+seeds, at 16.8 % of windows alarmed (precision 0.614, FPR 0.078)**, with the causal expanding budget.
+0.576 may appear only labelled as a non-causal upper bound.
 
 ---
 

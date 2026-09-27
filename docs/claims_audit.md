@@ -22,4 +22,5 @@ This document audits claims across the repository to ensure they match our lates
 | E17 method: "fitted on a day with no positives, or in-sample on the day being tested" | `research.md`, `research/early-warning-nulls.md` | **Fixed**: E17 fitted on each checkpoint's own training days (in-sample), then applied to the held-out day |
 | "pre-registration drifted from cross-entropy to NLL ... lowering the bar" | `research.md`, `research/early-warning-nulls.md` | **Fixed**: no cross-entropy stage existed. The bar named NLL, which E5 never recorded (the wording came from the orchestrator's card); an either/or gate; a Friday clause nothing could pass. All three were fixed before any E10 number was read |
 | "probability" in the dashboard and the deck | `frontend/`, `docs/presentation.md` | **Open**: H-16 (branch `h16`) and S-6b |
-
+| "F1 0.576 at 2.7 % FPR", "precision 0.959 at a 5 % budget" as deployable | `docs/architecture.md`, `docs/demo_script.md`, D-020, D-021 | **Fixed (E18)**: both used a threshold over the whole day, future windows included. Causal: F1 0.608 (0.52-0.61) at 7.8 % FPR and 16.8 % of windows alarmed; the 5 % precision becomes 0.661. 0.576 is quoted only as a non-causal upper bound |
+| The dashboard threshold and the model card | `engine/predict.py`, `backend/inference.py` | **Open**: still whole-capture (G-9) |

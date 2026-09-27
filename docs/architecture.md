@@ -100,19 +100,24 @@ afterthought.
 
 ## 6. Results (held-out infiltration day; tables and commands in `results.md`)
 
-Every NetWM number is the `p_max` alarm statistic at the 10 % alert budget (D-019, D-020). The
-shipped checkpoint is quoted with the range its method gives over three training seeds (D-032).
+Every NetWM number is the `p_max` alarm statistic (D-019). The threshold is the **causal** alert budget:
+the 90th percentile of the scores seen so far that day, never of windows still to come (D-034, E18).
+The shipped checkpoint is quoted with the range its method gives over three training seeds (D-032).
 
 | Thursday fold (base rate 0.171) | LR baseline (E3) | **NetWM r2, shipped** (E14) | same method, 3 seeds (E10) |
 |---|---:|---:|---:|
 | PR-AUC | 0.139 | **0.640** | 0.37-0.64 |
 | ROC-AUC | 0.379 | **0.827** | 0.73-0.83 |
-| F1 at a deployable threshold | 0.011 (own threshold) | **0.576** | 0.43-0.57 |
-| FPR at that threshold | 0.608 (oracle) | **0.027** | 0.03-0.05 |
+| F1 at a deployable threshold | 0.011 (own threshold) | **0.608** | 0.52-0.61 |
+| precision / recall | - | **0.614 / 0.602** | 0.54-0.64 / 0.50-0.60 |
+| FPR, windows alarmed | 0.608 (oracle) | **0.078, 16.8 %** | 0.06-0.09, 13-17 % |
 | episodes warned early | 0 / 4 | 0 / 4 | - |
 
-Even the weakest seed (F1 0.43) is about 40x the baseline. Friday, whose only compromise is a C2
-family seen on no training day, is F1 0.000 on every seed.
+Even the weakest seed (F1 0.52) is about 50x the baseline. E14's 0.576 at 2.7 % FPR used a threshold
+taken over the whole day, future windows included; it is an upper bound, not a deployable number.
+The causal threshold keeps the signal but not the budget: it alarms on 16.8 % of windows, not 10 %
+(E18). Friday, whose only compromise is a C2 family seen on no training day, is near zero under
+every threshold.
 
 Open-loop rollout beats the persistence floor averaged over steps 2-10, on both held-out days and
 every training seed (E10). It loses at k = 1: one step ahead, "nothing changes" is still the better

@@ -26,6 +26,7 @@ the commentary column.
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
 | E10 | ablations | 9 retrained runs (`e10-*`), 3 seeds | `run_y4_ablation.bat` -> `rescore_pmax.py --run e10-*` -> `e10_collect.py` | `results/tables/e10_ablation_summary.csv` | neither component passes D-030; the multi-step loss earns detection (2 of 3 seeds), not rollout; headline F1 spans 0.43-0.57 over seeds |
 | E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves held-out Thursday and fails held-out Friday (worse than a constant forecast); budget stays |
+| E18 | causal alert budget (G-8) | r2 + E10 seeds, published scores | `python scripts/threshold_eval.py` (D-034) | `results/tables/e18_*`, `results/figures/e18_*` | the causal expanding q90 keeps the signal (Thursday F1 0.608, 0.52-0.61 over seeds) but alarms 16.8 % of windows at FPR 0.078; the non-causal 0.576 is an upper bound only; the 5 % precision 0.959 does not survive |
 
 ## Planned experiment set (M1)
 
@@ -979,3 +980,72 @@ It stays in the model, described for what it does.
 
 Artefacts: `results/tables/e10_ablation_summary.csv`, `results/tables/e14_pmax_rescore_e10-*.csv`,
 `results/runs/e10-*`, `results/runs/e14-pmax-rescore-e10-*`.
+
+---
+
+## E18 - A causal alert budget (G-8): the signal survives, the 10 % budget does not
+
+```
+python scripts/threshold_eval.py      # pre-registered in D-034 (e87a8aa) before this was run
+```
+Scores: the held-out `p_max` scores E14 published for r2 and the three E10 full seeds. No
+re-inference, so the whole-capture row reproduces E14 exactly (F1 0.5758). r2's training-day scores
+were recomputed with E14's exact procedure; the held-out scores recomputed alongside matched the
+published ones, so these are E14's own training-day scores. Label: `y_within_K`; lead time as in E14.
+
+**Why this was run.** E14's deployable threshold, the one behind 0.576, is the 90th percentile of the
+*whole* held-out day, windows after the one being judged included. So is the dashboard's
+(`engine/predict.py`). A live sensor has only the past.
+
+### Held-out Thursday, r2 checkpoint (seed range from the E10 full seeds in brackets)
+
+| policy | causal | alarm rate | precision | recall | F1 | FPR | warned early |
+|---|:---:|---:|---:|---:|---:|---:|---:|
+| whole-capture q90 (E14) | **no** | 0.101 | 0.776 | 0.458 | 0.576 [0.43-0.57] | 0.027 | 0/4 |
+| **expanding q90 - primary** | yes | **0.168** [0.13-0.17] | **0.614** [0.54-0.64] | **0.602** [0.50-0.60] | **0.608** [0.52-0.61] | **0.078** [0.06-0.09] | 2/4, p = 0.33 |
+| trailing-120 q90 | yes | 0.135 | 0.397 | 0.313 | 0.350 [0.31-0.35] | 0.098 | 0/4 |
+| trailing-60 q90 | yes | 0.161 | 0.308 | 0.289 | 0.298 [0.18-0.30] | 0.134 | 0/4 |
+| expanding q95 | yes | 0.131 | 0.661 | 0.506 | 0.573 [0.23-0.57] | 0.053 | 1/4 |
+| training-day q95 | yes | 0.000 | 0 | 0 | 0.000 | 0.000 | 0/4 |
+
+Friday: every policy is near zero, as in E14. The expanding q90 gives F1 0.061. The trailing-60 gives
+0.251 and warns 1 of 1 (p = 0.29), but it scores 0.30 on Thursday, and per D-034 a secondary policy
+cannot be adopted on one fold's result.
+
+### What E18 shows
+
+1. **The detection signal survives a real-time threshold.** On the pre-registered primary policy,
+   Thursday F1 is 0.608 on the shipped checkpoint (0.52-0.61 over three seeds), against the
+   non-causal 0.576 (0.43-0.57). The Thursday plot (`e18_thursday_thresholds.png`) shows why.
+   The expanding threshold is built from a quiet day, so it sits near 0.005 when the attack starts
+   and lets the attack's lower-scoring windows through. The whole-capture threshold (0.0455) is
+   partly set *by* the attack: a tenth of the "whole day" is the attack's own high scores. So the
+   causal version buys recall (0.46 -> 0.60) with precision (0.78 -> 0.61).
+2. **What it no longer is: a 10 % budget.** It fires on 16.8 % of windows, and the FPR roughly
+   triples (0.027 -> 0.078). A percentile of a day's *past* is not a cap on its future alert volume.
+   Wherever "at a 10 % alert budget" and "2.7 % FPR" were quoted, the deployable figures are now
+   16.8 % of windows alarmed at 7.8 % FPR.
+3. **The 5 % figure does not survive.** D-021's precision 0.959 at a 5 % budget becomes 0.661 under
+   the causal q95, and its F1 is unstable across seeds (0.23-0.57).
+4. **No early warning.** The primary's 2 of 4 warned early is chance: a circular-shift null of the
+   same alarm sequence averages 0.97 and reaches 3 at its 95th percentile, p = 0.33. It meets no
+   clause of D-023.
+5. **Why a training-day threshold fires nothing** (`e18_score_distributions.png`,
+   `e18_score_distributions.csv`). The in-sample training-day scores reach 0.99 (q95 0.517), while
+   held-out Thursday tops out at 0.47 (q95 0.182). Held-out Friday is the opposite: its top 10 % sits
+   at 0.94-0.99 on windows that are not compromise, the over-forecast E17 found.
+6. **Trailing windows are worse on Thursday** (0.30-0.35). A sustained attack fills the trailing hour
+   and raises its own threshold, the saturation E16 saw with trailing rank.
+
+**Commitment (D-034).** Everywhere D-032 applies, the deployable Thursday number becomes **F1 0.608
+(0.52-0.61 over three seeds) at 16.8 % of windows alarmed, precision 0.614, FPR 0.078**, with the
+causal expanding budget. 0.576 may be quoted only as a non-causal upper bound. The dashboard still
+computes the non-causal threshold until the product card lands.
+
+Artefacts:
+- `results/tables/e18_window_scores_e4e7-worldmodel-r2_{thursday,friday}.csv`: per window, the
+  score, label, stage, every policy's threshold and alarm.
+- `results/tables/e18_score_distributions.csv`, `results/tables/e18_policy_summary.csv` (all runs x
+  days x policies).
+- `results/figures/e18_{thursday,friday}_thresholds.png`, `results/figures/e18_score_distributions.png`.
+
