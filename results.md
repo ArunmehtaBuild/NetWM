@@ -35,6 +35,7 @@ the commentary column.
 | E24 | Model A vs Model B | E22 stack, 3 seeds | `run_m1v2.sh e24a ...` + scorecard | `results/tables/scorecard_e24.csv` | **the latent dynamics earn anticipation**: B beats A on all seeds (S2\* +0.096, precision +0.20) |
 | E20r | flow-only vs flow + real packets | 5 folds x 3 seeds | `run_m1v2.sh e20r ... data/processed/cicids2017_m1v2p` | `results/tables/scorecard_e20r.csv` | packets do **not** help anticipation (S2\* 0.642 vs 0.651); they **do** help detection: Thursday PR-AUC 0.56 [0.42-0.71] vs 0.43 |
 | E25 | M2, CTU-13 leave-one-family-out | 7 folds, seed 42 | `train.py --data data/processed/ctu13 --group-folds configs/ctu13_folds.yaml` | `results/tables/scorecard_e25.csv` | anticipation does **not** transfer across botnet families (S2\* 0.551); detection transfers to Neris/NSIS/Virut (ROC-AUC 0.85-0.99) and inverts on Murlo/Sogou |
+| E26 | E22 + real packets, one model for CSV and PCAP (D-037) | 5 folds x 3 seeds, two input modes | `run_m1v2.sh e26 ...` + `scripts/ablation_matrix.py` | `results/tables/e26_ablation_*.csv`, `results/runs/e26-ship-decision/` | **does not compose**: detection +0.054 PR-AUC, anticipation -0.041 (bar -0.03) -> outcome 3, r2 stays shipped; LR ranks pre-onset windows at 0.659, level with round 2; inference state == training state on real Thursday (0 of 103k cells differ) |
 | E18 | causal alert budget (G-8) | r2 + E10 seeds, published scores | `python scripts/threshold_eval.py` (D-034) | `results/tables/e18_*`, `results/figures/e18_*` | the causal expanding q90 keeps the signal (Thursday F1 0.608, 0.52-0.61 over seeds) but alarms 16.8 % of windows at FPR 0.078; the non-causal 0.576 is an upper bound only; the 5 % precision 0.959 does not survive |
 
 ## Planned experiment set (M1)
@@ -1395,3 +1396,87 @@ Artefacts:
 - `results/tables/scorecard_e25.csv` and `results/runs/scorecard-e25/`;
 - `results/runs/e25-ctu13-s42/`, `models/e25-ctu13-s42/<family>.pt`;
 - `results/runs/m1v2-sweep-logs/e25-ctu13-s42{,.interrupted}.log`, `results/runs/f6-ctu13-build/build.log`.
+
+---
+
+## E26 - do E22 and real packets compose? One model for CSV and PCAP inputs (D-037)
+
+```
+bash scripts/run_m1v2.sh e26 configs/m1v2/e26_combined.yaml data/processed/cicids2017_m1v2p   # + <run>-csvmode
+python scripts/lr_baseline.py --data data/processed/cicids2017_m1v2 --model-config configs/m1v2/e19_base.yaml \
+    --test-days monday tuesday wednesday thursday friday --run lr-flow-s42
+python scripts/parity_check.py --day thursday --pcap D:/CIC-2017-PCAP/Thursday-WorkingHours.pcap
+python scripts/ablation_matrix.py                                                              # matrix + bar
+```
+
+**E26 is E22 (RSSM + factorised target) plus the 18 real-capture `pcap_` features and `has_pcap`,**
+106 inputs in all. It is trained with packet dropout 0.3, so one model serves both inputs. Every
+held-out day is scored twice: with packets, and in CSV form (packets absent). The reference point is
+frozen in `results/runs/reference-m1-2026-09-28/manifest.json` (tag `ref-m1-2026-09-28`).
+
+**Parity, checked on real data before the result was read.** For a whole real day, Thursday, the state
+the API builds matches the training matrix in both modes: 972 windows x 106 inputs, **0 mismatched
+cells**. The CSV path goes through `read_flow_csv`. The PCAP path puts the 8.3 GB capture through the
+engine's packet code (`results/runs/parity-thursday/`). The flow converter now emits the 8 per-flow
+columns behind the CSV packet block, so a PCAP upload builds the same 17 `pkt_` features as training.
+
+### The ablation matrix (mean of seeds 42/43/44; LR is deterministic)
+
+| row | S1 precision | S1 FPR | S2 0-2 / 2-4 / 4-6 / 6-10 min | **S2\*** | isolated | Thu PR-AUC | Thu F1 causal | Fri PR-AUC | rollout gain Thu / Fri | S3 |
+|---|---:|---:|---|---:|---:|---:|---:|---:|---|---|
+| LR flow-only | 0.122 | 0.104 | 0.69 / 0.64 / 0.72 / 0.61 | **0.659** | 0.663 | 0.139 | 0.112 | 0.156 | - | not met |
+| E19 flow-only (r2 method) | 0.325 | 0.120 | 0.69 / 0.69 / 0.66 / 0.60 | **0.651** [0.63-0.68] | 0.631 | 0.434 | 0.514 | 0.120 | +0.162 / +0.144 | not met |
+| E22 flow + CSV-pkt, factorised | 0.322 | 0.115 | 0.76 / 0.75 / 0.70 / 0.65 | **0.704** [0.66-0.75] | 0.670 | 0.389 | 0.499 | 0.156 | +0.166 / +0.207 | not met |
+| E20r flow + real packets | 0.376 | 0.122 | 0.68 / 0.68 / 0.65 / 0.60 | **0.642** [0.60-0.68] | 0.632 | **0.564** | **0.618** | 0.131 | +0.165 / +0.247 | not met |
+| E24a no latent dynamics | 0.119 | 0.125 | 0.65 / 0.64 / 0.64 / 0.55 | **0.608** [0.58-0.65] | 0.574 | 0.222 | 0.146 | 0.105 | - | not met |
+| **E26 PCAP mode** | **0.375** | 0.114 | 0.67 / 0.68 / 0.69 / 0.62 | **0.663** [0.62-0.69] | 0.618 | 0.444 [0.42-0.46] | 0.546 | **0.234** | +0.055 / +0.104 | not met |
+| **E26 CSV mode** | 0.192 | 0.134 | 0.72 / 0.73 / 0.74 / 0.71 | **0.727** [0.69-0.75] | 0.685 | 0.358 [0.27-0.46] | 0.319 | 0.146 | -0.337 / -0.239 | not met |
+
+*Rollout gain is the mean over k = 2..10 of (persistence MSE - world-model MSE); positive means the
+open-loop rollout beats "nothing changes".*
+
+### The composition bar and the ship decision (pre-registered in D-037)
+
+| clause, E26 PCAP mode vs E22 | result | bar | |
+|---|---|---|---|
+| (a) anticipation preserved | S2\* **-0.041** (-0.013 / -0.068 / -0.041) | >= -0.03 | **fails** |
+| (b) detection added | Thursday PR-AUC **+0.054** (+0.071 / +0.042 / +0.051) | >= +0.05, >= 2 of 3 seeds | passes |
+| (c) alarm cost | precision +0.053, FPR -0.000 | | passes |
+| (d) stability | min Thursday PR-AUC 0.42 in PCAP mode, 0.27 in CSV mode | >= 0.20 | passes |
+| (e) still a world model | rollout beats persistence on 3 of 3 seeds | >= 2 of 3 | passes |
+
+**Outcome 3: the two gains do not compose on anticipation. r2 stays shipped; E22 (anticipation) and
+E20r (detection) remain separate references.** The miss is 0.011 below the bar. D-037 forbids
+reading it any other way after the fact, and forbids a tuning sweep.
+
+### Diagnosis (descriptive; nothing tuned)
+
+1. **The packet block acts as current-state evidence.**
+   - E26 with packets loses its anticipation on the two compromise days: S4 on Thursday falls from
+     0.707 to 0.637, and on Friday from 0.684 to 0.628. It gains on Tuesday and Wednesday.
+   - The *same weights* in CSV mode rank the run-up at 0.727, and Thursday's at **0.811**, the highest
+     of any row.
+   - With packets, E26 has the best Friday detection of any model on the three-seed mean: PR-AUC
+     0.234 and causal F1 0.188,
+     where every other row stays at or below 0.156 and 0.154 (E20r's best single seed reaches F1 0.285).
+   - This is E20r's finding again, inside one model. What packets add is evidence about *now*, and on
+     the infiltration and botnet days that evidence outweighs the quieter run-up.
+2. **The world-model property holds, but weaker.** The rollout still beats persistence on every seed
+   in PCAP mode, by about a third of E22's margin (+0.06 / +0.10 against +0.17 / +0.21). In CSV mode
+   the rollout is *worse* than persistence (-0.34 / -0.24). The dynamics were learned on packet-bearing
+   states, and predicting the packet block from a masked state is what fails. **The CSV-mode forecasts
+   are therefore not world-model rollouts to lean on, whatever their ranking score.**
+3. **The logistic-regression baseline ranks pre-onset windows as well as the round-2 world model**
+   (S2\* 0.659 against 0.651). Its detection is poor: Thursday PR-AUC 0.139 and alarm precision 0.12.
+   - This qualifies E24. The latent dynamics beat a same-encoder model without them (0.608), but that
+     model is itself below LR.
+   - The world model's anticipation edge over LR comes from the factorised target: E22 reaches 0.704,
+     +0.045 over LR. What sets it apart from LR is detection at a usable alarm cost: precision 0.32
+     against 0.12, and Thursday PR-AUC 0.39-0.56 against 0.14.
+4. **Early warning (S3) is met by no row**, including LR. The claim stays "ranks pre-attack windows
+   above background", per D-021.
+
+Artefacts:
+- `results/tables/e26_ablation_matrix.csv` (per run) and `e26_ablation_summary.csv`;
+- `results/runs/e26-ship-decision/metrics.json` (the bar's verdict);
+- `results/runs/m1v2-e26-s4*{,-csvmode}/`, `results/runs/lr-flow-s42/`, `results/runs/parity-thursday/`.

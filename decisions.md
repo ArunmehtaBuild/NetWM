@@ -1427,3 +1427,17 @@ mode that such a change is designed to fix.
   used, so commits made during a sweep relabelled folds; E19's checkpoints carry three SHAs.
 - `--resume` no longer rewrites a checkpoint. The five resumed E25 folds were re-stamped `df2c6ef`,
   and the manifest reads their true training SHA, `bb36594`, from the interrupted log.
+
+**D-037 OUTCOME, E26 (2026-09-28).** The composition bar fails on clause (a): S2\* is -0.041 against
+E22 (bar -0.03). Clauses (b) to (e) pass: Thursday PR-AUC +0.054 on all seeds, precision +0.053,
+stable in both modes, rollout beats persistence on 3 of 3 seeds. **Ship outcome 3: r2 stays shipped.
+E22 is the anticipation reference and E20r the detection reference; no tuning.**
+
+Diagnosis, recorded as description: the packet block acts as current-state evidence. The loss sits on
+Thursday and Friday, and the same weights in CSV mode rank the run-up at 0.727. **CSV mode's rollout
+is worse than persistence**, so its forecasts are not world-model rollouts.
+
+**New baseline fact:** logistic regression ranks pre-onset windows at 0.659, level with round 2
+(0.651). The world model's anticipation edge over LR is the factorised target (+0.045). Its
+detection edge is large: PR-AUC 0.39-0.56 against 0.14.
+
