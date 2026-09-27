@@ -186,6 +186,10 @@ def _load_fallback_fixture(day_or_name: str = "thursday") -> dict[str, Any]:
     with open(fixture_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     data["mock"] = True
+    in_sample = any(d in day_or_name.lower() for d in ["monday", "tuesday", "wednesday"])
+    data["in_sample"] = in_sample
+    if "source" in data and isinstance(data["source"], dict):
+        data["source"]["in_sample"] = in_sample
     return data
 
 
@@ -214,6 +218,12 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
         payload = analyze_file(demo_csv_path, ckpt, **kwargs)
         payload["job_id"] = job.id
         payload["mock"] = False
+
+        train_days = [str(d).lower() for d in ckpt.get("train_days", [])] if isinstance(ckpt, dict) else []
+        is_in_sample = str(day).lower() in train_days
+        payload["in_sample"] = is_in_sample
+        if "source" in payload and isinstance(payload["source"], dict):
+            payload["source"]["in_sample"] = is_in_sample
 
         with open(result_file, "w", encoding="utf-8") as f:
             json.dump(payload, f)

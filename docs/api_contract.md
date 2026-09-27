@@ -54,7 +54,7 @@ that window*: `p_cum[k-1]` = P(compromise within k windows), with `p_lo` / `p_hi
 {
   "job_id": "j_7f3a", "source": {"filename": "thursday_slice.csv", "kind": "csv",
     "flows": 362076, "windows": 972, "t0": "2017-07-06T11:59:00Z", "window_s": 60, "stride_s": 30},
-  "threshold": 0.5, "horizon_k": 10,
+  "threshold": 0.5, "horizon_k": 10, "in_sample": false,
   "timeline": [
     {
       "t": 417, "ts": "2017-07-06T17:17:30Z",

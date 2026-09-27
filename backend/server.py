@@ -228,10 +228,11 @@ async def stream_job_replay(
     request: Request,
     job_id: str,
     speed: float = Query(4.0, ge=0.1, le=100.0, description="Replay rate in windows/second"),
+    from_window: int = Query(0, ge=0, alias="from", description="Starting window index t"),
 ) -> StreamingResponse:
     """SSE replay stream for the dashboard play/pause scrubber.
     
-    Streams timeline entries window-by-window at the requested speed.
+    Streams timeline entries window-by-window at the requested speed starting from `from_window`.
     """
     job = job_store.get_job(job_id)
     if not job:
@@ -246,6 +247,8 @@ async def stream_job_replay(
         raise APIError("internal", f"Failed reading job result cache: {exc}")
 
     timeline = payload.get("timeline", [])
+    if from_window > 0:
+        timeline = [entry for entry in timeline if entry.get("t", 0) >= from_window]
     delay_s = 1.0 / speed
 
     async def event_generator() -> AsyncGenerator[str, None]:

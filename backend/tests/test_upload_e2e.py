@@ -7,6 +7,7 @@ never saw the file) reach the board as done. These tests must reach ``state == "
 from __future__ import annotations
 
 import io
+from pathlib import Path
 import time
 
 import numpy as np
@@ -22,6 +23,17 @@ from netwm.data.cicids2017 import COLUMN_MAP
 client = TestClient(app)
 
 needs_model = pytest.mark.skipif(get_checkpoint() is None, reason="no checkpoint in models/")
+
+try:
+    from netwm.features.flow_aggregator import pcap_to_flows
+    has_pcap_aggregator = True
+except Exception:
+    has_pcap_aggregator = False
+
+needs_pcap = pytest.mark.skipif(
+    not has_pcap_aggregator,
+    reason="PCAP flow aggregator not importable (scapy or flow_aggregator missing)",
+)
 
 
 def _synthetic_flow_csv(minutes: int = 20, flows_per_min: int = 40, seed: int = 42) -> bytes:
@@ -65,6 +77,49 @@ def test_upload_csv_runs_real_inference() -> None:
     assert payload["mock"] is False
     assert len(payload["timeline"]) > 0
     assert payload["source"]["filename"] == "upload_test.csv"
+
+
+def _synthetic_pcap_bytes(packet_count: int = 50, step_seconds: float = 20.0) -> bytes:
+    """A small synthetic PCAP containing valid IP/TCP packets across ~15-20 minutes."""
+    from scapy.all import Ether, IP, TCP, wrpcap
+    from tempfile import NamedTemporaryFile
+
+    base_time = 1499342400.0  # 2017-07-06 12:00:00 UTC
+    packets = []
+    for i in range(packet_count):
+        pkt = Ether() / IP(src="192.168.10.14", dst="205.174.165.80") / TCP(sport=1024 + i, dport=80, flags="S")
+        pkt.time = base_time + i * step_seconds
+        packets.append(pkt)
+
+    with NamedTemporaryFile(suffix=".pcap", delete=False) as tmp:
+        tmp_name = tmp.name
+    try:
+        wrpcap(tmp_name, packets)
+        data = Path(tmp_name).read_bytes()
+    finally:
+        Path(tmp_name).unlink(missing_ok=True)
+    return data
+
+
+@needs_model
+@needs_pcap
+def test_upload_pcap_runs_real_inference() -> None:
+    """Task R-11: PCAP end-to-end upload test matching the CSV upload coverage."""
+    resp = client.post(
+        "/api/analyze",
+        files={"file": ("upload_test.pcap", io.BytesIO(_synthetic_pcap_bytes()), "application/vnd.tcpdump.pcap")},
+    )
+    assert resp.status_code == 202
+    job_id = resp.json()["job_id"]
+
+    status = _wait(job_id)
+    assert status["state"] == "done", status
+
+    payload = client.get(f"/api/jobs/{job_id}/result").json()
+    assert payload["mock"] is False
+    assert len(payload["timeline"]) > 0
+    assert payload["source"]["filename"] == "upload_test.pcap"
+    assert payload["source"]["kind"] == "pcap"
 
 
 @needs_model

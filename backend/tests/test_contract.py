@@ -51,6 +51,7 @@ def test_fixtures_contract_compliance(fixture_name: str) -> None:
     # 3. Explicit key presence checks
     assert payload.payload_version == "1.1"
     assert payload.alarm_statistic in {"p_max", "p_max (mean path)"}
+    assert payload.in_sample is False
     assert len(payload.stages) == 7
     assert len(payload.timeline) > 0
     assert payload.source.windows == len(payload.timeline)
@@ -68,6 +69,10 @@ def test_fixtures_contract_compliance(fixture_name: str) -> None:
         assert 0.0 <= alarm.p <= 1.0
 
 
+@pytest.mark.skipif(
+    not (settings.repo_root / "data" / "demo" / "thursday_infiltration.csv").exists(),
+    reason="Demo slice thursday_infiltration.csv missing (clean checkout without generated data)",
+)
 def test_engine_output_contract_compliance(tmp_path: Path) -> None:
     """Verify freshly produced payload from the engine matches the contract."""
     from backend.inference import get_checkpoint
@@ -96,3 +101,32 @@ def test_engine_output_contract_compliance(tmp_path: Path) -> None:
     payload = AnalysisResultPayload.model_validate(fresh_data)
     assert payload.payload_version == "1.1"
     assert len(payload.timeline) > 0
+
+
+def test_in_sample_flag_contract_semantics() -> None:
+    """Task R-12: in_sample flag contract test.
+
+    Verifies that:
+    1. Static evaluation fixtures (Thursday/Friday) are marked in_sample = False (held-out days).
+    2. Fallback fixtures and demo payloads evaluate in_sample = True for training days (e.g. Monday),
+       and in_sample = False for held-out evaluation days (Thursday, Friday).
+    """
+    from backend.inference import _load_fallback_fixture
+
+    # Held-out days evaluate to in_sample = False
+    thu_data = _load_fallback_fixture("thursday")
+    assert thu_data.get("in_sample") is False
+    thu_payload = AnalysisResultPayload.model_validate(thu_data)
+    assert thu_payload.in_sample is False
+
+    fri_data = _load_fallback_fixture("friday")
+    assert fri_data.get("in_sample") is False
+    fri_payload = AnalysisResultPayload.model_validate(fri_data)
+    assert fri_payload.in_sample is False
+
+    # Training days evaluate to in_sample = True
+    mon_data = _load_fallback_fixture("monday")
+    assert mon_data.get("in_sample") is True
+    mon_payload = AnalysisResultPayload.model_validate(mon_data)
+    assert mon_payload.in_sample is True
+
