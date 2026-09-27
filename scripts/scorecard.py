@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -232,7 +233,7 @@ def main() -> None:
         for run in runs.split(","):
             row = score_run(run, ds, args.shifts)
             row["variant"] = name
-            row["seed"] = int(run.rsplit("-s", 1)[-1])
+            row["seed"] = int(re.search(r"-s(\d+)(?:-|$)", run).group(1))  # m1v2-e26-s42-csvmode -> 42
             rows.append(row)
             print(f"{name:6s} {run:24s} S1 prec={row['S1_precision']:.3f} fpr={row['S1_fpr']:.3f} | "
                   f"S2 {[row[f'S2_{b}'] for b in BINS]} S2*={row['S2_star']:.3f} | worst day {row['S4_worst_day']} | "
