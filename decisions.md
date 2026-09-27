@@ -1106,3 +1106,14 @@ best of five policies on one held-out fold would be tuning the threshold on the 
 dashboard's threshold moves to the primary policy, which makes the threshold a per-window series in
 the API.
 
+**AMENDMENT (2026-09-27, G-9) - the product now runs the primary policy.** `netwm.metrics.causal_threshold`
+is the single implementation; `scripts/threshold_eval.py` calls it and reproduces every published E18
+table byte for byte, and `engine/predict.py` calls it for every upload and demo. Checkpoints that name
+`self-budget-10pct` are served as `expanding-10pct`. The payload carries the threshold per window
+(API contract v1.2) and the dashboard draws it as a stepped curve. The model card reads E18's primary
+row (F1 0.608, FPR 0.078) from `results/runs/e18-causal-threshold-e4e7-worldmodel-r2/`, with PR-AUC
+from E14. Its lead time stays 0: E18's 2 of 4 does not beat the null. The payload's
+`lead_time_summary` now carries D-022's circular-shift null on its own alarm series, and the alarm
+panel may only say "verified" when `beats_null` is true. On the full Thursday payload it reproduces
+E18's null exactly (chance 0.97 of 4, p = 0.331).
+

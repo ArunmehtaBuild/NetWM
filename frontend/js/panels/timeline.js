@@ -160,7 +160,12 @@ export class TimelinePanel {
     const labels = timeline.map((w) => w.t);
     const pMaxData = timeline.map((w) => w.p_max);
     const thresholdValue = Number(payload.threshold);
-    const thresholdData = new Array(timeline.length).fill(thresholdValue);
+    // The deployable threshold is causal (D-034): each window has its own, set from the windows
+    // before it, and none during the warm-up. Older payloads carry only the scalar.
+    const hasSeries = timeline.some((w) => w.threshold !== undefined);
+    const thresholdData = hasSeries
+      ? timeline.map((w) => (w.threshold === null || w.threshold === undefined ? null : Number(w.threshold)))
+      : new Array(timeline.length).fill(thresholdValue);
     const surpriseData = timeline.map((w) =>
       w.surprise !== undefined && w.surprise !== null ? Number(w.surprise) : null
     );
@@ -199,11 +204,15 @@ export class TimelinePanel {
           },
           // 1: Threshold Line
           {
-            label: `Threshold: ${formatFloat(thresholdValue, 4)} (${thresholdExplanation})`,
+            label: hasSeries
+              ? `Threshold (${thresholdExplanation})`
+              : `Threshold: ${formatFloat(thresholdValue, 4)} (${thresholdExplanation})`,
             data: thresholdData,
             borderColor: "rgba(226, 87, 76, 0.8)",
             borderWidth: 1.5,
             borderDash: [5, 4],
+            stepped: hasSeries ? "before" : false,
+            spanGaps: false,
             fill: false,
             pointRadius: 0,
             pointHoverRadius: 0,
@@ -433,7 +442,10 @@ export class TimelinePanel {
                   return `Historical Risk (p_max): ${formatFloat(w.p_max, 4)} (${formatPercent(w.p_max, 1)})${alarmText}`;
                 }
                 if (dIdx === 1) {
-                  return `Threshold: ${formatFloat(thresholdValue, 4)} (${thresholdExplanation})`;
+                  const thr = thresholdData[idx];
+                  return thr === null
+                    ? `Threshold: warming up (no alarm in the first ${payload.threshold_warmup_windows || 20} windows)`
+                    : `Threshold: ${formatFloat(thr, 4)} (${thresholdExplanation})`;
                 }
                 if (dIdx === 4 && context.parsed.y !== null) {
                   const lo = cone.lower[idx];

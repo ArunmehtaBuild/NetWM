@@ -54,6 +54,13 @@ def main() -> None:
     )
     if args.max_windows:
         payload["timeline"] = payload["timeline"][: args.max_windows]
+    # A full-day capture named after a day the checkpoint trained on is in-sample; its own held-out
+    # day is not. Anything else is unknown and left unset (R-12, c1fcb70).
+    day = Path(args.input).stem.lower()
+    if day == ckpt.get("test_day"):
+        payload["in_sample"] = False
+    elif day in ckpt.get("train_days", []):
+        payload["in_sample"] = True
 
     alarms = payload["alarms"]
     early = [a for a in alarms if a.get("lead_windows")]

@@ -131,7 +131,7 @@ from `models/e4e7-worldmodel-r2/`, not hand-written).
 |---|---|---|
 | `payload_version` | string | `"1.1"` |
 | `alarm_statistic` | string | `"p_max"` - the statistic `alarm` and `threshold` refer to |
-| `threshold_policy` | string | `"self-budget-10pct"` (threshold = 90th percentile of this capture's own scores) or `"fixed"` |
+| `threshold_policy` | string | `"expanding-10pct"` (each window's threshold = 90th percentile of this capture's scores **before** it, D-034) or `"fixed"`. Payloads before v1.2 said `"self-budget-10pct"` (whole-capture, non-causal) |
 | `stages` | array | the stage catalogue, same shape as `GET /api/model.stages` - so a result is renderable on its own |
 
 **Per timeline entry**
@@ -155,8 +155,9 @@ from `models/e4e7-worldmodel-r2/`, not hand-written).
 Contiguous runs of one ground-truth stage, named after the attack that dominates them (attempted-only
 traffic never names a span - D-009). Use these for the shaded bands behind the timeline.
 
-**Note on `alarm`/`threshold`.** `threshold` is now computed per capture when `threshold_policy` is a
-self-budget policy, so it differs between uploads - read it from the payload, never hard-code it.
+**Note on `alarm`/`threshold`.** Since v1.2 the threshold is a per-window series under an
+`expanding-*` policy (see the v1.2 addendum), so it differs between uploads and between windows -
+read it from the payload, never hard-code it.
 Absolute probabilities do not transfer between days (E14: a threshold tuned on training days sits
 ~100x too high on a held-out day).
 
@@ -177,9 +178,9 @@ early warning", with the onset time and the score at onset) rather than an empty
 
 | file | threshold | use |
 |---|---|---|
-| `fixtures/api/thursday.json` | self-budget 10 % (0.044) | the real payload: 8 alarm runs, **0 of 4** episodes warned early |
-| `fixtures/api/friday.json` | self-budget 10 % | the real payload: 13 alarm runs, **0 of 1** warned early |
-| `fixtures/api/thursday_oracle.json` | **0.010, hand-picked from the labels** | **UI development only.** `dev_only: true`. 2 of 4 episodes warned early (leads of 5 and 10 windows, 150 s and 300 s) and 2 missed, so H-4 can be built and verified against both branches in one payload. Never quote its numbers as a result - the honest ones are in results.md E14. |
+| `fixtures/api/thursday.json` | causal expanding 10 % (D-034) | the real payload: 14 alarm runs, 164 alarmed windows; **2 of 4** episodes have an alarm before onset, which does **not** beat the null (chance 0.97 of 4, p = 0.331, `beats_null: false`) |
+| `fixtures/api/friday.json` | causal expanding 10 % | the real payload: 21 alarm runs, **0 of 1** warned early |
+| `fixtures/api/thursday_oracle.json` | **0.010, hand-picked from the labels** | **UI development only.** `dev_only: true`. 1 of 4 episodes warned early (lead 5 windows, 150 s) and 3 missed, so H-4 can be built and verified against both branches in one payload. Never quote its numbers as a result - the honest ones are in results.md E14/E18. |
 
 
 ## Deployment (the two halves ship separately)
@@ -224,3 +225,20 @@ warned (the oracle fixture said 2 in one place and 1 in the other). They now sha
 the engine over `data/demo/monday_benign.csv` - a capture with no attack in it - still produces 24
 alarms, because a top-10 % budget flags the top 10 % of *something*. The UI must show the score and
 the threshold, not a bare alarm count (D-020).
+
+### v1.2 addendum (2026-09-27, G-9) - the causal threshold
+
+The dashboard alarms on the causal alert budget D-034 pre-registered and E18 measured, computed by
+the same function (`netwm.metrics.causal_threshold`). A window's threshold is the 90th percentile of
+the capture's scores **before** it; the first 20 windows (10 minutes) cannot alarm. The whole-capture
+quantile it replaces let later windows set an earlier window's threshold, which a live sensor cannot do.
+
+| field | where | meaning |
+|---|---|---|
+| `threshold` | timeline entry | the threshold in force at this window; `null` during the warm-up. `alarm` is `p_max >= threshold` |
+| `threshold` | top level | the threshold in force at the **last** window (kept so v1.1 readers still get a number) |
+| `threshold_warmup_windows` | top level | 20 under `expanding-*`, 0 for fixed policies |
+| `threshold` | alarm row | the threshold when the run began, so "how far above" needs no scalar |
+| `null_mean`, `null_p95`, `p_value`, `beats_null` | `lead_time_summary` | D-022's 2,000-shift circular null on the same alarm series. **Only `beats_null: true` may be shown as a verified early warning**; otherwise the count is chance-level and the alarm panel says so |
+
+Draw the threshold as a stepped curve, not a horizontal line.

@@ -144,7 +144,9 @@ def test_demo_runs_real_inference_on_its_slice() -> None:
 
 def test_model_card_metrics_come_from_results() -> None:
     metrics = client.get("/api/model").json()["metrics"]
-    assert metrics["f1"] == pytest.approx(0.576, abs=1e-3)
-    assert metrics["fpr"] == pytest.approx(0.027, abs=1e-3)
+    # E18's primary row: the causal budget the dashboard applies (D-034, G-9), not E14's 0.576
+    assert metrics["f1"] == pytest.approx(0.608, abs=1e-3)
+    assert metrics["fpr"] == pytest.approx(0.078, abs=1e-3)
+    assert metrics["pr_auc"] == pytest.approx(0.640, abs=1e-3)
     assert metrics["baseline_f1"] == pytest.approx(0.011, abs=1e-3)
     assert metrics["mean_lead_time_windows"] == 0.0

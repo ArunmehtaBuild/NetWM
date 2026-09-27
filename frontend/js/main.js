@@ -48,8 +48,13 @@ function renderGlobal(state) {
   const thresholdPill = document.getElementById("thresholdPill");
   if (thresholdPill) {
     const policyDesc = explainThresholdPolicy(payload.threshold, payload.threshold_policy);
-    thresholdPill.textContent = `Threshold: ${formatFloat(payload.threshold, 4)} (${policyDesc})`;
-    thresholdPill.title = `Alarm statistic: ${payload.alarm_statistic || "p_max"} >= ${payload.threshold} · Policy: ${payload.threshold_policy} · ranked against this capture's alert budget, not a calibrated probability (E17)`;
+    const causal = String(payload.threshold_policy || "").startsWith("expanding-");
+    thresholdPill.textContent = causal
+      ? `Threshold now: ${formatFloat(payload.threshold, 4)} (${policyDesc})`
+      : `Threshold: ${formatFloat(payload.threshold, 4)} (${policyDesc})`;
+    thresholdPill.title = causal
+      ? `Alarm statistic: ${payload.alarm_statistic || "p_max"} >= each window's own threshold, set only from the windows before it (D-034) · no alarms in the first ${payload.threshold_warmup_windows || 20} windows · a ranking against this capture's alert budget, not a calibrated probability (E17)`
+      : `Alarm statistic: ${payload.alarm_statistic || "p_max"} >= ${payload.threshold} · Policy: ${payload.threshold_policy} · ranked against this capture's alert budget, not a calibrated probability (E17)`;
   }
 
   const horizonPill = document.getElementById("horizonPill");

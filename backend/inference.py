@@ -75,9 +75,12 @@ def get_checkpoint(name: Optional[str] = None) -> Optional[dict[str, Any]]:
         return None
 
 
-# The deployable operating point quoted everywhere (results.md, E14): Thursday fold, p_max,
-# self-budget-10pct threshold, against the E3 logistic-regression baseline at its train-tuned
-# threshold on the same fold. Read from the run folders so the API can never drift from them.
+# The deployable operating point quoted everywhere (results.md, E18, D-032 amendment): Thursday
+# fold, p_max, the causal expanding 10 % budget the dashboard itself applies (D-034, G-9), against
+# the E3 logistic-regression baseline at its train-tuned threshold on the same fold. PR-AUC is
+# threshold-free and comes from E14, which scored the same arrays. Read from the run folders so the
+# API can never drift from them.
+_E18_RUN = "e18-causal-threshold-e4e7-worldmodel-r2"
 _E14_RUN = "e14-pmax-rescore-e4e7-worldmodel-r2"
 _E3_RUN = "e2e3-baselines-lags0"
 
@@ -97,16 +100,19 @@ def load_headline_metrics() -> dict[str, float]:
     """Model-card metrics, sourced from results/runs/ (zeros only if a run folder is missing)."""
     metrics = {k: 0.0 for k in ("f1", "precision", "recall", "fpr", "pr_auc",
                                 "mean_lead_time_windows", "baseline_f1")}
-    wm = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
+    wm = _find_row(_E18_RUN, run="e4e7-worldmodel-r2", test_day="thursday", policy="expanding-10pct")
     if wm:
         metrics.update(
             f1=round(wm["f1"], 3),
             precision=round(wm["precision"], 3),
             recall=round(wm["recall"], 3),
             fpr=round(wm["fpr"], 3),
-            pr_auc=round(wm["pr_auc"], 3),
-            mean_lead_time_windows=float(wm["mean_lead_windows"]),
         )
+        # mean_lead_time_windows stays 0.0: E18's 2 of 4 early warnings do not beat the
+        # circular-shift null (p = 0.33), and a count that does not is not a result (D-022).
+    ranking = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
+    if ranking:
+        metrics["pr_auc"] = round(ranking["pr_auc"], 3)
     base = _find_row(_E3_RUN, experiment="E3", target="forecast",
                      test_day="thursday", threshold_mode="train-tuned")
     if base:

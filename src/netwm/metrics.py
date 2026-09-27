@@ -73,10 +73,40 @@ def alarm_rate(y_score: np.ndarray, threshold: float) -> float:
     return float((np.asarray(y_score, dtype=float) >= threshold).mean())
 
 
+#: D-034: windows of history before the causal alert budget may fire (20 x 30 s = 10 minutes), so the
+#: first quantile is not taken over a handful of windows.
+CAUSAL_WARMUP = 20
+
+
+def causal_threshold(
+    score: np.ndarray,
+    quantile: float = 0.90,
+    warmup: int = CAUSAL_WARMUP,
+    trailing: int | None = None,
+) -> np.ndarray:
+    """Per-window alert-budget threshold that uses only the windows before ``t`` (D-034, E18).
+
+    ``threshold[t]`` is the ``quantile`` of ``score[:t]`` (or of the last ``trailing`` windows before
+    ``t``), and ``inf`` - no alarm possible - while ``t < warmup``. The whole-capture quantile it
+    replaces let windows after ``t`` set ``t``'s threshold, which a live sensor cannot do.
+
+    The one implementation of the policy: ``scripts/threshold_eval.py`` (E18) and the dashboard
+    (``engine/predict.py``) both call it, so the product alarms on exactly the rule E18 measured.
+    ``score >= threshold`` works element-wise wherever a scalar threshold did, including
+    :func:`lead_times` and :func:`forecast_metrics`.
+    """
+    score = np.asarray(score, dtype=float)
+    thr = np.full(len(score), np.inf)
+    for t in range(warmup, len(score)):
+        lo = 0 if trailing is None else max(0, t - trailing)
+        thr[t] = np.quantile(score[lo:t], quantile)
+    return thr
+
+
 def lead_times(
     y_score: np.ndarray,
     onsets: "list[int]",
-    threshold: float,
+    threshold: "float | np.ndarray",
     horizon: int,
     persistence: int = 1,
     eligible: np.ndarray | None = None,
