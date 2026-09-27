@@ -1,0 +1,89 @@
+
+== m1v2-e19-s43 / friday (held out; trained on ['monday', 'tuesday', 'wednesday', 'thursday'])
+col_0                BENIGN  RECONNAISSANCE  INITIAL_ACCESS  LATERAL_MOVEMENT  COMMAND_AND_CONTROL  EXFILTRATION  IMPACT
+row_0                                                                                                                   
+BENIGN                  495              29             165                54                    0             0      16
+RECONNAISSANCE            3               5              15                27                    0             0       2
+INITIAL_ACCESS            0               0               0                 0                    0             0       0
+LATERAL_MOVEMENT          0               0               0                 0                    0             0       0
+COMMAND_AND_CONTROL      78               0              38                 0                    0             0       0
+EXFILTRATION              0               0               0                 0                    0             0       0
+IMPACT                    1               0               0                 0                    0             0      40
+{'accuracy': 0.5579, 'hostile_windows': 209, 'hostile_stage_accuracy': 0.2153, 'hostile_detected': 0.6077, 'benign_false_stage': 0.3478, 'stages_present_not_in_training': [np.str_('COMMAND_AND_CONTROL')]}
+
+== m1v2-e19-s43 / monday (held out; trained on ['tuesday', 'wednesday', 'thursday', 'friday'])
+col_0                BENIGN  RECONNAISSANCE  INITIAL_ACCESS  LATERAL_MOVEMENT  COMMAND_AND_CONTROL  EXFILTRATION  IMPACT
+row_0                                                                                                                   
+BENIGN                  888              11              47                 8                   20             0       0
+RECONNAISSANCE            0               0               0                 0                    0             0       0
+INITIAL_ACCESS            0               0               0                 0                    0             0       0
+LATERAL_MOVEMENT          0               0               0                 0                    0             0       0
+COMMAND_AND_CONTROL       0               0               0                 0                    0             0       0
+EXFILTRATION              0               0               0                 0                    0             0       0
+IMPACT                    0               0               0                 0                    0             0       0
+{'accuracy': 0.9117, 'hostile_windows': 0, 'hostile_stage_accuracy': None, 'hostile_detected': None, 'benign_false_stage': 0.0883, 'stages_present_not_in_training': []}
+
+== m1v2-e19-s43 / thursday (held out; trained on ['monday', 'tuesday', 'wednesday', 'friday'])
+col_0                BENIGN  RECONNAISSANCE  INITIAL_ACCESS  LATERAL_MOVEMENT  COMMAND_AND_CONTROL  EXFILTRATION  IMPACT
+row_0                                                                                                                   
+BENIGN                  721              12               0                 0                    0             0       3
+RECONNAISSANCE            1               1               0                 0                    0             0       0
+INITIAL_ACCESS          110               3               9                 0                    0             0       4
+LATERAL_MOVEMENT         30              69               0                 0                    0             0       9
+COMMAND_AND_CONTROL       0               0               0                 0                    0             0       0
+EXFILTRATION              0               0               0                 0                    0             0       0
+IMPACT                    0               0               0                 0                    0             0       0
+{'accuracy': 0.7521, 'hostile_windows': 236, 'hostile_stage_accuracy': 0.0424, 'hostile_detected': 0.4025, 'benign_false_stage': 0.0204, 'stages_present_not_in_training': [np.str_('LATERAL_MOVEMENT')]}
+
+== m1v2-e19-s43 / tuesday (held out; trained on ['monday', 'wednesday', 'thursday', 'friday'])
+col_0                BENIGN  RECONNAISSANCE  INITIAL_ACCESS  LATERAL_MOVEMENT  COMMAND_AND_CONTROL  EXFILTRATION  IMPACT
+row_0                                                                                                                   
+BENIGN                  678              45               1                 0                    0             0       0
+RECONNAISSANCE            0               0               0                 0                    0             0       0
+INITIAL_ACCESS          101              52              83                 0                    9             0       7
+LATERAL_MOVEMENT          0               0               0                 0                    0             0       0
+COMMAND_AND_CONTROL       0               0               0                 0                    0             0       0
+EXFILTRATION              0               0               0                 0                    0             0       0
+IMPACT                    0               0               0                 0                    0             0       0
+{'accuracy': 0.7797, 'hostile_windows': 252, 'hostile_stage_accuracy': 0.3294, 'hostile_detected': 0.5992, 'benign_false_stage': 0.0635, 'stages_present_not_in_training': []}
+
+== m1v2-e19-s43 / wednesday (held out; trained on ['monday', 'tuesday', 'thursday', 'friday'])
+col_0                BENIGN  RECONNAISSANCE  INITIAL_ACCESS  LATERAL_MOVEMENT  COMMAND_AND_CONTROL  EXFILTRATION  IMPACT
+row_0                                                                                                                   
+BENIGN                  733               8              65                 4                   28             0      22
+RECONNAISSANCE            0               0               0                 0                    0             0       0
+INITIAL_ACCESS            2               0               1                 0                    6             0      13
+LATERAL_MOVEMENT          0               0               0                 0                    0             0       0
+COMMAND_AND_CONTROL       0               0               0                 0                    0             0       0
+EXFILTRATION              0               0               0                 0                    0             0       0
+IMPACT                   34               0              51                 0                    0             0      50
+{'accuracy': 0.7709, 'hostile_windows': 157, 'hostile_stage_accuracy': 0.3248, 'hostile_detected': 0.7707, 'benign_false_stage': 0.1477, 'stages_present_not_in_training': []}
+
+         run  test_day      view               stage  support  predicted  precision  recall  in_training
+m1v2-e19-s43    friday     stage              BENIGN      759        577     0.8579  0.6522         True
+m1v2-e19-s43    friday     stage      RECONNAISSANCE       52         34     0.1471  0.0962         True
+m1v2-e19-s43    friday     stage COMMAND_AND_CONTROL      116          0        NaN  0.0000        False
+m1v2-e19-s43    friday     stage              IMPACT       41         58     0.6897  0.9756         True
+m1v2-e19-s43    friday technique              BENIGN      759        577     0.8579  0.6522         True
+m1v2-e19-s43    friday technique     DISCOVERY_T1046       52        115     0.2783  0.6154         True
+m1v2-e19-s43    friday technique COMMAND_AND_CONTROL      116          0        NaN  0.0000        False
+m1v2-e19-s43    friday technique              IMPACT       41         58     0.6897  0.9756         True
+m1v2-e19-s43    monday     stage              BENIGN      974        888     1.0000  0.9117         True
+m1v2-e19-s43    monday technique              BENIGN      974        888     1.0000  0.9117         True
+m1v2-e19-s43  thursday     stage              BENIGN      736        862     0.8364  0.9796         True
+m1v2-e19-s43  thursday     stage      RECONNAISSANCE        2         85     0.0118  0.5000         True
+m1v2-e19-s43  thursday     stage      INITIAL_ACCESS      126          9     1.0000  0.0714         True
+m1v2-e19-s43  thursday     stage    LATERAL_MOVEMENT      108          0        NaN  0.0000        False
+m1v2-e19-s43  thursday technique              BENIGN      736        862     0.8364  0.9796         True
+m1v2-e19-s43  thursday technique     DISCOVERY_T1046      110         85     0.8235  0.6364         True
+m1v2-e19-s43  thursday technique      INITIAL_ACCESS      126          9     1.0000  0.0714         True
+m1v2-e19-s43   tuesday     stage              BENIGN      724        779     0.8703  0.9365         True
+m1v2-e19-s43   tuesday     stage      INITIAL_ACCESS      252         84     0.9881  0.3294         True
+m1v2-e19-s43   tuesday technique              BENIGN      724        779     0.8703  0.9365         True
+m1v2-e19-s43   tuesday technique      INITIAL_ACCESS      252         84     0.9881  0.3294         True
+m1v2-e19-s43 wednesday     stage              BENIGN      860        769     0.9532  0.8523         True
+m1v2-e19-s43 wednesday     stage      INITIAL_ACCESS       22        117     0.0085  0.0455         True
+m1v2-e19-s43 wednesday     stage              IMPACT      135         85     0.5882  0.3704         True
+m1v2-e19-s43 wednesday technique              BENIGN      860        769     0.9532  0.8523         True
+m1v2-e19-s43 wednesday technique      INITIAL_ACCESS       22        117     0.0085  0.0455         True
+m1v2-e19-s43 wednesday technique              IMPACT      135         85     0.5882  0.3704         True
