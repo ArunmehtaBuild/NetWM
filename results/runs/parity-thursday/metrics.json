@@ -1,0 +1,29 @@
+{
+  "run_id": "parity-thursday",
+  "timestamp_utc": "2026-09-27T20:45:45+00:00",
+  "git_sha": "d9af382",
+  "config": {
+    "day": "thursday",
+    "pcap": "D:/CIC-2017-PCAP/Thursday-WorkingHours.pcap",
+    "data": "data/processed/cicids2017_m1v2p",
+    "raw": "data/raw/cicids2017_improved",
+    "model_config": "configs/m1v2/e26_combined.yaml"
+  },
+  "metrics": {
+    "day": "thursday",
+    "t0": "2017-07-06 11:59:00",
+    "pcap_mode": {
+      "windows": 972,
+      "inputs": 106,
+      "mismatched_cells": 0,
+      "mismatched_inputs": {}
+    },
+    "csv_mode": {
+      "windows": 972,
+      "inputs": 106,
+      "mismatched_cells": 0,
+      "mismatched_inputs": {}
+    },
+    "identical": true
+  }
+}

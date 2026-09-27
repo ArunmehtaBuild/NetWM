@@ -1,0 +1,2 @@
+{'day': 'thursday', 't0': '2017-07-06 11:59:00', 'pcap_mode': {'windows': 972, 'inputs': 106, 'mismatched_cells': 0, 'mismatched_inputs': {}}, 'csv_mode': {'windows': 972, 'inputs': 106, 'mismatched_cells': 0, 'mismatched_inputs': {}}, 'identical': True}
+exit=0
