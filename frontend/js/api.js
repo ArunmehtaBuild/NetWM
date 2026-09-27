@@ -594,7 +594,7 @@ export class ApiClient {
       };
       cloned.job_id = `job_${Math.random().toString(36).substring(2, 8)}`;
 
-      onProgress?.({ state: "done", progress: 1.0, stage_text: "Ingestion and forecasting complete" });
+      onProgress?.({ state: "done", progress: 1.0, stage_text: "Fixture shown, your file was not analysed" });
       return { payload: cloned, isMock: true };
     } finally {
       this._mockAbortController = null;
