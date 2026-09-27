@@ -42,52 +42,53 @@ class PCAPFeatureExtractor:
         self.src_ports_visited = defaultdict(lambda: deque(maxlen=100))
 
     def process_packet(self, pkt):
-        """Extracts features from a single packet in a streaming fashion."""
+        """Extracts features from a single scapy packet in a streaming fashion."""
         if not IP in pkt:
             return
-            
+
         ip = pkt[IP]
-        proto = ip.proto
-        src_ip = ip.src
-        dst_ip = ip.dst
-        
-        src_port = 0
-        dst_port = 0
         seq = None
         tcp_win = None
-        payload_len = len(ip.payload)
-        
         if TCP in pkt:
             tcp = pkt[TCP]
-            src_port = tcp.sport
-            dst_port = tcp.dport
-            seq = tcp.seq
-            tcp_win = tcp.window
+            src_port, dst_port = tcp.sport, tcp.dport
+            seq, tcp_win = tcp.seq, tcp.window
             payload_len = len(tcp.payload)
         elif UDP in pkt:
             udp = pkt[UDP]
-            src_port = udp.sport
-            dst_port = udp.dport
+            src_port, dst_port = udp.sport, udp.dport
             payload_len = len(udp.payload)
         else:
-            return # Only process TCP/UDP for session features
-            
+            return  # Only process TCP/UDP for session features
+
+        self.process_fields(
+            ip.src, ip.dst, ip.proto, src_port, dst_port, ip.ttl,
+            bool(int(ip.flags) & 0x1), int(ip.frag), seq, tcp_win, payload_len,
+        )
+
+    def process_fields(self, src_ip, dst_ip, proto, src_port, dst_port, ttl,
+                       more_fragments, frag_offset, seq, tcp_win, payload_len):
+        """The per-packet update, from already-parsed header fields.
+
+        ``process_packet`` feeds it from a scapy packet; ``flow_aggregator`` feeds it from raw
+        header bytes, which is several times faster than dissecting every packet with scapy.
+        """
         session_key = (src_ip, dst_ip, src_port, dst_port, proto)
-        
+
         # DEFENSE: Drop tracking for new sessions if under DoS memory exhaustion attack
         if session_key not in self.sessions and len(self.sessions) >= self.max_sessions:
-            return 
-            
+            return
+
         s = self.sessions[session_key]
-        
+
         # 1. Packet count and TTL stats (Welford's Algorithm)
         s["packet_count"] += 1
         n = s["packet_count"]
-        delta = ip.ttl - s["ttl_mean"]
+        delta = ttl - s["ttl_mean"]
         s["ttl_mean"] += delta / n
-        delta2 = ip.ttl - s["ttl_mean"]
+        delta2 = ttl - s["ttl_mean"]
         s["ttl_m2"] += delta * delta2
-        
+
         # 2. TCP Window Size stats
         if tcp_win is not None:
             s["tcp_win_count"] += 1
@@ -96,17 +97,17 @@ class PCAPFeatureExtractor:
             s["tcp_win_mean"] += win_delta / win_n
             if tcp_win > s["tcp_win_max"]:
                 s["tcp_win_max"] = tcp_win
-                
+
         # 3. IP Fragment flags (MF=1 or frag offset > 0)
-        if ip.flags == 1 or ip.frag > 0:
+        if more_fragments or frag_offset > 0:
             s["ip_frag_count"] += 1
-            
+
         # 4. Retransmission count (heuristic: exact same sequence number back-to-back)
         if seq is not None:
             if s["last_seq"] == seq:
                 s["retrans_count"] += 1
             s["last_seq"] = seq
-            
+
         # 5. Payload size histogram
         if payload_len <= 64:
             s["payload_hist"]["0_64"] += 1
@@ -118,7 +119,7 @@ class PCAPFeatureExtractor:
             s["payload_hist"]["513_1024"] += 1
         else:
             s["payload_hist"]["gt_1024"] += 1
-            
+
         # 6. Track destination ports for scan detection
         if len(self.src_ports_visited) < self.max_sessions or src_ip in self.src_ports_visited:
             self.src_ports_visited[src_ip].append(dst_port)
