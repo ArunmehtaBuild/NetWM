@@ -1055,3 +1055,43 @@ ingestion path and nothing about model quality, and its catalogue entry says so.
 **Revisit if.** Real packet captures of the training days become available. Then the packet-level
 features can become model inputs (G-5), and this parity check becomes a real-capture test.
 
+---
+
+### D-034 — Pre-registration: a causal alert budget replaces the whole-capture one (G-8, E18)
+*Date: 2026-09-27 · Status: accepted, written and pushed before any causal threshold was computed · Board: G-8*
+
+**The problem.** D-020's deployable threshold, `self-budget-10pct`, is the 90th percentile of the
+scores of the *whole* capture (`scripts/rescore_pmax.py`, and `engine/predict.py` for the
+dashboard). A window's alarm therefore depends on scores that come after it. D-020's claim that "a
+sensor can set it from its live stream" is false for a live stream. It is D-025's objection to
+whole-capture ranking, applied to thresholds. E14's Thursday F1 0.576 (and D-021's precision 0.959
+at 5 %) were measured this way.
+
+**Policies, fixed before running** (`scripts/threshold_eval.py`, 90th percentile = 10 % budget):
+
+| policy | threshold at window t | role |
+|---|---|---|
+| `whole-capture-10pct` | q90 of all windows of the capture | reference, **non-causal** (E14) |
+| `expanding-10pct` | q90 of windows 0..t-1; no alarm while t < 20 | **primary** |
+| `trailing120-10pct` | q90 of windows t-120..t-1 (at least 20) | secondary |
+| `trailing60-10pct` | q90 of windows t-60..t-1 (at least 20) | secondary |
+| `expanding-5pct` | q95 of windows 0..t-1 | secondary (the causal version of the 5 % figure) |
+| `train-quantile-5pct` | q95 of training-day scores | reference (E14's `alert-budget-5pct`) |
+
+**Why the expanding budget is primary.** It is the causal counterpart of the current policy and
+changes exactly one thing: the percentile is taken over the capture *so far* rather than the whole
+capture. The trailing variants also change *what* the budget is relative to (the last hour), which
+the secondaries measure. The 20-window warm-up (10 minutes) is there so the first quantile is not
+taken over a handful of windows.
+
+**Scored on:** the held-out `p_max` scores E14 published for r2 (Thursday, Friday) and for the three
+E10 full seeds. Same label (`y_within_K`), same lead-time definition as E14.
+
+**What the result commits us to, whatever it is.** The primary policy's Thursday F1 on the r2
+checkpoint, with its E10 seed range, becomes the deployable number everywhere D-032 applies. The
+whole-capture 0.576 may only be quoted as a non-causal upper bound. The secondary policies are
+sensitivity analysis. **None may replace the primary on the strength of these results:** picking the
+best of five policies on one held-out fold would be tuning the threshold on the test set. The
+dashboard's threshold moves to the primary policy, which makes the threshold a per-window series in
+the API.
+
