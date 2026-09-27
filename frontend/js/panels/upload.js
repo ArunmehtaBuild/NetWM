@@ -441,13 +441,16 @@ export class UploadPanel {
     }
     if (this.percentText) this.percentText.textContent = "100%";
     if (this.stageText) {
-      this.stageText.textContent = `Analysis complete. Ingested ${payload.timeline?.length || 0} windows.`;
+      // H-17: a mock result must not read as an analysis of the uploaded file
+      this.stageText.textContent = isMock
+        ? "Fixture shown, your file was not analysed (analysis API unreachable)."
+        : `Analysis complete. Ingested ${payload.timeline?.length || 0} windows.`;
     }
 
     const statusPill = document.getElementById("uploadStatusPill");
     if (statusPill) {
       statusPill.className = "status-pill pill-done";
-      statusPill.textContent = "COMPLETE";
+      statusPill.textContent = isMock ? "FIXTURE - NOT ANALYSED" : "COMPLETE";
     }
 
     // Synchronize with store

@@ -172,16 +172,22 @@
             throw new Error(`Expected final progress 1.0, got ${lastProg.progress}`);
           }
 
-          // Verify source metadata was customized
+          // H-17: a mock result must not pass for an analysis of the uploaded file
           const src = result.payload.source;
-          if (src.filename !== testFile.name) {
-            throw new Error(`Expected source filename to be ${testFile.name}, got ${src.filename}`);
+          if (src.filename === testFile.name) {
+            throw new Error(`Fixture presented under the uploaded file's name (${src.filename})`);
           }
-          if (src.kind !== "pcap") {
-            throw new Error(`Expected kind 'pcap', got ${src.kind}`);
+          if (src.kind !== "fixture" || src.uploaded_filename !== testFile.name) {
+            throw new Error(`Expected kind 'fixture' and uploaded_filename ${testFile.name}, got ${src.kind} / ${src.uploaded_filename}`);
+          }
+          if (!result.payload.mock || !/not analysed/.test(result.payload.note || "")) {
+            throw new Error("Expected mock: true and a 'not analysed' note on the payload");
+          }
+          if (!/not analysed/.test(lastProg.stage_text || "")) {
+            throw new Error(`Final progress text must say the file was not analysed, got "${lastProg.stage_text}"`);
           }
 
-          return `Completed 6-stage simulation with 100% progress and synthesized source: ${src.filename} (${src.kind})`;
+          return `Mock upload labelled honestly: ${src.filename} (${src.kind}); uploaded ${src.uploaded_filename} not analysed`;
         }
       },
       {

@@ -538,13 +538,24 @@ export class ApiClient {
     const mockAbort = { aborted: false };
     this._mockAbortController = mockAbort;
 
+    const lower = (file.name || "").toLowerCase();
+    let baseScenario = explicitFixture;
+    if (!baseScenario) {
+      if (lower.includes("friday") || lower.includes("botnet") || lower.includes("ddos") || lower.includes("portscan")) {
+        baseScenario = "friday";
+      } else if (lower.includes("oracle")) {
+        baseScenario = "thursday_oracle";
+      } else {
+        baseScenario = "thursday";
+      }
+    }
+
+    // H-17: no backend, so nothing is analysed. The stage texts say what actually happens - they
+    // used to imitate feature extraction and rollouts, which let a fixture pass for an analysis.
     const stages = [
-      { progress: 0.12, state: "uploading", text: `Uploading ${file.name} (${formatBytes(file.size)})...` },
-      { progress: 0.28, state: "uploading", text: "Validating capture format and network flow timestamps..." },
-      { progress: 0.48, state: "analyzing", text: "Extracting 70-dimensional flow features across 60s windows..." },
-      { progress: 0.72, state: "analyzing", text: "Rolling out RSSM world model forward dynamics (K=10 horizon)..." },
-      { progress: 0.88, state: "analyzing", text: "Evaluating risk heads (p_max, p_cum) and computing attribution..." },
-      { progress: 1.00, state: "analyzing", text: "Finalizing detection and forecasting payload..." },
+      { progress: 0.25, state: "uploading", text: "Analysis API unreachable - running in offline mock mode" },
+      { progress: 0.55, state: "analyzing", text: `${file.name} is not uploaded and not analysed` },
+      { progress: 0.85, state: "analyzing", text: `Loading the bundled "${baseScenario}" fixture instead...` },
     ];
 
     try {
@@ -566,32 +577,19 @@ export class ApiClient {
         throw err;
       }
 
-      const lower = (file.name || "").toLowerCase();
-      let baseScenario = explicitFixture;
-      if (!baseScenario) {
-        if (lower.includes("friday") || lower.includes("botnet") || lower.includes("ddos") || lower.includes("portscan")) {
-          baseScenario = "friday";
-        } else if (lower.includes("oracle")) {
-          baseScenario = "thursday_oracle";
-        } else {
-          baseScenario = "thursday";
-        }
-      }
-
       const { payload } = await this._loadMock(baseScenario);
       const cloned = JSON.parse(JSON.stringify(payload));
 
-      const isPcap = lower.endsWith(".pcap") || lower.endsWith(".pcapng");
+      // The fixture keeps its own identity; the uploaded file is recorded only as "not analysed".
       cloned.source = {
-        filename: file.name,
-        kind: isPcap ? "pcap" : "csv",
-        flows: cloned.source?.flows || 362076,
-        windows: cloned.timeline ? cloned.timeline.length : 972,
-        t0: cloned.source?.t0 || "2017-07-06T11:59:00Z",
-        window_s: 60,
-        stride_s: 30,
-        size_bytes: file.size,
+        ...(cloned.source || {}),
+        filename: `${baseScenario} fixture (not your file)`,
+        kind: "fixture",
+        uploaded_filename: file.name,
+        uploaded_size_bytes: file.size,
       };
+      cloned.mock = true;
+      cloned.note = `Fixture shown, your file was not analysed: the analysis API was unreachable, so this is the bundled "${baseScenario}" fixture, not ${file.name}.`;
       cloned.job_id = `job_${Math.random().toString(36).substring(2, 8)}`;
 
       onProgress?.({ state: "done", progress: 1.0, stage_text: "Fixture shown, your file was not analysed" });
