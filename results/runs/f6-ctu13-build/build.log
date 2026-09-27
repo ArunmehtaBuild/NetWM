@@ -1,0 +1,15 @@
+s01 (Neris   ) flows=2,824,636 windows=  737 compromise=78.70% attack=78.70% onsets=[155, 524, 571, 587, 615] stages={'BENIGN': 168, 'RECONNAISSANCE': 49, 'COMMAND_AND_CONTROL': 520} build=139.5s
+s02 (Neris   ) flows=1,808,122 windows=  505 compromise=84.55% attack=84.75% onsets=[75, 85, 336, 412, 420] stages={'BENIGN': 96, 'RECONNAISSANCE': 26, 'COMMAND_AND_CONTROL': 383} build=98.0s
+s03 (Rbot    ) flows=4,710,638 windows=8,019 compromise=19.23% attack=29.87% onsets=[2, 126, 184, 248, 372] stages={'BENIGN': 6179, 'RECONNAISSANCE': 1391, 'COMMAND_AND_CONTROL': 439, 'IMPACT': 10} build=159.9s
+s04 (Rbot    ) flows=1,121,076 windows=  539 compromise=47.12% attack=60.85% onsets=[149, 159, 180, 230, 236] stages={'BENIGN': 359, 'RECONNAISSANCE': 34, 'COMMAND_AND_CONTROL': 119, 'IMPACT': 27} build=27.4s
+s05 (Virut   ) flows=  129,832 windows=   61 compromise=83.61% attack=83.61% onsets=[18] stages={'BENIGN': 19, 'RECONNAISSANCE': 3, 'COMMAND_AND_CONTROL': 39} build=2.9s
+s06 (Menti   ) flows=  558,919 windows=  260 compromise=97.69% attack=97.69% onsets=[1, 16, 35, 214] stages={'BENIGN': 15, 'COMMAND_AND_CONTROL': 232, 'IMPACT': 13} build=12.6s
+s07 (Sogou   ) flows=  114,077 windows=   44 compromise=40.91% attack=40.91% onsets=[3, 9] stages={'BENIGN': 34, 'COMMAND_AND_CONTROL': 10} build=2.7s
+s08 (Murlo   ) flows=2,954,230 windows=2,339 compromise=96.19% attack=96.75% onsets=[1, 12, 19, 522, 545] stages={'BENIGN': 154, 'RECONNAISSANCE': 52, 'COMMAND_AND_CONTROL': 2133} build=127.2s
+s09 (Neris   ) flows=2,087,508 windows=  677 compromise=56.43% attack=62.92% onsets=[108, 339] stages={'BENIGN': 314, 'RECONNAISSANCE': 5, 'COMMAND_AND_CONTROL': 354, 'IMPACT': 4} build=107.8s
+s10 (Rbot    ) flows=1,309,791 windows=  618 compromise=24.59% attack=50.48% onsets=[82, 93, 102, 117, 166] stages={'BENIGN': 477, 'RECONNAISSANCE': 22, 'COMMAND_AND_CONTROL': 74, 'IMPACT': 45} build=32.9s
+s11 (Rbot    ) flows=  107,251 windows=   34 compromise=41.18% attack=73.53% onsets=[16] stages={'BENIGN': 23, 'COMMAND_AND_CONTROL': 5, 'IMPACT': 6} build=2.7s
+s12 (NSIS.ay ) flows=  325,471 windows=  208 compromise=65.39% attack=65.39% onsets=[79, 140] stages={'BENIGN': 91, 'RECONNAISSANCE': 7, 'COMMAND_AND_CONTROL': 109, 'IMPACT': 1} build=8.1s
+s13 (Virut   ) flows=1,925,149 windows=1,967 compromise=99.54% attack=99.80% onsets=[6, 380, 501, 514, 523] stages={'BENIGN': 11, 'RECONNAISSANCE': 750, 'COMMAND_AND_CONTROL': 1206} build=51.2s
+wrote data\processed\ctu13 (13 scenarios)
+exit=0

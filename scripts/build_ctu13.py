@@ -67,8 +67,6 @@ def build_split(adapter: CTU13Adapter, split: str, cfg: dict, chunk: int) -> tup
     spec = WindowSpec(cfg["window"]["length_s"], cfg["window"]["stride_s"])
     horizon = int(cfg["horizon_k"])
     flows = adapter.load(split).drop(columns=["label"])
-    for col in ("src_ip", "dst_ip"):
-        flows[col] = flows[col].astype("string[pyarrow]")
     t0, n, feats, stages, stage_mat = chunked_windows(flows, spec, tuple(cfg["internal_prefixes"]), chunk)
     stages = stages.reset_index(drop=True)
     comp = compromise_flags(stages, int(COMPROMISE_THRESHOLD))

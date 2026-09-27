@@ -17,7 +17,8 @@ Derived fields:
 - ``fwd_bytes`` = SrcBytes, ``bwd_bytes`` = TotBytes - SrcBytes.
 - Packet split: Argus gives only the total. A flow with no reply (TCP ``State`` with nothing after
   ``_``, UDP ``INT``) is one-way; otherwise packets are split in proportion to bytes, at least one each
-  way. ``one_way_rate`` and ``tiny_flow_rate`` depend on this and are exact for one-way flows.
+  way. ``one_way_rate`` and ``tiny_flow_rate`` depend on this and are exact for one-way flows. A flow
+  with no ``State`` at all (a few ICMP flows) has no recorded reply and counts as one-way.
 - Flags: presence per side from ``State`` (``S`` SYN, ``A`` ACK, ``F`` FIN, ``R`` RST, ``P`` PSH, ``U``
   URG, ``E`` ECE, ``C`` CWR), so ``syn_cnt`` is 0-2, not a packet count. Rates built from presence are
   comparable; sums are on a different scale from CIC's, which is one reason E25 trains its own model.
@@ -88,16 +89,27 @@ def stage_of_ctu(label: str) -> int:
     return int(Stage.COMMAND_AND_CONTROL)
 
 
-def _port(values: pd.Series) -> np.ndarray:
+def _by_category(values: pd.Series, fn, dtype) -> np.ndarray:
+    """Apply ``fn`` once per distinct value of a categorical column, then broadcast by code.
+
+    Scenario 3 is 4.7 M flows on a 7 GB machine: converting every cell to a Python string would
+    cost gigabytes; the distinct values are a few hundred thousand at most.
+    """
+    cat = values.astype("category")
+    lut = np.array([fn(str(c)) for c in cat.cat.categories], dtype=dtype)
+    codes = cat.cat.codes.to_numpy()
+    out = np.zeros(len(codes), dtype=dtype)
+    ok = codes >= 0
+    out[ok] = lut[codes[ok]]
+    return out
+
+
+def _to_port(text: str) -> int:
     """Argus writes ports as decimal, hex (``0x0303`` for ICMP type/code) or blank."""
-    def conv(v) -> int:
-        try:
-            return int(str(v), 0)
-        except ValueError:
-            return 0
-    uniq = values.astype(str).unique()
-    lut = {u: conv(u) for u in uniq}
-    return values.astype(str).map(lut).to_numpy(dtype=np.int64)
+    try:
+        return int(text, 0)
+    except ValueError:
+        return 0
 
 
 class CTU13Adapter(DatasetAdapter):
@@ -123,18 +135,18 @@ class CTU13Adapter(DatasetAdapter):
         n = len(raw)
         df = pd.DataFrame({
             "ts": pd.to_datetime(raw["StartTime"], format="%Y/%m/%d %H:%M:%S.%f"),
-            "src_ip": raw["SrcAddr"].astype(str),
-            "dst_ip": raw["DstAddr"].astype(str),
-            "src_port": _port(raw["Sport"]),
-            "dst_port": _port(raw["Dport"]),
-            "protocol": raw["Proto"].astype(str).map(_PROTO).fillna(0).astype(np.int64).to_numpy(),
+            "src_ip": raw["SrcAddr"].astype("string[pyarrow]"),
+            "dst_ip": raw["DstAddr"].astype("string[pyarrow]"),
+            "src_port": _by_category(raw["Sport"], _to_port, np.int64),
+            "dst_port": _by_category(raw["Dport"], _to_port, np.int64),
+            "protocol": _by_category(raw["Proto"], lambda s: _PROTO.get(s, 0), np.int64),
             "duration_us": (raw["Dur"].astype(np.float64) * 1e6).to_numpy(),
         })
-        state = raw["State"].astype(str)
-        src_flags = state.str.split("_").str[0].fillna("")
-        dst_flags = state.str.split("_").str[1].fillna("")
+        del raw["StartTime"]
         tcp = df["protocol"].to_numpy() == 6
-        replied = np.where(tcp, dst_flags.str.len().to_numpy() > 0, state.to_numpy() != "INT")
+        dst_side = _by_category(raw["State"], lambda s: len(s.split("_", 1)[1]) > 0 if "_" in s else False, bool)
+        udp_replied = _by_category(raw["State"], lambda s: s != "INT", bool)
+        replied = np.where(tcp, dst_side, udp_replied)
         tot = raw["TotPkts"].to_numpy()
         fwd_b = raw["SrcBytes"].to_numpy()
         tot_b = raw["TotBytes"].to_numpy()
@@ -145,16 +157,16 @@ class CTU13Adapter(DatasetAdapter):
         df["fwd_bytes"] = fwd_b
         df["bwd_bytes"] = np.maximum(tot_b - fwd_b, 0)
         for letter, col in _FLAGS.items():
-            df[col] = np.where(tcp, src_flags.str.contains(letter, regex=False).to_numpy().astype(int)
-                               + dst_flags.str.contains(letter, regex=False).to_numpy().astype(int), 0)
+            # presence on each side of the State string, e.g. "FSPA_FSPA" -> 2 for F
+            seen = _by_category(raw["State"], lambda s, L=letter: sum(L in part for part in s.split("_")[:2]),
+                                np.int64)
+            df[col] = np.where(tcp, seen, 0)
         for col in ("flow_iat_mean", "flow_iat_std", "flow_iat_max", "flow_iat_min", "pkt_len_min",
                     "pkt_len_max", "pkt_len_mean", "pkt_len_std", "down_up_ratio", "fwd_init_win",
                     "bwd_init_win", "fwd_seg_size_min", "active_mean", "idle_mean"):
             df[col] = 0.0  # not recorded by Argus; every feature built from these is dropped (module doc)
-        labels = raw["Label"].astype(str)
-        lut = {lbl: stage_of_ctu(lbl) for lbl in labels.unique()}
-        df["label"] = labels.to_numpy()
-        df["stage"] = labels.map(lut).astype("int8").to_numpy()
+        df["label"] = raw["Label"].astype("category").to_numpy()
+        df["stage"] = _by_category(raw["Label"], stage_of_ctu, np.int8)
         df["attempted"] = False
         df["day"] = split
         df = df.sort_values("ts", kind="stable").reset_index(drop=True)
