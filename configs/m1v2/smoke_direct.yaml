@@ -1,0 +1,10 @@
+# Plumbing check only: Model A with every D-035 switch. Never reported.
+scaler:
+  mode: relative
+  rank_window: 120
+  rank_min_periods: 10
+model:
+  arch: direct
+  hazard: factorized
+train:
+  curriculum: {offsets: [20, 16, 12, 8, 4], history: 64, horizon: 20, weight: 1.0}

@@ -47,6 +47,12 @@ class WorldModelConfig:
     free_nats: float = 1.0         # KL free bits, per Dreamer - stops posterior collapse
     horizon_k: int = 10
     obs_logvar_init: float = 0.0
+    # D-035. "rssm" is this file's model (Model B); "direct" is models/direct.py (Model A, E24).
+    arch: str = "rssm"
+    # "direct": channel 0 is its own head (round 2). "factorized" (E22): channel 0 is
+    # P(threat) x P(compromise stage | hostile), so the compromise signal is carried by a threat
+    # detector trained on every attack family plus a stage classifier over hostile windows.
+    hazard: str = "direct"
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()}
@@ -63,6 +69,36 @@ BASE_CHANNELS = 3
 #: It is supervised and read on the filtered state only, and never leaves this file via a
 #: rollout-derived key (D-023).
 IMAGINED_CHANNELS = 4
+
+#: E22: indices into the hostile-stage head (stages 1..6, i.e. stage - 1) that count as compromise -
+#: Lateral Movement, Command and Control, Exfiltration (D-011; Impact is off the progression axis).
+HOSTILE_COMPROMISE_IDX = (2, 3, 4)
+
+
+def hostile_stage_loss(
+    logits: torch.Tensor, stage: torch.Tensor, weight: torch.Tensor | None
+) -> torch.Tensor:
+    """E22: cross-entropy over the six non-benign stages, on hostile windows only.
+
+    The factor ``P(compromise stage | hostile)`` is learned from every hostile window of every
+    training day, whatever its family, instead of from the handful of compromise windows one fold has.
+    """
+    mask = stage > 0
+    if not bool(mask.any()):
+        return logits.new_zeros(())
+    target = (stage[mask] - 1).long()
+    if weight is not None and float(weight[target].sum()) == 0.0:
+        return logits.new_zeros(())
+    return F.cross_entropy(logits[mask], target, weight=weight)
+
+
+def build_model(cfg: WorldModelConfig) -> nn.Module:
+    """Model B (this file) or Model A (``models/direct.py``), by ``cfg.arch`` (D-035, E24)."""
+    if cfg.arch == "direct":
+        from netwm.models.direct import DirectForecaster
+
+        return DirectForecaster(cfg)
+    return NetWorldModel(cfg)
 
 
 class ObservationEncoder(nn.Module):
@@ -178,6 +214,19 @@ class NetWorldModel(nn.Module):
         self.risk_head = nn.Sequential(
             nn.Linear(feat_dim, cfg.embed_dim), nn.SiLU(), nn.Linear(cfg.embed_dim, cfg.n_risk)
         )
+        if cfg.hazard == "factorized":
+            self.hostile_head = nn.Sequential(
+                nn.Linear(feat_dim, cfg.embed_dim), nn.SiLU(), nn.Linear(cfg.embed_dim, cfg.n_stages - 1)
+            )
+
+    def _risk_logits(self, feat: torch.Tensor) -> torch.Tensor:
+        """Risk logits for a state; under ``hazard="factorized"`` channel 0 is composed (E22)."""
+        logits = self.risk_head(feat)
+        if self.cfg.hazard != "factorized":
+            return logits
+        q = F.softmax(self.hostile_head(feat), dim=-1)[..., list(HOSTILE_COMPROMISE_IDX)].sum(-1)
+        p = (torch.sigmoid(logits[..., 1]) * q).clamp(1e-6, 1 - 1e-6)
+        return torch.cat([torch.logit(p).unsqueeze(-1), logits[..., 1:]], dim=-1)
 
     # ---- state transitions ------------------------------------------------------------------
     def initial_state(self, batch: int, device: torch.device) -> RSSMState:
@@ -247,7 +296,7 @@ class NetWorldModel(nn.Module):
             obs_hat = self.decoder(feat)
             states.append(state)
             decoded.append(obs_hat)
-            risk.append(self.risk_head(feat))
+            risk.append(self._risk_logits(feat))
             stage_logits.append(self.stage_head(feat))
             buf = torch.cat([buf[:, 1:], self.encoder(obs_hat).unsqueeze(1)], dim=1)
         risk_logits = torch.stack(risk, dim=1)                       # (B, K, n_risk)
@@ -302,7 +351,7 @@ class NetWorldModel(nn.Module):
         # this term *numerically identical* to round 2 - a single term spanning all five channels
         # would quietly rescale the compromise gradient by 3/5 and confound every E14 comparison.
         base = min(BASE_CHANNELS, cfg.n_risk)
-        risk_now = self.risk_head(feats)
+        risk_now = self._risk_logits(feats)
         comp_loss = F.binary_cross_entropy_with_logits(
             risk_now[..., :base], risk[..., :base],
             pos_weight=None if pos_weight is None else pos_weight[:base],
@@ -353,7 +402,7 @@ class NetWorldModel(nn.Module):
             img_comp, img_stage, img_recon = img_comp / n, img_stage / n, img_recon / n
             img_prec = img_prec / n
 
-        return {
+        out_losses = {
             "recon": recon,
             "kl": kl_loss,
             "kl_raw": kl.detach(),
@@ -365,6 +414,40 @@ class NetWorldModel(nn.Module):
             "precursor": prec_loss,
             "imagine_precursor": img_prec,
         }
+        if cfg.hazard == "factorized":
+            out_losses["hostile_stage"] = hostile_stage_loss(
+                self.hostile_head(feats), stage, None if stage_weight is None else stage_weight[1:]
+            )
+        return out_losses
+
+    def curriculum_loss(
+        self,
+        x: torch.Tensor,
+        stage: torch.Tensor,
+        risk: torch.Tensor,
+        start: int,
+        horizon: int,
+        stage_weight: torch.Tensor | None = None,
+        pos_weight: torch.Tensor | None = None,
+    ) -> dict[str, torch.Tensor]:
+        """E23: imagine ``horizon`` steps from the filtered state at ``start`` and score the imagined
+        future against what really happened. ``start`` is the last window of history, placed a fixed
+        number of windows before an attack onset; the filter is causal, so windows after ``start``
+        in ``x`` shape only the targets. Weighted like the in-sequence imagination terms."""
+        cfg = self.cfg
+        out = self.observe(x)
+        img = self.imagine(out["posts"][start], out["embeds"][:, : start + 1], horizon)
+        target = slice(start + 1, start + 1 + horizon)
+        k = risk[:, target].shape[1]
+        base = min(BASE_CHANNELS, cfg.n_risk)
+        bce = F.binary_cross_entropy_with_logits(
+            img["risk_logits"][:, :k, :base], risk[:, target][..., :base],
+            pos_weight=None if pos_weight is None else pos_weight[:base],
+        )
+        ce = F.cross_entropy(img["stage_logits"][:, :k].reshape(-1, cfg.n_stages),
+                             stage[:, target].reshape(-1), weight=stage_weight)
+        mse = F.mse_loss(img["decoded"][:, :k], x[:, target])
+        return {"curriculum": 3.0 * bce + 0.5 * ce + mse}
 
     # ---- inference ---------------------------------------------------------------------------
     @torch.no_grad()
@@ -467,7 +550,7 @@ class NetWorldModel(nn.Module):
                 if cfg.n_risk > 3
                 else {}
             ),
-            "risk_now": torch.sigmoid(self.risk_head(feats))[0].cpu(),
+            "risk_now": torch.sigmoid(self._risk_logits(feats))[0].cpu(),
             "stage_now": stage_now.cpu(),
             "stage_future": stage_future,
             "surprise": surprise.cpu(),

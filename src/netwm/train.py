@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader, Dataset
 from netwm.data.processed import ProcessedDataset
 from netwm.features.scaler import StateScaler
 from netwm.models.targets import episode_labels
-from netwm.models.world_model import NetWorldModel, WorldModelConfig
+from netwm.models.world_model import NetWorldModel, WorldModelConfig, build_model
 
 #: What each risk channel is supervised on, in order. The first three are D-016 and are what every
 #: round-2 checkpoint carries; the last two are round 3 (D-023). ``n_risk`` must equal the length of
@@ -32,6 +32,35 @@ RISK_COLUMNS: tuple[str, ...] = (
 #: gradient; for a first-occurrence target that risk is the point, so it is raised deliberately.
 POS_WEIGHT_CAP: dict[str, float] = {"onset_now": 250.0}
 DEFAULT_POS_WEIGHT_CAP = 50.0
+
+
+class CurriculumSequences(Dataset):
+    """E23 (D-035): histories that end a fixed number of windows before an attack onset.
+
+    One item per (training-day onset, offset): ``history`` windows ending ``offset`` windows before the
+    onset, followed by ``horizon`` windows of true future, so the model can be asked to imagine from
+    the last history window into the attack. Items whose span leaves the day are skipped.
+    """
+
+    def __init__(self, days: dict[str, dict], offsets: "list[int]", history: int, horizon: int) -> None:
+        self.history = history
+        self.items: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        for day in days.values():
+            n = len(day["x"])
+            for onset in day["attack_onsets"]:
+                for offset in offsets:
+                    end = onset - offset                      # last window of history
+                    lo, hi = end - history + 1, end + horizon + 1
+                    if lo < 0 or hi > n:
+                        continue
+                    self.items.append((day["x"][lo:hi], day["stage"][lo:hi], day["risk"][lo:hi]))
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __getitem__(self, i: int):
+        x, stage, risk = self.items[i]
+        return torch.from_numpy(x).float(), torch.from_numpy(stage).long(), torch.from_numpy(risk).float()
 
 
 class WindowSequences(Dataset):
@@ -72,6 +101,11 @@ class TrainConfig:
     risk_columns: "tuple[str, ...]" = RISK_COLUMNS[:3]
     onset_source: str = "attack"
     onset_gap: int = 4
+    # E23 (D-035): {"offsets": [...], "history": int, "horizon": int, "weight": float}; None = off
+    curriculum: dict | None = None
+    # E25: train for this many optimiser steps, whatever the fold's size (D-035: CTU-13 folds get a
+    # CIC-IDS2017 fold's step budget, not its epoch count). None = `epochs` epochs.
+    target_steps: int | None = None
 
     def __post_init__(self) -> None:
         self.risk_columns = tuple(self.risk_columns)
@@ -93,6 +127,10 @@ class TrainConfig:
         # there is no prior reason to weight it differently. Revisited in the E15 ablation.
         self.weights.setdefault("precursor", 2.0 if round_three else 0.0)
         self.weights.setdefault("imagine_precursor", 3.0 if round_three else 0.0)
+        # emitted only by the E22 factorised hazard and the E23 curriculum; declared so the
+        # unweighted-term guard can stay strict
+        self.weights.setdefault("hostile_stage", 1.0)
+        self.weights.setdefault("curriculum", float((self.curriculum or {}).get("weight", 1.0)))
 
 
 def prepare_days(
@@ -189,14 +227,27 @@ def train_model(
     stage_w, pos_w = class_weights(days, model_cfg.n_stages, cfg.risk_columns)
     stage_w, pos_w = stage_w.to(device), pos_w.to(device)
 
-    model = NetWorldModel(model_cfg).to(device)
+    curriculum = None
+    if cfg.curriculum:
+        cur = CurriculumSequences(days, list(cfg.curriculum["offsets"]), int(cfg.curriculum["history"]),
+                                  int(cfg.curriculum["horizon"]))
+        progress(f"  curriculum: {len(cur)} pre-onset sequences")
+        if len(cur):
+            curriculum = DataLoader(cur, batch_size=cfg.batch_size, shuffle=True, drop_last=False)
+
+    model = build_model(model_cfg).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=1e-4)
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, cfg.epochs))
+    epochs = cfg.epochs
+    if cfg.target_steps:
+        epochs = max(1, -(-int(cfg.target_steps) // max(1, len(loader))))
+        progress(f"  {len(loader)} batches/epoch -> {epochs} epochs for ~{cfg.target_steps} steps")
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, epochs))
 
     history: list[dict] = []
-    for epoch in range(cfg.epochs):
+    for epoch in range(epochs):
         model.train()
         totals: dict[str, float] = {}
+        cur_iter = iter(curriculum) if curriculum is not None else None
         for x, stage, risk in loader:
             x, stage, risk = x.to(device), stage.to(device), risk.to(device)
             losses = model.losses(
@@ -208,6 +259,17 @@ def train_model(
                 stage_weight=stage_w,
                 pos_weight=pos_w,
             )
+            if cur_iter is not None:
+                # one curriculum batch per regular batch, cycling over the pre-onset set
+                try:
+                    cx, cs, cr = next(cur_iter)
+                except StopIteration:
+                    cur_iter = iter(curriculum)
+                    cx, cs, cr = next(cur_iter)
+                losses.update(model.curriculum_loss(
+                    cx.to(device), cs.to(device), cr.to(device), start=int(cfg.curriculum["history"]) - 1,
+                    horizon=int(cfg.curriculum["horizon"]), stage_weight=stage_w, pos_weight=pos_w,
+                ))
             unweighted = {k for k in losses if k not in cfg.weights and not k.endswith("_raw")}
             if unweighted:
                 # A loss term absent from the weight dict contributes nothing, trains a dead head
@@ -227,7 +289,7 @@ def train_model(
         n = max(1, len(loader))
         row = {"epoch": epoch, **{k: round(v / n, 4) for k, v in totals.items()}}
         history.append(row)
-        if epoch % log_every == 0 or epoch == cfg.epochs - 1:
+        if epoch % log_every == 0 or epoch == epochs - 1:
             line = (
                 f"  epoch {epoch:>3d}  total={row['total']:.3f}  recon={row['recon']:.3f}  "
                 f"kl={row['kl_raw']:.3f}  comp={row['compromise']:.3f}  "

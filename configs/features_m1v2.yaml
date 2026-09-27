@@ -1,0 +1,25 @@
+# M1 v2 state (D-035): S_t v1 + the CSV packet block (E20) + the per-host-relative block (E21).
+#
+# One build holds every block; each run picks its inputs with a `features:` block in its model
+# config, so every step of the E19-E24 stack reads identical values for the columns it shares.
+# S_t v1's 70 columns are computed by the same code as data/processed/cicids2017.
+#
+#   python scripts/build_features.py --config configs/features_m1v2.yaml
+dataset: cicids2017
+raw_dir: data/raw/cicids2017_improved
+processed_dir: data/processed/cicids2017_m1v2
+
+window:
+  length_s: 60.0    # D-002
+  stride_s: 30.0
+  use_trend_features: false
+  host_slots: 0
+  use_packet_csv: true       # 17 pkt_ features (E20)
+  use_host_relative: true    # 6 hostrel_ features (E21)
+
+horizon_k: 10
+
+internal_prefixes:
+  - "192.168.10."
+
+seed: 42

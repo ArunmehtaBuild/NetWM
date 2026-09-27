@@ -56,6 +56,47 @@ TREND_Z_CLIP = 10.0  # a flat baseline must not mint 1e6-sized values - the E2 f
 HOST_FEATURES: tuple[str, ...] = ("fanout", "ports", "byte_asym", "new_peer_rate")
 _HOST_NAME = re.compile(r"^host(\d+)_")
 
+#: Packet block from the flow CSVs (D-035, E20): per-packet statistics the flow meter recorded and S_t
+#: v1 never read. TTL, IP fragmentation and retransmissions are not in any flow CSV; they come from real
+#: packets (``packet_windows.py``, E20r).
+PACKET_CSV_FEATURES: tuple[str, ...] = (
+    "pkt_win_zero_rate",          # TCP flows whose first forward packet advertised window 0
+    "pkt_win_small_rate",         # ... a window under 1024 bytes (scanner / crafted-packet signature)
+    "pkt_win_distinct",           # distinct initial windows: roughly, distinct TCP stacks talking
+    "pkt_win_entropy",
+    "pkt_payload_0_rate",         # packet-weighted payload-size histogram, 5 bins
+    "pkt_payload_1_64_rate",
+    "pkt_payload_65_512_rate",
+    "pkt_payload_513_1024_rate",
+    "pkt_payload_gt1024_rate",
+    "pkt_fwd_len_std_mean",       # payload variability within a flow, per direction
+    "pkt_bwd_len_std_mean",
+    "pkt_fwd_iat_std_mean",       # inter-packet timing spread, per direction
+    "pkt_bwd_iat_std_mean",
+    "pkt_iat_cv_median",          # regularity of packet timing within a flow: the slow-scan signal
+    "pkt_bwd_rst_rate",           # the target answered with RST: a refused probe
+    "pkt_syn_probe_rate",         # SYN, at most 2 forward packets, no forward data: a half-open probe
+    "pkt_fwd_hdr_per_pkt_mean",   # forward header bytes per packet: TCP options, i.e. the stack's shape
+)
+#: CSV columns the block reads; absent ones (a PCAP upload) count as 0.
+PACKET_CSV_COLUMNS: tuple[str, ...] = (
+    "fwd_pkt_len_std", "bwd_pkt_len_std", "fwd_iat_std", "bwd_iat_std", "fwd_rst_cnt", "bwd_rst_cnt",
+    "fwd_hdr_bytes", "fwd_data_pkts",
+)
+_PAYLOAD_EDGES = (0.5, 64.5, 512.5, 1024.5)  # 0 | 1-64 | 65-512 | 513-1024 | > 1024 bytes
+
+#: Per-host-relative block (D-035, E21): each internal host against its own past in this capture.
+HOST_RELATIVE_FEATURES: tuple[str, ...] = (
+    "hostrel_ports_z_max",        # max over hosts of (ports now - its trailing mean) / trailing std
+    "hostrel_fanout_z_max",       # the same for distinct destination hosts
+    "hostrel_flows_ratio_max",    # max over hosts of flows now / (1 + its trailing mean)
+    "hostrel_new_peer_hosts",     # hosts contacting a peer they never contacted before in the capture
+    "hostrel_new_ports_max",      # the most destination ports any one host used for the first time
+    "hostrel_new_hosts",          # internal sources active for the first time in the capture
+)
+HOSTREL_BASELINE = 120  # trailing windows (60 min), the same horizon as the trend z-score
+HOSTREL_MIN_PERIODS = 10
+
 
 def _entropy(counts: np.ndarray) -> float:
     """Shannon entropy in bits of a count vector; 0 for a single value."""
@@ -199,6 +240,8 @@ def window_features(
     n_windows: int | None = None,
     use_trend: bool = False,
     host_slots: int = 0,
+    use_packet_csv: bool = False,
+    use_host_relative: bool = False,
 ) -> pd.DataFrame:
     """Aggregate an expanded (flow x window) frame into one feature row per window.
 
@@ -262,6 +305,10 @@ def window_features(
         feats = feats.join(_trend_features(feats))
     if host_slots > 0:
         feats = feats.join(_host_channels(df, feats.index, host_slots))
+    if use_packet_csv:
+        feats = feats.join(_packet_csv_features(df, feats.index))
+    if use_host_relative:
+        feats = feats.join(_host_relative_features(df, feats.index))
 
     feats.index.name = "w"
     return feats.astype(np.float32)
@@ -295,7 +342,103 @@ def feature_flags_from_names(names: Iterable[str]) -> dict[str, Any]:
             f"checkpoint has host slots up to {slots} but lacks {sorted(missing_host)[:3]} - built "
             f"with a different per-host schema than flow_features.py now defines"
         )
-    return {"use_trend": bool(present), "host_slots": slots}
+    return {
+        "use_trend": bool(present),
+        "host_slots": slots,
+        "use_packet_csv": _all_or_none(names, PACKET_CSV_FEATURES, "packet"),
+        "use_host_relative": _all_or_none(names, HOST_RELATIVE_FEATURES, "host-relative"),
+    }
+
+
+def _all_or_none(names: set, block: tuple, label: str) -> bool:
+    present = set(block) & names
+    if present and present != set(block):
+        raise ValueError(f"checkpoint has {len(present)} of {len(block)} {label} features - built with a "
+                         f"different {label} schema than flow_features.py now defines")
+    return bool(present)
+
+
+def _packet_csv_features(df: pd.DataFrame, index: pd.Index) -> pd.DataFrame:
+    """The per-window packet block (E20) from per-flow packet statistics; see PACKET_CSV_FEATURES."""
+    col = {c: (df[c].astype(np.float64) if c in df.columns else pd.Series(0.0, index=df.index))
+           for c in PACKET_CSV_COLUMNS}
+    w = df["w"]
+    out = pd.DataFrame(index=index)
+    tcp = df["protocol"].to_numpy() == 6
+    tw = df.loc[tcp, ["w", "fwd_init_win"]]
+    win = tw["fwd_init_win"]
+    out["pkt_win_zero_rate"] = (win == 0).groupby(tw["w"]).mean()
+    out["pkt_win_small_rate"] = ((win > 0) & (win < 1024)).groupby(tw["w"]).mean()
+    out["pkt_win_distinct"] = win.groupby(tw["w"]).nunique()
+    out["pkt_win_entropy"] = _group_entropy(tw, "fwd_init_win") if len(tw) else np.nan
+
+    # packet-weighted histogram of each flow's mean payload per packet
+    pkts = df["pkts"].astype(np.float64)
+    bins = np.digitize(df["pkt_len_mean"].to_numpy(dtype=np.float64), _PAYLOAD_EDGES)
+    total = pkts.groupby(w).sum()
+    names = ("pkt_payload_0_rate", "pkt_payload_1_64_rate", "pkt_payload_65_512_rate",
+             "pkt_payload_513_1024_rate", "pkt_payload_gt1024_rate")
+    for b, name in enumerate(names):
+        out[name] = pkts.where(bins == b, 0.0).groupby(w).sum() / total.where(total > 0)
+
+    out["pkt_fwd_len_std_mean"] = col["fwd_pkt_len_std"].groupby(w).mean()
+    out["pkt_bwd_len_std_mean"] = col["bwd_pkt_len_std"].groupby(w).mean()
+    out["pkt_fwd_iat_std_mean"] = col["fwd_iat_std"].groupby(w).mean()
+    out["pkt_bwd_iat_std_mean"] = col["bwd_iat_std"].groupby(w).mean()
+    iat_mean = df["flow_iat_mean"].astype(np.float64)
+    ok = (df["pkts"] >= 3) & (iat_mean > 0)
+    cv = (df["flow_iat_std"].astype(np.float64) / iat_mean).where(ok)
+    out["pkt_iat_cv_median"] = cv.groupby(w).median()
+    out["pkt_bwd_rst_rate"] = (col["bwd_rst_cnt"] > 0).groupby(w).mean()
+    probe = (tcp & (df["syn_cnt"].to_numpy() > 0) & (df["fwd_pkts"].to_numpy() <= 2)
+             & (col["fwd_data_pkts"].to_numpy() == 0))
+    out["pkt_syn_probe_rate"] = pd.Series(probe.astype(np.float64), index=df.index).groupby(w).mean()
+    fwd_pkts = df["fwd_pkts"].astype(np.float64)
+    hdr = (col["fwd_hdr_bytes"] / fwd_pkts.where(fwd_pkts > 0)).where(pd.Series(tcp, index=df.index))
+    out["pkt_fwd_hdr_per_pkt_mean"] = hdr.groupby(w).mean()
+    return out.reindex(index)[list(PACKET_CSV_FEATURES)].fillna(0.0).astype(np.float64)
+
+
+def _host_relative_features(df: pd.DataFrame, index: pd.Index) -> pd.DataFrame:
+    """Each internal host against its own trailing past (E21); see HOST_RELATIVE_FEATURES.
+
+    Strictly causal: a host's baseline at window ``w`` uses windows ``< w`` only, and "new" means not
+    seen in any earlier window of this capture. Label-free. A pivoting host is invisible in network
+    aggregates when benign hosts are busier; against its *own* history it stands out.
+    """
+    src_internal = (df["is_outbound"] + df["is_internal"]) > 0
+    flows = df.loc[src_internal, ["w", "src_ip", "dst_ip", "dst_port"]]
+    out = pd.DataFrame(0.0, index=index, columns=list(HOST_RELATIVE_FEATURES))
+    if flows.empty:
+        return out
+    per = flows.groupby(["w", "src_ip"], sort=True).agg(
+        flows=("dst_ip", "size"), fanout=("dst_ip", "nunique"), ports=("dst_port", "nunique"))
+    for stat, name in (("ports", "hostrel_ports_z_max"), ("fanout", "hostrel_fanout_z_max")):
+        wide = per[stat].unstack("src_ip").reindex(index).fillna(0.0)
+        hist = wide.shift(1).rolling(HOSTREL_BASELINE, min_periods=HOSTREL_MIN_PERIODS)
+        # a count baseline: std floored at 1, so a host flat at 3 ports cannot mint z = 1e6
+        z = (wide - hist.mean()) / hist.std().clip(lower=1.0)
+        out[name] = z.clip(-10, 10).max(axis=1).fillna(0.0)
+    wide = per["flows"].unstack("src_ip").reindex(index).fillna(0.0)
+    base = wide.shift(1).rolling(HOSTREL_BASELINE, min_periods=HOSTREL_MIN_PERIODS).mean()
+    out["hostrel_flows_ratio_max"] = (wide / (1.0 + base)).max(axis=1).fillna(0.0)
+
+    pairs = flows[["w", "src_ip", "dst_ip"]].drop_duplicates()
+    first_pair = pairs.groupby(["src_ip", "dst_ip"])["w"].transform("min").eq(pairs["w"])
+    first_seen = pairs.groupby("src_ip")["w"].transform("min")
+    # a host's first window has no past to be new against
+    new_pair = pairs[first_pair & (pairs["w"] > first_seen)]
+    out["hostrel_new_peer_hosts"] = new_pair.groupby("w")["src_ip"].nunique().reindex(index).fillna(0.0)
+    ports = flows[["w", "src_ip", "dst_port"]].drop_duplicates()
+    first_port = ports.groupby(["src_ip", "dst_port"])["w"].transform("min").eq(ports["w"])
+    port_first_seen = ports.groupby("src_ip")["w"].transform("min")
+    new_ports = ports[first_port & (ports["w"] > port_first_seen)]
+    out["hostrel_new_ports_max"] = (new_ports.groupby(["w", "src_ip"]).size().groupby(level=0).max()
+                                    .reindex(index).fillna(0.0))
+    hosts = flows[["w", "src_ip"]].drop_duplicates()
+    newcomers = hosts[hosts.groupby("src_ip")["w"].transform("min").eq(hosts["w"])]
+    out["hostrel_new_hosts"] = newcomers.groupby("w").size().reindex(index).fillna(0.0)
+    return out.astype(np.float64)
 
 
 def host_feature_names(slots: int) -> list[str]:

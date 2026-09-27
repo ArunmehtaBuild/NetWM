@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from netwm.data.cicids2017 import COLUMN_MAP, VICTIM_SUBNET
+from netwm.data.cicids2017 import COLUMN_MAP, PACKET_STAT_MAP, VICTIM_SUBNET
 from netwm.engine.explain import explain_window, global_attribution, top_features
 from netwm.features.flow_features import feature_flags_from_names, window_features
 from netwm.features.windowing import (
@@ -35,7 +35,7 @@ from netwm.labels.mitre_map import (
     refine_scan_direction,
     stage_of,
 )
-from netwm.models.world_model import NetWorldModel, WorldModelConfig
+from netwm.models.world_model import WorldModelConfig, build_model
 
 STAGE_COLORS = {
     0: "#9aa7b1", 1: "#4c9be8", 2: "#f2a541", 3: "#e2574c",
@@ -60,7 +60,7 @@ def stage_catalogue() -> list[dict[str, Any]]:
 def load_checkpoint(path: Path | str, device: torch.device | None = None) -> dict:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = torch.load(Path(path), map_location=device, weights_only=False)
-    model = NetWorldModel(WorldModelConfig(**ckpt["model_config"])).to(device)
+    model = build_model(WorldModelConfig(**ckpt["model_config"])).to(device)
     model.load_state_dict(ckpt["model_state"])
     model.eval()
     ckpt["model"], ckpt["device"] = model, device
@@ -71,7 +71,7 @@ def read_flow_csv(path: Path | str) -> pd.DataFrame:
     """Read a CIC-style flow CSV into the canonical schema, labels included when present."""
     raw = pd.read_csv(path, low_memory=False)
     raw.columns = [c.strip() for c in raw.columns]
-    usable = {src: dst for src, dst in COLUMN_MAP.items() if src in raw.columns}
+    usable = {src: dst for src, dst in {**COLUMN_MAP, **PACKET_STAT_MAP}.items() if src in raw.columns}
     missing = {"Timestamp", "Src IP", "Dst IP", "Dst Port"} - set(usable)
     if missing:
         raise ValueError(
@@ -125,6 +125,8 @@ def analyze_flows(
     feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
                             **feature_flags_from_names(names))
     x = scaler.transform(feats[names])
+    # what the model's inputs are called: the feature names, or four views of each (D-035, E21)
+    input_names = scaler.output_names() if hasattr(scaler, "output_names") else list(names)
     if progress:
         progress(0.35, f"{len(flows):,} flows -> {n_windows:,} windows")
 
@@ -207,7 +209,7 @@ def analyze_flows(
             "flow_count": int(feats["n_flows"].iloc[t]),
             "top_talkers": talkers.get(t, []),
             "top_features": (
-                top_features(expl["feature_attribution"], x[t], names) if expl is not None else []
+                top_features(expl["feature_attribution"], x[t], input_names) if expl is not None else []
             ),
         }
         if has_labels:
@@ -233,7 +235,7 @@ def analyze_flows(
         "horizon_k": horizon,
         "stages": stage_catalogue(),
         "timeline": timeline,
-        "explanation_global": global_attribution(list(explanations.values()), names),
+        "explanation_global": global_attribution(list(explanations.values()), input_names),
     }
     if has_labels:
         onsets = onset_windows(stages, int(COMPROMISE_THRESHOLD))

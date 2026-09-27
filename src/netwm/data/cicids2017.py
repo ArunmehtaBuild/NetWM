@@ -52,6 +52,20 @@ COLUMN_MAP: dict[str, str] = {
     "Label": "label",
 }
 
+#: Per-packet statistics the flow meter recorded that S_t v1 never read (D-035, E20). Optional: a
+#: flow table without them (a PCAP upload, an older CSV) still loads, and the packet block is then
+#: built from what is present - see ``flow_features.PACKET_CSV_COLUMNS``.
+PACKET_STAT_MAP: dict[str, str] = {
+    "Fwd Packet Length Std": "fwd_pkt_len_std",
+    "Bwd Packet Length Std": "bwd_pkt_len_std",
+    "Fwd IAT Std": "fwd_iat_std",
+    "Bwd IAT Std": "bwd_iat_std",
+    "Fwd RST Flags": "fwd_rst_cnt",
+    "Bwd RST Flags": "bwd_rst_cnt",
+    "Fwd Header Length": "fwd_hdr_bytes",
+    "Fwd Act Data Pkts": "fwd_data_pkts",
+}
+
 DAYS: tuple[str, ...] = ("monday", "tuesday", "wednesday", "thursday", "friday")
 
 #: Ground-truth attack windows, UTC, from the official schedule (local UTC-3) - used by the audit
@@ -103,11 +117,11 @@ class CICIDS2017Adapter(DatasetAdapter):
 
         df = pd.read_csv(
             path,
-            usecols=list(COLUMN_MAP),
+            usecols=[*COLUMN_MAP, *PACKET_STAT_MAP],
             nrows=nrows,
             parse_dates=["Timestamp"],
             low_memory=False,
-        ).rename(columns=COLUMN_MAP)
+        ).rename(columns={**COLUMN_MAP, **PACKET_STAT_MAP})
 
         # Labels -> ATT&CK stage. Mapping per *unique* label keeps this O(#labels), not O(#flows),
         # and any unmapped label raises (see mitre_map.UnknownLabelError) rather than silently
@@ -126,7 +140,7 @@ class CICIDS2017Adapter(DatasetAdapter):
         df["day"] = split
 
         df = df.sort_values("ts", kind="stable").reset_index(drop=True)
-        return self.validate(df[[*CANONICAL_COLUMNS, "day"]])
+        return self.validate(df[[*CANONICAL_COLUMNS, *PACKET_STAT_MAP.values(), "day"]])
 
     def attack_schedule(self, split: str) -> pd.DataFrame:
         """Official attack windows (UTC) for a day, as a frame with start/end/name."""
