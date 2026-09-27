@@ -17,6 +17,9 @@ Read [problemstatement.md](problemstatement.md) first - it is the spec everythin
    gets one line in [research.md](research.md). Cite the URL.
 4. **No unreproducible numbers.** Every training / benchmark run writes its seed, config and git SHA
    into its run folder.
+5. **Commit messages carry no AI co-author line.** Never add `Co-Authored-By: Claude ...` (or any
+   other assistant attribution) to a commit message in this repo. The commit's author is the person
+   whose work it is.
 
 ## Environment
 
