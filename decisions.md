@@ -971,7 +971,7 @@ unpushed and unopened until this commit). Two points, with Yash's choices otherw
 ---
 
 ### D-031 — PCAP demo source: Scapy synthesis
-*Date: 2026-09-26 · Status: accepted for demonstrating the PCAP pipeline; the demo capture itself is withdrawn pending A-5b · renumbered from a third D-029 at merge*
+*Date: 2026-09-26 · Status: accepted; the capture described here is superseded by D-033 (synthesised from the real Thursday flows); withdrawn pending A-5b · renumbered from a third D-029 at merge*
 
 **Decision.** The small PCAP demo (A-5) is synthesized using Scapy rather than extracted from a real
 capture.
@@ -1016,4 +1016,42 @@ reported as such (E14, E10).
 
 **Revisit if.** A later run replaces the submission checkpoint. Then quote that checkpoint, with its
 own seed range, in the same commit that changes `_E14_RUN` (D-024).
+
+---
+
+### D-033 — PCAP flows follow the corrected extraction's semantics, measured from its CSVs
+*Date: 2026-09-27 · Status: accepted · Evidence: A-3c, `tests/test_pcap_ingest.py` · Supersedes the demo capture in D-031*
+
+**Decision.** `flow_aggregator.pcap_to_flows` reproduces the flows of the corrected CIC-IDS2017 release
+(D-001), because the model was trained on them.
+- A flow is a bidirectional 5-tuple; forward is the direction of its first packet.
+- A flow lasts at most **120 s from its first packet**.
+- **RST ends a flow.** A TCP teardown stays in its flow; only a new SYN after both FINs starts another.
+- Lengths are payload bytes, and IAT spans both directions.
+- `*_init_win` is the window of the first packet in each direction, 0 when unobserved.
+- `fwd_seg_size_min` is the smallest forward transport header.
+- Active and idle periods use a 5 s threshold.
+
+**Why.** Each rule was read off the CSVs rather than assumed:
+- **The timeout runs from the start.** On Thursday 16:50-17:25, repeated 5-tuples restart no sooner
+  than 120.7 s after the previous flow's *start*, while about 850 restart less than 120 s after its
+  *end*. An idle-based timeout merged those, leaving 849 flows missing; the start-based rule leaves 8
+  of 22,486.
+- **The encodings.** Unobserved windows are 0 in the CSVs (UDP, one-way TCP). TCP flows without a SYN
+  still carry a forward window. Segment-size values are 8 for UDP and 20/24/32 for TCP, which are
+  header sizes.
+- **The teardown.** Ending a flow at the first FIN, as stock CICFlowMeter does, is the defect the
+  corrected release fixed. It turns every close into an extra one- or two-packet flow.
+
+**The demo capture (replaces D-031's).** `scripts/make_demo_pcap.py` synthesises packets from the real
+Thursday flow rows (`netwm.features.pcap_synth`) for 16:50-17:25. Every flow is kept and attack flows
+keep every packet. Benign flows are trimmed to their handshake and teardown (4 packets), and payloads
+to 8 bytes, which comes to 4.56 MB. It reads back as 22,478 flows against 22,486 source TCP/UDP rows,
+with all 972 flows from the 17:00 scanner. On `thursday.pt` it runs end to end in 7.5 s, and one
+alarm lands on the 17:00:30 scan window. **But the trimming makes traffic look unlike the training
+days:** median surprise is 4.6, against 0.15 on the untrimmed CSV slice. So the PCAP demo shows the
+ingestion path and nothing about model quality, and its catalogue entry says so.
+
+**Revisit if.** Real packet captures of the training days become available. Then the packet-level
+features can become model inputs (G-5), and this parity check becomes a real-capture test.
 

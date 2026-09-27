@@ -83,14 +83,16 @@
   {
     "id": "thursday_demo_pcap",
     "day": "thursday",
-    "start": "2017-07-06 16:40",
-    "end": "2017-07-06 17:30",
-    "description": "A precise 50-minute slice of the real Thursday capture containing the start of the infiltration, synthesized for PCAP ingestion testing.",
-    "flows": 31378,
-    "size_mb": 4.5,
+    "start": "2017-07-06 16:50",
+    "end": "2017-07-06 17:25",
+    "description": "PCAP upload demo: 35 min of the real Thursday capture as packets - the 17:00 external port scan and the 17:19 Meterpreter session, real addresses and UTC times. Every flow kept; benign flows trimmed to 4 packets, payloads to 8 bytes. Shows PCAP ingestion end to end; the trimming makes traffic look unlike the training days, so surprise runs high throughout - use the CSV demo for model behaviour.",
+    "flows": 22478,
+    "size_mb": 4.56,
     "labels": {
-      "BENIGN": 15000,
-      "Infiltration - Portscan": 16000
+      "BENIGN": 21550,
+      "Infiltration - Portscan": 955,
+      "Infiltration - Attempted": 3,
+      "Infiltration": 1
     },
     "file": "thursday_demo.pcap"
   }
