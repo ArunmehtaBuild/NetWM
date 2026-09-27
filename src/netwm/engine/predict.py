@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from netwm.data.cicids2017 import COLUMN_MAP, VICTIM_SUBNET
+from netwm.data.cicids2017 import COLUMN_MAP, PACKET_STAT_MAP, VICTIM_SUBNET
 from netwm.engine.explain import explain_window, global_attribution, top_features
 from netwm.features.flow_features import feature_flags_from_names, window_features
 from netwm.features.windowing import (
@@ -24,7 +24,8 @@ from netwm.features.windowing import (
     onset_windows,
     window_stages,
 )
-from netwm.metrics import lead_times
+from netwm.metrics import CAUSAL_WARMUP, causal_threshold, lead_times
+from netwm.models.leadtime import circular_shift_null
 from netwm.labels.mitre_map import (
     COMPROMISE_THRESHOLD,
     STAGE_LABELS,
@@ -34,7 +35,7 @@ from netwm.labels.mitre_map import (
     refine_scan_direction,
     stage_of,
 )
-from netwm.models.world_model import NetWorldModel, WorldModelConfig
+from netwm.models.world_model import WorldModelConfig, build_model
 
 STAGE_COLORS = {
     0: "#9aa7b1", 1: "#4c9be8", 2: "#f2a541", 3: "#e2574c",
@@ -59,7 +60,7 @@ def stage_catalogue() -> list[dict[str, Any]]:
 def load_checkpoint(path: Path | str, device: torch.device | None = None) -> dict:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = torch.load(Path(path), map_location=device, weights_only=False)
-    model = NetWorldModel(WorldModelConfig(**ckpt["model_config"])).to(device)
+    model = build_model(WorldModelConfig(**ckpt["model_config"])).to(device)
     model.load_state_dict(ckpt["model_state"])
     model.eval()
     ckpt["model"], ckpt["device"] = model, device
@@ -70,7 +71,7 @@ def read_flow_csv(path: Path | str) -> pd.DataFrame:
     """Read a CIC-style flow CSV into the canonical schema, labels included when present."""
     raw = pd.read_csv(path, low_memory=False)
     raw.columns = [c.strip() for c in raw.columns]
-    usable = {src: dst for src, dst in COLUMN_MAP.items() if src in raw.columns}
+    usable = {src: dst for src, dst in {**COLUMN_MAP, **PACKET_STAT_MAP}.items() if src in raw.columns}
     missing = {"Timestamp", "Src IP", "Dst IP", "Dst Port"} - set(usable)
     if missing:
         raise ValueError(
@@ -112,6 +113,10 @@ def analyze_flows(
     horizon, stride_s = int(ckpt["horizon_k"]), float(ckpt["stride_s"])
     threshold = float(ckpt.get("threshold", 0.5))
     policy = str(ckpt.get("threshold_policy", "fixed"))
+    if policy.startswith("self-budget"):
+        # D-034 / G-9: the whole-capture budget these checkpoints name let windows after t set t's
+        # threshold. The engine serves its causal counterpart at the same percentage instead.
+        policy = "expanding-" + policy.rsplit("-", 1)[-1]
     spec = WindowSpec(2 * stride_s, stride_s)
 
     expanded, t0 = expand_to_windows(flows, spec)
@@ -120,6 +125,8 @@ def analyze_flows(
     feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
                             **feature_flags_from_names(names))
     x = scaler.transform(feats[names])
+    # what the model's inputs are called: the feature names, or four views of each (D-035, E21)
+    input_names = scaler.output_names() if hasattr(scaler, "output_names") else list(names)
     if progress:
         progress(0.35, f"{len(flows):,} flows -> {n_windows:,} windows")
 
@@ -141,22 +148,29 @@ def analyze_flows(
         out["p_max"] = mean_out["p_max"].numpy()
         statistic = "p_max (mean path)"
     score = out["p_max"]
+    # One threshold per window. Fixed policies repeat a scalar; the deployable policy is a series.
+    thresholds = np.full(n_windows, threshold)
     if threshold_override is not None:
         # Only for fixtures: a threshold chosen with knowledge of the labels is not something a
         # deployed sensor can pick (E14). Payloads produced this way are marked dev_only.
         threshold, policy = float(threshold_override), "fixed-override"
-    elif policy.startswith("self-budget"):
-        # Alert budget on this capture's own score distribution: no labels, so a sensor can set it
-        # from its live stream. Absolute probabilities do not transfer between days (E14: the
-        # train-tuned threshold is ~100x too high on a held-out day).
+        thresholds = np.full(n_windows, threshold)
+    elif policy.startswith("expanding"):
+        # Alert budget on this capture's own scores *so far* (D-034, E18): the quantile of windows
+        # 0..t-1, silent for the first CAUSAL_WARMUP windows. No labels and no future windows, so a
+        # sensor can run it on a live stream. Absolute probabilities do not transfer between days
+        # (E14: the train-tuned threshold is ~100x too high on a held-out day).
         budget_pct = float(policy.rsplit("-", 1)[-1].rstrip("pct")) / 100.0
-        threshold = float(np.quantile(score, 1.0 - budget_pct))
+        thresholds = causal_threshold(score, 1.0 - budget_pct)
+        finite = thresholds[np.isfinite(thresholds)]
+        # the scalar is the threshold in force at the end of the capture (1.0 while still warming up)
+        threshold = float(finite[-1]) if finite.size else 1.0
     if progress:
         progress(0.7, "forecast complete, explaining alarms")
 
     # Explain the windows a defender would actually open: the strongest alarms first, plus a regular
     # sample so the global attribution is not computed only on alarms (D-017).
-    alarm_idx = np.flatnonzero(score >= threshold)
+    alarm_idx = np.flatnonzero(score >= thresholds)
     ranked = alarm_idx[np.argsort(score[alarm_idx])[::-1][:explain_limit]] if alarm_idx.size else np.array([], int)
     sampled = np.arange(0, n_windows, explain_every)
     explain_at = sorted(set(ranked.tolist()) | set(sampled.tolist()))
@@ -185,7 +199,9 @@ def analyze_flows(
                 "p_cum_attack": [round(float(p), 4) for p in out["p_cum_attack"][t]],
                 "p_cum_escalate": [round(float(p), 4) for p in out["p_cum_escalate"][t]],
             },
-            "alarm": bool(score[t] >= threshold),
+            "alarm": bool(score[t] >= thresholds[t]),
+            # null during the warm-up, when the causal budget has too little history to fire
+            "threshold": round(float(thresholds[t]), 6) if np.isfinite(thresholds[t]) else None,
             "surprise": round(float(out["surprise"][t]), 4),
             "attention": [round(float(a), 4) for a in out["attention"][t]],
             "p_max": round(float(score[t]), 4),
@@ -193,7 +209,7 @@ def analyze_flows(
             "flow_count": int(feats["n_flows"].iloc[t]),
             "top_talkers": talkers.get(t, []),
             "top_features": (
-                top_features(expl["feature_attribution"], x[t], names) if expl is not None else []
+                top_features(expl["feature_attribution"], x[t], input_names) if expl is not None else []
             ),
         }
         if has_labels:
@@ -215,10 +231,11 @@ def analyze_flows(
             "stride_s": spec.stride_s,
         },
         "threshold": threshold,
+        "threshold_warmup_windows": CAUSAL_WARMUP if policy.startswith("expanding") else 0,
         "horizon_k": horizon,
         "stages": stage_catalogue(),
         "timeline": timeline,
-        "explanation_global": global_attribution(list(explanations.values()), names),
+        "explanation_global": global_attribution(list(explanations.values()), input_names),
     }
     if has_labels:
         onsets = onset_windows(stages, int(COMPROMISE_THRESHOLD))
@@ -229,13 +246,13 @@ def analyze_flows(
             "compromise_windows": int(comp.sum()),
             "spans": _stage_spans(stages, expanded, ts),
         }
-        payload["alarms"] = _alarm_rows(score, threshold, onsets, ts, stride_s, horizon)
+        payload["alarms"] = _alarm_rows(score, thresholds, onsets, ts, stride_s, horizon)
         payload["lead_time_summary"] = _lead_summary(
-            score, threshold, onsets, ts, stride_s, horizon
+            score, thresholds, onsets, ts, stride_s, horizon
         )
     else:
         payload["ground_truth"] = {"available": False}
-        payload["alarms"] = _alarm_rows(score, threshold, [], ts, stride_s, horizon)
+        payload["alarms"] = _alarm_rows(score, thresholds, [], ts, stride_s, horizon)
         payload["lead_time_summary"] = None
     if override_note:
         payload["dev_only"] = True
@@ -251,8 +268,10 @@ def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon, persistence: in
     A run shorter than ``persistence`` windows is still reported - the operator saw it - but it earns
     no lead time, because a single spike above the threshold is not a warning. This is the same rule
     ``lead_time_summary`` applies, so the two never disagree about how many episodes were warned.
+    ``threshold`` is a scalar or one value per window (the causal budget, D-034).
     """
-    above = score >= threshold
+    thresholds = np.broadcast_to(np.asarray(threshold, dtype=float), np.shape(score))
+    above = score >= thresholds
     rows, start = [], None
     for t, flag in enumerate(above):
         if flag and start is None:
@@ -276,6 +295,8 @@ def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon, persistence: in
                 "windows": int(length),
                 "sustained": bool(length >= persistence),
                 "p": round(float(score[begin : end + 1].max()), 4),
+                # the threshold in force when the run started, so "how far above" needs no scalar
+                "threshold": round(float(thresholds[begin]), 6),
                 "onset_t": int(nxt[0]) if nxt else None,
                 "lead_windows": int(lead) if lead is not None else None,
                 "lead_seconds": float(lead * stride_s) if lead is not None else None,
@@ -290,7 +311,8 @@ def _lead_summary(score, threshold, onsets, ts, stride_s, horizon) -> dict[str, 
     The alarm panel must be able to say "0 of 4 episodes warned early" as clearly as it says
     "fired 5 windows early", because today that is the honest answer (E14).
     """
-    rows = lead_times(np.asarray(score), list(onsets), float(threshold), int(horizon), persistence=2)
+    rows = lead_times(np.asarray(score), list(onsets), np.asarray(threshold, dtype=float), int(horizon),
+                      persistence=2)
     for row in rows:
         row["onset_ts"] = ts[row["onset"]].isoformat() + "Z"
         row["first_alarm_ts"] = (
@@ -298,12 +320,24 @@ def _lead_summary(score, threshold, onsets, ts, stride_s, horizon) -> dict[str, 
         )
         row["lead_seconds"] = float(row["lead_windows"] * stride_s)
     early = [r for r in rows if r["detected_early"]]
+    # D-022: a warned-early count is only a result if it beats an unaligned alarm series of the same
+    # shape. Rolling the margin score - threshold rolls the alarm series itself, so the alarm rate is
+    # held fixed even though the causal threshold moves; same counting rule as the rows above.
+    margin = np.asarray(score, dtype=float) - np.asarray(threshold, dtype=float)
+    margin = np.where(np.isfinite(margin), margin, -1.0)
+    null = circular_shift_null(margin, list(onsets), 0.0, int(horizon), n_shifts=2000, seed=42,
+                               persistence=2, confirm_before_onset=False) if onsets else {}
     return {
         "episodes": len(rows),
         "persistence_windows": 2,
         "warned_early": len(early),
         "mean_lead_windows": round(float(np.mean([r["lead_windows"] for r in early])), 2) if early else 0.0,
         "mean_lead_seconds": round(float(np.mean([r["lead_seconds"] for r in early])), 1) if early else 0.0,
+        "null_mean": round(float(null.get("null_mean", 0.0)), 2),
+        "null_p95": int(null.get("null_p95", 0)),
+        "p_value": round(float(null.get("p_value", 1.0)), 3),
+        # the only condition under which the dashboard may call an early warning verified
+        "beats_null": bool(null.get("exceeds_null_p95", False)),
         "per_episode": rows,
     }
 

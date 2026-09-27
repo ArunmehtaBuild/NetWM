@@ -12,6 +12,12 @@ leak test-day statistics into training.
 Gaussian rank *within the capture being transformed*, so no statistic crosses from the training days
 to the test day at all. It is the D-020 alert-budget idea applied to features instead of scores, and
 like the budget it uses no labels, so it is legal on an unseen capture at inference.
+
+``mode="relative"`` (D-035, E21) keeps the level and adds three causal views of it, so each feature
+becomes four inputs: the D-014 level, its Gaussian rank among the previous ``rank_window`` windows of
+the same capture, its one-window delta and its 5-window least-squares slope. The question it lets the
+model ask is "is this unusual for what this network was doing recently", not only "is this number like
+the ones seen on Tuesday". Every view uses windows ``<= t`` only.
 """
 
 from __future__ import annotations
@@ -24,7 +30,10 @@ import numpy as np
 import pandas as pd
 from scipy.special import ndtri
 
-MODES = ("log_standard", "rank")
+MODES = ("log_standard", "rank", "relative")
+#: E21's slope span, in windows; matches the S_t v2 trend block's short slope (D-026)
+RELATIVE_SLOPE = 5
+RELATIVE_VIEWS = ("level", "rank", "delta", "slope")
 
 
 @dataclass
@@ -52,6 +61,8 @@ class StateScaler:
 
     def fit(self, df: pd.DataFrame) -> "StateScaler":
         self.columns_ = list(df.columns)
+        if self.mode == "relative" and self.rank_window is None:
+            raise ValueError("relative mode needs a causal rank_window (D-035)")
         if self.mode == "rank":
             # Nothing to learn: rank statistics come from the capture being transformed, never from
             # the training days - that is the whole point of the mode.
@@ -101,7 +112,36 @@ class StateScaler:
                 out[rows] = self._rank(frame.iloc[rows])
             return out
         x = self._log(df[self.columns_]).to_numpy(dtype=np.float32)
-        return (x - self.mean_) / self.std_
+        level = (x - self.mean_) / self.std_
+        if self.mode == "relative":
+            return self._relative(df[self.columns_], level)
+        return level
+
+    @property
+    def n_outputs(self) -> int:
+        return len(self.columns_) * (len(RELATIVE_VIEWS) if self.mode == "relative" else 1)
+
+    def output_names(self) -> list[str]:
+        """Names of the transformed columns - what explanations must be reported against."""
+        if self.mode != "relative":
+            return list(self.columns_)
+        return [f"{c}@{v}" if v != "level" else c for v in RELATIVE_VIEWS for c in self.columns_]
+
+    def _relative(self, frame: pd.DataFrame, level: np.ndarray) -> np.ndarray:
+        """[level | causal rank | delta | slope], one capture at a time (callers pass one day)."""
+        rank = self._rank(frame)
+        delta = np.zeros_like(level)
+        delta[1:] = level[1:] - level[:-1]
+        w = RELATIVE_SLOPE
+        j = np.arange(w, dtype=np.float64) - (w - 1) / 2.0
+        kernel = (j / (j**2).sum()).astype(np.float32)
+        slope = np.zeros_like(level)
+        if len(level) >= w:
+            from numpy.lib.stride_tricks import sliding_window_view
+
+            # windows t-w+1..t -> slope at t; the first w-1 windows have no full span and stay 0
+            slope[w - 1:] = np.einsum("tfw,w->tf", sliding_window_view(level, w, axis=0), kernel)
+        return np.concatenate([level, rank, delta, slope], axis=1).astype(np.float32)
 
     def _rank(self, frame: pd.DataFrame) -> np.ndarray:
         """Gaussian rank of every column within one capture (rank-based inverse normal transform).
@@ -127,7 +167,7 @@ class StateScaler:
 
     def inverse_transform(self, x: np.ndarray) -> pd.DataFrame:
         """Back to feature space - needed to show a *predicted* future state in defender units."""
-        if self.mode == "rank":
+        if self.mode != "log_standard":
             # A rank has no fitted scale to undo; it would need the capture's own quantiles, which
             # the scaler deliberately does not keep.
             raise NotImplementedError("rank-mode scaling is not invertible (D-025)")

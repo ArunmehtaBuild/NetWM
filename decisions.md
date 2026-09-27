@@ -1106,3 +1106,181 @@ best of five policies on one held-out fold would be tuning the threshold on the 
 dashboard's threshold moves to the primary policy, which makes the threshold a per-window series in
 the API.
 
+**AMENDMENT (2026-09-27, G-9) - the product now runs the primary policy.** `netwm.metrics.causal_threshold`
+is the single implementation; `scripts/threshold_eval.py` calls it and reproduces every published E18
+table byte for byte, and `engine/predict.py` calls it for every upload and demo. Checkpoints that name
+`self-budget-10pct` are served as `expanding-10pct`. The payload carries the threshold per window
+(API contract v1.2) and the dashboard draws it as a stepped curve. The model card reads E18's primary
+row (F1 0.608, FPR 0.078) from `results/runs/e18-causal-threshold-e4e7-worldmodel-r2/`, with PR-AUC
+from E14. Its lead time stays 0: E18's 2 of 4 does not beat the null. The payload's
+`lead_time_summary` now carries D-022's circular-shift null on its own alarm series, and the alarm
+panel may only say "verified" when `beats_null` is true. On the full Thursday payload it reproduces
+E18's null exactly (chance 0.97 of 4, p = 0.331).
+
+---
+
+### D-035 — Pre-registration: the M1 v2 programme, and the scorecard that replaces Thursday F1
+*Date: 2026-09-27 · Status: accepted, written and pushed before any v2 model was trained or any E9/E11
+number computed · Experiments: E9, E11, E19-E24, E25 (CTU-13)*
+
+**Why.** E18 showed that Thursday F1 moves from 0.576 to 0.608 by changing only the threshold rule. A
+number the threshold alone can move is the wrong thing to optimise. PS 26153 asks for anticipation of
+attacker progression that survives a change of day. From here on, **no model change is adopted on
+Thursday F1.** F1 is still reported, because the PS asks for it.
+
+#### The scorecard (computed by `scripts/scorecard.py`, identical for every run)
+
+Every candidate is trained **leave-one-day-out on all five folds, on seeds 42, 43 and 44**, with the
+round-2 training budget (25 epochs, 16 Monte-Carlo samples at evaluation). Two scores are read off
+each held-out day:
+
+- `comp`: channel-0 `p_max`, compromise within K. This is the product's alarm statistic (D-019).
+- `threat`: channel-1 `p_max`, any hostile activity within K. It does not depend on the attack family.
+
+Four numbers per run:
+
+| id | name | definition |
+|---|---|---|
+| **S1** | causal alarm cost | `comp` at the causal expanding q90 (D-034) against `y_within_K`, pooled over Thursday and Friday (the only days with compromise): precision and FPR |
+| **S2** | anticipation by lead bin | Take every attack episode with Impact excluded: 19 onsets (Tue 3, Wed 1, Thu 8, Fri 7). For each, take the **eligible** (non-attack) windows at 1-4, 5-8, 9-12 and 13-20 windows before the onset, i.e. 0-2, 2-4, 4-6 and 6-10 min. Score each window by the percentile of its `threat` value among the same day's **reference windows**, which are the eligible windows at least 20 windows from every onset. Report the mean percentile per bin; 0.5 is chance. **S2\*** is the mean over the three bins from 2 to 10 min (5-20 windows). The same table for the 5 compromise onsets, scored with `comp`, is reported beside it and does not gate |
+| **S3** | early-warning significance | Strict warned-early (the D-022 guards) at the causal expanding q90 on `threat`, over the 19 non-Impact episodes. Tested per fold against a 2,000-shift circular null of the alarm series, then Fisher-combined over the four attack folds |
+| **S4** | cross-day robustness | S2\* for each held-out day (Tue, Wed, Thu, Fri); the worst day is reported next to the pooled value |
+
+S2 needs no threshold and is normalised within each day, so a shift in score scale between days
+cannot move it. Thursday F1 lacked exactly that property. The 0-2 min bin is reported but does not
+gate: a score that rises in the minute before an onset cannot be told apart from detecting the run-up.
+
+#### The adoption bar for every step (fixed now)
+
+Each step is compared with the **current stack** on the same seeds and folds. It is **adopted** only
+if all three conditions hold:
+
+1. **Anticipation:** the 3-seed mean of S2\* rises by **at least 0.03**, and it rises on **at least 2 of
+   the 3 seeds**.
+2. **No extra alarm cost:** the 3-seed mean of S1 precision falls by **less than 0.05**, and S1 FPR rises
+   by **less than 0.02**.
+3. **Stability:** no seed collapses, meaning no seed has Thursday `comp` PR-AUC below 0.20 (E16's
+   failure mode).
+
+A step that fails is reported with all four numbers and is not carried forward.
+
+**Packet features are the exception, because the PS requires them.** They are carried forward if
+conditions 2 and 3 hold. Condition 1 then answers the question "does packet information help early
+forecasting?", and that answer is reported whichever way it goes.
+
+If S3 ever passes (Fisher p below 0.05, with at least 2 of the 4 folds above the null's p95), that is a
+new early-warning claim on its own. It goes through D-021's review before it reaches any slide.
+
+#### The steps, in the order the stack is built
+
+| exp | step | the change, and nothing else |
+|---|---|---|
+| **E19** | baseline | The round-2 model on S_t v1 (70 features), 5 folds x 3 seeds (`m1v2-base`). Every later step is measured against the stack, starting here |
+| **E20** | packet block (CSV) | Adds 17 `pkt_` features. The flow meter recorded these per packet, but S_t never used them: the TCP initial-window distribution (zero and small-window rates, distinct count, entropy); the payload-size histogram (5 bins, weighted by packets); payload variability per direction; per-direction inter-arrival spread and the coefficient of variation of flow IAT (the slow-scan timing signal); RST and SYN-only probes by direction; and header bytes per packet (TCP options). **TTL, fragmentation and retransmissions are not in any flow CSV**, so this block cannot include them |
+| **E20r** | packet block (PCAP) | Adds the same families measured from the real packets, once the five CIC-IDS2017 day PCAPs are on disk: TTL mean, std and distinct count; fragment rate; retransmission rate; zero-window rate; the true per-packet payload histogram; and packet inter-arrival spread. Compared with E20 on the same seeds. **This is the FLOW-ONLY vs FLOW+PACKET comparison the PS asks for**; E20 is the half of it the CSVs allow |
+| **E21** | causal representation | Each feature becomes four inputs: its level (log-standardised as in D-014), its causal percentile among the previous 120 windows (E16's causal transform), its one-window delta, and its 5-window least-squares slope. Plus 6 **per-host-relative** features, each comparing an internal host with its own past in the capture: the maximum over hosts of the port-count z-score and of the fan-out z-score against the host's trailing 120 windows; the maximum flow-count ratio; the number of hosts that contact a peer they have never contacted before; and the most new ports any single host touched. All causal, all label-free |
+| **E22** | factorised target | Drops the dedicated compromise head: `P(compromise) = P(threat) x P(compromise stage \| hostile)`. The first factor, `threat`, is channel 1 and trains on every attack family of every training day. The second is a stage classifier over the six non-benign stages, trained only on hostile windows. The compromise BCE is applied to the product, and the rollout reads the product off imagined states as before |
+| **E23** | precursor curriculum | For every attack onset on the training days, adds extra sequences whose history ends 20, 16, 12, 8 or 4 windows (10, 8, 6, 4 or 2 min) before it. Each is imagined **20 steps** ahead and supervised on the true future labels. Inference is unchanged (K = 10), so any gain lives in the representation, not in a longer horizon |
+| **E24** | Model A vs Model B | A keeps the same encoder and causal attention but uses heads that predict "within K" directly: no GRU, no stochastic latent, no imagination. B is the stack as built. B keeps the latent dynamics only if it beats A under conditions 1-3 of the bar. Otherwise we report that the latent dynamics earn reconstruction, not lead time |
+
+**Guard against the garden of forking paths.** Each step runs exactly once, in this order, on the
+listed seeds. Nothing is tuned between steps, and no step is re-run with changed settings after its
+score has been read. If a step's code turns out to be wrong, the fix and the re-run are recorded as such.
+
+#### E9 - MITRE stage confusion (no bar; a measurement the PS requires)
+
+A confusion matrix on each held-out day: rows are the window's ground-truth stage (D-003), columns are
+`argmax stage_now`. It is computed for the submission checkpoint r2 (Thursday and Friday folds) and for
+every E19 fold, with per-stage precision and recall.
+
+One column records whether the stage **appears in that fold's training days at all**. Thursday's
+Lateral Movement occurs only on Thursday, so the Thursday-fold stage head has never seen that class,
+and any error there is structural, not a failure to learn. A technique-level view merges
+Reconnaissance and Lateral Movement (both T1046 in this capture) and is reported beside the stage view.
+
+#### E11 - do the explanations point at the attack? (bar fixed now)
+
+E11 runs the dashboard's Integrated-Gradients attribution (`engine/explain.py`, unchanged) on the r2
+checkpoint. It covers the attack windows of six held-out episodes, up to 24 evenly spaced windows per
+episode. Each episode's signature set is written down here:
+
+| episode | windows | signature features |
+|---|---|---|
+| Thu 17:00 external port scan | stage Recon, 17:00-17:02 | `uniq_dst_port`, `dst_port_entropy`, `port_fanout_max`, `ports_per_pair_max`, `seq_port_ratio`, `syn_no_ack_rate`, `has_rst_rate`, `tiny_flow_rate`, `one_way_rate`, `rst_cnt_sum`, `syn_cnt_sum` |
+| Thu internal sweep | stage Lateral Movement, 18:04-18:45 | `uniq_dst_ip`, `fanout_max`, `fanout_mean`, `uniq_dst_port`, `port_fanout_max`, `ports_per_pair_max`, `dst_ip_entropy`, `dst_port_entropy`, `n_flows`, `flows_per_s`, `top_talker_share`, `syn_no_ack_rate`, `has_rst_rate`, `tiny_flow_rate`, `is_internal_rate` |
+| Thu web attacks | stage Initial Access, 12:20-13:42 | `svc_http_rate`, `n_flows`, `flows_per_s`, `top_talker_share`, `pkt_len_mean_mean`, `pkt_len_max_max`, `bytes_mean`, `psh_cnt_sum`, `is_inbound_rate` |
+| Fri botnet C2 (Ares) | stage C2 | `beacon_score`, `is_outbound_rate`, `outbound_bytes`, `byte_asymmetry`, `svc_http_rate`, `flow_iat_mean_mean`, `flow_iat_std_mean`, `duration_s_mean` |
+| Fri port scan | stage Recon | the 17:00 scan's set |
+| Fri DDoS LOIC | stage Impact | `flows_per_s`, `n_flows`, `pkts_per_s`, `bytes_per_s`, `svc_http_rate`, `uniq_src_port`, `is_inbound_rate`, `syn_cnt_sum`, `top_talker_share` |
+
+**Per episode:** rank the 70 features by mean |attribution|, count how many signature features are in
+the top 8 (`hits`), and compute the hypergeometric p-value of scoring that many hits or more by chance.
+**An episode passes at p < 0.05, and E11 passes if at least 4 of the 6 episodes pass.**
+
+Two controls are reported and do not gate. The first is the Spearman correlation between the
+attribution ranking and a ranking by |scaled value| alone: if IG only restates which features are
+unusual, that correlation will be near 1. The second is the same hit count for the |value| ranking.
+
+#### E25 - CTU-13 (M2), scenario-held-out
+
+A new adapter reads the Argus `.binetflow` files. Its state is the part of S_t v1 that Argus fields
+can support: counts, ports, hosts, fan-out, entropies, flags from `State`, bytes, duration, direction,
+services and beaconing. CIC-only fields are dropped, not zero-filled.
+
+Labels:
+- `From-Botnet*-CC*` flows are Command and Control, a compromise stage (D-011).
+- Other `From-Botnet` flows are hostile activity: Reconnaissance for scans, Impact for DDoS and spam.
+- `Normal` and `Background` are benign.
+
+The evaluation is **leave-one-family-out** over the seven families: Neris (scenarios 1, 2, 9), Rbot
+(3, 4, 10, 11), Virut (5, 13), Menti (6), Sogou (7), Murlo (8) and NSIS (12). Seed 42 runs first. Each
+fold gets the same number of gradient steps as a CIC-IDS2017 fold, not the same number of epochs,
+because scenario 3 alone is 66 hours long. Scoring uses the same scorecard, with the botnet's first C2
+window as the compromise onset. The architecture is the final E19-E24 stack, fixed before the first
+CTU-13 run.
+
+**Revisit if:**
+- The five PCAPs cannot be obtained. Then E20r is reported as not run.
+- E19 reproduces the r2 numbers poorly, with Thursday `comp` PR-AUC outside the E10 seed range
+  (0.37-0.64). That would mean the harness changed, not the model.
+
+---
+
+### D-036 — CTU-13 flows become MITRE stages by their own labels; Argus-only state (E25)
+*Date: 2026-09-27 · Status: accepted, fixed before any CTU-13 model was trained · Evidence: the label vocabulary of scenarios 1-3 (164 distinct botnet labels), `src/netwm/data/ctu13.py`*
+
+**Decision.** `Background` and `Normal` flows are benign. `From-Botnet` flows map by keyword, first
+match wins:
+
+| label contains | stage | why |
+|---|---|---|
+| `CC` | Command and Control | the dataset's own C&C labels (`CC1-HTTP-Not-Encrypted`, `CC69-Custom-Encryption`, ...) |
+| `SPAM`, `DDoS`, `Flood`, `ICMP`, `-Ad-`, `ClickFraud`, `Proxy` | Impact | abuse of the host's resources: spam relay, ad fraud, floods (T1496, T1498) |
+| `Attempt`, `Scan` | Reconnaissance | unanswered connection attempts, which is what a scanning bot produces |
+| anything else (`DNS`, `Established`, `HTTP-Google-Net`, ...) | Command and Control | the infected host's own channel; CTU-13 does not tag every C&C flow `CC` |
+
+`To-Botnet` flows and flows towards an infected host are benign. They are replies or background
+traffic, and labelling them hostile would mark the victim's legitimate peers as attackers.
+
+The compromise onset is the first window at or past Lateral Movement (D-011), which here means the
+bot's first C2 window.
+
+**State.** Argus records the 5-tuple, start, duration, total packets, total and source bytes, and a
+`State` string of TCP flags per side. It records no inter-arrival, packet-length, initial-window,
+segment-size or active/idle statistics. The 14 S_t v1 features built from those fields are dropped
+from E25's inputs (`CIC_ONLY_FEATURES`), leaving 56. The E20 packet block needs the same missing fields
+and is absent. Packets are split between directions in proportion to bytes. A flow with no recorded
+reply is one-way, including the 91 ICMP flows in scenario 11 that have no `State` at all.
+
+**Why this and not a transfer test of the CIC model.** The public CTU-13 PCAPs are botnet-only
+(research/ctu13.md), so neither the CIC state nor the CIC checkpoint can be rebuilt on it. E25 is
+therefore a new model with the same architecture and training budget, evaluated leave-one-family-out.
+It tests whether *the method* transfers across families, not whether one set of weights does.
+
+**Known weakness, stated before the result.** Several captures are almost entirely botnet: Murlo
+96 % of windows C2, Virut s13 99.5 %, Menti 98 %. Several onsets fall in the first minutes of a
+capture: s06 at window 1, s08 at window 1, s03 at window 2. Those scenarios test detection, not
+anticipation, and S2 has few eligible pre-onset windows there.
+
+**Revisit if.** A labelled full-traffic CTU capture appears, or a label turns out to be misrouted by
+the keyword rule. The first match wins, so `Attempt-SPAM` is Impact, not Reconnaissance, by design.

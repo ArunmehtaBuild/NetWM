@@ -27,7 +27,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from netwm.data.processed import ProcessedDataset
 from netwm.evaluate import evaluate_fold
-from netwm.features.scaler import StateScaler
+from netwm.data.ctu13 import CIC_ONLY_FEATURES
+from netwm.features.flow_features import HOST_RELATIVE_FEATURES, PACKET_CSV_FEATURES
+from netwm.features.scaler import RELATIVE_VIEWS, StateScaler
 from netwm.models.world_model import WorldModelConfig
 from netwm.train import TrainConfig, prepare_days, train_model
 from netwm.utils import FIGURES, TABLES, ensure_dirs, git_sha, run_dir, save_run, set_seed
@@ -80,6 +82,26 @@ def plot_rollout(rollout: dict, day: str, out: Path) -> None:
     plt.close(fig)
 
 
+#: Named feature blocks a model config may drop (D-035). By exact name, never by prefix: three S_t v1
+#: features also start with ``pkt_len_``.
+FEATURE_BLOCKS: dict[str, tuple[str, ...]] = {
+    "packet_csv": PACKET_CSV_FEATURES,
+    "host_relative": HOST_RELATIVE_FEATURES,
+    # E25: S_t v1 columns built from fields Argus does not record - dropped, never learned as constants
+    "cic_only": CIC_ONLY_FEATURES,
+}
+
+
+def select_features(names: "list[str]", spec: dict | None) -> "list[str]":
+    """``spec = {"exclude_blocks": [...]}``; an absent spec keeps every column the build produced."""
+    drop: set[str] = set()
+    for block in (spec or {}).get("exclude_blocks", []):
+        if block not in FEATURE_BLOCKS:
+            raise SystemExit(f"unknown feature block {block!r}; known: {sorted(FEATURE_BLOCKS)}")
+        drop |= set(FEATURE_BLOCKS[block])
+    return [n for n in names if n not in drop]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config", default="configs/cicids2017.yaml")
@@ -87,11 +109,15 @@ def main() -> None:
                     help="YAML overriding WorldModelConfig / TrainConfig (e.g. the round-3 heads)")
     ap.add_argument("--data", default=None, help="override processed_dir from the config")
     ap.add_argument("--test-days", nargs="*", default=["thursday", "friday"])
+    ap.add_argument("--group-folds", default=None,
+                    help="YAML {fold: [test splits]}: hold out a whole group per fold (E25 leave-one-family-out)")
     ap.add_argument("--run", default="e4e7-worldmodel")
     ap.add_argument("--epochs", type=int, default=20)
     ap.add_argument("--samples", type=int, default=16, help="Monte-Carlo rollouts per window")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--smoke", action="store_true", help="2 epochs, first test day only")
+    ap.add_argument("--no-figures", action="store_true",
+                    help="skip the per-fold E5/E6 PNGs (sweeps: the scorecard is the result)")
     args = ap.parse_args()
 
     set_seed(args.seed)
@@ -108,11 +134,17 @@ def main() -> None:
         else {}
     )
     test_days = args.test_days[:1] if args.smoke else args.test_days
+    # D-035: a run may drop named feature blocks; everything downstream (prepare_days, the checkpoint's
+    # feature_names, inference) reads ds.feature_names, so narrowing it here narrows all of them.
+    ds.feature_names = select_features(ds.feature_names, overrides.get("features"))
     train_cfg = TrainConfig(epochs=2 if args.smoke else args.epochs, **overrides.get("train", {}))
+    views = len(RELATIVE_VIEWS) if overrides.get("scaler", {}).get("mode") == "relative" else 1
     model_cfg = WorldModelConfig(
-        n_features=len(ds.feature_names), horizon_k=ds.horizon, n_stages=7,
+        n_features=len(ds.feature_names) * views, horizon_k=ds.horizon, n_stages=7,
         **overrides.get("model", {}),
     )
+    print(f"{len(ds.feature_names)} features x {views} view(s) = {model_cfg.n_features} model inputs; "
+          f"arch={model_cfg.arch} hazard={model_cfg.hazard} curriculum={bool(train_cfg.curriculum)}")
     if len(train_cfg.risk_columns) != model_cfg.n_risk:
         raise SystemExit(
             f"config mismatch: n_risk={model_cfg.n_risk} but "
@@ -123,9 +155,15 @@ def main() -> None:
     model_root.mkdir(parents=True, exist_ok=True)
 
     rows, per_day, histories = [], {}, {}
-    for test_day in test_days:
-        train_days = [d for d in ds.splits if d != test_day]
-        print(f"\n== fold: test={test_day}  train={train_days}  device={device}")
+    # one fold per held-out day, or one per group of splits held out together (D-035, E25)
+    folds = (yaml.safe_load(Path(args.group_folds).read_text(encoding="utf-8")) if args.group_folds
+             else {d: [d] for d in test_days})
+    if args.smoke:
+        folds = dict(list(folds.items())[:1])
+    for fold, held_out in folds.items():
+        test_day = fold
+        train_days = [d for d in ds.splits if d not in held_out]
+        print(f"\n== fold: {fold} test={held_out}  train={train_days}  device={device}")
         # an absent `scaler:` block is the D-014 log-standardiser, i.e. round 2 exactly (D-025)
         scaler = StateScaler(**overrides.get("scaler", {})).fit(ds.concat(train_days)[ds.feature_names])
         model, history = train_model(ds, train_days, train_cfg, model_cfg, device, scaler)
@@ -133,18 +171,19 @@ def main() -> None:
 
         prepared = prepare_days(ds, ds.splits, scaler, train_cfg.risk_columns,
                                 train_cfg.onset_source, train_cfg.onset_gap)
-        fold_rows, extras = evaluate_fold(
-            model,
-            {d: prepared[d] for d in train_days},
-            test_day,
-            prepared[test_day],
-            ds.horizon,
-            ds.stride_s,
-            device,
-            n_samples=4 if args.smoke else args.samples,
-        )
-        rows.extend(fold_rows)
-        per_day[test_day] = {k: v for k, v in extras.items() if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
+        for held in held_out:
+            fold_rows, extras = evaluate_fold(
+                model,
+                {d: prepared[d] for d in train_days},
+                held,
+                prepared[held],
+                ds.horizon,
+                ds.stride_s,
+                device,
+                n_samples=4 if args.smoke else args.samples,
+            )
+            rows.extend(fold_rows)
+            per_day[held] = {k: v for k, v in extras.items() if k not in {"p_cum", "p_lo", "p_hi", "attention"}}
 
         torch.save(
             {
@@ -155,6 +194,7 @@ def main() -> None:
                 "scaler": scaler,
                 "train_days": train_days,
                 "test_day": test_day,
+                "test_days": list(held_out),
                 "git_sha": git_sha(),
                 "horizon_k": ds.horizon,
                 "stride_s": ds.stride_s,
@@ -167,10 +207,12 @@ def main() -> None:
         )
         # Namespaced by run id: these filenames used to be run-independent, so any training run
         # silently overwrote the published E5/E6 figures of a previous one.
-        plot_forecast(ds, test_day, extras, extras["threshold_train"],
-                      FIGURES / f"e6_{run_id}_{test_day}_worldmodel_forecast.png")
-        plot_rollout(extras["rollout"], test_day,
-                     FIGURES / f"e5_{run_id}_{test_day}_rollout_fidelity.png")
+        if not args.no_figures:
+            plot_forecast(ds, test_day, extras, extras["threshold_train"],
+                          FIGURES / f"e6_{run_id}_{test_day}_worldmodel_forecast.png")
+        if extras["rollout"] is not None and not args.no_figures:
+            plot_rollout(extras["rollout"], test_day,
+                         FIGURES / f"e5_{run_id}_{test_day}_rollout_fidelity.png")
 
         for row in fold_rows:
             keys = ("target", "threshold_mode", "f1", "precision", "recall", "fpr", "pr_auc",

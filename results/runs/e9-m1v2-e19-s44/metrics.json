@@ -1,0 +1,2737 @@
+{
+  "run_id": "e9-m1v2-e19-s44",
+  "timestamp_utc": "2026-09-27T08:30:16+00:00",
+  "git_sha": "43af51c",
+  "config": {
+    "run": "m1v2-e19-s44",
+    "data": "data/processed/cicids2017_m1v2",
+    "seed": 42
+  },
+  "metrics": {
+    "summary": {
+      "friday": {
+        "accuracy": 0.6756,
+        "hostile_windows": 209,
+        "hostile_stage_accuracy": 0.201,
+        "hostile_detected": 0.4498,
+        "benign_false_stage": 0.1937,
+        "stages_present_not_in_training": [
+          "COMMAND_AND_CONTROL"
+        ]
+      },
+      "monday": {
+        "accuracy": 0.9251,
+        "hostile_windows": 0,
+        "hostile_stage_accuracy": null,
+        "hostile_detected": null,
+        "benign_false_stage": 0.0749,
+        "stages_present_not_in_training": []
+      },
+      "thursday": {
+        "accuracy": 0.7469,
+        "hostile_windows": 236,
+        "hostile_stage_accuracy": 0.0127,
+        "hostile_detected": 0.3432,
+        "benign_false_stage": 0.0177,
+        "stages_present_not_in_training": [
+          "LATERAL_MOVEMENT"
+        ]
+      },
+      "tuesday": {
+        "accuracy": 0.749,
+        "hostile_windows": 252,
+        "hostile_stage_accuracy": 0.1429,
+        "hostile_detected": 0.9563,
+        "benign_false_stage": 0.0401,
+        "stages_present_not_in_training": []
+      },
+      "wednesday": {
+        "accuracy": 0.7512,
+        "hostile_windows": 157,
+        "hostile_stage_accuracy": 0.3503,
+        "hostile_detected": 0.9236,
+        "benign_false_stage": 0.1756,
+        "stages_present_not_in_training": []
+      }
+    },
+    "per_stage": [
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "BENIGN",
+        "support": 759,
+        "predicted": 727,
+        "precision": 0.8418,
+        "recall": 0.8063,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "RECONNAISSANCE",
+        "support": 52,
+        "predicted": 17,
+        "precision": 0.0588,
+        "recall": 0.0192,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "INITIAL_ACCESS",
+        "support": 0,
+        "predicted": 76,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "LATERAL_MOVEMENT",
+        "support": 0,
+        "predicted": 75,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 116,
+        "predicted": 0,
+        "precision": null,
+        "recall": 0.0,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "stage": "IMPACT",
+        "support": 41,
+        "predicted": 73,
+        "precision": 0.5616,
+        "recall": 1.0,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "BENIGN",
+        "support": 759,
+        "predicted": 727,
+        "precision": 0.8418,
+        "recall": 0.8063,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "DISCOVERY_T1046",
+        "support": 52,
+        "predicted": 92,
+        "precision": 0.2391,
+        "recall": 0.4231,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "INITIAL_ACCESS",
+        "support": 0,
+        "predicted": 76,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 116,
+        "predicted": 0,
+        "precision": null,
+        "recall": 0.0,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "technique",
+        "stage": "IMPACT",
+        "support": 41,
+        "predicted": 73,
+        "precision": 0.5616,
+        "recall": 1.0,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "BENIGN",
+        "support": 974,
+        "predicted": 901,
+        "precision": 1.0,
+        "recall": 0.9251,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "RECONNAISSANCE",
+        "support": 0,
+        "predicted": 25,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "INITIAL_ACCESS",
+        "support": 0,
+        "predicted": 30,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "LATERAL_MOVEMENT",
+        "support": 0,
+        "predicted": 2,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 15,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 1,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "BENIGN",
+        "support": 974,
+        "predicted": 901,
+        "precision": 1.0,
+        "recall": 0.9251,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "DISCOVERY_T1046",
+        "support": 0,
+        "predicted": 27,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "INITIAL_ACCESS",
+        "support": 0,
+        "predicted": 30,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 15,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "technique",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 1,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "BENIGN",
+        "support": 736,
+        "predicted": 878,
+        "precision": 0.8235,
+        "recall": 0.9823,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "RECONNAISSANCE",
+        "support": 2,
+        "predicted": 75,
+        "precision": 0.0,
+        "recall": 0.0,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "INITIAL_ACCESS",
+        "support": 126,
+        "predicted": 4,
+        "precision": 0.75,
+        "recall": 0.0238,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "LATERAL_MOVEMENT",
+        "support": 108,
+        "predicted": 0,
+        "precision": null,
+        "recall": 0.0,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 13,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 2,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "BENIGN",
+        "support": 736,
+        "predicted": 878,
+        "precision": 0.8235,
+        "recall": 0.9823,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "DISCOVERY_T1046",
+        "support": 110,
+        "predicted": 75,
+        "precision": 0.84,
+        "recall": 0.5727,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "INITIAL_ACCESS",
+        "support": 126,
+        "predicted": 4,
+        "precision": 0.75,
+        "recall": 0.0238,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 13,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "technique",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 2,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "BENIGN",
+        "support": 724,
+        "predicted": 706,
+        "precision": 0.9844,
+        "recall": 0.9599,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "RECONNAISSANCE",
+        "support": 0,
+        "predicted": 87,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "INITIAL_ACCESS",
+        "support": 252,
+        "predicted": 36,
+        "precision": 1.0,
+        "recall": 0.1429,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "LATERAL_MOVEMENT",
+        "support": 0,
+        "predicted": 34,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 113,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "BENIGN",
+        "support": 724,
+        "predicted": 706,
+        "precision": 0.9844,
+        "recall": 0.9599,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "DISCOVERY_T1046",
+        "support": 0,
+        "predicted": 121,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "INITIAL_ACCESS",
+        "support": 252,
+        "predicted": 36,
+        "precision": 1.0,
+        "recall": 0.1429,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 113,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "technique",
+        "stage": "IMPACT",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "BENIGN",
+        "support": 860,
+        "predicted": 721,
+        "precision": 0.9834,
+        "recall": 0.8244,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "RECONNAISSANCE",
+        "support": 0,
+        "predicted": 27,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "INITIAL_ACCESS",
+        "support": 22,
+        "predicted": 151,
+        "precision": 0.0397,
+        "recall": 0.2727,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "LATERAL_MOVEMENT",
+        "support": 0,
+        "predicted": 9,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 18,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "stage": "IMPACT",
+        "support": 135,
+        "predicted": 91,
+        "precision": 0.5385,
+        "recall": 0.363,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "BENIGN",
+        "support": 860,
+        "predicted": 721,
+        "precision": 0.9834,
+        "recall": 0.8244,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "DISCOVERY_T1046",
+        "support": 0,
+        "predicted": 36,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "INITIAL_ACCESS",
+        "support": 22,
+        "predicted": 151,
+        "precision": 0.0397,
+        "recall": 0.2727,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "COMMAND_AND_CONTROL",
+        "support": 0,
+        "predicted": 18,
+        "precision": 0.0,
+        "recall": null,
+        "in_training": true
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "EXFILTRATION",
+        "support": 0,
+        "predicted": 0,
+        "precision": null,
+        "recall": null,
+        "in_training": false
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "technique",
+        "stage": "IMPACT",
+        "support": 135,
+        "predicted": 91,
+        "precision": 0.5385,
+        "recall": 0.363,
+        "in_training": true
+      }
+    ],
+    "confusion": [
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "BENIGN",
+        "windows": 612
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "RECONNAISSANCE",
+        "windows": 16
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "INITIAL_ACCESS",
+        "windows": 58
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 54
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "IMPACT",
+        "windows": 19
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "BENIGN",
+        "windows": 10
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "RECONNAISSANCE",
+        "windows": 1
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "INITIAL_ACCESS",
+        "windows": 7
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 21
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "IMPACT",
+        "windows": 13
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "BENIGN",
+        "windows": 105
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "INITIAL_ACCESS",
+        "windows": 11
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "friday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "IMPACT",
+        "windows": 41
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "BENIGN",
+        "windows": 901
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "RECONNAISSANCE",
+        "windows": 25
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "INITIAL_ACCESS",
+        "windows": 30
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 2
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 15
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "IMPACT",
+        "windows": 1
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "monday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "BENIGN",
+        "windows": 723
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "RECONNAISSANCE",
+        "windows": 7
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 6
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "BENIGN",
+        "windows": 2
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "BENIGN",
+        "windows": 109
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "RECONNAISSANCE",
+        "windows": 5
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "INITIAL_ACCESS",
+        "windows": 3
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 7
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "IMPACT",
+        "windows": 2
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "BENIGN",
+        "windows": 44
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "RECONNAISSANCE",
+        "windows": 63
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 1
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "thursday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "BENIGN",
+        "windows": 695
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "RECONNAISSANCE",
+        "windows": 11
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 18
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "BENIGN",
+        "windows": 11
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "RECONNAISSANCE",
+        "windows": 76
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "INITIAL_ACCESS",
+        "windows": 36
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 34
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 95
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "tuesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "BENIGN",
+        "windows": 709
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "RECONNAISSANCE",
+        "windows": 27
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "INITIAL_ACCESS",
+        "windows": 68
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 7
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 14
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "BENIGN",
+        "pred": "IMPACT",
+        "windows": 35
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "RECONNAISSANCE",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "BENIGN",
+        "windows": 3
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "INITIAL_ACCESS",
+        "windows": 6
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 2
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 4
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "INITIAL_ACCESS",
+        "pred": "IMPACT",
+        "windows": 7
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "LATERAL_MOVEMENT",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "COMMAND_AND_CONTROL",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "BENIGN",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "INITIAL_ACCESS",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "EXFILTRATION",
+        "pred": "IMPACT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "BENIGN",
+        "windows": 9
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "RECONNAISSANCE",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "INITIAL_ACCESS",
+        "windows": 77
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "LATERAL_MOVEMENT",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "COMMAND_AND_CONTROL",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "EXFILTRATION",
+        "windows": 0
+      },
+      {
+        "run": "m1v2-e19-s44",
+        "test_day": "wednesday",
+        "view": "stage",
+        "true": "IMPACT",
+        "pred": "IMPACT",
+        "windows": 49
+      }
+    ]
+  }
+}

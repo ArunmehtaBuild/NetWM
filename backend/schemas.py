@@ -110,6 +110,9 @@ class TimelineEntry(BaseContractModel):
     surprise: float
     p_max: Optional[float] = None
     p_max_mc: Optional[float] = None
+    # The alarm threshold in force at this window (D-034: the causal budget moves with the capture);
+    # null during the warm-up, when no alarm can fire.
+    threshold: Optional[float] = None
     top_features: list[TopFeatureItem] = Field(default_factory=list)
     attention: list[float] = Field(default_factory=list)
     flow_count: int = 0
@@ -149,6 +152,7 @@ class AlarmItem(BaseContractModel):
     lead_seconds: Optional[float] = None
     windows: Optional[int] = None
     sustained: Optional[bool] = None
+    threshold: Optional[float] = None
 
 
 class ExplanationGlobalItem(BaseContractModel):
@@ -170,6 +174,11 @@ class LeadTimeSummaryItem(BaseContractModel):
     episodes: int
     persistence_windows: int = 2
     warned_early: int
+    # D-022 circular-shift null on the same alarm series (older payloads omit these)
+    null_mean: Optional[float] = None
+    null_p95: Optional[int] = None
+    p_value: Optional[float] = None
+    beats_null: Optional[bool] = None
     mean_lead_windows: float = 0.0
     mean_lead_seconds: float = 0.0
     per_episode: list[PerEpisodeItem] = Field(default_factory=list)
@@ -189,9 +198,11 @@ class SourceItem(BaseContractModel):
 class AnalysisResultPayload(BaseContractModel):
     payload_version: str = "1.1"
     alarm_statistic: str = "p_max (mean path)"
-    threshold_policy: str = "self-budget-10pct"
+    threshold_policy: str = "expanding-10pct"
     source: SourceItem
+    # The threshold in force at the last window; the per-window series is timeline[].threshold.
     threshold: float
+    threshold_warmup_windows: int = 0
     horizon_k: int
     stages: list[StageItem]
     timeline: list[TimelineEntry]

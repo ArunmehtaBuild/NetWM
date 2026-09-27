@@ -26,6 +26,8 @@ the commentary column.
 | E3b | lagged logistic regression | leave-one-day-out | `python scripts/benchmark_baselines.py --lags 4` | `results/tables/e2e3_baselines_lags4.csv` | history does not help the baseline: 0 early warnings, ranking worse than lags=0 |
 | E10 | ablations | 9 retrained runs (`e10-*`), 3 seeds | `run_y4_ablation.bat` -> `rescore_pmax.py --run e10-*` -> `e10_collect.py` | `results/tables/e10_ablation_summary.csv` | neither component passes D-030; the multi-step loss earns detection (2 of 3 seeds), not rollout; headline F1 spans 0.43-0.57 over seeds |
 | E17 | calibration | r2 checkpoints | `python scripts/calibration_eval.py` | `results/tables/e17_*`, `results/figures/e17_reliability.png` | temperature scaling improves held-out Thursday and fails held-out Friday (worse than a constant forecast); budget stays |
+| E9 | MITRE stage confusion (G-4) | r2, held-out Thu + Fri | `python scripts/stage_confusion.py --run e4e7-worldmodel-r2` (D-035) | `results/tables/e9_*`, `results/figures/e9_*.png`, `results/runs/e9-*` | the stage that matters on each held-out day never occurs in its training days (Thu Lateral Movement, Fri C2): recall 0 on both; web attacks all called benign; merged as T1046 the sweep is found at precision 0.885 |
+| E11 | explanation sanity (G-7) | r2, 6 held-out episodes | `python scripts/explain_sanity.py --run e4e7-worldmodel-r2` (D-035) | `results/tables/e11_*`, `results/figures/e11_*.png`, `results/runs/e11-*` | **fails its bar: 1 of 6 episodes** put the known signature in the top 8 (bar >= 4); on both port scans a plain |value| ranking does better than IG |
 | E18 | causal alert budget (G-8) | r2 + E10 seeds, published scores | `python scripts/threshold_eval.py` (D-034) | `results/tables/e18_*`, `results/figures/e18_*` | the causal expanding q90 keeps the signal (Thursday F1 0.608, 0.52-0.61 over seeds) but alarms 16.8 % of windows at FPR 0.078; the non-causal 0.576 is an upper bound only; the 5 % precision 0.959 does not survive |
 
 ## Planned experiment set (M1)
@@ -1039,8 +1041,8 @@ cannot be adopted on one fold's result.
 
 **Commitment (D-034).** Everywhere D-032 applies, the deployable Thursday number becomes **F1 0.608
 (0.52-0.61 over three seeds) at 16.8 % of windows alarmed, precision 0.614, FPR 0.078**, with the
-causal expanding budget. 0.576 may be quoted only as a non-causal upper bound. The dashboard still
-computes the non-causal threshold until the product card lands.
+causal expanding budget. 0.576 may be quoted only as a non-causal upper bound. *(G-9, `f2bb6de`:
+the dashboard, model card and fixtures now run the primary policy through the same function.)*
 
 Artefacts:
 - `results/tables/e18_window_scores_e4e7-worldmodel-r2_{thursday,friday}.csv`: per window, the
@@ -1049,24 +1051,108 @@ Artefacts:
   days x policies).
 - `results/figures/e18_{thursday,friday}_thresholds.png`, `results/figures/e18_score_distributions.png`.
 
+---
+
+## E9 - MITRE stage confusion on held-out days (G-4)
+
+```
+python scripts/stage_confusion.py --run e4e7-worldmodel-r2      # design: D-035 (529289d)
+```
+Rows are the window's ground-truth stage; columns are `argmax stage_now`, read off the filtered state
+on the deterministic mean path. Scored on each fold's held-out day only.
+
+*Design credit: Yash designed E9 independently (PR #13). His script, with a one-character fix for
+Python 3.10, reproduces the matrices below exactly. The script on main adds the `in_training` column
+and the technique view, and writes the artefacts.*
+
+| held-out day | stage | windows | predicted | precision | recall | stage on a training day? |
+|---|---|---:|---:|---:|---:|:---:|
+| Thursday | Benign | 736 | 888 | 0.821 | 0.991 | yes |
+| | Reconnaissance (17:00 scan) | 2 | 78 | 0.013 | 0.500 | yes |
+| | Initial Access (web attacks) | 126 | 0 | - | **0.000** | yes |
+| | Lateral Movement | 108 | 0 | - | **0.000** | **no** |
+| Friday | Benign | 759 | 556 | 0.845 | 0.619 | yes |
+| | Reconnaissance (port scan) | 52 | 37 | 0.405 | 0.288 | yes |
+| | Command and Control (Ares) | 116 | 0 | - | **0.000** | **no** |
+| | Impact (DDoS) | 41 | 54 | 0.759 | **1.000** | yes |
+
+Where the Thursday windows go: Lateral Movement goes to Reconnaissance on 68 windows, to Benign on 35
+and to Impact on 5. The web attacks go to Benign (123) and Reconnaissance (3). On Friday, C2 goes to
+Benign (82) and Initial Access (34). And 38 % of Friday's benign windows get a hostile stage: Initial
+Access 185, Lateral Movement 69, Reconnaissance 22, Impact 13.
+
+**Technique view** (Reconnaissance and Lateral Movement merged as T1046, network service discovery,
+which D-012 splits only by source address). Thursday's T1046 windows: precision **0.885**, recall
+**0.627**. Friday's: precision 0.248, recall 0.577.
+
+### What E9 shows
+
+1. **The stage that matters on each held-out day is a class its training days never contain.**
+   Leave-one-day-out on CIC-IDS2017 is leave-one-family-out (D-006). Thursday is the only day with
+   Lateral Movement and Friday the only day with C2, so the stage head scores 0 recall on both by
+   construction. That is a property of the split, not a model failure, but it means **stage mapping
+   of compromise cannot be validated on this dataset with a held-out day.** M2 (CTU-13, seven
+   families) is where it can be.
+2. **The sweep is found as a technique, not as a stage.** Merged, 68 of the 108 sweep windows are
+   called discovery, at precision 0.885. The model recognises the behaviour; it has no way of telling
+   an internal source from an external one, because it never saw an internal scan.
+3. **Initial Access is missed entirely on Thursday** (0 of 126), although brute force was in
+   training on Tuesday. Web brute force and XSS against port 80 do not look like FTP/SSH-Patator in
+   flow aggregates, and the stage head does not generalise across that gap.
+4. **Impact transfers** (Friday DDoS recall 1.0, trained on Wednesday's DoS). This is the one family
+   with a close relative in training, which fits D-029's diagnosis: transfer works within a family
+   and fails across families.
+
+Artefacts: `results/tables/e9_e4e7-worldmodel-r2_{confusion,per_stage}.csv`,
+`results/figures/e9_e4e7-worldmodel-r2.png`, `results/runs/e9-e4e7-worldmodel-r2/metrics.json`.
 
 ---
 
-## E9 - MITRE stage confusion matrix
+## E11 - Do the dashboard's explanations point at the attack? (G-7)
 
-*Script designed by Yash, to be run by Atharv.*
-`python scripts/e9_confusion_matrix.py`
+```
+python scripts/explain_sanity.py --run e4e7-worldmodel-r2       # signature sets and bar: D-035 (529289d)
+```
+This runs the dashboard's own Integrated-Gradients attribution (`engine/explain.explain_window`,
+unchanged) on the r2 checkpoint, over up to 24 evenly spaced attack windows per held-out episode. For
+each episode it ranks the 70 features by mean |attribution| and counts the pre-registered signature
+features in the top 8. The p-value is hypergeometric (the chance of that many hits from a random 8).
+**The bar: an episode passes at p < 0.05, and E11 passes if at least 4 of 6 do.**
 
-This experiment evaluates the per-stage precision and recall on the held-out days (Thursday and Friday), using the r2 checkpoint.
-*(Results to be added once run).*
+| episode | windows | IG hits / 8 | p | chance | control: \|value\| hits | Spearman IG vs \|value\| |
+|---|---:|---:|---:|---:|---:|---:|
+| Thu 17:00 external port scan | 2 | 3 | 0.105 | 1.26 | **5** (p 0.002) | 0.81 |
+| Thu internal sweep | 24 | 4 | 0.059 | 1.71 | 4 (p 0.059) | 0.79 |
+| Thu web attacks | 24 | 1 | 0.688 | 1.03 | 2 | 0.46 |
+| Fri botnet C2 (Ares) | 24 | 3 | **0.043** | 0.91 | 1 | 0.45 |
+| Fri port scan | 24 | 1 | 0.765 | 1.26 | **4** (p 0.018) | 0.77 |
+| Fri DDoS LOIC | 24 | 3 | 0.060 | 1.03 | 2 | 0.80 |
 
----
+**E11 fails: 1 of 6 episodes passes** (bar: 4).
 
-## E11 - Explainability sanity check
+*Design credit: Yash's E11 draft (PR #13) printed the top attributions for one window per attack,
+without a criterion, and crashed on a key name. The version run here fixes the signature sets and the
+bar before looking.*
 
-*Script designed by Yash, to be run by Atharv.*
-`python scripts/e11_explain_sanity.py`
+### What E11 shows
 
-This sanity check verifies whether the top attributions on known attacks point at their known signatures, such as the port spread on the 17:00 scan (Reconnaissance) and the fan-out on the internal sweep (Lateral Movement).
-*(Results to be added once run).*
+1. **The attributions are above chance but do not reliably point at the attack.** Every episode except
+   the two weakest scores more hits than chance, and the internal sweep (4 hits, p 0.059) and DDoS (3,
+   p 0.060) come close. But only Friday C2 clears p < 0.05. The dashboard's why panel cannot be
+   presented as "the model looks at the right features".
+2. **On port scans, "which features are unusual" beats IG.** Ranking by |scaled value| puts 5 scan
+   signatures in the top 8 on Thursday and 4 on Friday; IG puts 3 and 1. IG attributes the
+   *compromise forecast*, and a scan from outside is not a compromise, so it spreads its attribution
+   over features like `svc_rdp_rate` and `proto_udp_rate`. That is a mismatch between the target
+   explained and the question asked, and it matches E9's finding that the stage and risk heads read
+   scans as something else.
+3. **IG largely restates the input's magnitude.** On four of the six episodes it correlates 0.77-0.81
+   with the |value| ranking. The one episode that passes is also the one where it departs most from it
+   (rho 0.45).
+
+**Consequence for the product.** The why panel should label its bars as "features pushing the
+compromise score", not "why this is an attack". The claims audit carries this.
+
+Artefacts: `results/tables/e11_e4e7-worldmodel-r2_{episodes,rankings}.csv`,
+`results/figures/e11_e4e7-worldmodel-r2.png`, `results/runs/e11-e4e7-worldmodel-r2/metrics.json`.
 

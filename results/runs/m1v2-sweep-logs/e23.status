@@ -1,0 +1,4 @@
+m1v2-e23-s42 exit=127
+m1v2-e23-s44 exit=0
+m1v2-e23-s43 exit=0
+m1v2-e23-s42 exit=0 (re-run after a silent crash, D-035 guard)

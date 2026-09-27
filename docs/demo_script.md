@@ -29,8 +29,9 @@ Monday-Thursday) - a family the model never saw in training.
 
 1. `run_demo.bat`; the API is on :5000, the dashboard on :8080. **Wi-Fi off** - the offline claim is
    part of the demo.
-2. `GET /api/model` shows the r2 card: Thursday F1 **0.576**, FPR **0.027**, PR-AUC **0.640**, LR
-   F1 **0.011**. If it shows zeros, a run folder is missing (D-024) - stop.
+2. `GET /api/model` shows the r2 card: Thursday F1 **0.608**, FPR **0.078**, PR-AUC **0.640**, LR
+   F1 **0.011** (E18's causal row, G-9). If it shows 0.576 the API is running old code; if it shows
+   zeros, a run folder is missing (D-024) - stop.
 3. Load `thursday_infiltration` once to warm the model (~15 s cold). The payload must say
    `"mock": false`.
 4. Pre-select nothing. Scroll the timeline to 16:40.
@@ -42,11 +43,11 @@ Monday-Thursday) - a family the model never saw in training.
 | **0:00-0:30** | title | "Most intrusion detectors classify one flow at a time. We built a *world model*: it learns how the network's state moves from one 30-second window to the next, then rolls that forward ten steps without seeing any more traffic. Everything you'll see runs offline, on a day the model never trained on." |
 | **0:30-1:00** | pick `thursday_infiltration`, progress bar | "This is two hours of Thursday from CIC-IDS2017, as flow records - a hundred and seventy thousand of them. The model trained on the other four days." |
 | **1:00-1:45** | timeline 16:40-17:15; hover 17:00 in the ribbon | "Quiet traffic until 17:00, when an outside host scans one of our servers - 954 ports in fourteen seconds. Watch the surprise score: it's the model's own error at predicting the next window. Typical is about 0.15; here it jumps to 7.5. Infiltration risk score stays low, correctly - a scan from outside is reconnaissance, not a compromise." |
-| | the 17:10 alarm | **Scripted, do not improvise:** "There's one alarm here at 17:10, eight minutes before the attacker gets in. We don't count it as a warning. It's outside our five-minute horizon, and when we tested early alarms against chance, ours didn't beat it (p = 0.41). So it's a false positive, and we score it as one." |
+| | the 17:03-17:12 alarms | **Scripted, do not improvise:** "The threshold is the stepped line: it's set only from the traffic seen so far, so it starts low on a quiet afternoon. The scan trips it at 17:00, and it fires again from 17:03 to 17:12 - six to fifteen minutes before the attacker gets in. We don't count those as warnings. They're outside our five-minute horizon, and when we tested early alarms against chance, ours didn't beat it (p = 0.33 on the full day). The dashboard runs that same test live and says so in the alarm panel." |
 | **1:45-2:45** | 18:04-18:45; click the 18:23 alarm; open the why panel | "At 17:19, 192.168.10.8 opens a session back to the attacker's machine - it's been compromised. From 17:33 it starts sweeping the internal network - eleven hosts, seventy thousand flows - and from 18:04 it's the top talker, 2 000 to 5 000 flows a minute. Surprise goes to 15-50. The why panel shows what the model looked at: destination-port spread up, and which earlier windows it attended to." |
 | | stage ribbon over the sweep | "The ribbon shows the model calling this reconnaissance, where our ground truth says lateral movement. They're the same technique - network service discovery, T1046 - seen from inside instead of outside. We split them by source address (D-012); the model hasn't learned that split. We'd rather show it than hide it." |
 | **2:45-3:15** | the forecast cone on a sweep window | "This cone is the rollout: ten steps imagined in latent space, with Monte-Carlo bands. That's what makes it a world model rather than a classifier. Averaged over steps 2-10, it predicts the next state better than just repeating the current one. At step 1 it doesn't, and we report that too." |
-| **3:15-4:00** | model card | "On the full held-out day, with a threshold set only from the traffic seen so far, the checkpoint we ship scores F1 0.61, precision 0.61, at a 7.8 % false-positive rate. Retrained on three seeds, the same method ranges from 0.52 to 0.61. The logistic regression the problem statement asks us to beat scores 0.011 on the same features at its own threshold. On this slice, 24 of the 26 alarms land on attack windows. You'll also see nothing fired between 17:18 and 18:23: at a 10 % alert budget, the model spends its alarms on the loudest phase, the sweep." |
+| **3:15-4:00** | model card | "On the full held-out day, with a threshold set only from the traffic seen so far, the checkpoint we ship scores F1 0.61, precision 0.61, at a 7.8 % false-positive rate. Retrained on three seeds, the same method ranges from 0.52 to 0.61. The logistic regression the problem statement asks us to beat scores 0.011 on the same features at its own threshold. On this slice, 64 of the 80 alarmed windows are attack windows, and the long alarm from 18:08 to 18:33 is the sweep. Between the 17:19 compromise and the sweep it only fires on three single windows: the quiet session itself barely moves the score." |
 | **4:00-4:45** | slide 5 (S-6) | **The forecasting gap - verbatim, below.** |
 | **4:45-5:00** | dashboard | "Everything here - features, model, dashboard - runs on one laptop with no network. Code, decisions and every number's source are in the repo." |
 
@@ -95,20 +96,22 @@ flows. It wasn't one."
 | rollout vs persistence | better from k = 2, worse at k = 1 | E5 |
 | E14's early warning against the null | 1 of 4, p = 0.412 - withdrawn | E15a |
 | threshold non-transfer | 0.843 train vs 0.059 Thursday | E4-E7 |
-| slice: alarms on attack windows | 24 of 26; 22 % of attack windows alarmed | this slice, see below |
+| slice: alarms on attack windows | 64 of 80 alarmed windows (12 runs); 58 % of attack windows alarmed; 0 of 4 onsets warned early, null p = 1.0 | this slice, see below |
 | slice: surprise | benign median 0.15; 7.5 at the 17:00 scan; 15-52 during the sweep | this slice |
 | slice: 17:00 scan | 172.16.0.1 -> 192.168.10.51, 954 ports, 17:00:31-17:00:45 | S-8, `results/tables/s8_thursday_onset602_*.csv` |
 
 The slice figures come from `analyze_file("data/demo/thursday_infiltration.csv",
 load_checkpoint("models/e4e7-worldmodel-r2/thursday.pt"))`, the same call the demo endpoint makes
-(D-024). They are description, not evaluation: the 10 % budget is computed on the slice itself.
+(D-024), re-measured after G-9 moved the dashboard to the causal budget. They are description, not
+evaluation: the budget is computed on the slice so far, which starts at 16:40, so the threshold is
+set by 20 minutes of quiet traffic and alarms on 31 % of the slice's windows - the E18 cost, on a
+capture that is mostly attack.
 
 ## Fix before recording
 
-- **The dashboard's threshold is still the whole-capture one** (`engine/predict.py`), and so is the
-  model card (D-024 reads E14). Both must move to the causal expanding budget (D-034) before
-  recording. The slice figures above (24 of 26 alarms, nothing between 17:18 and 18:23) were
-  measured with the old threshold and must be re-measured after that change.
+- ~~The dashboard's threshold is still the whole-capture one.~~ Done (G-9): the dashboard, the model
+  card and the fixtures use the causal expanding budget, and the slice figures above were
+  re-measured with it.
 
 - **Surprise is only in a ribbon tooltip.** It's the strongest live signal on this slice, and it's
   the world model's own quantity. Plot it as a second series on the timeline (Harshit).

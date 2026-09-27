@@ -93,8 +93,21 @@ export class AlarmsPanel {
           <div class="verdict-banner verdict-honest">
             <span class="status-dot dot-warn"></span>
             <div>
-              <strong>HONEST CURRENT OUTCOME:</strong> 0 of ${episodes} episodes warned early at deployable threshold 
-              (${formatFloat(threshold, 4)} · ${explainThresholdPolicy(threshold, policy)}). System operating in detection mode (E14).
+              <strong>HONEST CURRENT OUTCOME:</strong> 0 of ${episodes} episodes warned early at the deployable threshold
+              (${explainThresholdPolicy(threshold, policy)}). System operating in detection mode (E18).
+            </div>
+          </div>
+        `;
+      } else if (leadSummary.beats_null === false) {
+        // D-022: an early-warning count that an unaligned alarm series of the same shape matches is
+        // chance, not a result - say so instead of "verified".
+        verdictBannerHtml = `
+          <div class="verdict-banner verdict-honest">
+            <span class="status-dot dot-warn"></span>
+            <div>
+              <strong>NOT DISTINGUISHABLE FROM CHANCE:</strong> ${warnedEarly} of ${episodes} episodes had an alarm before onset,
+              but the same alarms shifted to random times do this often (chance level ${leadSummary.null_mean} of ${episodes}, p = ${leadSummary.p_value}).
+              Detection, not early warning (D-022, E18).
             </div>
           </div>
         `;
@@ -157,15 +170,20 @@ export class AlarmsPanel {
             : "<span style='color:var(--text-dim)'>None</span>";
 
           const scoreOnsetVal = ep.score_at_onset !== undefined ? Number(ep.score_at_onset) : null;
+          // the causal threshold in force at the onset window (D-034), else the payload scalar
+          const onsetEntry = (payload.timeline || [])[ep.onset];
+          const onsetThr = onsetEntry && onsetEntry.threshold !== undefined
+            ? (onsetEntry.threshold === null ? Infinity : Number(onsetEntry.threshold))
+            : threshold;
           const scoreOnsetStr = scoreOnsetVal !== null
-            ? `${formatFloat(scoreOnsetVal, 4)} ${scoreOnsetVal >= threshold ? '▲' : '< thr'}`
+            ? `${formatFloat(scoreOnsetVal, 4)} ${scoreOnsetVal >= onsetThr ? '▲' : '< thr'}`
             : "--";
 
           return `
             <tr>
               <td class="font-mono">#${idx + 1}</td>
               <td class="font-mono">t=${ep.onset} (${onsetTimeStr})</td>
-              <td class="font-mono" title="Threshold is ${formatFloat(threshold, 4)}">${scoreOnsetStr}</td>
+              <td class="font-mono" title="Threshold at onset: ${Number.isFinite(onsetThr) ? formatFloat(onsetThr, 4) : "warming up"}">${scoreOnsetStr}</td>
               <td class="font-mono">${firstAlarmStr}</td>
               <td class="font-mono">${leadStr}</td>
               <td>${statusBadge}</td>
@@ -186,7 +204,7 @@ export class AlarmsPanel {
                 <tr>
                   <th>Ep</th>
                   <th>Onset Time</th>
-                  <th>Score at Onset vs Thr (${formatFloat(threshold, 4)})</th>
+                  <th>Score at Onset vs Threshold then</th>
                   <th>First Alarm</th>
                   <th>Lead Time</th>
                   <th>Per-Episode Outcome</th>
@@ -259,7 +277,9 @@ export class AlarmsPanel {
 
         const windowRangeStr = a.t === a.until_t ? `t=${a.t}` : `t=${a.t}..${a.until_t}`;
         const timeStr = a.ts ? formatIsoTime(a.ts) : "--";
-        const deltaThreshold = a.p - threshold;
+        // the causal threshold moves, so compare against the one in force when the run began
+        const runThreshold = a.threshold !== undefined && a.threshold !== null ? Number(a.threshold) : threshold;
+        const deltaThreshold = a.p - runThreshold;
         const deltaStr = deltaThreshold >= 0 ? `+${formatFloat(deltaThreshold, 4)}` : formatFloat(deltaThreshold, 4);
         const peakPStr = `${formatFloat(a.p, 4)} (${formatPercent(a.p, 1)})`;
 
@@ -267,7 +287,7 @@ export class AlarmsPanel {
           <tr class="alarm-row ${activeClass}" data-window="${a.t}" data-until="${a.until_t}" title="Click to inspect window t=${a.t} on timeline">
             <td class="font-mono">#${idx + 1}</td>
             <td class="font-mono">${windowRangeStr} (${timeStr})</td>
-            <td class="font-mono" style="color:var(--danger); font-weight:600;" title="Threshold: ${formatFloat(threshold, 4)} (Delta: ${deltaStr})">
+            <td class="font-mono" style="color:var(--danger); font-weight:600;" title="Threshold: ${formatFloat(runThreshold, 4)} (Delta: ${deltaStr})">
               ${peakPStr} <span style="font-size:9px; color:var(--text-dim); font-weight:normal;">[${deltaStr}]</span>
             </td>
             <td>

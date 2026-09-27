@@ -127,6 +127,8 @@ def evaluate_fold(
 
     extras = {
         "alarm_statistic": "p_max",
+        # D-035 scorecard: channel 1 read the same way - "anything hostile within K"
+        "threat_scores": out["p_raw"][:, :, 1].max(axis=1).tolist() if out["p_raw"].shape[2] > 1 else None,
         "threshold_train": thr_train,
         "threshold_budget": thr_budget,
         "escalation_scores": esc_score.tolist(),
@@ -140,6 +142,7 @@ def evaluate_fold(
         "lead": summarise_lead(
             lead_times(score, test_day["onsets"], thr_train, horizon, persistence=2), stride_s
         ),
-        "rollout": rollout_fidelity(model, test_day["x"], horizon, device),
+        # Model A (E24) has no latent dynamics to roll out
+        "rollout": rollout_fidelity(model, test_day["x"], horizon, device) if hasattr(model, "imagine") else None,
     }
     return rows, extras

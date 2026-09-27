@@ -1,0 +1,17 @@
+# M2 / E25 (D-035): CTU-13 scenario-held-out. Same window grid and horizon as CIC-IDS2017.
+#   python scripts/build_ctu13.py --config configs/ctu13.yaml
+dataset: ctu13
+raw_dir: data/raw/ctu13
+processed_dir: data/processed/ctu13
+
+window:
+  length_s: 60.0
+  stride_s: 30.0
+
+horizon_k: 10
+
+# CTU's monitored /16; the infected hosts are 147.32.84.x (research/ctu13.md)
+internal_prefixes:
+  - "147.32."
+
+seed: 42

@@ -1,0 +1,9 @@
+# E23 (D-035): the stack (E20 packet block + E22 factorised target; E21 not adopted) with the
+# precursor curriculum: histories ending 20/16/12/8/4 windows before each training-day attack onset,
+# imagined 20 steps ahead against the true future. Inference unchanged (K = 10).
+features:
+  exclude_blocks: [host_relative]
+model:
+  hazard: factorized
+train:
+  curriculum: {offsets: [20, 16, 12, 8, 4], history: 64, horizon: 20, weight: 1.0}

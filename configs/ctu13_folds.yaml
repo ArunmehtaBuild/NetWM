@@ -1,0 +1,9 @@
+# E25 (D-035): leave-one-family-out over CTU-13's seven botnet families. Each fold trains on every
+# other scenario and is evaluated on each of its own scenarios separately.
+neris: [s01, s02, s09]
+rbot: [s03, s04, s10, s11]
+virut: [s05, s13]
+menti: [s06]
+sogou: [s07]
+murlo: [s08]
+nsis: [s12]

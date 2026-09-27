@@ -1,0 +1,10 @@
+# E24 (D-035), Model A on the final stack when E23 is adopted: the same encoder and causal attention,
+# heads predicting "within K" directly - no GRU, no stochastic latent, no imagination. Model B is the
+# E23 run itself. B keeps its latent dynamics only if it beats A under clauses 1-3.
+features:
+  exclude_blocks: [host_relative]
+model:
+  arch: direct
+  hazard: factorized
+train:
+  curriculum: {offsets: [20, 16, 12, 8, 4], history: 64, horizon: 20, weight: 1.0}

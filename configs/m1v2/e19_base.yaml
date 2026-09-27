@@ -1,0 +1,7 @@
+# E19 (D-035): the round-2 model on S_t v1, read from the M1 v2 build. Model and training blocks are
+# absent on purpose: every default is round 2 (D-023). Only the two new feature blocks are dropped.
+#
+#   python scripts/train.py --data data/processed/cicids2017_m1v2 --model-config configs/m1v2/e19_base.yaml \
+#       --test-days monday tuesday wednesday thursday friday --run m1v2-e19-s42 --epochs 25 --seed 42
+features:
+  exclude_blocks: [packet_csv, host_relative]

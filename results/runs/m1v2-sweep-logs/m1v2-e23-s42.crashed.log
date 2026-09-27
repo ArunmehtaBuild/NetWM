@@ -1,0 +1,4 @@
+87 features x 1 view(s) = 87 model inputs; arch=rssm hazard=factorized curriculum=True
+
+== fold: monday test=['monday']  train=['tuesday', 'wednesday', 'thursday', 'friday']  device=cuda
+  curriculum: 120 pre-onset sequences

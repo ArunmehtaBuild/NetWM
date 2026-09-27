@@ -1,0 +1,7 @@
+# E24 (D-035), Model A on the final stack when E23 is not adopted (stack = E20 + E22). Model B is the
+# E22 run itself. Same encoder and attention, direct "within K" heads, no latent dynamics.
+features:
+  exclude_blocks: [host_relative]
+model:
+  arch: direct
+  hazard: factorized

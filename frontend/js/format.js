@@ -106,6 +106,10 @@ export function hexToRgba(hex, alpha = 1) {
  */
 export function explainThresholdPolicy(threshold, policy = "") {
   if (!policy) return "Reference threshold";
+  if (policy.startsWith("expanding-")) {
+    const pct = policy.replace("expanding-", "").replace("pct", "");
+    return `Top ${pct}% of this capture so far (causal)`;
+  }
   if (policy.startsWith("self-budget-")) {
     const pct = policy.replace("self-budget-", "").replace("pct", "");
     return `Top ${pct}% of this capture (self-budget)`;

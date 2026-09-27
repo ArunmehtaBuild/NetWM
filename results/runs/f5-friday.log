@@ -1,0 +1,23 @@
+friday: md5 ok (7366c552425956e610bd69f57feb7e7a); reading D:\CIC-2017-PCAP\Friday-WorkingHours.pcap (8.84 GB)
+  2,000,000 packets, 86 s
+  4,000,000 packets, 180 s
+  6,000,000 packets, 224 s
+  8,000,000 packets, 308 s
+{
+ "day": "friday",
+ "capture": "Friday-WorkingHours.pcap",
+ "size_gb": 8.839,
+ "integrity": "md5 ok (7366c552425956e610bd69f57feb7e7a)",
+ "packets": 9501241,
+ "frames_skipped": 82194,
+ "duplicate_frames_dropped": 414439,
+ "first_packet_utc": "2017-07-07 11:59:50.315194845",
+ "last_packet_utc": "2017-07-07 20:02:41.169107914",
+ "read_seconds": 343.8,
+ "total_seconds": 630.5,
+ "corr_pkts_vs_csv": 0.921,
+ "ratio_pkts_to_csv": 0.9549,
+ "retrans_rate_mean": 0.10374,
+ "frag_rate_max": 0.00835
+}
+exit=0

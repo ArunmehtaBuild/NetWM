@@ -1,0 +1,8 @@
+# E21 (D-035): the stack + the causal representation - level, trailing-120 rank, delta, 5-window
+# slope for every feature - and the 6 per-host-relative features. Stack: the packet block carried forward (E20 non-inferior).
+features:
+  exclude_blocks: []
+scaler:
+  mode: relative
+  rank_window: 120
+  rank_min_periods: 10

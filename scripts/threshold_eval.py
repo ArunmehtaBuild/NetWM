@@ -46,11 +46,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from netwm.data.processed import ProcessedDataset
 from netwm.engine.predict import load_checkpoint
-from netwm.metrics import lead_times, summarise_lead
-from netwm.utils import FIGURES, RUNS, TABLES, ensure_dirs, set_seed
+from netwm.metrics import CAUSAL_WARMUP, causal_threshold, lead_times, summarise_lead
+from netwm.utils import FIGURES, RUNS, TABLES, ensure_dirs, save_run, set_seed
 from rescore_pmax import scores_for
 
-WARMUP = 20
+WARMUP = CAUSAL_WARMUP
 R2 = "e4e7-worldmodel-r2"
 SEEDS = {"e10-full-s42": 42, "e10-full-s43": 43, "e10-full-s44": 44}
 DAYS = ("thursday", "friday")
@@ -61,17 +61,11 @@ def whole(score: np.ndarray, q: float) -> np.ndarray:
 
 
 def expanding(score: np.ndarray, q: float, warmup: int = WARMUP) -> np.ndarray:
-    thr = np.full(len(score), np.inf)  # inf = no alarm possible
-    for t in range(warmup, len(score)):
-        thr[t] = np.quantile(score[:t], q)
-    return thr
+    return causal_threshold(score, q, warmup)  # inf = no alarm possible (the warm-up)
 
 
 def trailing(score: np.ndarray, q: float, n: int, warmup: int = WARMUP) -> np.ndarray:
-    thr = np.full(len(score), np.inf)
-    for t in range(warmup, len(score)):
-        thr[t] = np.quantile(score[max(0, t - n):t], q)
-    return thr
+    return causal_threshold(score, q, warmup, trailing=n)
 
 
 def binary_metrics(y: np.ndarray, alarm: np.ndarray) -> dict:
@@ -144,7 +138,8 @@ def main() -> None:
                 summary.append({"run": run, "test_day": day, "policy": name,
                                 "causal": name != "whole-capture-10pct", "primary": name == "expanding-10pct",
                                 **binary_metrics(y, alarm),
-                                "warned_early": lead["episodes_warned_early"], "episodes": lead["episodes"]})
+                                "warned_early": lead["episodes_warned_early"], "episodes": lead["episodes"],
+                                "mean_lead_windows": round(lead["mean_lead_windows"], 2)})
             if run == R2:
                 table = pd.DataFrame({"t": np.arange(len(score)), "ts": frame["ts"].values, "score": score,
                                       "y_within_K": y, "stage": frame["stage"].values})
@@ -163,6 +158,9 @@ def main() -> None:
     pd.DataFrame(dist_rows).to_csv(TABLES / "e18_score_distributions.csv", index=False)
     out = pd.DataFrame(summary)
     out.to_csv(TABLES / "e18_policy_summary.csv", index=False)
+    # the model card (backend/inference.py, D-024) reads the primary row from here
+    save_run(f"e18-causal-threshold-{R2}", {"rows": summary, "score_distributions": dist_rows},
+             config={"runs": list(runs), "warmup": WARMUP, "days": list(DAYS)})
     plot_timelines(ds)
     plot_distributions(train_scores, runs[R2])
 

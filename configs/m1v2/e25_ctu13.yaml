@@ -1,0 +1,14 @@
+# E25 (D-035): the final M1 stack on CTU-13, fixed before the first CTU-13 run.
+#   stack: RSSM (Model B beat Model A, E24) + factorised target (E22). E21 and E23 were not adopted.
+#   The CSV packet block (E20) needs CICFlowMeter fields Argus does not record, so it is absent from
+#   the CTU-13 build; the 14 S_t v1 features built from CIC-only fields are dropped, not zero-filled.
+#   Leave-one-family-out (configs/ctu13_folds.yaml); each fold gets a CIC-IDS2017 fold's 250 steps.
+#
+#   python scripts/train.py --data data/processed/ctu13 --model-config configs/m1v2/e25_ctu13.yaml \
+#       --group-folds configs/ctu13_folds.yaml --run e25-ctu13-s42 --seed 42 --no-figures
+features:
+  exclude_blocks: [cic_only]
+model:
+  hazard: factorized
+train:
+  target_steps: 250

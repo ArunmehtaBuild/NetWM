@@ -1,0 +1,35 @@
+{
+  "run_id": "f5-pcap-build-wednesday",
+  "timestamp_utc": "2026-09-27T09:34:44+00:00",
+  "git_sha": "14277fb",
+  "config": {
+    "pcap_dir": "D:/CIC-2017-PCAP",
+    "data": "data/processed/cicids2017_m1v2",
+    "out": "data/processed/cicids2017_m1v2p",
+    "days": [
+      "wednesday"
+    ],
+    "extract_only": true
+  },
+  "metrics": {
+    "days": [
+      {
+        "day": "wednesday",
+        "capture": "Wednesday-workingHours.pcap",
+        "size_gb": 13.421,
+        "integrity": "md5 ok (a8c9cd0ea22e3df6acc1c5972f38f0bf)",
+        "packets": 13276245,
+        "frames_skipped": 83323,
+        "duplicate_frames_dropped": 429310,
+        "first_packet_utc": "2017-07-05 11:42:42.084372044",
+        "last_packet_utc": "2017-07-05 20:10:14.560757875",
+        "read_seconds": 355.9,
+        "total_seconds": 714.7,
+        "corr_pkts_vs_csv": 0.8882,
+        "ratio_pkts_to_csv": 0.9661,
+        "retrans_rate_mean": 0.09463,
+        "frag_rate_max": 0.00847
+      }
+    ]
+  }
+}
