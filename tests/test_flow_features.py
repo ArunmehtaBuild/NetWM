@@ -151,11 +151,15 @@ def test_a_widening_sweep_shows_up_as_rising_trend_not_only_as_level():
 
 
 def test_flags_round_trip_through_feature_names():
-    assert feature_flags_from_names(V1_COLUMNS) == {"use_trend": False, "host_slots": 0}
+    off = {"use_packet_csv": False, "use_host_relative": False}  # the D-035 blocks
+    assert feature_flags_from_names(V1_COLUMNS) == {"use_trend": False, "host_slots": 0, **off}
     v2 = [*V1_COLUMNS, *trend_feature_names()]
-    assert feature_flags_from_names(v2) == {"use_trend": True, "host_slots": 0}
+    assert feature_flags_from_names(v2) == {"use_trend": True, "host_slots": 0, **off}
     both = features(sweep(3), use_trend=True, host_slots=2).columns
-    assert feature_flags_from_names(both) == {"use_trend": True, "host_slots": 2}
+    assert feature_flags_from_names(both) == {"use_trend": True, "host_slots": 2, **off}
+    blocks = features(sweep(3), use_packet_csv=True, use_host_relative=True).columns
+    assert feature_flags_from_names(blocks) == {"use_trend": False, "host_slots": 0,
+                                                "use_packet_csv": True, "use_host_relative": True}
 
 
 def test_a_checkpoint_built_with_other_trend_constants_fails_loudly():

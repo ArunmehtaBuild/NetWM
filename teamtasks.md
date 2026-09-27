@@ -4,23 +4,27 @@
 (Atharv). Task ids appear in commit messages; numbers live in `results.md`; modelling choices live in
 `decisions.md`.
 
-## Status - 2026-09-26, evening
+## Status - 2026-09-27, night (after D-035)
 
-**Merged:** #1 dashboard · #2 FastAPI backend · #3 live wiring · #4 S-track · #5 Y-scaffolding + S-3
-· #6 PCAP extractor · Arun's `run_demo.bat` fix (`mehta`, with a readiness wait that actually waits).
-Main runs end to end: a real CSV upload produces a real forecast in the browser, offline.
-95 ML tests + 16 API tests.
+**The M1 v2 programme ran end to end, pre-registered (D-035, pushed before any run).** Model changes
+are now judged on a scorecard, not on Thursday F1, which the threshold rule alone moves (E18). The
+scorecard measures anticipation 2-10 minutes before 19 attack onsets on four held-out days, alarm
+cost at the causal threshold, significance against a shuffled-time baseline, and the worst day.
 
-**Model status, final for the submission.** Detection is strong: Thursday F1 0.576 at 2.7 % FPR,
-against the baseline's 0.011. Forecasting is unproven. **E16 is in:** per-capture rank normalisation
-fails every clause of the D-023 bar and is unstable across training seeds. That makes five causes
-eliminated, one experiment each: statistic (E13), threshold (E14), data (E12), target (E15) and
-representation (E16). The signal dies in cross-day transfer: on Thursday, logistic regression on all
-70 features scores 0.604 and `uniq_dst_port` alone scores 0.607. `models/e4e7-worldmodel-r2/`
-remains the submission checkpoint, and no artefact claims early warning (D-021).
+- **The world model does anticipate, as a ranking.** Pre-onset windows rank above background on
+  held-out days (S2\* 0.65, where chance is 0.5).
+- **The factorised target (E22)** is the one change that passed its bar: S2\* rises to 0.70.
+- **The latent dynamics earn this (E24).** The same encoder without them scores 0.61 and detects worse.
+- **No configuration turns the ranking into early warnings that beat the null**, so D-021 stands.
+- **Real packet features** from all five captures (53.7 M packets) help detection (Thursday PR-AUC
+  0.43 -> 0.56), not anticipation (E20r).
+- **CTU-13 (M2)** is built and run leave-one-family-out: anticipation does not transfer across botnet
+  families (0.55); detection transfers to 3 of 7 (E25).
 
-**No open gate for the CSV demo.** PCAP ingestion landed (PR #8): a `.pcap` returns a v1.1 payload.
-The PCAP demo capture was withdrawn and is being redone (A-5b). The demo script is `docs/demo_script.md`.
+**Product.** The dashboard, model card and fixtures run the causal threshold, and the alarm panel
+carries the D-022 null (G-9). The why panel is relabelled after E11 fails. The shipped checkpoint is
+still `models/e4e7-worldmodel-r2/`: whether to switch to the E22 stack is open below.
+147 tests pass (126 ML + 21 API).
 
 ## Current tasks
 
@@ -32,15 +36,21 @@ produced them, or when the thing it describes demonstrably works end to end - no
 | **Atharv** | **G-2** (gap) | **The architecture document is about 1,750 words, roughly 4 pages; the PS allows 2.** Write the 2-page version the judges read, and keep `docs/architecture.md` as the reference it links to | a 2-page PDF in `docs/` |
 | | **G-3** (gap) | **The demo video is capped at 2 minutes, but `docs/demo_script.md` is timed for 5.** Cut it to 2: the Thursday slice, the 17:00 scan and surprise, the sweep with the why panel, the model card with D-032, the gap line. PCAP upload gets 10 s once A-5b lands | a 2-minute script; H-15 records from it |
 | | **G-6** (gap) | **One benchmark table** as the PS asks: F1, precision, recall and FPR for logistic regression vs NetWM, on Thursday and Friday, with the seed range. The numbers exist in E3, E14 and E10 but are spread across entries | the table in `results.md` and on slide 4 |
-| | **G-5** (gap, decision) | **Packet-level features are required, but `S_t` is flow-only.** PCAPs are parsed and packet features extracted, but the corrected CIC-IDS2017 release is CSV, so the model never trained on them. Decide how the submission says so (architecture doc, slide 2) and whether the dashboard shows packet stats for a PCAP upload | a decision entry; the wording is in the doc and the deck |
 | **Arun** | **G-1** (gap, **owner action**) | **The repo is PRIVATE.** The checklist had marked "public GitHub repo" done. Make it public, or confirm the evaluators will be given access, before submission | `gh repo view` shows PUBLIC, or access is confirmed in writing |
-| **Atharv** (+ Arun, Harshit) | **G-9** (**before recording**) | **Move the product to the causal threshold (D-034).** `engine/predict.py` still sets the dashboard threshold from the whole capture, and the model card (D-024) still reads E14's non-causal row. <br>• **Atharv:** `predict.py` emits a per-window `threshold` series using the expanding q90 with a 20-window warm-up (the same code as `threshold_eval.expanding`). <br>• **Arun:** a contract field for the series (keeping the scalar for old payloads); the model card reads E18's primary row. <br>• **Harshit:** draw the threshold as a curve, not a line. <br>Then re-measure the demo-slice figures in `docs/demo_script.md` | the dashboard's alarms equal E18's `alarm_expanding-10pct` on the same scores; the model card shows 0.608 |
-| **Yash** | **G-4** (gap) | **E9, the MITRE stage confusion matrix, was planned and never run.** Stage mapping is a named PS output, and on the demo slice the stage head calls the internal sweep Reconnaissance where the truth is Lateral Movement. Design E9 (per-stage precision and recall on the held-out days, r2 checkpoint); Atharv runs it | E9 in `results.md`; slide 3 quotes it |
-| | **G-7** (gap) | **E11, the explainability sanity check, was planned and never run.** Do the top attributions on known attacks point at the known signature, e.g. port spread on the 17:00 scan and fan-out on the sweep? Design it; Atharv runs it | E11 in `results.md` |
 | **Sanchi** | **S-6b** | Deck from `docs/presentation.md` with the review fixes (branch `s6-s7-features-presentation`, unchanged since 18:49). Use D-032 for the headline, "risk score" not "probability", no "before compromise", flow-only `S_t`, and add E10/E17 to slide 5 | an exported 5-slide deck reviewed by two teammates |
 | **Alok** | | No open cards: A-3c and A-5c were finished on main (`0b22d98`, `a9ff68a`). Next assignment comes from the gap list | |
 | **Harshit** | **H-17** | In mock mode, an upload shows the fixture under the uploaded file's name after imitation stage texts. Say "fixture shown, your file was not analysed" | a mock upload cannot pass for an analysis |
 | | **H-15** | Rehearse and record from the **2-minute** script (G-3), after R-12. The PCAP half needs A-5b | a recorded run under 2 minutes that follows the script |
+
+### Open after D-035 - not yet assigned
+
+| id | task | done when |
+|---|---|---|
+| **N-1** (decision) | **Which checkpoint ships.** r2 detects Thursday best among CSV models (PR-AUC 0.640). The E22 stack anticipates better across days (S2\* 0.70 vs r2-method 0.65) but detects Thursday worse (0.39). E20r detects best of all (0.56 mean, 0.71 best seed) but needs a PCAP. Pick one for the demo and the model card | a decision entry; `_E18_RUN`/model card and fixtures follow it |
+| **N-2** | **Train E22 + real packets with a `has_pcap` mask**, so one model reads PCAP uploads with packet features and CSV uploads without (the design's original plan). Score it on the D-035 scorecard | a scorecard row; the dashboard computes `pcap_` features for a PCAP upload |
+| **N-3** | **CTU-13 seeds 43 and 44** (E25 ran seed 42 as pre-registered) and a logistic-regression floor on the same folds | three-seed E25 and a baseline row in `results.md` |
+| **N-4** | **Carry the new results into the submission artefacts**: slides (S-6b), the 2-page doc (G-2), the benchmark table (G-6), the demo script (G-3). Use D-035's language: "ranks the run-up above background on unseen days", never "warns before" | every number traced to `results.md` E19-E25 |
+| **N-5** | **E21's representation for alarm quality.** It cut FPR 0.137 -> 0.110 and raised precision 0.35 -> 0.42 without an anticipation gain; test it against a bar written for alarm cost | a pre-registered bar and a run |
 
 **Order that matters:** G-1 is a one-click owner action and cannot slip past submission. G-9 and G-3
 come before H-15 records, because a 5-minute script cannot make a 2-minute video. G-4 and G-7 are the last
@@ -131,6 +141,11 @@ T-15 gap check, 2026-09-26. The PS lists five deliverables; the rest are its ind
 
 | id | outcome |
 |---|---|
+| G-9 | the dashboard, model card and fixtures run E18's causal rule through one function (`f2bb6de`); the alarm panel carries the D-022 null ("not distinguishable from chance", p = 0.331) |
+| G-4 (E9) | stage recall is high only where a relative family was in training (DDoS 0.99); 0 for Lateral Movement and C2; T1046 technique view 0.885 precision on the sweep (`59838be`, five-fold `14277fb`). Yash's PR #13 reproduced the matrices once fixed; closed with review |
+| G-7 (E11) | fails its bar: 1 of 6 episodes; the why panel relabelled (`59838be`, `9893362`) |
+| G-5 | packet features built from the five real captures and measured (E20, E20r): detection yes, anticipation no; wording in the architecture doc and the PS map (`c305236`) |
+| D-035 programme | E19-E25 run and scored; outcome recorded in D-035; results in `results.md` (`515a74e`) |
 | T-01, T-02, T-06, T-07 | alarm statistic, payload v1.1, contract drift, UI fixture |
 | T-08 | D-021 amendment: sub-chance bar withdrawn, null gate adopted |
 | T-09, T-11, T-12 | `evaluate.py` scores `p_max`; fixtures regenerated; E15/E15a in the architecture doc |
