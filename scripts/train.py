@@ -123,6 +123,8 @@ def main() -> None:
     ap.add_argument("--resume", action="store_true",
                     help="a fold whose checkpoint already exists is loaded and evaluated, not retrained "
                          "(recovery after an interrupted run; the weights are the ones that run trained)")
+    ap.add_argument("--note", default=None,
+                    help="free-text provenance stored with the run (D-037: E25b's seeds are 'completion of E25')")
     args = ap.parse_args()
 
     set_seed(args.seed)
