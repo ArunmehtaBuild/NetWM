@@ -1,0 +1,8 @@
+fold neris: train ['s03', 's04', 's05', 's06', 's07', 's08', 's10', 's11', 's12', 's13'] -> ['s01', 's02', 's09']
+fold rbot: train ['s01', 's02', 's05', 's06', 's07', 's08', 's09', 's12', 's13'] -> ['s03', 's04', 's10', 's11']
+fold virut: train ['s01', 's02', 's03', 's04', 's06', 's07', 's08', 's09', 's10', 's11', 's12'] -> ['s05', 's13']
+fold menti: train ['s01', 's02', 's03', 's04', 's05', 's07', 's08', 's09', 's10', 's11', 's12', 's13'] -> ['s06']
+fold sogou: train ['s01', 's02', 's03', 's04', 's05', 's06', 's08', 's09', 's10', 's11', 's12', 's13'] -> ['s07']
+fold murlo: train ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's09', 's10', 's11', 's12', 's13'] -> ['s08']
+fold nsis: train ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's11', 's13'] -> ['s12']
+wrote results/runs/lr-d042-h/metrics.json (62 features)

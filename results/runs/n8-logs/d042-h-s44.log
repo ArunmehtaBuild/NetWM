@@ -1,0 +1,112 @@
+62 features x 1 view(s) = 62 model inputs; arch=rssm hazard=factorized curriculum=False
+
+== fold: neris test=['s01', 's02', 's09']  train=['s03', 's04', 's05', 's06', 's07', 's08', 's10', 's11', 's12', 's13']  device=cuda
+  35 batches/epoch -> 8 epochs for ~250 steps
+  epoch   0  total=9.604  recon=0.401  kl=0.593  comp=0.843  imag_comp=0.846
+  epoch   1  total=7.700  recon=0.346  kl=0.557  comp=0.752  imag_comp=0.756
+  epoch   2  total=7.116  recon=0.328  kl=0.528  comp=0.710  imag_comp=0.710
+  epoch   3  total=6.458  recon=0.321  kl=0.607  comp=0.649  imag_comp=0.644
+  epoch   4  total=6.106  recon=0.319  kl=0.423  comp=0.625  imag_comp=0.621
+  epoch   5  total=5.938  recon=0.317  kl=0.639  comp=0.609  imag_comp=0.604
+  epoch   6  total=5.854  recon=0.314  kl=0.679  comp=0.607  imag_comp=0.599
+  epoch   7  total=5.782  recon=0.313  kl=0.374  comp=0.600  imag_comp=0.593
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.7694, "precision": 0.6252, "recall": 1.0, "fpr": 0.7763, "pr_auc": 0.9595, "roc_auc": 0.9351, "warned_early": 2, "episodes": 2, "mean_lead_windows": 10.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.9595, "roc_auc": 0.9351, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.8923, "precision": 0.9444, "recall": 0.8455, "fpr": 0.0644, "pr_auc": 0.9595, "roc_auc": 0.9351, "warned_early": 1, "episodes": 2, "mean_lead_windows": 10.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.4214, "precision": 0.278, "recall": 0.8701, "fpr": 0.29, "pr_auc": 0.339, "roc_auc": 0.8327}
+
+== fold: rbot test=['s03', 's04', 's10', 's11']  train=['s01', 's02', 's05', 's06', 's07', 's08', 's09', 's12', 's13']  device=cuda
+  17 batches/epoch -> 15 epochs for ~250 steps
+  epoch   0  total=9.005  recon=0.414  kl=0.446  comp=0.630  imag_comp=0.623
+  epoch   1  total=7.641  recon=0.396  kl=0.623  comp=0.605  imag_comp=0.604
+  epoch   2  total=6.881  recon=0.344  kl=0.339  comp=0.610  imag_comp=0.608
+  epoch   3  total=7.142  recon=0.552  kl=0.646  comp=0.585  imag_comp=0.589
+  epoch   4  total=6.236  recon=0.352  kl=0.521  comp=0.552  imag_comp=0.542
+  epoch   5  total=6.782  recon=0.555  kl=0.660  comp=0.550  imag_comp=0.553
+  epoch   6  total=5.729  recon=0.355  kl=0.435  comp=0.525  imag_comp=0.521
+  epoch   7  total=5.641  recon=0.361  kl=0.773  comp=0.516  imag_comp=0.512
+  epoch   8  total=6.028  recon=0.354  kl=0.473  comp=0.559  imag_comp=0.566
+  epoch   9  total=5.547  recon=0.346  kl=0.309  comp=0.517  imag_comp=0.514
+  epoch  10  total=5.982  recon=0.555  kl=0.311  comp=0.508  imag_comp=0.505
+  epoch  11  total=5.423  recon=0.345  kl=0.295  comp=0.506  imag_comp=0.507
+  epoch  12  total=5.494  recon=0.344  kl=0.323  comp=0.527  imag_comp=0.525
+  epoch  13  total=5.364  recon=0.348  kl=0.327  comp=0.508  imag_comp=0.503
+  epoch  14  total=5.435  recon=0.345  kl=0.332  comp=0.527  imag_comp=0.523
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.5, "pr_auc": 0.2587, "roc_auc": 0.0214, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.2587, "roc_auc": 0.0214, "warned_early": 0, "episodes": 1, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.5833, "precision": 0.4118, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.2587, "roc_auc": 0.0214, "warned_early": 1, "episodes": 1, "mean_lead_windows": 10.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.5, "precision": 0.3333, "recall": 1.0, "fpr": 0.8333, "pr_auc": 0.2143, "roc_auc": 0.2167}
+
+== fold: virut test=['s05', 's13']  train=['s01', 's02', 's03', 's04', 's06', 's07', 's08', 's09', 's10', 's11', 's12']  device=cuda
+  35 batches/epoch -> 8 epochs for ~250 steps
+  epoch   0  total=10.268  recon=0.409  kl=0.520  comp=0.932  imag_comp=0.934
+  epoch   1  total=8.044  recon=0.350  kl=0.611  comp=0.798  imag_comp=0.796
+  epoch   2  total=7.053  recon=0.330  kl=0.670  comp=0.722  imag_comp=0.725
+  epoch   3  total=6.398  recon=0.320  kl=0.559  comp=0.666  imag_comp=0.663
+  epoch   4  total=6.095  recon=0.319  kl=0.334  comp=0.643  imag_comp=0.643
+  epoch   5  total=5.961  recon=0.312  kl=0.477  comp=0.633  imag_comp=0.630
+  epoch   6  total=5.931  recon=0.319  kl=0.646  comp=0.629  imag_comp=0.622
+  epoch   7  total=5.796  recon=0.310  kl=0.649  comp=0.619  imag_comp=0.612
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.9768, "precision": 0.9958, "recall": 0.9586, "fpr": 0.8889, "pr_auc": 0.9996, "roc_auc": 0.9185, "warned_early": 116, "episodes": 117, "mean_lead_windows": 9.81}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0719, "precision": 1.0, "recall": 0.0373, "fpr": 0.0, "pr_auc": 0.9996, "roc_auc": 0.9185, "warned_early": 0, "episodes": 117, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.9977, "precision": 0.9954, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.9996, "roc_auc": 0.9185, "warned_early": 117, "episodes": 117, "mean_lead_windows": 9.97}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.8466, "precision": 0.734, "recall": 1.0, "fpr": 0.9981, "pr_auc": 0.6278, "roc_auc": 0.281}
+
+== fold: menti test=['s06']  train=['s01', 's02', 's03', 's04', 's05', 's07', 's08', 's09', 's10', 's11', 's12', 's13']  device=cuda
+  39 batches/epoch -> 7 epochs for ~250 steps
+  epoch   0  total=9.448  recon=0.399  kl=0.645  comp=0.840  imag_comp=0.843
+  epoch   1  total=7.715  recon=0.329  kl=0.628  comp=0.755  imag_comp=0.763
+  epoch   2  total=6.888  recon=0.316  kl=0.594  comp=0.704  imag_comp=0.701
+  epoch   3  total=6.589  recon=0.315  kl=0.601  comp=0.669  imag_comp=0.671
+  epoch   4  total=6.122  recon=0.317  kl=0.529  comp=0.635  imag_comp=0.633
+  epoch   5  total=5.971  recon=0.315  kl=0.683  comp=0.618  imag_comp=0.612
+  epoch   6  total=5.900  recon=0.315  kl=0.506  comp=0.611  imag_comp=0.605
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.9636, "precision": 0.9917, "recall": 0.937, "fpr": 0.3333, "pr_auc": 0.9807, "roc_auc": 0.6713, "warned_early": 3, "episodes": 4, "mean_lead_windows": 7.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.2414, "precision": 0.9722, "recall": 0.1378, "fpr": 0.1667, "pr_auc": 0.9807, "roc_auc": 0.6713, "warned_early": 1, "episodes": 4, "mean_lead_windows": 10.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.9883, "precision": 0.9769, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.9807, "roc_auc": 0.6713, "warned_early": 4, "episodes": 4, "mean_lead_windows": 7.75}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.5, "precision": 0.4043, "recall": 0.6552, "fpr": 0.2772, "pr_auc": 0.4085, "roc_auc": 0.572}
+
+== fold: sogou test=['s07']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's08', 's09', 's10', 's11', 's12', 's13']  device=cuda
+  40 batches/epoch -> 7 epochs for ~250 steps
+  epoch   0  total=9.440  recon=0.399  kl=0.587  comp=0.842  imag_comp=0.840
+  epoch   1  total=7.465  recon=0.331  kl=0.630  comp=0.743  imag_comp=0.739
+  epoch   2  total=6.803  recon=0.315  kl=0.520  comp=0.688  imag_comp=0.691
+  epoch   3  total=6.284  recon=0.319  kl=0.502  comp=0.636  imag_comp=0.631
+  epoch   4  total=6.075  recon=0.317  kl=0.583  comp=0.627  imag_comp=0.626
+  epoch   5  total=5.855  recon=0.311  kl=0.605  comp=0.606  imag_comp=0.599
+  epoch   6  total=5.777  recon=0.312  kl=0.583  comp=0.601  imag_comp=0.593
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.4815, "precision": 0.3611, "recall": 0.7222, "fpr": 0.8846, "pr_auc": 0.6929, "roc_auc": 0.5833, "warned_early": 2, "episodes": 2, "mean_lead_windows": 6.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.6929, "roc_auc": 0.5833, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.6, "precision": 0.75, "recall": 0.5, "fpr": 0.1154, "pr_auc": 0.6929, "roc_auc": 0.5833, "warned_early": 2, "episodes": 2, "mean_lead_windows": 6.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.5333, "precision": 0.3636, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.2224, "roc_auc": 0.0335}
+
+== fold: murlo test=['s08']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's09', 's10', 's11', 's12', 's13']  device=cuda
+  34 batches/epoch -> 8 epochs for ~250 steps
+  epoch   0  total=9.943  recon=0.397  kl=0.634  comp=0.908  imag_comp=0.908
+  epoch   1  total=7.853  recon=0.333  kl=0.672  comp=0.784  imag_comp=0.782
+  epoch   2  total=7.094  recon=0.316  kl=0.609  comp=0.721  imag_comp=0.713
+  epoch   3  total=6.580  recon=0.325  kl=0.519  comp=0.674  imag_comp=0.666
+  epoch   4  total=6.254  recon=0.314  kl=0.545  comp=0.648  imag_comp=0.639
+  epoch   5  total=6.169  recon=0.316  kl=0.655  comp=0.642  imag_comp=0.632
+  epoch   6  total=6.092  recon=0.312  kl=0.298  comp=0.630  imag_comp=0.622
+  epoch   7  total=6.002  recon=0.311  kl=0.317  comp=0.625  imag_comp=0.616
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.7353, "precision": 0.9386, "recall": 0.6044, "fpr": 1.0, "pr_auc": 0.9287, "roc_auc": 0.1746, "warned_early": 3, "episodes": 6, "mean_lead_windows": 10.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.9287, "roc_auc": 0.1746, "warned_early": 0, "episodes": 6, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.9806, "precision": 0.9619, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.9287, "roc_auc": 0.1746, "warned_early": 6, "episodes": 6, "mean_lead_windows": 8.5}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.4727, "precision": 0.3099, "recall": 0.9958, "fpr": 0.9901, "pr_auc": 0.2838, "roc_auc": 0.45}
+
+== fold: nsis test=['s12']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's11', 's13']  device=cuda
+  40 batches/epoch -> 7 epochs for ~250 steps
+  epoch   0  total=9.639  recon=0.393  kl=0.645  comp=0.850  imag_comp=0.852
+  epoch   1  total=7.600  recon=0.316  kl=0.629  comp=0.749  imag_comp=0.745
+  epoch   2  total=6.869  recon=0.308  kl=0.489  comp=0.690  imag_comp=0.689
+  epoch   3  total=6.365  recon=0.312  kl=0.485  comp=0.655  imag_comp=0.647
+  epoch   4  total=6.124  recon=0.311  kl=0.400  comp=0.638  imag_comp=0.633
+  epoch   5  total=5.979  recon=0.317  kl=0.588  comp=0.609  imag_comp=0.604
+  epoch   6  total=5.901  recon=0.310  kl=0.718  comp=0.616  imag_comp=0.607
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.9694, "roc_auc": 0.9798, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.9694, "roc_auc": 0.9798, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.9712, "precision": 0.9507, "recall": 0.9926, "fpr": 0.0972, "pr_auc": 0.9694, "roc_auc": 0.9798, "warned_early": 2, "episodes": 2, "mean_lead_windows": 9.5}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.8017, "precision": 0.6691, "recall": 1.0, "fpr": 0.4, "pr_auc": 0.6877, "roc_auc": 0.8157}
+
+wrote models\d042-h-s44/*.pt, results/tables/d042-h-s44_*.csv, results/figures/e5_*, e6_*

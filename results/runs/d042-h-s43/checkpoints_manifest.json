@@ -1,0 +1,91 @@
+{
+  "run": "d042-h-s43",
+  "machine": "Atharv-laptop",
+  "device": "NVIDIA GeForce GTX 1650",
+  "note": "weights are untracked (models/); this manifest identifies them",
+  "checkpoints": [
+    {
+      "path": "models/d042-h-s43/menti.pt",
+      "bytes": 2467358,
+      "sha256": "3f0834c2ce4b770ddb67a3a5d74ea24e0bceb16f4d7a3f543ffc4530f4ce9437",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s06"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/murlo.pt",
+      "bytes": 2467358,
+      "sha256": "b6a62f0f7d016304e426e2a8d41dcae87381d980caab955984d0f4099a6e873d",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s08"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/neris.pt",
+      "bytes": 2467358,
+      "sha256": "0b531c5149640e4ff240eac20bd1779624a0e0c887024f9e5c6b1c95019feeaf",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s01",
+        "s02",
+        "s09"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/nsis.pt",
+      "bytes": 2467306,
+      "sha256": "2d3c51d71b09659903133357a0dcd94ac9d35b4483c288d709ad77ddab7c253d",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s12"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/rbot.pt",
+      "bytes": 2467242,
+      "sha256": "096621621146e464fed7fe547cb584304711b8afeec26526ca0c8011daeae2e7",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s03",
+        "s04",
+        "s10",
+        "s11"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/sogou.pt",
+      "bytes": 2467358,
+      "sha256": "e9a842f70737a9c679bc41f2c7095bf8faf6bb465977e2b969a55d2565fad27c",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s07"
+      ]
+    },
+    {
+      "path": "models/d042-h-s43/virut.pt",
+      "bytes": 2467358,
+      "sha256": "34cfa77ce69b2d781a7fd3731cdac37c0cfc9ebc6750e5c66a465be830b7e6c1",
+      "pos_mode": "window",
+      "git_sha": "26680d2",
+      "n_features": 62,
+      "test_days": [
+        "s05",
+        "s13"
+      ]
+    }
+  ]
+}

@@ -2266,3 +2266,173 @@ Artefacts:
   `checkpoints_manifest.json`, and `results/tables/<run>_{forecast,training_curves}.csv`;
 - `results/runs/n8-logs/` (runner scripts, `chain.status`, per-run logs, the stopped starts,
   `n8-full-tests.log`).
+
+---
+
+## E25b with confidence intervals - the final CTU-13 table and its uncertainty (D-042's method)
+
+```
+python scripts/ctu_bootstrap_ci.py --tag e25b --data data/processed/ctu13 \
+    --wm s42=e25-ctu13-s42 s43=e25-ctu13-s43 s44=e25-ctu13-s44 --lr LR=lr-ctu13-s42
+```
+
+**Method, fixed in D-042 before it ran.**
+- A moving-block bootstrap over each held-out scenario's windows: blocks of 20 windows (2K, 10 min),
+  2,000 resamples, and a percentile 95 % interval on the ROC-AUC of the stored `comp` score
+  (`y_within_K`).
+- Every series of a scenario is scored on the same resamples.
+- "WM mean" is the per-window mean of the three seeds' scores.
+- The intervals measure uncertainty from the windows. The spread across seeds is a separate source,
+  shown by the three seed columns.
+
+ROC-AUC [95 % interval, block 20]. The sensitivity column shows the WM mean's interval at blocks 10 / 40.
+
+| family | scenario | background | WM s42 | WM s43 | WM s44 | **WM mean** | LR | WM mean at blocks 10 / 40 | resamples dropped (max) |
+|---|---|---:|---|---|---|---|---|---|---:|
+| Neris | s01 | 157 | 0.942 [0.84, 1.00] | 0.664 [0.36, 0.86] | 0.761 [0.48, 0.94] | 0.709 [0.40, 0.91] | 0.614 [0.37, 0.84] | [0.50, 0.87] / [0.32, 0.95] | 2 |
+| Neris | s02 | 78 | 0.597 [0.28, 0.80] | 0.425 [0.05, 0.68] | 0.413 [0.06, 0.67] | 0.424 [0.05, 0.69] | 0.571 [0.28, 0.83] | [0.11, 0.64] / [0.08, 0.92] | 24 |
+| Neris | s09 | 295 | 0.608 [0.39, 0.77] | 0.858 [0.72, 0.95] | 0.931 [0.85, 0.99] | 0.860 [0.74, 0.95] | 0.924 [0.84, 0.98] | [0.77, 0.94] / [0.70, 0.97] | 0 |
+| Rbot | s03 | 6,477 | 0.714 [0.66, 0.76] | 0.695 [0.64, 0.74] | 0.632 [0.58, 0.69] | 0.701 [0.65, 0.75] | 0.520 [0.48, 0.56] | [0.66, 0.74] / [0.64, 0.75] | 0 |
+| Rbot | s04 | 285 | 0.595 [0.43, 0.80] | 0.712 [0.53, 0.87] | 0.542 [0.37, 0.74] | 0.603 [0.42, 0.78] | 0.672 [0.51, 0.79] | [0.46, 0.75] / [0.38, 0.84] | 0 |
+| Rbot | s10 | 466 | 0.671 [0.50, 0.86] | 0.667 [0.52, 0.85] | 0.652 [0.50, 0.82] | 0.686 [0.53, 0.87] | 0.531 [0.41, 0.65] | [0.53, 0.83] / [0.57, 0.88] | 0 |
+| Rbot | s11 | 20 | 0.082 [0.00, 0.17] | 0.054 [0.02, 0.15] | 0.054 [0.00, 0.13] | 0.039 [0.00, 0.10] | 0.518 [0.42, 0.64] | [0.00, 0.13] / degenerate | 0 |
+| Virut | s05 | 10 | 0.847 [0.53, 1.00] | 0.857 [0.15, 1.00] | 0.886 [0.27, 1.00] | 0.878 [0.23, 1.00] | 0.512 [0.03, 1.00] | [0.33, 1.00] / [0.23, 1.00] | 745 |
+| Virut | s13 | 9 | 0.439 [0.33, 0.52] | 0.302 [0.22, 0.39] | 0.313 [0.22, 0.39] | 0.321 [0.22, 0.40] | 0.991 [0.97, 0.99] | [0.25, 0.37] / [0.19, 0.43] | 1,262 |
+| Menti | s06 | 6 | 0.770 [0.24, 0.98] | 0.698 [0.07, 0.99] | 0.777 [0.32, 0.94] | 0.701 [0.11, 0.96] | 0.985 [0.92, 1.00] | [0.12, 0.98] / [0.12, 0.96] | 1,279 |
+| Sogou | s07 | 26 | 0.015 [0.00, 0.11] | 0.156 [0.00, 0.46] | 0.177 [0.00, 0.43] | 0.096 [0.00, 0.40] | 0.737 [0.21, 0.85] | [0.00, 0.27] / [0.07, 0.14] | 42 |
+| Murlo | s08 | 89 | 0.204 [0.11, 0.35] | 0.137 [0.06, 0.21] | 0.157 [0.06, 0.31] | 0.155 [0.07, 0.27] | 0.590 [0.50, 0.66] | [0.08, 0.24] / [0.05, 0.28] | 0 |
+| NSIS.ay | s12 | 72 | 0.985 [0.98, 1.00] | 0.979 [0.97, 1.00] | 0.985 [0.98, 1.00] | 0.985 [0.98, 1.00] | 0.957 [0.84, 1.00] | [0.98, 1.00] / [0.98, 1.00] | 13 |
+
+**What the intervals add to E25b.** E25b's verdicts stand; D-037's rule is unchanged. What the
+intervals show is how much evidence each verdict rests on.
+1. **Measured firmly:**
+   - NSIS s12 transfers: every interval is above 0.97.
+   - Murlo s08 is inverted: every seed's interval ends below 0.36.
+   - Rbot s11 is inverted: every seed's interval ends below 0.18, though on 20 background windows.
+   - Rbot s03 separates modestly: the WM mean is 0.70 [0.65, 0.75], where LR is at chance.
+2. **Not established:**
+   - Menti's "transfers" (s06, 6 background windows): the WM mean's interval runs from 0.11 to 0.96.
+   - Neris's "inverted" rests on s02 seeds 43/44, whose intervals cross 0.5 ([0.05, 0.68]).
+   - Virut s05: [0.23, 1.00].
+3. **Virut s13's inversion sits below 0.5 on every seed**, but on 9 background windows. 1,262 of 2,000
+   resamples contain none and are dropped, so the interval rests on 738 resamples.
+4. **LR's advantages on Sogou and Virut s13 are real where the data allow.** Sogou is 0.737
+   [0.21, 0.85]; s13 is 0.991 [0.97, 0.99].
+5. **Method notes.**
+   - Block length 10 or 40 moves the intervals by a few hundredths.
+   - Where a capture is shorter than the block (s11 at 40), every resample is the whole capture, so
+     that interval is degenerate and carries no information.
+
+Artefacts: `results/tables/ctu_ci_e25b.csv` (every series, all three block lengths, and dropped counts)
+and `results/runs/ctu-ci-e25b/`.
+
+---
+
+## D-042 - host-local temporal state on CTU-13 (7 folds x 3 seeds): it does not fix the cross-family inversions
+
+```
+bash results/runs/n8-logs/run_chain_d042_par.sh       # build, arms G and H, LR, intervals, then:
+python scripts/d042_compare.py
+```
+
+**Setup, pre-registered in D-042 (`1c78e49`).**
+- **Arm G:** E25's stack (RSSM, factorised target, 250 steps per fold) on the 56 network-global
+  inputs, with D-041's window positions.
+- **Arm H:** the same stack plus E21's six host-relative features (each internal host against its
+  own trailing past; label-free and causal), 62 inputs.
+- Seeds 42/43/44 and E25's seven family folds. Both arms read `data/processed/ctu13_hostrel`. It was
+  built and checked on all 13 scenarios: every scenario's window grid and per-window flow counts
+  matched the base matrix.
+
+*Procedure notes.*
+1. All runs were trained on the GTX 1650 from code `26680d2`. That is `d1b3f22`'s model and training
+   code plus D-041's results and the backend switch; nothing a CTU run executes changed.
+2. From 15:56 UTC, at the user's request, the two arms ran in parallel, one worker per arm. The
+   run in progress (G seed 42) was left running and checked like any other.
+3. No run needed a retry. Checkpoint sha256 manifests are in each run folder.
+
+**The rule, applied as written.** "H helps on a scenario" means ROC(H) - ROC(G) >= +0.10 on at least 2
+of 3 seeds. The result counts as "helps" only if H helps on at least 2 of s08, s07 and s11, and no
+scenario that G transfers on falls below 0.70.
+
+| scenario | role | background | ROC G, s42 / 43 / 44 | ROC H, s42 / 43 / 44 | H - G | helps | G transfers here | H regresses | LR G / LR H |
+|---|---|---:|---|---|---|---|---|---|---|
+| **s08 Murlo** | deciding | 89 | 0.278 / 0.128 / 0.157 | 0.203 / 0.145 / 0.175 | -0.075 / +0.017 / +0.018 | no | no | - | 0.590 / 0.606 |
+| **s07 Sogou** | deciding | 26 | 0.088 / 0.103 / 0.079 | 0.094 / 0.547 / 0.583 | +0.006 / **+0.444 / +0.504** | **yes** | no | - | 0.737 / 0.761 |
+| **s11 Rbot** | deciding | 20 | 0.032 / 0.218 / 0.054 | 0.057 / 0.071 / 0.021 | +0.025 / -0.147 / -0.032 | no | no | - | 0.518 / 0.393 |
+| s01 Neris | | 157 | 0.946 / 0.653 / 0.775 | 0.856 / 0.850 / 0.886 | -0.090 / +0.197 / +0.111 | yes | yes | no | 0.614 / 0.761 |
+| s02 Neris | | 78 | 0.602 / 0.393 / 0.423 | 0.568 / 0.560 / 0.475 | -0.034 / +0.167 / +0.052 | no | no | - | 0.571 / 0.583 |
+| s09 Neris | | 295 | 0.636 / 0.879 / 0.936 | 0.930 / 0.828 / 0.935 | +0.294 / -0.051 / -0.001 | no | yes | no | 0.924 / 0.924 |
+| s03 Rbot | | 6,477 | 0.716 / 0.696 / 0.629 | 0.673 / 0.676 / 0.725 | -0.043 / -0.019 / +0.096 | no | no | - | 0.520 / 0.567 |
+| s04 Rbot | | 285 | 0.592 / 0.706 / 0.545 | 0.809 / 0.757 / 0.784 | +0.217 / +0.051 / +0.239 | yes | no | - | 0.672 / 0.692 |
+| s10 Rbot | | 466 | 0.677 / 0.674 / 0.667 | 0.468 / 0.454 / 0.400 | **-0.210 / -0.220 / -0.267** | no | no | - | 0.531 / 0.491 |
+| s05 Virut | | 10 | 0.912 / 0.806 / 0.871 | 0.498 / 0.774 / 0.331 | -0.414 / -0.031 / -0.539 | no | yes | **yes** | 0.512 / 0.420 |
+| s13 Virut | | 9 | 0.423 / 0.299 / 0.306 | 0.472 / 0.361 / 0.918 | +0.049 / +0.062 / +0.612 | no | no | - | 0.991 / 0.968 |
+| s06 Menti | | 6 | 0.780 / 0.703 / 0.833 | 0.678 / 0.669 / 0.671 | -0.102 / -0.033 / -0.161 | no | yes | **yes** | 0.985 / 0.963 |
+| s12 NSIS.ay | | 72 | 0.986 / 0.981 / 0.987 | 0.990 / 0.935 / 0.980 | +0.004 / -0.046 / -0.007 | no | yes | no | 0.957 / 0.945 |
+
+**Verdict: "does not help".**
+- H helps on 1 of the 3 deciding scenarios (s07), where the rule needs 2.
+- Two scenarios that G transfers on regress: s05 and s06.
+
+D-037's family verdicts:
+
+| family | E25b (interp) | G | H |
+|---|---|---|---|
+| NSIS.ay | transfers | transfers | transfers |
+| Menti | transfers | transfers | **partial** |
+| Neris | inverted | inverted | **partial** |
+| Sogou | inverted | inverted | **partial** |
+| Murlo | inverted | inverted | inverted |
+| Rbot | inverted | inverted | inverted |
+| Virut | inverted | inverted | inverted |
+
+### What D-042 shows
+
+1. **Host-relative summaries in the global state do not fix the inversions.**
+   - Murlo (s08) does not move: -0.07 / +0.02 / +0.02. This was predicted, because the Murlo bot is
+     active from the start of the capture, so its own past is no clean baseline.
+   - Rbot s11 does not move, or falls.
+   - Sogou (s07) rises from about 0.09 to 0.55-0.58 on seeds 43/44, still below 0.70. Seed 42 does
+     not move.
+2. **The regressions sit on the least-measured captures.**
+   - s05 has 10 background windows, and its paired intervals on H - G span [-1.0, +0.45] (seed 42)
+     and [-1.0, +0.64] (seed 44).
+   - s06 has 6 background windows.
+   - The rule counts both as regressions, and this entry reports them as such. With so few negatives
+     they are weak evidence either way.
+3. **Elsewhere the block changes which families the model reads correctly; it does not help across
+   the board.**
+   - *Gains:* Neris s01 (seeds 43/44, +0.20 / +0.11), Rbot s04 (+0.05 to +0.24 on all seeds), and
+     Virut s13 on seed 44 (+0.61, interval [+0.52, +0.68]).
+   - *Losses:* Rbot s10, on every seed (-0.21 to -0.27; each seed's paired interval excludes 0).
+   - This is the family-specific pattern N-6a described: the inputs move the model's reading of some
+     families and flip others.
+4. **LR sees the same mixture.** The host-relative block lifts LR on s01 (0.61 to 0.76) and lowers it
+   on s11 (0.52 to 0.39) and s05.
+5. **Anticipation does not improve either.** S2\* is measurable on six scenarios (mean of seeds, G to
+   H):
+   - it rises on s03 (0.45 to 0.52) and s04 (0.79 to 0.82);
+   - it falls on s02 (0.62 to 0.49), s08 (0.50 to 0.42) and s10 (0.61 to 0.47).
+
+   S3 is met nowhere in either arm; the smallest p is 0.08.
+6. **G against E25b is the positional change plus retraining noise.** G is a fresh training, not a
+   re-scoring. It stays close to E25b on the well-measured scenarios, as N-8 x E25b bounded, and every
+   family keeps its E25b verdict.
+7. **What follows, per D-042's "does not help" branch.**
+   - A per-host-sequence model (each host its own sequence, a window's risk the maximum over hosts)
+     remains untested. It stays deferred, as the user decided, until there is evidence for it; D-042
+     is not that evidence.
+   - D-039's GNN condition is not met.
+   - The architecture decision waits for M3.
+
+Artefacts:
+- `results/tables/d042_scenarios.csv` (every arm, seed and scenario: ROC, PR-AUC, causal F1, S2\*, S3),
+  `d042_scenario_matrix.csv`, `d042_paired.csv` (per seed H - G with its paired block-bootstrap
+  interval) and `d042_families.csv`;
+- `results/tables/ctu_ci_d042-{g,h}.csv` and `results/runs/ctu-ci-d042-{g,h}/` (intervals per arm);
+- `results/runs/d042-compare/` (verdict), `results/runs/d042-{g,h}-s{42,43,44}/` (each with
+  `checkpoints_manifest.json`), `results/runs/lr-d042-{g,h}/`, and
+  `results/tables/d042-*-s*_{forecast,training_curves}.csv`;
+- `results/runs/n8-logs/` (`run_chain_d042*.sh`, `chain_d042.status`, per-run logs; the build log is
+  `d042-build.log`).

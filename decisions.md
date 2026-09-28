@@ -1854,3 +1854,14 @@ scenario, as E25b did.
 
 **Not allowed.** No change to the baseline length, the minimum history or the feature list. No
 feature selection. No reruns except `--resume` after a crash.
+
+**Outcome (2026-09-28, results.md "D-042"): does not help.**
+- H helps on 1 of the 3 deciding scenarios: s07, +0.44 and +0.50 on seeds 43/44.
+- s08 and s11 do not move.
+- Two scenarios G transfers on regress: s05 (10 background windows) and s06 (6).
+- Elsewhere the block moves families both ways: Rbot s04 up on every seed, Rbot s10 down on every
+  seed (-0.21 to -0.27).
+- Per this entry's "does not help" branch, the per-host-sequence model stays untested and deferred,
+  and the architecture decision waits for M3.
+- The uncertainty tables (the board's confidence-interval item) are in results.md, "E25b with
+  confidence intervals".

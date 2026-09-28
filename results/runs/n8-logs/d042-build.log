@@ -1,0 +1,14 @@
+s01: 737 windows, block built in 22s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=227.0, hostrel_new_peer_hosts=51.0, hostrel_new_ports_max=754.0, hostrel_new_hosts=68.0
+s02: 505 windows, block built in 15s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=437.4, hostrel_new_peer_hosts=63.0, hostrel_new_ports_max=1005.0, hostrel_new_hosts=111.0
+s03: 8019 windows, block built in 38s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=525.2, hostrel_new_peer_hosts=190.0, hostrel_new_ports_max=843.0, hostrel_new_hosts=139.0
+s04: 539 windows, block built in 9s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=482.0, hostrel_new_peer_hosts=65.0, hostrel_new_ports_max=1237.0, hostrel_new_hosts=121.0
+s05: 61 windows, block built in 1s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=48.0, hostrel_new_peer_hosts=58.0, hostrel_new_ports_max=406.0, hostrel_new_hosts=126.0
+s06: 260 windows, block built in 4s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=198.7, hostrel_new_peer_hosts=62.0, hostrel_new_ports_max=508.0, hostrel_new_hosts=95.0
+s07: 44 windows, block built in 1s; max per column: hostrel_ports_z_max=9.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=136.2, hostrel_new_peer_hosts=67.0, hostrel_new_ports_max=460.0, hostrel_new_hosts=159.0
+s08: 2339 windows, block built in 22s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=420.0, hostrel_new_peer_hosts=66.0, hostrel_new_ports_max=874.0, hostrel_new_hosts=84.0
+s09: 677 windows, block built in 16s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=890.0, hostrel_new_peer_hosts=58.0, hostrel_new_ports_max=499.0, hostrel_new_hosts=120.0
+s10: 618 windows, block built in 9s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=1576.5, hostrel_new_peer_hosts=56.0, hostrel_new_ports_max=375.0, hostrel_new_hosts=94.0
+s11: 34 windows, block built in 1s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=223.2, hostrel_new_peer_hosts=72.0, hostrel_new_ports_max=326.0, hostrel_new_hosts=118.0
+s12: 208 windows, block built in 3s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=348.0, hostrel_new_peer_hosts=69.0, hostrel_new_ports_max=276.0, hostrel_new_hosts=110.0
+s13: 1967 windows, block built in 18s; max per column: hostrel_ports_z_max=10.0, hostrel_fanout_z_max=10.0, hostrel_flows_ratio_max=294.3, hostrel_new_peer_hosts=149.0, hostrel_new_ports_max=492.0, hostrel_new_hosts=93.0
+wrote data\processed\ctu13_hostrel/ (13 splits)

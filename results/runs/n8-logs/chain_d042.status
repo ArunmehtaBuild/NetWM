@@ -1,0 +1,37 @@
+2026-09-28T15:24:31Z start d042-build
+2026-09-28T15:27:18Z d042-build exit=0
+2026-09-28T15:27:18Z d042-build OK (13 splits)
+2026-09-28T15:27:19Z start d042-g-s42
+2026-09-28T15:56:01Z hand-over: run_chain_d042.sh stopped between steps; run_chain_d042_par.sh runs arms G and H in parallel
+2026-09-28T15:56:02Z start d042-h-s42
+2026-09-28T15:56:02Z d042-g-s42 in progress (started by run_chain_d042.sh) - waiting for it
+2026-09-28T16:31:40Z d042-g-s42 process ended
+2026-09-28T16:31:41Z d042-g-s42 OK
+2026-09-28T16:31:42Z start d042-g-s43
+2026-09-28T17:17:20Z d042-h-s42 exit=0
+2026-09-28T17:17:20Z d042-h-s42 OK
+2026-09-28T17:17:22Z start d042-h-s43
+2026-09-28T17:53:44Z d042-g-s43 exit=0
+2026-09-28T17:53:45Z d042-g-s43 OK
+2026-09-28T17:53:46Z start d042-g-s44
+2026-09-28T18:39:15Z d042-h-s43 exit=0
+2026-09-28T18:39:16Z d042-h-s43 OK
+2026-09-28T18:39:17Z start d042-h-s44
+2026-09-28T19:15:50Z d042-g-s44 exit=0
+2026-09-28T19:15:50Z d042-g-s44 OK
+2026-09-28T19:44:03Z d042-h-s44 exit=0
+2026-09-28T19:44:03Z d042-h-s44 OK
+2026-09-28T19:44:03Z both arms finished
+2026-09-28T19:44:03Z start lr-d042-g
+2026-09-28T19:45:17Z lr-d042-g exit=0
+2026-09-28T19:45:17Z start lr-d042-h
+2026-09-28T19:46:27Z lr-d042-h exit=0
+2026-09-28T19:46:27Z start ci-e25b
+2026-09-28T19:47:20Z ci-e25b exit=0
+2026-09-28T19:47:20Z start ci-d042-g
+2026-09-28T19:48:11Z ci-d042-g exit=0
+2026-09-28T19:48:11Z start ci-d042-h
+2026-09-28T19:49:03Z ci-d042-h exit=0
+2026-09-28T19:49:03Z start d042-compare
+2026-09-28T19:50:45Z d042-compare exit=0
+2026-09-28T19:50:45Z d042 chain done

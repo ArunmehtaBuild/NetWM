@@ -1,0 +1,701 @@
+{
+  "run_id": "d042-compare",
+  "timestamp_utc": "2026-09-28T19:50:44+00:00",
+  "git_sha": "26680d2",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "decision": "D-042",
+    "deciding": [
+      "s08",
+      "s07",
+      "s11"
+    ],
+    "help_margin": 0.1,
+    "bar": 0.7,
+    "block": 20,
+    "n_boot": 2000,
+    "git_sha_at_start": "26680d2"
+  },
+  "metrics": {
+    "verdict": {
+      "helps_on_deciding": [
+        "s07"
+      ],
+      "regressions": [
+        "s05",
+        "s06"
+      ],
+      "result": "does not help"
+    },
+    "scenarios": [
+      {
+        "scenario": "s01",
+        "family": "Neris",
+        "deciding": false,
+        "windows": 737,
+        "background": 157,
+        "roc_G": "0.946 / 0.653 / 0.775",
+        "roc_H": "0.856 / 0.850 / 0.886",
+        "delta": "-0.090 / +0.197 / +0.111",
+        "helps": true,
+        "g_transfers_here": true,
+        "regresses": false,
+        "roc_e25b": "0.942 / 0.664 / 0.761"
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "deciding": false,
+        "windows": 505,
+        "background": 78,
+        "roc_G": "0.602 / 0.393 / 0.423",
+        "roc_H": "0.568 / 0.560 / 0.475",
+        "delta": "-0.034 / +0.167 / +0.052",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.597 / 0.425 / 0.413"
+      },
+      {
+        "scenario": "s03",
+        "family": "Rbot",
+        "deciding": false,
+        "windows": 8019,
+        "background": 6477,
+        "roc_G": "0.716 / 0.696 / 0.629",
+        "roc_H": "0.673 / 0.676 / 0.725",
+        "delta": "-0.043 / -0.019 / +0.096",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.714 / 0.695 / 0.632"
+      },
+      {
+        "scenario": "s04",
+        "family": "Rbot",
+        "deciding": false,
+        "windows": 539,
+        "background": 285,
+        "roc_G": "0.592 / 0.706 / 0.545",
+        "roc_H": "0.809 / 0.757 / 0.784",
+        "delta": "+0.217 / +0.051 / +0.239",
+        "helps": true,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.595 / 0.712 / 0.542"
+      },
+      {
+        "scenario": "s05",
+        "family": "Virut",
+        "deciding": false,
+        "windows": 61,
+        "background": 10,
+        "roc_G": "0.912 / 0.806 / 0.871",
+        "roc_H": "0.498 / 0.774 / 0.331",
+        "delta": "-0.414 / -0.031 / -0.539",
+        "helps": false,
+        "g_transfers_here": true,
+        "regresses": true,
+        "roc_e25b": "0.847 / 0.857 / 0.886"
+      },
+      {
+        "scenario": "s06",
+        "family": "Menti",
+        "deciding": false,
+        "windows": 260,
+        "background": 6,
+        "roc_G": "0.780 / 0.703 / 0.833",
+        "roc_H": "0.678 / 0.669 / 0.671",
+        "delta": "-0.102 / -0.033 / -0.161",
+        "helps": false,
+        "g_transfers_here": true,
+        "regresses": true,
+        "roc_e25b": "0.770 / 0.698 / 0.777"
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "deciding": true,
+        "windows": 44,
+        "background": 26,
+        "roc_G": "0.088 / 0.103 / 0.079",
+        "roc_H": "0.094 / 0.547 / 0.583",
+        "delta": "+0.006 / +0.444 / +0.504",
+        "helps": true,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.015 / 0.156 / 0.177"
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "deciding": true,
+        "windows": 2339,
+        "background": 89,
+        "roc_G": "0.278 / 0.128 / 0.157",
+        "roc_H": "0.203 / 0.145 / 0.175",
+        "delta": "-0.075 / +0.017 / +0.018",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.204 / 0.137 / 0.157"
+      },
+      {
+        "scenario": "s09",
+        "family": "Neris",
+        "deciding": false,
+        "windows": 677,
+        "background": 295,
+        "roc_G": "0.636 / 0.879 / 0.936",
+        "roc_H": "0.930 / 0.828 / 0.935",
+        "delta": "+0.294 / -0.051 / -0.001",
+        "helps": false,
+        "g_transfers_here": true,
+        "regresses": false,
+        "roc_e25b": "0.608 / 0.858 / 0.931"
+      },
+      {
+        "scenario": "s10",
+        "family": "Rbot",
+        "deciding": false,
+        "windows": 618,
+        "background": 466,
+        "roc_G": "0.677 / 0.674 / 0.667",
+        "roc_H": "0.468 / 0.454 / 0.400",
+        "delta": "-0.210 / -0.220 / -0.267",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.671 / 0.667 / 0.652"
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "deciding": true,
+        "windows": 34,
+        "background": 20,
+        "roc_G": "0.032 / 0.218 / 0.054",
+        "roc_H": "0.057 / 0.071 / 0.021",
+        "delta": "+0.025 / -0.147 / -0.032",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.082 / 0.054 / 0.054"
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "deciding": false,
+        "windows": 208,
+        "background": 72,
+        "roc_G": "0.986 / 0.981 / 0.987",
+        "roc_H": "0.990 / 0.935 / 0.980",
+        "delta": "+0.004 / -0.046 / -0.007",
+        "helps": false,
+        "g_transfers_here": true,
+        "regresses": false,
+        "roc_e25b": "0.985 / 0.979 / 0.985"
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "deciding": false,
+        "windows": 1967,
+        "background": 9,
+        "roc_G": "0.423 / 0.299 / 0.306",
+        "roc_H": "0.472 / 0.361 / 0.918",
+        "delta": "+0.049 / +0.062 / +0.612",
+        "helps": false,
+        "g_transfers_here": false,
+        "regresses": false,
+        "roc_e25b": "0.439 / 0.302 / 0.313"
+      }
+    ],
+    "paired": [
+      {
+        "scenario": "s01",
+        "seed": 42,
+        "roc_G": 0.9455,
+        "roc_H": 0.8556,
+        "delta": -0.0899,
+        "delta_lo": -0.2542,
+        "delta_hi": 0.0221
+      },
+      {
+        "scenario": "s01",
+        "seed": 43,
+        "roc_G": 0.6531,
+        "roc_H": 0.8503,
+        "delta": 0.1972,
+        "delta_lo": 0.0856,
+        "delta_hi": 0.3654
+      },
+      {
+        "scenario": "s01",
+        "seed": 44,
+        "roc_G": 0.7753,
+        "roc_H": 0.8861,
+        "delta": 0.1108,
+        "delta_lo": 0.0077,
+        "delta_hi": 0.2807
+      },
+      {
+        "scenario": "s02",
+        "seed": 42,
+        "roc_G": 0.6019,
+        "roc_H": 0.5682,
+        "delta": -0.0337,
+        "delta_lo": -0.24,
+        "delta_hi": 0.1853
+      },
+      {
+        "scenario": "s02",
+        "seed": 43,
+        "roc_G": 0.3927,
+        "roc_H": 0.5596,
+        "delta": 0.1669,
+        "delta_lo": 0.0408,
+        "delta_hi": 0.3745
+      },
+      {
+        "scenario": "s02",
+        "seed": 44,
+        "roc_G": 0.4235,
+        "roc_H": 0.4753,
+        "delta": 0.0518,
+        "delta_lo": -0.0462,
+        "delta_hi": 0.3038
+      },
+      {
+        "scenario": "s03",
+        "seed": 42,
+        "roc_G": 0.7159,
+        "roc_H": 0.6726,
+        "delta": -0.0433,
+        "delta_lo": -0.091,
+        "delta_hi": 0.0076
+      },
+      {
+        "scenario": "s03",
+        "seed": 43,
+        "roc_G": 0.6956,
+        "roc_H": 0.6763,
+        "delta": -0.0193,
+        "delta_lo": -0.0495,
+        "delta_hi": 0.0145
+      },
+      {
+        "scenario": "s03",
+        "seed": 44,
+        "roc_G": 0.6293,
+        "roc_H": 0.7253,
+        "delta": 0.096,
+        "delta_lo": 0.0526,
+        "delta_hi": 0.1459
+      },
+      {
+        "scenario": "s04",
+        "seed": 42,
+        "roc_G": 0.5922,
+        "roc_H": 0.8089,
+        "delta": 0.2167,
+        "delta_lo": 0.0333,
+        "delta_hi": 0.3822
+      },
+      {
+        "scenario": "s04",
+        "seed": 43,
+        "roc_G": 0.7056,
+        "roc_H": 0.7566,
+        "delta": 0.051,
+        "delta_lo": -0.108,
+        "delta_hi": 0.225
+      },
+      {
+        "scenario": "s04",
+        "seed": 44,
+        "roc_G": 0.5451,
+        "roc_H": 0.7843,
+        "delta": 0.2392,
+        "delta_lo": 0.0249,
+        "delta_hi": 0.4234
+      },
+      {
+        "scenario": "s05",
+        "seed": 42,
+        "roc_G": 0.9118,
+        "roc_H": 0.498,
+        "delta": -0.4138,
+        "delta_lo": -1.0,
+        "delta_hi": 0.4492
+      },
+      {
+        "scenario": "s05",
+        "seed": 43,
+        "roc_G": 0.8059,
+        "roc_H": 0.7745,
+        "delta": -0.0314,
+        "delta_lo": -0.1102,
+        "delta_hi": 0.25
+      },
+      {
+        "scenario": "s05",
+        "seed": 44,
+        "roc_G": 0.8706,
+        "roc_H": 0.3314,
+        "delta": -0.5392,
+        "delta_lo": -1.0,
+        "delta_hi": 0.6356
+      },
+      {
+        "scenario": "s06",
+        "seed": 42,
+        "roc_G": 0.7802,
+        "roc_H": 0.6778,
+        "delta": -0.1024,
+        "delta_lo": -0.3124,
+        "delta_hi": -0.0156
+      },
+      {
+        "scenario": "s06",
+        "seed": 43,
+        "roc_G": 0.7028,
+        "roc_H": 0.6693,
+        "delta": -0.0335,
+        "delta_lo": -0.3872,
+        "delta_hi": 0.3787
+      },
+      {
+        "scenario": "s06",
+        "seed": 44,
+        "roc_G": 0.8327,
+        "roc_H": 0.6713,
+        "delta": -0.1614,
+        "delta_lo": -0.593,
+        "delta_hi": -0.0193
+      },
+      {
+        "scenario": "s07",
+        "seed": 42,
+        "roc_G": 0.0876,
+        "roc_H": 0.094,
+        "delta": 0.0064,
+        "delta_lo": -0.2474,
+        "delta_hi": 0.0125
+      },
+      {
+        "scenario": "s07",
+        "seed": 43,
+        "roc_G": 0.1026,
+        "roc_H": 0.547,
+        "delta": 0.4444,
+        "delta_lo": 0.0,
+        "delta_hi": 0.631
+      },
+      {
+        "scenario": "s07",
+        "seed": 44,
+        "roc_G": 0.0791,
+        "roc_H": 0.5833,
+        "delta": 0.5042,
+        "delta_lo": 0.0163,
+        "delta_hi": 0.714
+      },
+      {
+        "scenario": "s08",
+        "seed": 42,
+        "roc_G": 0.2779,
+        "roc_H": 0.2031,
+        "delta": -0.0748,
+        "delta_lo": -0.1765,
+        "delta_hi": 0.0134
+      },
+      {
+        "scenario": "s08",
+        "seed": 43,
+        "roc_G": 0.1284,
+        "roc_H": 0.1452,
+        "delta": 0.0168,
+        "delta_lo": -0.0585,
+        "delta_hi": 0.1008
+      },
+      {
+        "scenario": "s08",
+        "seed": 44,
+        "roc_G": 0.1571,
+        "roc_H": 0.1746,
+        "delta": 0.0175,
+        "delta_lo": -0.0442,
+        "delta_hi": 0.0668
+      },
+      {
+        "scenario": "s09",
+        "seed": 42,
+        "roc_G": 0.6361,
+        "roc_H": 0.93,
+        "delta": 0.2939,
+        "delta_lo": 0.1556,
+        "delta_hi": 0.4996
+      },
+      {
+        "scenario": "s09",
+        "seed": 43,
+        "roc_G": 0.8795,
+        "roc_H": 0.8284,
+        "delta": -0.0511,
+        "delta_lo": -0.1119,
+        "delta_hi": 0.016
+      },
+      {
+        "scenario": "s09",
+        "seed": 44,
+        "roc_G": 0.9358,
+        "roc_H": 0.9351,
+        "delta": -0.0007,
+        "delta_lo": -0.0265,
+        "delta_hi": 0.0186
+      },
+      {
+        "scenario": "s10",
+        "seed": 42,
+        "roc_G": 0.6775,
+        "roc_H": 0.4679,
+        "delta": -0.2096,
+        "delta_lo": -0.4444,
+        "delta_hi": -0.0395
+      },
+      {
+        "scenario": "s10",
+        "seed": 43,
+        "roc_G": 0.6736,
+        "roc_H": 0.4537,
+        "delta": -0.2199,
+        "delta_lo": -0.4732,
+        "delta_hi": -0.0104
+      },
+      {
+        "scenario": "s10",
+        "seed": 44,
+        "roc_G": 0.6666,
+        "roc_H": 0.3998,
+        "delta": -0.2668,
+        "delta_lo": -0.446,
+        "delta_hi": -0.1246
+      },
+      {
+        "scenario": "s11",
+        "seed": 42,
+        "roc_G": 0.0321,
+        "roc_H": 0.0571,
+        "delta": 0.025,
+        "delta_lo": 0.0167,
+        "delta_hi": 0.1244
+      },
+      {
+        "scenario": "s11",
+        "seed": 43,
+        "roc_G": 0.2179,
+        "roc_H": 0.0714,
+        "delta": -0.1465,
+        "delta_lo": -0.6708,
+        "delta_hi": 0.1827
+      },
+      {
+        "scenario": "s11",
+        "seed": 44,
+        "roc_G": 0.0536,
+        "roc_H": 0.0214,
+        "delta": -0.0322,
+        "delta_lo": -0.1058,
+        "delta_hi": 0.0167
+      },
+      {
+        "scenario": "s12",
+        "seed": 42,
+        "roc_G": 0.9861,
+        "roc_H": 0.99,
+        "delta": 0.0039,
+        "delta_lo": -0.0012,
+        "delta_hi": 0.0223
+      },
+      {
+        "scenario": "s12",
+        "seed": 43,
+        "roc_G": 0.9812,
+        "roc_H": 0.9355,
+        "delta": -0.0457,
+        "delta_lo": -0.0676,
+        "delta_hi": 0.0036
+      },
+      {
+        "scenario": "s12",
+        "seed": 44,
+        "roc_G": 0.9866,
+        "roc_H": 0.9798,
+        "delta": -0.0068,
+        "delta_lo": -0.0113,
+        "delta_hi": 0.0068
+      },
+      {
+        "scenario": "s13",
+        "seed": 42,
+        "roc_G": 0.4233,
+        "roc_H": 0.472,
+        "delta": 0.0487,
+        "delta_lo": -0.0626,
+        "delta_hi": 0.1283
+      },
+      {
+        "scenario": "s13",
+        "seed": 43,
+        "roc_G": 0.2989,
+        "roc_H": 0.3614,
+        "delta": 0.0625,
+        "delta_lo": -0.0226,
+        "delta_hi": 0.1416
+      },
+      {
+        "scenario": "s13",
+        "seed": 44,
+        "roc_G": 0.3065,
+        "roc_H": 0.9185,
+        "delta": 0.612,
+        "delta_lo": 0.5188,
+        "delta_hi": 0.6827
+      }
+    ],
+    "families": [
+      {
+        "arm": "G (global, 56)",
+        "family": "Menti",
+        "verdict": "transfers",
+        "roc_auc_mean": 0.772
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "Murlo",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.188
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "NSIS.ay",
+        "verdict": "transfers",
+        "roc_auc_mean": 0.985
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "Neris",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.694
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "Rbot",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.517
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "Sogou",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.09
+      },
+      {
+        "arm": "G (global, 56)",
+        "family": "Virut",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.603
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Menti",
+        "verdict": "partial",
+        "roc_auc_mean": 0.673
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Murlo",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.174
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "NSIS.ay",
+        "verdict": "transfers",
+        "roc_auc_mean": 0.968
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Neris",
+        "verdict": "partial",
+        "roc_auc_mean": 0.765
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Rbot",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.491
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Sogou",
+        "verdict": "partial",
+        "roc_auc_mean": 0.408
+      },
+      {
+        "arm": "H (global + host-local, 62)",
+        "family": "Virut",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.559
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Menti",
+        "verdict": "transfers",
+        "roc_auc_mean": 0.748
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Murlo",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.166
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "NSIS.ay",
+        "verdict": "transfers",
+        "roc_auc_mean": 0.983
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Neris",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.689
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Rbot",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.506
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Sogou",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.116
+      },
+      {
+        "arm": "E25b (global, interp)",
+        "family": "Virut",
+        "verdict": "inverted",
+        "roc_auc_mean": 0.607
+      }
+    ]
+  }
+}
