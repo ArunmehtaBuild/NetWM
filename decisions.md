@@ -1441,3 +1441,79 @@ is worse than persistence**, so its forecasts are not world-model rollouts.
 (0.651). The world model's anticipation edge over LR is the factorised target (+0.045). Its
 detection edge is large: PR-AUC 0.39-0.56 against 0.14.
 
+---
+
+### D-038 — Pre-registration: PCAP uploads are served by the mean of the three E20r seeds; CSV uploads stay on r2 (E27)
+*Date: 2026-09-28 · Status: accepted, committed before any ensemble score was computed · Follows D-035 (packet
+features are carried forward because the PS requires them) and D-037 outcome 3 (r2 stays shipped)*
+
+**Why.** PS section 1 requires flow-level and packet-level features, in combination. The shipped r2
+reads 70 flow features. On a PCAP upload the engine turns the capture into flows, and r2 ignores every
+packet measurement; the payload says so (`"packet_features": "not used by this model"`). D-035 carried
+packet features forward because the PS requires them, but the shipped model has none. E20r is the
+existing packet-consuming reference: 105 inputs, namely S_t v1 (70), the CSV packet block (17) and
+the 18 `pcap_` features measured from the real captures (TTL, fragments, retransmissions, TCP window,
+payload histogram, packet timing, SYN-only and RST shares).
+
+**What this is, and what it is not.** It is an inference-routing decision on three existing
+checkpoints. No model is trained. It claims neither that packets improve anticipation (E20r's S2\* is
+0.642 against 0.651 flow-only: they do not) nor that the ensemble generalises better than one seed.
+
+**Routing, fixed now.**
+- One endpoint, `/api/analyze`, routed by input modality:
+  - `.csv` / `.txt` → r2 (`models/e4e7-worldmodel-r2/`), unchanged;
+  - `.pcap` / `.pcapng` → the E20r ensemble.
+- The ensemble is **all three seeds**, `models/m1v2-e20r-s{42,43,44}/`. For a demo slice of a held-out
+  day, each seed's fold for that day; for any other capture, each seed's `thursday.pt`, the same default
+  r2 uses. **No seed is chosen, dropped or weighted by held-out performance.** The per-seed Thursday
+  numbers (PR-AUC 0.418 / 0.562 / 0.710) were known when this was written; the unweighted mean of all
+  three is chosen so that this knowledge cannot pick one.
+- Every checkpoint reads the same state, built once: flows from `pcap_to_flows`, and the packet block
+  from `window_packet_features(read_packets(capture))`, the functions that built its training matrix.
+  Each applies its own fitted scaler. The three feature orders are checked identical before serving.
+- Alarm score per checkpoint: `p_max` on the deterministic mean path, as the engine scores r2 (D-019,
+  E14). **Ensemble score = arithmetic mean of the three per-window scores**, on the shared window grid.
+- Threshold: the causal expanding q90 (D-034), applied once, to the ensemble score. The E20r
+  checkpoints store no threshold policy, and the engine would otherwise fall back to their fixed
+  train-tuned threshold, which E14 found ~100x too high on a held-out day. The route sets the causal
+  policy explicitly.
+- Every other per-window output (risk curves and bands, stage distribution, surprise, attention) is the
+  arithmetic mean of the three. Feature contributions are the mean of the three Integrated-Gradients
+  attributions on the same windows. IG is linear in the model, so this equals IG of the mean score.
+- **A PCAP upload never falls back to r2.** If an E20r checkpoint is missing, or the packet block
+  cannot be built, the request fails with an error.
+- The payload names the input modality, the model mode, the checkpoint set and whether packet
+  features were measured. A CSV result says packet features are unavailable. D-031's synthesised demo
+  capture takes the same route, and is labelled as synthesised packets, not evaluation data.
+
+**Scoring (E27), fixed now.**
+- From stored outputs only. For each held-out day, the per-window `scores` and `threat_scores` stored
+  by each E20r run are averaged across the three seeds. These are `p_max` over 16 Monte-Carlo rollouts,
+  the statistic of every E20r row in the benchmark and the ablation matrix.
+- The averaged arrays are written as the run folder `results/runs/e27-e20r-mean/` and scored by the
+  unchanged `scorecard.score_run` and `benchmark_table`'s causal metrics:
+  - S1, S2 by bin and S2\*, S3 with its null, S4;
+  - Thursday and Friday PR-AUC, causal F1, precision, recall and FPR.
+- The three seeds are reported beside the ensemble. r2 is shown as the flow-only reference, a
+  different input.
+- The live mean-path statistic differs from the stored Monte-Carlo one by sampling noise. The parity
+  check reports that difference per window; it does not require equality.
+- The ensemble has no single rollout. Its world-model evidence is each seed's own (E26 matrix: all
+  three beat persistence on Thursday and Friday).
+
+**Acceptance of the PCAP path, fixed now.** Accepted when all three hold:
+1. **Engineering.** The routing tests pass. On the processed Thursday and Friday matrices, the live
+   path gives each seed the feature order and scaler it trained with. No future-dependent statistic
+   enters preprocessing or the threshold. The parity check is recorded in results.md.
+2. **Stability** (D-037 clause (d)): ensemble Thursday `comp` PR-AUC >= 0.20.
+3. **Non-inferior anticipation against the flow-only reference:** ensemble S2\* >= E19's S2\* - 0.03,
+   which is 0.651 - 0.03 = 0.621.
+
+If 2 or 3 fails, the PCAP path is not accepted and the team decides. No seed selection, re-weighting,
+threshold change or retraining follows from the result.
+
+**Supersedes nothing.** D-037 outcome 3 stands: r2 stays the model for CSV inputs, and E22 stays the
+anticipation reference. This adds a route for PCAP inputs.
+
+**Revisit if.** A later pre-registered fusion experiment produces a packet-consuming model that passes
+D-037's composition bar; it would then replace this ensemble on the PCAP route.
