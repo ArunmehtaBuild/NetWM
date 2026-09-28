@@ -1333,6 +1333,8 @@ result points to.
 
 ## E25 - M2: the final stack on CTU-13, leave-one-botnet-family-out (D-035, D-036)
 
+*Completed on three seeds in **E25b** below. Points 1, 2 and 4 of "What E25 shows" are seed-42 readings; E25b revises them.*
+
 ```
 python scripts/build_ctu13.py --config configs/ctu13.yaml                          # F6: 13 scenarios
 python scripts/train.py --data data/processed/ctu13 --model-config configs/m1v2/e25_ctu13.yaml \
@@ -1480,3 +1482,131 @@ Artefacts:
 - `results/tables/e26_ablation_matrix.csv` (per run) and `e26_ablation_summary.csv`;
 - `results/runs/e26-ship-decision/metrics.json` (the bar's verdict);
 - `results/runs/m1v2-e26-s4*{,-csvmode}/`, `results/runs/lr-flow-s42/`, `results/runs/parity-thursday/`.
+
+---
+
+## E25b - M2 completed: CTU-13 on three seeds, family by family, world model vs logistic regression (D-037)
+
+```
+python scripts/train.py --data data/processed/ctu13 --model-config configs/m1v2/e25_ctu13.yaml \
+    --group-folds configs/ctu13_folds.yaml --run e25-ctu13-s43 --seed 43 --no-figures --resume \
+    --note "completion of E25"                                                        # and s44 / --seed 44
+python scripts/lr_baseline.py --data data/processed/ctu13 --model-config configs/m1v2/e25_ctu13.yaml \
+    --group-folds configs/ctu13_folds.yaml --run lr-ctu13-s42
+CUDA_VISIBLE_DEVICES="" python scripts/ctu_family_matrix.py
+```
+
+**Setup.** Seeds 43 and 44 use seed 42's definition exactly: the same config, folds, 56 Argus
+features and 250-step budget (D-037). The LR baseline uses the same features, folds, targets, scaler
+and scorer, and is deterministic, so it has one row. The verdict rule was fixed in D-037 before these
+runs:
+- **transfers:** world-model ROC-AUC >= 0.70 on >= 2 of 3 seeds, for every scenario of the family;
+- **inverted:** ROC-AUC < 0.50 on >= 2 of 3 seeds, for any scenario of the family;
+- **partial:** everything else.
+
+*Procedure notes:*
+1. Seeds 43/44 were trained on an RTX 4060 (torch 2.5.1+cu121, Python 3.10.21); seed 42 was trained on
+   the GTX 1650. Each run folder's `env` block records this.
+2. A first attempt on the other machine died after fold 1. All seven folds of both seeds were
+   retrained here, so each seed was trained on one machine.
+3. The code that ran is `git_sha_at_start` = `7399495`. The folders' save-time `git_sha` (`a0dfb52`)
+   differs from it only by results commits.
+4. The logs carry no `exit=` line. The launcher's `echo exit=%ERRORLEVEL%>>` was parsed by cmd as a
+   handle redirect. Completion is shown by `complete: true`, all 13 scenarios with threat scores, the
+   final `wrote models/...` line, and no traceback in either log.
+
+**Detection and anticipation, per held-out scenario.** ROC-AUC, PR-AUC and causal F1 are for `comp`
+on `y_within_K` at the causal expanding q90. "Background" is the number of windows with
+`y_within_K` = 0, the negatives every ROC-AUC below rests on. S2\* is the percentile of pre-onset
+windows, reported only where a scenario has >= 20 pre-onset cells. World-model columns show seeds
+42 / 43 / 44, or their mean.
+
+| family | scenario | windows | background | **WM ROC-AUC** 42 / 43 / 44 | **LR ROC-AUC** | WM / LR PR-AUC | WM / LR causal F1 | **WM S2\*** 42 / 43 / 44 | **LR S2\*** | S2 cells |
+|---|---|---:|---:|---|---:|---|---|---|---:|---:|
+| Menti | s06 | 260 | 6 | 0.770 / 0.698 / 0.777 | 0.985 | 0.990 / 1.000 | 0.573 / 0.412 | - | - | 10 |
+| Murlo | s08 | 2,339 | 89 | **0.204 / 0.137 / 0.156** | 0.590 | 0.919 / 0.974 | 0.169 / 0.278 | 0.472 / 0.541 / 0.460 | 0.632 | 54 |
+| NSIS.ay | s12 | 208 | 72 | 0.985 / 0.979 / 0.985 | 0.957 | 0.990 / 0.952 | 0.651 / 0.378 | - | - | 16 |
+| Neris | s01 | 737 | 157 | 0.942 / 0.664 / 0.761 | 0.614 | 0.898 / 0.785 | 0.212 / 0.132 | - | - | 16 |
+| Neris | s02 | 505 | 78 | 0.597 / **0.425 / 0.413** | 0.571 | 0.826 / 0.853 | 0.190 / 0.213 | 0.748 / 0.525 / 0.542 | 0.242 | 30 |
+| Neris | s09 | 677 | 295 | 0.608 / 0.858 / 0.931 | 0.924 | 0.840 / 0.954 | 0.431 / 0.641 | 0.751 / 0.819 / 0.758 | 0.560 | 62 |
+| Rbot | s03 | 8,019 | 6,479 | 0.714 / 0.695 / 0.632 | 0.520 | 0.371 / 0.191 | 0.398 / 0.115 | 0.460 / 0.439 / 0.466 | 0.491 | 892 |
+| Rbot | s04 | 539 | 285 | 0.595 / 0.712 / 0.542 | 0.672 | 0.623 / 0.680 | 0.282 / 0.395 | 0.816 / 0.821 / 0.773 | 0.546 | 197 |
+| Rbot | s10 | 618 | 466 | 0.671 / 0.667 / 0.652 | 0.531 | 0.400 / 0.243 | 0.364 / 0.129 | 0.666 / 0.571 / 0.612 | 0.521 | 216 |
+| Rbot | s11 | 34 | 20 | **0.082 / 0.054 / 0.054** | 0.518 | 0.264 / 0.421 | 0.000 / 0.000 | - | - | 0 |
+| Sogou | s07 | 44 | 26 | **0.015 / 0.156 / 0.177** | 0.737 | 0.313 / 0.566 | 0.000 / 0.000 | - | - | 3 |
+| Virut | s05 | 61 | 10 | 0.847 / 0.857 / 0.886 | 0.512 | 0.962 / 0.853 | 0.657 / 0.000 | - | - | 14 |
+| Virut | s13 | 1,967 | 10 | **0.439 / 0.302 / 0.313** | 0.991 | 0.995 / 1.000 | 0.169 / 0.106 | - | - | 2 |
+
+**S3 (early alarms against the circular-shift null)** is met nowhere: in no scenario, on no seed, and
+not by LR. The smallest p is 0.059 (s10, seed 42, 8 of 17 onsets warned early).
+
+### The verdicts (D-037's rule, applied as written)
+
+| family | verdict | the scenario that decides it | WM ROC-AUC, family mean | LR ROC-AUC, family mean |
+|---|---|---|---:|---:|
+| NSIS.ay | **transfers** | s12: 0.98 on all seeds, 72 background windows | 0.983 | 0.957 |
+| Menti | **transfers** | s06: >= 0.70 on 2 of 3 seeds, but only **6** background windows | 0.748 | 0.985 |
+| Murlo | **inverted** | s08: 0.14-0.20 on all seeds, 89 background windows | 0.166 | 0.590 |
+| Neris | **inverted** | s02: 0.425 and 0.413 on seeds 43/44 (78 background); s01 0.66-0.94, s09 0.61-0.93 | 0.689 | 0.703 |
+| Rbot | **inverted** | s11: 0.05-0.08 on all seeds (34 windows, 20 background); s03/s04/s10 0.54-0.71 | 0.506 | 0.560 |
+| Sogou | **inverted** | s07: 0.02-0.18 on all seeds (44 windows, 26 background) | 0.116 | 0.737 |
+| Virut | **inverted** | s13: 0.30-0.44 on all seeds, but only **10** background windows in 1,967; s05 0.85-0.89 | 0.607 | 0.751 |
+
+**2 families transfer, 5 are inverted, 0 are partial.** The family means are shown only beside the
+per-scenario rows above. They are not the result.
+
+### What E25b shows
+
+1. **Three seeds overturn most of E25's detection picture.**
+   - Seed 42 alone showed detection transferring to Neris, NSIS and Virut.
+   - Across three seeds, only NSIS transfers on well-measured data.
+   - Seed 42 was the most favourable seed on both Neris scenarios that decided the verdict: s01 0.942
+     against 0.664 / 0.761, and s02 0.597 against 0.425 / 0.413. That is exactly what D-035 and
+     D-037 required three seeds for.
+2. **The rule weighs a 34-window capture the same as an 8,019-window one.** This point is descriptive
+   and does not re-read the rule.
+   - Two inversions are well measured: Murlo (89 background windows, 2,339 in all, 0.14-0.20 on every
+     seed) and Neris s02 (78 background windows).
+   - Rbot's verdict rests on s11 (20 background windows), Sogou's on 26, and Virut's on s13's 10.
+   - Menti's "transfers" rests on 6.
+   - Several CTU-13 captures are almost entirely botnet (D-036's stated weakness), so their ROC-AUC
+     has a handful of negatives behind it.
+3. **On CTU-13 detection, the world model is not better than LR.**
+   - ROC-AUC: the world model is higher on 5 of 13 scenarios (s01, s03, s05, s10, s12), LR on 8.
+   - At the causal threshold the picture reverses: the world model's F1 is higher on 7, LR's on 4,
+     with 2 ties at zero.
+   - LR on the same 56 network-global features is not inverted on Sogou (0.737) or Virut s13 (0.991),
+     although those rest on 26 and 10 background windows. There, the global state carries what is
+     needed to rank the bot's windows correctly, and what inverts is the world model's learned
+     weighting.
+   - LR is weak where the world model fails worst: Murlo 0.590 and Rbot s11 0.518.
+4. **Anticipation transfers to some scenarios and fails on others; a pooled number hides which.** It
+   is measurable on six scenarios.
+   - **World model above LR on all three seeds, on four scenarios:**
+
+     | scenario | world model, 3 seeds | LR |
+     |---|---|---:|
+     | Neris s02 | 0.53-0.75 | 0.24 |
+     | Neris s09 | 0.75-0.82 | 0.56 |
+     | Rbot s04 | 0.77-0.82 | 0.55 |
+     | Rbot s10 | 0.57-0.67 | 0.52 |
+
+   - **LR above the world model on two scenarios:** Murlo (0.63 against 0.46-0.54) and Rbot s03.
+   - On s03 **both are below chance** (0.44-0.47 and 0.49). That scenario holds 892 of the 1,451
+     cells, so any pooled S2\* is mostly s03.
+   - E25's "anticipation does not transfer across botnet families" therefore needs its scope stated:
+     it fails on Murlo and on Rbot's largest capture, and the world model's run-up ranking does carry
+     to two Neris and two Rbot scenarios.
+5. **Early warning is not established on M2 either.** S3 is met nowhere, so the claim stays "ranks
+   pre-attack windows above background", per D-021. On CTU-13 that holds only for the scenarios in
+   point 4.
+6. **Scope.** M2 covers cross-family behaviour on Argus flow state: 56 features, no packet
+   features. CTU-13 has no mixed-traffic PCAPs (D-036), so M2 says nothing about the packet block.
+
+Artefacts:
+- `results/tables/e25b_ctu13_scenarios.csv` (one row per run and scenario), `e25b_ctu13_scenario_matrix.csv` and `e25b_ctu13_families.csv`;
+- `results/runs/e25b-ctu13-matrix/` (`metrics.json` and `matrix.log`);
+- `results/runs/e25-ctu13-s{42,43,44}/` and `results/runs/lr-ctu13-s42/`;
+- `results/tables/e25-ctu13-s4{3,4}_{forecast,training_curves}.csv`;
+- `results/runs/m1v2-sweep-logs/e25-ctu13-s4{3,4}.log`;
+- `models/e25-ctu13-s4{3,4}/<family>.pt` (untracked; kept on the training machine).

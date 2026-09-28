@@ -1441,6 +1441,33 @@ is worse than persistence**, so its forecasts are not world-model rollouts.
 (0.651). The world model's anticipation edge over LR is the factorised target (+0.045). Its
 detection edge is large: PR-AUC 0.39-0.56 against 0.14.
 
+**D-037 OUTCOME, E25b (2026-09-28; recorded after all three seeds were scored).** Applying the rule
+fixed above: **NSIS and Menti transfer; Murlo, Neris, Rbot, Sogou and Virut are inverted; none is
+partial** (results.md E25b).
+- **Transfers.** Only NSIS transfers on well-measured data (72 background windows, 0.98 on every
+  seed). Menti's "transfers" rests on 6 background windows.
+- **Inversions.** Two are well measured: Murlo (89 background windows, 0.14-0.20 on every seed) and
+  Neris s02 (78). The others rest on captures with 10-26 background windows: Rbot s11, Sogou s07 and
+  Virut s13.
+- **Why E25 read Neris as transferring.** Seed 42 was the most favourable seed on Neris.
+
+**World model vs LR**, on the same 56 features and folds:
+- ROC-AUC is higher for the world model on 5 of 13 scenarios, and for LR on 8.
+- Causal F1 is higher for the world model on 7, and for LR on 4.
+- LR is not inverted on Sogou (0.737) or Virut s13 (0.991).
+
+**Anticipation** is measurable on 6 scenarios.
+- The world model ranks the run-up above LR on every seed on Neris s02 and s09 and on Rbot s04 and
+  s10.
+- It ranks below LR on Murlo, and on Rbot s03, where both models are below chance. s03 holds 892 of
+  the 1,451 cells.
+- S3 is met nowhere.
+
+**No pooled CTU-13 number is quoted without the E25b matrix beside it.** The M2 claim is exactly
+this: the method's detection transfers robustly to one botnet family and inverts on several; its
+run-up ranking carries to some Neris and Rbot captures and not to Murlo; M2 covers Argus flow state
+only.
+
 ---
 
 ### D-038 — Pre-registration: PCAP uploads are served by the mean of the three E20r seeds; CSV uploads stay on r2 (E27)
@@ -1517,3 +1544,63 @@ anticipation reference. This adds a route for PCAP inputs.
 
 **Revisit if.** A later pre-registered fusion experiment produces a packet-consuming model that passes
 D-037's composition bar; it would then replace this ensemble on the PCAP route.
+
+---
+
+### D-039 — Step 10: no GNN and no larger model on the evidence of E24, E26 and E25b
+*Date: 2026-09-28 · Status: accepted under D-037's Step 10 rule; whether to run M3 is left to the team ·
+Evidence: E12, E21, E24, E26, E25b, `results/runs/reference-m1-2026-09-28/manifest.json`*
+
+**Decision.** Neither a GNN nor a larger model is started. D-037 allows either only once E26 and E25b
+show a concrete failure mode that such a change is designed to fix. Neither does.
+
+**Why not a larger model.**
+- **Size.** The world models behind every claim (r2, E22, E20r, E25) have 0.58-0.62 M parameters. D-004 set that size because training
+  ran on a 4 GB GTX 1650. The RTX 4060 lifts that limit, but new hardware is not evidence that size is
+  the constraint.
+- **The failures are failures to transfer, not to fit.**
+  - Within a day, pre-onset windows separate from background at ROC-AUC 0.88-0.96 (E12).
+  - Logistic regression ranks the run-up as well as the round-2 world model on CIC-IDS2017 (0.659
+    against 0.651, E26).
+  - On CTU-13, LR beats the world model's detection ROC-AUC on 8 of 13 scenarios (E25b).
+- **More freedom has already cost anticipation.** Adding inputs cost -0.041 (E26). More freedom to
+  fit the training families points in the direction of the failure, not towards its fix.
+- **What did help is not size.** The one change that raised anticipation was the target (E22,
+  +0.045). The latent dynamics earn their place against a same-encoder model without them (E24).
+
+**Why not a GNN, yet.** The evaluators named the trigger: the same CTU-13 families fail across seeds
+because one infected host is drowned in the network-global state.
+- **The first half is met.** Murlo, Sogou and Rbot s11 are inverted on all three seeds (E25b).
+- **The second half is not supported.**
+  - Drowning would push any model on the global state towards chance.
+  - What E25b shows instead is strong inversion by the world model (0.05-0.20, well below chance).
+  - LR on the same 56 global features is not inverted on Sogou (0.737) or Virut s13 (0.991).
+  - So on those families the information is in the global state, and it is the world model's learned
+    weighting that flips on unseen families.
+  - Murlo stays open: LR is weak there too (0.590).
+- **Per-host information has been tried once.** E21 (causal representation plus six per-host-relative
+  features) did not raise anticipation (+0.008, D-035).
+- **A GNN cannot fix the lateral-movement recall.** The stage head scores zero recall on lateral
+  movement (E9) because no training day contains that class, and a graph model cannot learn an absent
+  class either.
+
+**What would reopen each.**
+- **A per-host state (the evaluators' intermediate step).** First a descriptive diagnostic: in the
+  inverted scenarios (s08, s07, s11), the bot host's windows separate from background hosts on
+  per-host features but not on the network-global ones. Only then a pre-registered per-host-state
+  run, against the global state, on CTU-13's folds.
+- **A GNN.** Only after that run passes, and relational structure (which hosts talk to which) is shown
+  to matter beyond per-host features.
+- **A larger model.** Only if a model underfits its own training families, with its training-fold
+  ranking no better than its held-out one.
+
+**Is M2 enough?**
+- **For the submission, yes.** M2 is the cross-dataset evidence, reported family by family (E25b).
+- **M3 (CIC-IDS2018) is the next transfer test worth running, if the team has time.**
+  - The corrected flow CSVs (a 9.7 GB zip, no PCAPs needed) keep the full 70-feature state, which
+    CTU-13 cannot, and add compromise onsets.
+  - It needs its own pre-registration, and a download the team approves.
+
+**Revisit if.**
+- A diagnostic localises E25b's inversions to per-host behaviour.
+- Or M3 shows the same inversion pattern on the full feature state.
