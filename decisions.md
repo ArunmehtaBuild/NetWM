@@ -1558,8 +1558,13 @@ Found while checking for lookahead: every model's score depends on the capture's
 `CausalContext`'s interpolated positional embedding (E27 finding 5, `research/positional-length.md`).
 It is pre-existing, and a fix needs its own pre-registered retraining.
 
-Pending: check 4 (the live PCAP state on a full real day) and Step 8 (the same traffic through both
-routes).
+Check 4, on the full Tuesday capture: the 18 packet features equal the training matrix exactly. The
+flow features built by `pcap_to_flows` do not: counts are inflated up to about 2x, likely because the
+converter keeps the capture duplicates that `read_packets` removes. The acceptance stands as
+pre-registered, since it was scored on the training-matrix state. **No live-PCAP number may be quoted
+until the converter is fixed and check 4 passes** (N-9).
+
+Pending: Step 8 (the same traffic through both routes).
 
 ---
 

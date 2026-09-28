@@ -1721,9 +1721,20 @@ A flow CSV handed to E20r now raises an error rather than feeding it zeros it ne
    not done here. `test_forecast_is_prefix_invariant` is marked `xfail(strict=True)` until then. See
    `research/positional-length.md`.
 6. **Pending.**
-   - *Check 4*: the live PCAP state against the training matrix on a full real day. Its flow half comes
-     from `pcap_to_flows`, not the corrected CSVs, and no full day had compared that before. The
-     Tuesday run was started; its result goes in `results/runs/e27-parity/`.
+   - *Check 4, run on the full Tuesday capture (10.3 GB, 967 windows compared): the packet block
+     matches the training matrix, the flow block does not.*
+     - All 18 `pcap_` features are exact.
+     - The flow features the upload path builds with `pcap_to_flows` are not: 3 of the 87 flow and CSV
+       packet features match. The median feature's worst-window relative error is 0.99.
+     - Packet, byte and flag counts are inflated, up to about 2x (mean relative error 0.45-0.48,
+       correlation above 0.99). The flow count and distinct-destination features differ as well
+       (mean relative error 0.39 and 0.44).
+     - Likely cause, not yet verified: the CIC-IDS2017 captures record most packets twice.
+       `read_packets` removes those duplicates; `pcap_to_flows` does not.
+     - **So E27's numbers describe the model on the training-matrix state.** A live upload of a raw
+       CIC capture is scored on a flow state the model never saw. No live-PCAP number may be quoted
+       until the converter is fixed and check 4 passes (N-9). The per-feature table is
+       `results/tables/e27_parity_live_pcap.csv`; the log is `results/runs/e27-parity/parity-live-tuesday.log`.
    - *Step 8*: the same traffic through both routes. It needs a real Thursday 16:40-18:50 capture. The
      demo PCAP is synthesised from flow rows (D-031), so its packet features are not real telemetry.
 7. **Deployment.** The E20r weights are not tracked (`models/`). On a fresh clone the PCAP route
