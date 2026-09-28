@@ -1619,8 +1619,11 @@ Artefacts:
 .venv/Scripts/python.exe -m pytest -q tests backend/tests                       # routing tests: backend/tests/test_pcap_route.py
 CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py                    # Step 5, checks 1-3
 python scripts/pcap_route_eval.py                                               # Steps 6-7 + D-038's acceptance bar
-CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py --pcap data/cic-2017-pcap/Tuesday-WorkingHours.pcap --day tuesday   # check 4 (pending)
-python scripts/pcap_route_same_traffic.py --pcap <Thursday 16:40-18:50 UTC slice>                                               # Step 8 (pending)
+python scripts/slice_pcap.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --start 1499173200 --stop 1499176800 --out data/cic-2017-pcap/tuesday_1300_1400.pcap
+python scripts/slice_pcap.py --pcap D:/CIC-2017-PCAP/Thursday-WorkingHours.pcap --start 1499359200 --stop 1499367000 --out data/cic-2017-pcap/thursday_1640_1850.pcap
+CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --day tuesday   # check 4 (after D-040)
+CUDA_VISIBLE_DEVICES="" python scripts/check4_dedupe_ab.py --pcap data/cic-2017-pcap/tuesday_1300_1400.pcap --day tuesday   # check 4 diagnostic
+python scripts/pcap_route_same_traffic.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap                                   # Step 8
 ```
 
 **What E27 is.** The shipped r2 reads 70 flow features, so a PCAP upload used to be turned into flows
@@ -1720,21 +1723,49 @@ A flow CSV handed to E20r now raises an error rather than feeding it zeros it ne
    A fix changes the model and needs retraining, so it is a separate pre-registered experiment and is
    not done here. `test_forecast_is_prefix_invariant` is marked `xfail(strict=True)` until then. See
    `research/positional-length.md`.
-6. **Pending.**
-   - *Check 4, run on the full Tuesday capture (10.3 GB, 967 windows compared): the packet block
-     matches the training matrix, the flow block does not.*
+6. **Check 4 and Step 8, on real captures.** Captures from `D:/CIC-2017-PCAP/` match their published
+   md5s. Slices were cut with `scripts/slice_pcap.py` (editcap's `-A`/`-B`; Wireshark is not
+   installed on every machine).
+   - *Check 4, first run (ae3ea25, kept for the record): the packet block matches the training matrix,
+     the flow block does not.*
      - All 18 `pcap_` features are exact.
      - The flow features the upload path builds with `pcap_to_flows` are not: 3 of the 87 flow and CSV
        packet features match. The median feature's worst-window relative error is 0.99.
      - Packet, byte and flag counts are inflated, up to about 2x (mean relative error 0.45-0.48,
        correlation above 0.99). The flow count and distinct-destination features differ as well
        (mean relative error 0.39 and 0.44).
-     - Likely cause, not yet verified: the CIC-IDS2017 captures record most packets twice.
-       `read_packets` removes those duplicates; `pcap_to_flows` does not.
-     - **So E27's numbers describe the model on the training-matrix state.** A live upload of a raw
-       CIC capture is scored on a flow state the model never saw. No live-PCAP number may be quoted
-       until the converter is fixed and check 4 passes (N-9). The per-feature table is
-       `results/tables/e27_parity_live_pcap.csv`; the log is `results/runs/e27-parity/parity-live-tuesday.log`.
+     - The cause given with it, capture duplicates, is wrong. The log
+       (`results/runs/e27-parity/parity-live-tuesday.log`) says `session cap 100000 reached,
+       2869997 packets dropped`. Quiet flows were never closed, so they filled the converter's
+       session cap, and every later flow was dropped. The counts fell towards zero; they were not
+       inflated: `pkts_total`'s worst window was off by 0.995.
+     - Duplicates are not the cause (`scripts/check4_dedupe_ab.py`, Tuesday 13:00-14:00, below the
+       cap). The flow counts as served already match the training matrix: median ratio 0.999 for
+       `pkts_total`, and 1.000 for the SYN, ACK and PSH sums. Dropping duplicates first moves them to
+       0.939, 0.966, 0.983 and 0.955. The corrected CSVs count the mirrored copies.
+   - *The fix (D-040, 0c5f976):* flows are finished once they are more than 120 + 60 s old. On the
+     slice the flow table is identical before and after.
+   - *Check 4, re-run on the full Tuesday capture (968 windows, no session-cap drops).* Per-feature
+     differences by block; check 4 is reported, not gated:
+
+     | block | features | exact | median mean rel. error, before -> after | within 5 % on average, before -> after | correlation > 0.9, before -> after |
+     |---|---:|---:|---|---|---|
+     | `pcap_` (from `read_packets`) | 18 | 18 | 0 -> 0 | 18 -> 18 | 18 -> 18 |
+     | flow (from `pcap_to_flows`) | 67 | 4 | 0.312 -> 0.039 | 14 -> 39 | 10 -> 43 |
+     | CSV packet statistics (from `pcap_to_flows`) | 20 | 0 | 0.200 -> 0.068 | 4 -> 9 | 0 -> 14 |
+
+     - Totals now track the training matrix: `pkts_total` 0.012 mean relative error, `bytes_total`
+       0.010, the SYN, ACK, PSH and FIN sums 0.006 or less, all with correlation 1.000.
+     - Still far off, and apparently definition differences rather than lost packets:
+       `active_mean_mean` and `bwd_init_win_mean`; the distinct-port and distinct-host counts
+       (`ports_per_pair_max`, `uniq_dst_port`, `port_fanout_max`, `uniq_src_ip`);
+       `flow_iat_min_min` and `pkt_len_max_max`.
+     - **E27's numbers still describe the model on the training-matrix state.** A live upload now
+       gets totals close to training, but 28 of 67 flow features still differ by more than 5 % on
+       average. So no live-PCAP detection number is quoted. Table
+       `results/tables/e27_parity_live_pcap.csv`; log `results/runs/e27-parity/parity-live-tuesday-d040.log`.
+       The run's `git_sha` reads 65035a3: it ran with 0c5f976's converter change in the working
+       tree, before that commit.
    - *Step 8*: the same traffic through both routes. It needs a real Thursday 16:40-18:50 capture. The
      demo PCAP is synthesised from flow rows (D-031), so its packet features are not real telemetry.
 7. **Deployment.** The E20r weights are not tracked (`models/`). On a fresh clone the PCAP route
@@ -1838,6 +1869,12 @@ interpolates its 16 positional vectors to the input length, CTU-13's held-out ca
 method is fixed in the script's docstring:
 - **Models:** the fold checkpoints on this machine: seed 42 for all seven families, seeds 43/44 for
   Neris only (their other folds are on the RTX 4060 machine; the run folder lists what was skipped).
+  **Correction (found after this entry was pushed):** the two seed-43/44 `neris.pt` files on this
+  machine are *not* E25b's checkpoints. They were saved at 2026-09-27 21:45 UTC by code at `c552088`,
+  before E25b's seed-43/44 runs (code `7399495`, RTX 4060, finished 10:22 UTC). They come from an
+  earlier run of the same seed and config, and they reproduce E25b's stored Neris ROC-AUC to within
+  0.014. Read the seed-43/44 rows below as that earlier run, not as E25b's weights. Without them,
+  the largest `prefix_of` move on captures of >= 208 windows is 0.014 (seed 42, Virut s13), not 0.023.
   Deterministic mean path, `p_max`, as in N-6a. ROC-AUC on `y_within_K`.
 - **`prefix_of_T'`** - the same single pass, but the positional vectors are interpolated to T' = 96
   (training `seq_len`) or 8,019 (s03, the longest capture) and the first T are used. Attention is
