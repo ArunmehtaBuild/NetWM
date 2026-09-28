@@ -1,0 +1,1009 @@
+scenario,family,role,model,feature,d_train,d_heldout,flips,delta_roc_neutralised
+s08,Murlo,inverted,logistic regression,n_flows,0.846,-0.383,True,-0.0313
+s08,Murlo,inverted,logistic regression,flows_per_s,0.97,-0.379,True,-0.0562
+s08,Murlo,inverted,logistic regression,bytes_total,0.473,-0.538,True,-0.0028
+s08,Murlo,inverted,logistic regression,bytes_per_s,0.5,-0.538,True,-0.0071
+s08,Murlo,inverted,logistic regression,pkts_total,0.568,-0.527,True,-0.1475
+s08,Murlo,inverted,logistic regression,pkts_per_s,0.598,-0.526,True,-0.168
+s08,Murlo,inverted,logistic regression,syn_no_ack_rate,-0.18,0.4,False,0.0375
+s08,Murlo,inverted,logistic regression,has_rst_rate,0.115,0.006,False,-0.0263
+s08,Murlo,inverted,logistic regression,has_fin_rate,-0.564,-0.271,False,-0.1445
+s08,Murlo,inverted,logistic regression,one_way_rate,-0.082,-0.603,False,0.0482
+s08,Murlo,inverted,logistic regression,tiny_flow_rate,-0.24,0.59,True,-0.0656
+s08,Murlo,inverted,logistic regression,priv_port_rate,-0.791,-0.081,False,-0.0506
+s08,Murlo,inverted,logistic regression,ephemeral_dst_rate,0.252,-0.035,False,-0.0002
+s08,Murlo,inverted,logistic regression,is_outbound_rate,0.33,-0.422,True,0.1003
+s08,Murlo,inverted,logistic regression,is_inbound_rate,0.869,0.096,False,0.023
+s08,Murlo,inverted,logistic regression,is_internal_rate,-0.819,0.236,True,-0.0212
+s08,Murlo,inverted,logistic regression,proto_tcp_rate,-0.477,0.033,False,-0.0045
+s08,Murlo,inverted,logistic regression,proto_udp_rate,0.672,0.004,False,-0.0542
+s08,Murlo,inverted,logistic regression,proto_icmp_rate,-0.454,-0.292,False,0.0044
+s08,Murlo,inverted,logistic regression,svc_http_rate,-0.521,-0.417,False,0.0465
+s08,Murlo,inverted,logistic regression,svc_https_rate,0.564,-0.646,True,0.0682
+s08,Murlo,inverted,logistic regression,svc_dns_rate,-0.735,0.215,True,-0.0274
+s08,Murlo,inverted,logistic regression,svc_ssh_rate,-0.02,0.184,False,-0.01
+s08,Murlo,inverted,logistic regression,svc_ftp_rate,-0.03,-0.005,False,0.004
+s08,Murlo,inverted,logistic regression,svc_smtp_rate,0.613,-0.221,True,0.0515
+s08,Murlo,inverted,logistic regression,svc_smb_rate,0.004,0.355,False,0.0057
+s08,Murlo,inverted,logistic regression,svc_rdp_rate,-0.041,0.392,False,-0.0214
+s08,Murlo,inverted,logistic regression,svc_db_rate,-0.012,0.066,False,-0.0012
+s08,Murlo,inverted,logistic regression,duration_s_mean,0.664,-0.048,False,-0.0022
+s08,Murlo,inverted,logistic regression,duration_s_max,-0.151,-0.027,False,-0.0365
+s08,Murlo,inverted,logistic regression,bytes_mean,0.094,-0.489,False,0.0381
+s08,Murlo,inverted,logistic regression,bytes_max,0.41,-0.351,True,-0.0189
+s08,Murlo,inverted,logistic regression,pkts_mean,0.024,-0.46,False,0.0773
+s08,Murlo,inverted,logistic regression,syn_cnt_sum,0.674,-0.437,True,0.125
+s08,Murlo,inverted,logistic regression,ack_cnt_sum,0.661,-0.436,True,-0.2236
+s08,Murlo,inverted,logistic regression,fin_cnt_sum,0.548,-0.043,False,0.0456
+s08,Murlo,inverted,logistic regression,rst_cnt_sum,0.866,-0.296,True,0.1134
+s08,Murlo,inverted,logistic regression,psh_cnt_sum,0.55,-0.026,False,-0.0694
+s08,Murlo,inverted,logistic regression,urg_cnt_sum,0.106,-0.081,False,-0.0003
+s08,Murlo,inverted,logistic regression,uniq_src_ip,0.834,-0.868,True,-0.0225
+s08,Murlo,inverted,logistic regression,uniq_dst_ip,0.72,-0.276,True,-0.0014
+s08,Murlo,inverted,logistic regression,uniq_dst_port,0.931,-0.605,True,-0.011
+s08,Murlo,inverted,logistic regression,uniq_src_port,0.845,-0.396,True,0.1254
+s08,Murlo,inverted,logistic regression,dst_port_entropy,0.56,-0.52,True,-0.0641
+s08,Murlo,inverted,logistic regression,dst_ip_entropy,0.44,-0.549,True,-0.0847
+s08,Murlo,inverted,logistic regression,src_ip_entropy,1.081,-0.472,True,-0.0132
+s08,Murlo,inverted,logistic regression,fanout_max,1.127,-0.091,False,0.0148
+s08,Murlo,inverted,logistic regression,fanout_mean,-0.032,-0.221,False,-0.0511
+s08,Murlo,inverted,logistic regression,port_fanout_max,1.098,-0.007,False,0.0
+s08,Murlo,inverted,logistic regression,top_talker_share,-0.014,0.236,False,0.0001
+s08,Murlo,inverted,logistic regression,seq_port_ratio,-0.052,-0.362,False,-0.0033
+s08,Murlo,inverted,logistic regression,ports_per_pair_max,0.02,-0.341,False,-0.0198
+s08,Murlo,inverted,logistic regression,outbound_bytes,0.471,-0.354,True,-0.0354
+s08,Murlo,inverted,logistic regression,inbound_bytes,0.469,-0.771,True,-0.054
+s08,Murlo,inverted,logistic regression,byte_asymmetry,-0.012,0.492,False,-0.0484
+s08,Murlo,inverted,logistic regression,beacon_score,0.231,-0.049,False,-0.0002
+s08,Murlo,inverted,world model s43,n_flows,0.846,-0.383,True,0.0048
+s08,Murlo,inverted,world model s43,flows_per_s,0.97,-0.379,True,0.0093
+s08,Murlo,inverted,world model s43,bytes_total,0.473,-0.538,True,0.0013
+s08,Murlo,inverted,world model s43,bytes_per_s,0.5,-0.538,True,0.012
+s08,Murlo,inverted,world model s43,pkts_total,0.568,-0.527,True,0.003
+s08,Murlo,inverted,world model s43,pkts_per_s,0.598,-0.526,True,0.0123
+s08,Murlo,inverted,world model s43,syn_no_ack_rate,-0.18,0.4,False,-0.0016
+s08,Murlo,inverted,world model s43,has_rst_rate,0.115,0.006,False,0.003
+s08,Murlo,inverted,world model s43,has_fin_rate,-0.564,-0.271,False,0.0612
+s08,Murlo,inverted,world model s43,one_way_rate,-0.082,-0.603,False,0.0172
+s08,Murlo,inverted,world model s43,tiny_flow_rate,-0.24,0.59,True,0.0092
+s08,Murlo,inverted,world model s43,priv_port_rate,-0.791,-0.081,False,0.0042
+s08,Murlo,inverted,world model s43,ephemeral_dst_rate,0.252,-0.035,False,0.0123
+s08,Murlo,inverted,world model s43,is_outbound_rate,0.33,-0.422,True,0.0358
+s08,Murlo,inverted,world model s43,is_inbound_rate,0.869,0.096,False,0.0106
+s08,Murlo,inverted,world model s43,is_internal_rate,-0.819,0.236,True,-0.0025
+s08,Murlo,inverted,world model s43,proto_tcp_rate,-0.477,0.033,False,0.0068
+s08,Murlo,inverted,world model s43,proto_udp_rate,0.672,0.004,False,0.0122
+s08,Murlo,inverted,world model s43,proto_icmp_rate,-0.454,-0.292,False,-0.0082
+s08,Murlo,inverted,world model s43,svc_http_rate,-0.521,-0.417,False,0.0003
+s08,Murlo,inverted,world model s43,svc_https_rate,0.564,-0.646,True,0.0321
+s08,Murlo,inverted,world model s43,svc_dns_rate,-0.735,0.215,True,-0.007
+s08,Murlo,inverted,world model s43,svc_ssh_rate,-0.02,0.184,False,0.003
+s08,Murlo,inverted,world model s43,svc_ftp_rate,-0.03,-0.005,False,0.0028
+s08,Murlo,inverted,world model s43,svc_smtp_rate,0.613,-0.221,True,0.0036
+s08,Murlo,inverted,world model s43,svc_smb_rate,0.004,0.355,False,-0.0036
+s08,Murlo,inverted,world model s43,svc_rdp_rate,-0.041,0.392,False,0.0022
+s08,Murlo,inverted,world model s43,svc_db_rate,-0.012,0.066,False,-0.0004
+s08,Murlo,inverted,world model s43,duration_s_mean,0.664,-0.048,False,0.0148
+s08,Murlo,inverted,world model s43,duration_s_max,-0.151,-0.027,False,-0.0
+s08,Murlo,inverted,world model s43,bytes_mean,0.094,-0.489,False,0.003
+s08,Murlo,inverted,world model s43,bytes_max,0.41,-0.351,True,0.0009
+s08,Murlo,inverted,world model s43,pkts_mean,0.024,-0.46,False,-0.0071
+s08,Murlo,inverted,world model s43,syn_cnt_sum,0.674,-0.437,True,0.0017
+s08,Murlo,inverted,world model s43,ack_cnt_sum,0.661,-0.436,True,0.0012
+s08,Murlo,inverted,world model s43,fin_cnt_sum,0.548,-0.043,False,0.0069
+s08,Murlo,inverted,world model s43,rst_cnt_sum,0.866,-0.296,True,0.0051
+s08,Murlo,inverted,world model s43,psh_cnt_sum,0.55,-0.026,False,0.0319
+s08,Murlo,inverted,world model s43,urg_cnt_sum,0.106,-0.081,False,-0.0034
+s08,Murlo,inverted,world model s43,uniq_src_ip,0.834,-0.868,True,0.0051
+s08,Murlo,inverted,world model s43,uniq_dst_ip,0.72,-0.276,True,0.0115
+s08,Murlo,inverted,world model s43,uniq_dst_port,0.931,-0.605,True,0.0273
+s08,Murlo,inverted,world model s43,uniq_src_port,0.845,-0.396,True,0.011
+s08,Murlo,inverted,world model s43,dst_port_entropy,0.56,-0.52,True,-0.0021
+s08,Murlo,inverted,world model s43,dst_ip_entropy,0.44,-0.549,True,0.0019
+s08,Murlo,inverted,world model s43,src_ip_entropy,1.081,-0.472,True,0.0037
+s08,Murlo,inverted,world model s43,fanout_max,1.127,-0.091,False,0.0038
+s08,Murlo,inverted,world model s43,fanout_mean,-0.032,-0.221,False,-0.0022
+s08,Murlo,inverted,world model s43,port_fanout_max,1.098,-0.007,False,-0.005
+s08,Murlo,inverted,world model s43,top_talker_share,-0.014,0.236,False,0.0096
+s08,Murlo,inverted,world model s43,seq_port_ratio,-0.052,-0.362,False,0.0003
+s08,Murlo,inverted,world model s43,ports_per_pair_max,0.02,-0.341,False,0.0046
+s08,Murlo,inverted,world model s43,outbound_bytes,0.471,-0.354,True,0.0016
+s08,Murlo,inverted,world model s43,inbound_bytes,0.469,-0.771,True,-0.0079
+s08,Murlo,inverted,world model s43,byte_asymmetry,-0.012,0.492,False,-0.0199
+s08,Murlo,inverted,world model s43,beacon_score,0.231,-0.049,False,0.0009
+s08,Murlo,inverted,world model s44,n_flows,0.846,-0.383,True,0.034
+s08,Murlo,inverted,world model s44,flows_per_s,0.97,-0.379,True,0.0039
+s08,Murlo,inverted,world model s44,bytes_total,0.473,-0.538,True,-0.0124
+s08,Murlo,inverted,world model s44,bytes_per_s,0.5,-0.538,True,-0.0035
+s08,Murlo,inverted,world model s44,pkts_total,0.568,-0.527,True,0.0125
+s08,Murlo,inverted,world model s44,pkts_per_s,0.598,-0.526,True,0.015
+s08,Murlo,inverted,world model s44,syn_no_ack_rate,-0.18,0.4,False,0.0004
+s08,Murlo,inverted,world model s44,has_rst_rate,0.115,0.006,False,0.0181
+s08,Murlo,inverted,world model s44,has_fin_rate,-0.564,-0.271,False,-0.0053
+s08,Murlo,inverted,world model s44,one_way_rate,-0.082,-0.603,False,0.0271
+s08,Murlo,inverted,world model s44,tiny_flow_rate,-0.24,0.59,True,0.0181
+s08,Murlo,inverted,world model s44,priv_port_rate,-0.791,-0.081,False,0.0273
+s08,Murlo,inverted,world model s44,ephemeral_dst_rate,0.252,-0.035,False,0.0196
+s08,Murlo,inverted,world model s44,is_outbound_rate,0.33,-0.422,True,0.0633
+s08,Murlo,inverted,world model s44,is_inbound_rate,0.869,0.096,False,0.0054
+s08,Murlo,inverted,world model s44,is_internal_rate,-0.819,0.236,True,-0.0021
+s08,Murlo,inverted,world model s44,proto_tcp_rate,-0.477,0.033,False,0.0165
+s08,Murlo,inverted,world model s44,proto_udp_rate,0.672,0.004,False,-0.0042
+s08,Murlo,inverted,world model s44,proto_icmp_rate,-0.454,-0.292,False,-0.003
+s08,Murlo,inverted,world model s44,svc_http_rate,-0.521,-0.417,False,-0.0104
+s08,Murlo,inverted,world model s44,svc_https_rate,0.564,-0.646,True,0.1184
+s08,Murlo,inverted,world model s44,svc_dns_rate,-0.735,0.215,True,0.0181
+s08,Murlo,inverted,world model s44,svc_ssh_rate,-0.02,0.184,False,0.0082
+s08,Murlo,inverted,world model s44,svc_ftp_rate,-0.03,-0.005,False,0.0002
+s08,Murlo,inverted,world model s44,svc_smtp_rate,0.613,-0.221,True,0.0183
+s08,Murlo,inverted,world model s44,svc_smb_rate,0.004,0.355,False,0.0014
+s08,Murlo,inverted,world model s44,svc_rdp_rate,-0.041,0.392,False,-0.0003
+s08,Murlo,inverted,world model s44,svc_db_rate,-0.012,0.066,False,-0.0006
+s08,Murlo,inverted,world model s44,duration_s_mean,0.664,-0.048,False,0.0123
+s08,Murlo,inverted,world model s44,duration_s_max,-0.151,-0.027,False,-0.0067
+s08,Murlo,inverted,world model s44,bytes_mean,0.094,-0.489,False,-0.0406
+s08,Murlo,inverted,world model s44,bytes_max,0.41,-0.351,True,0.0134
+s08,Murlo,inverted,world model s44,pkts_mean,0.024,-0.46,False,-0.0083
+s08,Murlo,inverted,world model s44,syn_cnt_sum,0.674,-0.437,True,-0.0034
+s08,Murlo,inverted,world model s44,ack_cnt_sum,0.661,-0.436,True,0.016
+s08,Murlo,inverted,world model s44,fin_cnt_sum,0.548,-0.043,False,0.0042
+s08,Murlo,inverted,world model s44,rst_cnt_sum,0.866,-0.296,True,0.0166
+s08,Murlo,inverted,world model s44,psh_cnt_sum,0.55,-0.026,False,0.0045
+s08,Murlo,inverted,world model s44,urg_cnt_sum,0.106,-0.081,False,-0.0088
+s08,Murlo,inverted,world model s44,uniq_src_ip,0.834,-0.868,True,0.0039
+s08,Murlo,inverted,world model s44,uniq_dst_ip,0.72,-0.276,True,0.0244
+s08,Murlo,inverted,world model s44,uniq_dst_port,0.931,-0.605,True,0.0252
+s08,Murlo,inverted,world model s44,uniq_src_port,0.845,-0.396,True,0.0115
+s08,Murlo,inverted,world model s44,dst_port_entropy,0.56,-0.52,True,-0.0049
+s08,Murlo,inverted,world model s44,dst_ip_entropy,0.44,-0.549,True,-0.0137
+s08,Murlo,inverted,world model s44,src_ip_entropy,1.081,-0.472,True,0.0074
+s08,Murlo,inverted,world model s44,fanout_max,1.127,-0.091,False,-0.0085
+s08,Murlo,inverted,world model s44,fanout_mean,-0.032,-0.221,False,0.0252
+s08,Murlo,inverted,world model s44,port_fanout_max,1.098,-0.007,False,0.0101
+s08,Murlo,inverted,world model s44,top_talker_share,-0.014,0.236,False,0.0077
+s08,Murlo,inverted,world model s44,seq_port_ratio,-0.052,-0.362,False,-0.0167
+s08,Murlo,inverted,world model s44,ports_per_pair_max,0.02,-0.341,False,-0.022
+s08,Murlo,inverted,world model s44,outbound_bytes,0.471,-0.354,True,0.0129
+s08,Murlo,inverted,world model s44,inbound_bytes,0.469,-0.771,True,-0.0009
+s08,Murlo,inverted,world model s44,byte_asymmetry,-0.012,0.492,False,-0.017
+s08,Murlo,inverted,world model s44,beacon_score,0.231,-0.049,False,0.0006
+s07,Sogou,inverted,logistic regression,n_flows,0.823,0.752,False,0.0171
+s07,Sogou,inverted,logistic regression,flows_per_s,0.95,0.758,False,0.0427
+s07,Sogou,inverted,logistic regression,bytes_total,0.448,1.227,False,-0.0064
+s07,Sogou,inverted,logistic regression,bytes_per_s,0.471,1.227,False,-0.0064
+s07,Sogou,inverted,logistic regression,pkts_total,0.539,1.219,False,0.1197
+s07,Sogou,inverted,logistic regression,pkts_per_s,0.565,1.22,False,0.1453
+s07,Sogou,inverted,logistic regression,syn_no_ack_rate,-0.279,-0.185,False,-0.0064
+s07,Sogou,inverted,logistic regression,has_rst_rate,0.051,0.006,False,-0.0021
+s07,Sogou,inverted,logistic regression,has_fin_rate,-0.656,-0.122,False,-0.0278
+s07,Sogou,inverted,logistic regression,one_way_rate,-0.23,1.749,True,-0.0235
+s07,Sogou,inverted,logistic regression,tiny_flow_rate,-0.167,-2.137,False,0.1239
+s07,Sogou,inverted,logistic regression,priv_port_rate,-0.816,-2.436,False,-0.1132
+s07,Sogou,inverted,logistic regression,ephemeral_dst_rate,0.22,1.456,False,0.0085
+s07,Sogou,inverted,logistic regression,is_outbound_rate,0.25,1.506,False,-0.1154
+s07,Sogou,inverted,logistic regression,is_inbound_rate,0.853,1.967,False,0.0342
+s07,Sogou,inverted,logistic regression,is_internal_rate,-0.766,-2.132,False,0.0855
+s07,Sogou,inverted,logistic regression,proto_tcp_rate,-0.593,-0.12,False,-0.0192
+s07,Sogou,inverted,logistic regression,proto_udp_rate,0.769,-0.023,False,0.0
+s07,Sogou,inverted,logistic regression,proto_icmp_rate,-0.509,1.169,True,-0.0064
+s07,Sogou,inverted,logistic regression,svc_http_rate,-0.636,-0.92,False,0.0043
+s07,Sogou,inverted,logistic regression,svc_https_rate,0.436,-0.792,True,0.0107
+s07,Sogou,inverted,logistic regression,svc_dns_rate,-0.674,-2.421,False,-0.1517
+s07,Sogou,inverted,logistic regression,svc_ssh_rate,-0.069,4.001,False,-0.0171
+s07,Sogou,inverted,logistic regression,svc_ftp_rate,-0.033,-0.507,False,0.0
+s07,Sogou,inverted,logistic regression,svc_smtp_rate,0.49,0.452,False,-0.0363
+s07,Sogou,inverted,logistic regression,svc_smb_rate,0.005,-0.533,False,-0.0064
+s07,Sogou,inverted,logistic regression,svc_rdp_rate,-0.06,1.544,False,-0.0043
+s07,Sogou,inverted,logistic regression,svc_db_rate,-0.026,-0.634,False,0.0
+s07,Sogou,inverted,logistic regression,duration_s_mean,0.733,3.026,False,-0.7372
+s07,Sogou,inverted,logistic regression,duration_s_max,-0.091,3.417,False,0.1368
+s07,Sogou,inverted,logistic regression,bytes_mean,0.084,1.196,False,-0.0919
+s07,Sogou,inverted,logistic regression,bytes_max,0.389,0.811,False,0.0427
+s07,Sogou,inverted,logistic regression,pkts_mean,0.017,1.186,False,-0.2137
+s07,Sogou,inverted,logistic regression,syn_cnt_sum,0.595,-0.012,False,0.015
+s07,Sogou,inverted,logistic regression,ack_cnt_sum,0.589,0.519,False,0.0406
+s07,Sogou,inverted,logistic regression,fin_cnt_sum,0.455,0.454,False,0.0021
+s07,Sogou,inverted,logistic regression,rst_cnt_sum,0.772,0.436,False,-0.0
+s07,Sogou,inverted,logistic regression,psh_cnt_sum,0.456,0.577,False,0.0577
+s07,Sogou,inverted,logistic regression,urg_cnt_sum,0.096,0.0,False,0.0
+s07,Sogou,inverted,logistic regression,uniq_src_ip,1.152,1.35,False,-0.1111
+s07,Sogou,inverted,logistic regression,uniq_dst_ip,0.619,1.745,False,0.0962
+s07,Sogou,inverted,logistic regression,uniq_dst_port,0.907,1.623,False,-0.0064
+s07,Sogou,inverted,logistic regression,uniq_src_port,0.823,0.322,False,-0.0235
+s07,Sogou,inverted,logistic regression,dst_port_entropy,0.501,2.23,False,0.1261
+s07,Sogou,inverted,logistic regression,dst_ip_entropy,0.306,1.792,False,0.1261
+s07,Sogou,inverted,logistic regression,src_ip_entropy,1.021,2.474,False,0.109
+s07,Sogou,inverted,logistic regression,fanout_max,1.155,1.38,False,-0.0641
+s07,Sogou,inverted,logistic regression,fanout_mean,-0.07,0.975,False,0.0342
+s07,Sogou,inverted,logistic regression,port_fanout_max,1.134,1.461,False,-0.0171
+s07,Sogou,inverted,logistic regression,top_talker_share,0.067,-0.59,False,-0.0043
+s07,Sogou,inverted,logistic regression,seq_port_ratio,-0.053,1.251,False,0.0043
+s07,Sogou,inverted,logistic regression,ports_per_pair_max,-0.031,1.341,False,0.0363
+s07,Sogou,inverted,logistic regression,outbound_bytes,0.459,0.702,False,-0.0064
+s07,Sogou,inverted,logistic regression,inbound_bytes,0.439,1.532,False,0.0128
+s07,Sogou,inverted,logistic regression,byte_asymmetry,0.026,-0.675,False,0.0021
+s07,Sogou,inverted,logistic regression,beacon_score,0.229,0.275,False,0.0
+s07,Sogou,inverted,world model s43,n_flows,0.823,0.752,False,0.0406
+s07,Sogou,inverted,world model s43,flows_per_s,0.95,0.758,False,-0.0214
+s07,Sogou,inverted,world model s43,bytes_total,0.448,1.227,False,-0.0107
+s07,Sogou,inverted,world model s43,bytes_per_s,0.471,1.227,False,-0.0342
+s07,Sogou,inverted,world model s43,pkts_total,0.539,1.219,False,-0.0321
+s07,Sogou,inverted,world model s43,pkts_per_s,0.565,1.22,False,-0.0
+s07,Sogou,inverted,world model s43,syn_no_ack_rate,-0.279,-0.185,False,-0.0363
+s07,Sogou,inverted,world model s43,has_rst_rate,0.051,0.006,False,0.0
+s07,Sogou,inverted,world model s43,has_fin_rate,-0.656,-0.122,False,-0.0064
+s07,Sogou,inverted,world model s43,one_way_rate,-0.23,1.749,True,-0.015
+s07,Sogou,inverted,world model s43,tiny_flow_rate,-0.167,-2.137,False,-0.0385
+s07,Sogou,inverted,world model s43,priv_port_rate,-0.816,-2.436,False,0.0085
+s07,Sogou,inverted,world model s43,ephemeral_dst_rate,0.22,1.456,False,0.1368
+s07,Sogou,inverted,world model s43,is_outbound_rate,0.25,1.506,False,-0.0321
+s07,Sogou,inverted,world model s43,is_inbound_rate,0.853,1.967,False,0.0043
+s07,Sogou,inverted,world model s43,is_internal_rate,-0.766,-2.132,False,0.0021
+s07,Sogou,inverted,world model s43,proto_tcp_rate,-0.593,-0.12,False,0.0192
+s07,Sogou,inverted,world model s43,proto_udp_rate,0.769,-0.023,False,0.0128
+s07,Sogou,inverted,world model s43,proto_icmp_rate,-0.509,1.169,True,0.0427
+s07,Sogou,inverted,world model s43,svc_http_rate,-0.636,-0.92,False,-0.0256
+s07,Sogou,inverted,world model s43,svc_https_rate,0.436,-0.792,True,-0.0171
+s07,Sogou,inverted,world model s43,svc_dns_rate,-0.674,-2.421,False,0.0299
+s07,Sogou,inverted,world model s43,svc_ssh_rate,-0.069,4.001,False,-0.0085
+s07,Sogou,inverted,world model s43,svc_ftp_rate,-0.033,-0.507,False,-0.0021
+s07,Sogou,inverted,world model s43,svc_smtp_rate,0.49,0.452,False,-0.0235
+s07,Sogou,inverted,world model s43,svc_smb_rate,0.005,-0.533,False,0.0085
+s07,Sogou,inverted,world model s43,svc_rdp_rate,-0.06,1.544,False,-0.0107
+s07,Sogou,inverted,world model s43,svc_db_rate,-0.026,-0.634,False,-0.0021
+s07,Sogou,inverted,world model s43,duration_s_mean,0.733,3.026,False,-0.0214
+s07,Sogou,inverted,world model s43,duration_s_max,-0.091,3.417,False,0.1496
+s07,Sogou,inverted,world model s43,bytes_mean,0.084,1.196,False,-0.0043
+s07,Sogou,inverted,world model s43,bytes_max,0.389,0.811,False,-0.0256
+s07,Sogou,inverted,world model s43,pkts_mean,0.017,1.186,False,-0.0043
+s07,Sogou,inverted,world model s43,syn_cnt_sum,0.595,-0.012,False,-0.0085
+s07,Sogou,inverted,world model s43,ack_cnt_sum,0.589,0.519,False,-0.0299
+s07,Sogou,inverted,world model s43,fin_cnt_sum,0.455,0.454,False,-0.0748
+s07,Sogou,inverted,world model s43,rst_cnt_sum,0.772,0.436,False,0.0192
+s07,Sogou,inverted,world model s43,psh_cnt_sum,0.456,0.577,False,-0.0491
+s07,Sogou,inverted,world model s43,urg_cnt_sum,0.096,0.0,False,0.0021
+s07,Sogou,inverted,world model s43,uniq_src_ip,1.152,1.35,False,0.0
+s07,Sogou,inverted,world model s43,uniq_dst_ip,0.619,1.745,False,0.0256
+s07,Sogou,inverted,world model s43,uniq_dst_port,0.907,1.623,False,0.0278
+s07,Sogou,inverted,world model s43,uniq_src_port,0.823,0.322,False,0.0342
+s07,Sogou,inverted,world model s43,dst_port_entropy,0.501,2.23,False,-0.0256
+s07,Sogou,inverted,world model s43,dst_ip_entropy,0.306,1.792,False,0.0192
+s07,Sogou,inverted,world model s43,src_ip_entropy,1.021,2.474,False,0.0
+s07,Sogou,inverted,world model s43,fanout_max,1.155,1.38,False,0.0278
+s07,Sogou,inverted,world model s43,fanout_mean,-0.07,0.975,False,0.0085
+s07,Sogou,inverted,world model s43,port_fanout_max,1.134,1.461,False,0.0427
+s07,Sogou,inverted,world model s43,top_talker_share,0.067,-0.59,False,-0.015
+s07,Sogou,inverted,world model s43,seq_port_ratio,-0.053,1.251,False,-0.0983
+s07,Sogou,inverted,world model s43,ports_per_pair_max,-0.031,1.341,False,-0.0385
+s07,Sogou,inverted,world model s43,outbound_bytes,0.459,0.702,False,-0.0043
+s07,Sogou,inverted,world model s43,inbound_bytes,0.439,1.532,False,0.0043
+s07,Sogou,inverted,world model s43,byte_asymmetry,0.026,-0.675,False,-0.0919
+s07,Sogou,inverted,world model s43,beacon_score,0.229,0.275,False,0.0021
+s07,Sogou,inverted,world model s44,n_flows,0.823,0.752,False,-0.0021
+s07,Sogou,inverted,world model s44,flows_per_s,0.95,0.758,False,0.0
+s07,Sogou,inverted,world model s44,bytes_total,0.448,1.227,False,0.0043
+s07,Sogou,inverted,world model s44,bytes_per_s,0.471,1.227,False,-0.0192
+s07,Sogou,inverted,world model s44,pkts_total,0.539,1.219,False,-0.0043
+s07,Sogou,inverted,world model s44,pkts_per_s,0.565,1.22,False,-0.0021
+s07,Sogou,inverted,world model s44,syn_no_ack_rate,-0.279,-0.185,False,-0.0021
+s07,Sogou,inverted,world model s44,has_rst_rate,0.051,0.006,False,0.0
+s07,Sogou,inverted,world model s44,has_fin_rate,-0.656,-0.122,False,0.0021
+s07,Sogou,inverted,world model s44,one_way_rate,-0.23,1.749,True,0.0
+s07,Sogou,inverted,world model s44,tiny_flow_rate,-0.167,-2.137,False,0.0
+s07,Sogou,inverted,world model s44,priv_port_rate,-0.816,-2.436,False,0.0021
+s07,Sogou,inverted,world model s44,ephemeral_dst_rate,0.22,1.456,False,0.0598
+s07,Sogou,inverted,world model s44,is_outbound_rate,0.25,1.506,False,-0.0385
+s07,Sogou,inverted,world model s44,is_inbound_rate,0.853,1.967,False,0.0
+s07,Sogou,inverted,world model s44,is_internal_rate,-0.766,-2.132,False,0.0021
+s07,Sogou,inverted,world model s44,proto_tcp_rate,-0.593,-0.12,False,0.0085
+s07,Sogou,inverted,world model s44,proto_udp_rate,0.769,-0.023,False,0.0021
+s07,Sogou,inverted,world model s44,proto_icmp_rate,-0.509,1.169,True,0.0107
+s07,Sogou,inverted,world model s44,svc_http_rate,-0.636,-0.92,False,-0.0107
+s07,Sogou,inverted,world model s44,svc_https_rate,0.436,-0.792,True,0.0
+s07,Sogou,inverted,world model s44,svc_dns_rate,-0.674,-2.421,False,0.0107
+s07,Sogou,inverted,world model s44,svc_ssh_rate,-0.069,4.001,False,0.0
+s07,Sogou,inverted,world model s44,svc_ftp_rate,-0.033,-0.507,False,0.0
+s07,Sogou,inverted,world model s44,svc_smtp_rate,0.49,0.452,False,-0.0064
+s07,Sogou,inverted,world model s44,svc_smb_rate,0.005,-0.533,False,-0.0021
+s07,Sogou,inverted,world model s44,svc_rdp_rate,-0.06,1.544,False,0.0
+s07,Sogou,inverted,world model s44,svc_db_rate,-0.026,-0.634,False,0.0
+s07,Sogou,inverted,world model s44,duration_s_mean,0.733,3.026,False,-0.1004
+s07,Sogou,inverted,world model s44,duration_s_max,-0.091,3.417,False,0.0513
+s07,Sogou,inverted,world model s44,bytes_mean,0.084,1.196,False,0.0021
+s07,Sogou,inverted,world model s44,bytes_max,0.389,0.811,False,-0.0043
+s07,Sogou,inverted,world model s44,pkts_mean,0.017,1.186,False,-0.0064
+s07,Sogou,inverted,world model s44,syn_cnt_sum,0.595,-0.012,False,0.0043
+s07,Sogou,inverted,world model s44,ack_cnt_sum,0.589,0.519,False,-0.0021
+s07,Sogou,inverted,world model s44,fin_cnt_sum,0.455,0.454,False,-0.047
+s07,Sogou,inverted,world model s44,rst_cnt_sum,0.772,0.436,False,0.0
+s07,Sogou,inverted,world model s44,psh_cnt_sum,0.456,0.577,False,-0.0043
+s07,Sogou,inverted,world model s44,urg_cnt_sum,0.096,0.0,False,0.0
+s07,Sogou,inverted,world model s44,uniq_src_ip,1.152,1.35,False,0.0021
+s07,Sogou,inverted,world model s44,uniq_dst_ip,0.619,1.745,False,-0.0299
+s07,Sogou,inverted,world model s44,uniq_dst_port,0.907,1.623,False,0.0043
+s07,Sogou,inverted,world model s44,uniq_src_port,0.823,0.322,False,-0.0021
+s07,Sogou,inverted,world model s44,dst_port_entropy,0.501,2.23,False,-0.0128
+s07,Sogou,inverted,world model s44,dst_ip_entropy,0.306,1.792,False,0.0385
+s07,Sogou,inverted,world model s44,src_ip_entropy,1.021,2.474,False,0.0
+s07,Sogou,inverted,world model s44,fanout_max,1.155,1.38,False,0.0
+s07,Sogou,inverted,world model s44,fanout_mean,-0.07,0.975,False,0.0064
+s07,Sogou,inverted,world model s44,port_fanout_max,1.134,1.461,False,0.0085
+s07,Sogou,inverted,world model s44,top_talker_share,0.067,-0.59,False,-0.0107
+s07,Sogou,inverted,world model s44,seq_port_ratio,-0.053,1.251,False,-0.062
+s07,Sogou,inverted,world model s44,ports_per_pair_max,-0.031,1.341,False,-0.0278
+s07,Sogou,inverted,world model s44,outbound_bytes,0.459,0.702,False,-0.0107
+s07,Sogou,inverted,world model s44,inbound_bytes,0.439,1.532,False,-0.0043
+s07,Sogou,inverted,world model s44,byte_asymmetry,0.026,-0.675,False,-0.0556
+s07,Sogou,inverted,world model s44,beacon_score,0.229,0.275,False,0.0
+s11,Rbot,inverted,logistic regression,n_flows,0.29,-0.074,False,0.0036
+s11,Rbot,inverted,logistic regression,flows_per_s,0.043,-0.078,False,0.05
+s11,Rbot,inverted,logistic regression,bytes_total,0.385,-0.45,True,0.075
+s11,Rbot,inverted,logistic regression,bytes_per_s,0.331,-0.45,True,0.0929
+s11,Rbot,inverted,logistic regression,pkts_total,0.304,-0.453,True,0.0893
+s11,Rbot,inverted,logistic regression,pkts_per_s,0.16,-0.454,False,-0.0607
+s11,Rbot,inverted,logistic regression,syn_no_ack_rate,0.473,0.233,False,0.0036
+s11,Rbot,inverted,logistic regression,has_rst_rate,0.242,0.868,False,0.025
+s11,Rbot,inverted,logistic regression,has_fin_rate,0.213,1.167,False,0.025
+s11,Rbot,inverted,logistic regression,one_way_rate,0.414,-0.552,True,0.0786
+s11,Rbot,inverted,logistic regression,tiny_flow_rate,0.639,-0.241,True,0.1286
+s11,Rbot,inverted,logistic regression,priv_port_rate,0.694,-0.117,False,0.0679
+s11,Rbot,inverted,logistic regression,ephemeral_dst_rate,0.004,-0.154,False,0.0536
+s11,Rbot,inverted,logistic regression,is_outbound_rate,0.084,0.187,False,0.0321
+s11,Rbot,inverted,logistic regression,is_inbound_rate,0.222,0.882,False,0.0571
+s11,Rbot,inverted,logistic regression,is_internal_rate,0.745,-0.605,True,0.0
+s11,Rbot,inverted,logistic regression,proto_tcp_rate,0.405,0.341,False,-0.0143
+s11,Rbot,inverted,logistic regression,proto_udp_rate,0.48,1.097,False,0.175
+s11,Rbot,inverted,logistic regression,proto_icmp_rate,0.592,-0.954,True,0.1429
+s11,Rbot,inverted,logistic regression,svc_http_rate,0.138,0.701,False,-0.0286
+s11,Rbot,inverted,logistic regression,svc_https_rate,0.382,0.646,False,-0.0179
+s11,Rbot,inverted,logistic regression,svc_dns_rate,0.711,0.889,False,0.0214
+s11,Rbot,inverted,logistic regression,svc_ssh_rate,0.124,-0.326,False,0.0
+s11,Rbot,inverted,logistic regression,svc_ftp_rate,0.102,-0.217,False,0.0
+s11,Rbot,inverted,logistic regression,svc_smtp_rate,0.645,-0.306,True,0.0143
+s11,Rbot,inverted,logistic regression,svc_smb_rate,0.101,-0.464,False,0.0179
+s11,Rbot,inverted,logistic regression,svc_rdp_rate,0.219,-1.44,True,0.0679
+s11,Rbot,inverted,logistic regression,svc_db_rate,0.028,-0.28,False,0.0
+s11,Rbot,inverted,logistic regression,duration_s_mean,0.437,0.524,False,-0.125
+s11,Rbot,inverted,logistic regression,duration_s_max,0.516,0.787,False,0.0643
+s11,Rbot,inverted,logistic regression,bytes_mean,0.44,-0.462,True,0.0214
+s11,Rbot,inverted,logistic regression,bytes_max,0.356,-0.326,True,-0.025
+s11,Rbot,inverted,logistic regression,pkts_mean,0.266,-0.486,True,-0.0464
+s11,Rbot,inverted,logistic regression,syn_cnt_sum,0.234,1.049,False,0.0286
+s11,Rbot,inverted,logistic regression,ack_cnt_sum,0.209,0.409,False,0.025
+s11,Rbot,inverted,logistic regression,fin_cnt_sum,-0.5,0.83,True,-0.1357
+s11,Rbot,inverted,logistic regression,rst_cnt_sum,0.114,0.844,False,-0.0464
+s11,Rbot,inverted,logistic regression,psh_cnt_sum,-0.539,0.245,True,0.0071
+s11,Rbot,inverted,logistic regression,urg_cnt_sum,-0.037,0.0,False,0.0
+s11,Rbot,inverted,logistic regression,uniq_src_ip,-0.606,0.51,True,-0.0214
+s11,Rbot,inverted,logistic regression,uniq_dst_ip,-0.558,-0.198,False,0.0357
+s11,Rbot,inverted,logistic regression,uniq_dst_port,0.153,-0.305,False,-0.0214
+s11,Rbot,inverted,logistic regression,uniq_src_port,-0.547,-0.094,False,0.0821
+s11,Rbot,inverted,logistic regression,dst_port_entropy,0.192,-0.53,False,-0.1357
+s11,Rbot,inverted,logistic regression,dst_ip_entropy,0.169,-0.0,False,0.0143
+s11,Rbot,inverted,logistic regression,src_ip_entropy,0.278,0.866,False,0.0893
+s11,Rbot,inverted,logistic regression,fanout_max,0.19,-0.093,False,0.0321
+s11,Rbot,inverted,logistic regression,fanout_mean,0.43,-0.741,True,0.0607
+s11,Rbot,inverted,logistic regression,port_fanout_max,0.182,0.244,False,-0.025
+s11,Rbot,inverted,logistic regression,top_talker_share,0.159,-0.435,False,0.0
+s11,Rbot,inverted,logistic regression,seq_port_ratio,-0.285,-0.709,False,-0.0214
+s11,Rbot,inverted,logistic regression,ports_per_pair_max,-0.08,-0.432,False,0.0036
+s11,Rbot,inverted,logistic regression,outbound_bytes,0.468,-0.489,True,-0.1036
+s11,Rbot,inverted,logistic regression,inbound_bytes,0.3,-0.478,True,0.0607
+s11,Rbot,inverted,logistic regression,byte_asymmetry,0.576,-0.214,True,0.0393
+s11,Rbot,inverted,logistic regression,beacon_score,0.601,-0.169,False,0.0107
+s11,Rbot,inverted,world model s43,n_flows,0.29,-0.074,False,-0.0143
+s11,Rbot,inverted,world model s43,flows_per_s,0.043,-0.078,False,0.0
+s11,Rbot,inverted,world model s43,bytes_total,0.385,-0.45,True,0.0036
+s11,Rbot,inverted,world model s43,bytes_per_s,0.331,-0.45,True,-0.0036
+s11,Rbot,inverted,world model s43,pkts_total,0.304,-0.453,True,-0.0143
+s11,Rbot,inverted,world model s43,pkts_per_s,0.16,-0.454,False,-0.0357
+s11,Rbot,inverted,world model s43,syn_no_ack_rate,0.473,0.233,False,0.0143
+s11,Rbot,inverted,world model s43,has_rst_rate,0.242,0.868,False,0.0107
+s11,Rbot,inverted,world model s43,has_fin_rate,0.213,1.167,False,0.0179
+s11,Rbot,inverted,world model s43,one_way_rate,0.414,-0.552,True,0.05
+s11,Rbot,inverted,world model s43,tiny_flow_rate,0.639,-0.241,True,0.0036
+s11,Rbot,inverted,world model s43,priv_port_rate,0.694,-0.117,False,0.0071
+s11,Rbot,inverted,world model s43,ephemeral_dst_rate,0.004,-0.154,False,0.1321
+s11,Rbot,inverted,world model s43,is_outbound_rate,0.084,0.187,False,-0.0429
+s11,Rbot,inverted,world model s43,is_inbound_rate,0.222,0.882,False,-0.0036
+s11,Rbot,inverted,world model s43,is_internal_rate,0.745,-0.605,True,-0.0393
+s11,Rbot,inverted,world model s43,proto_tcp_rate,0.405,0.341,False,0.0357
+s11,Rbot,inverted,world model s43,proto_udp_rate,0.48,1.097,False,-0.0071
+s11,Rbot,inverted,world model s43,proto_icmp_rate,0.592,-0.954,True,0.0071
+s11,Rbot,inverted,world model s43,svc_http_rate,0.138,0.701,False,0.0071
+s11,Rbot,inverted,world model s43,svc_https_rate,0.382,0.646,False,0.0
+s11,Rbot,inverted,world model s43,svc_dns_rate,0.711,0.889,False,-0.0286
+s11,Rbot,inverted,world model s43,svc_ssh_rate,0.124,-0.326,False,0.0036
+s11,Rbot,inverted,world model s43,svc_ftp_rate,0.102,-0.217,False,-0.0107
+s11,Rbot,inverted,world model s43,svc_smtp_rate,0.645,-0.306,True,0.0464
+s11,Rbot,inverted,world model s43,svc_smb_rate,0.101,-0.464,False,-0.0071
+s11,Rbot,inverted,world model s43,svc_rdp_rate,0.219,-1.44,True,0.0
+s11,Rbot,inverted,world model s43,svc_db_rate,0.028,-0.28,False,0.0
+s11,Rbot,inverted,world model s43,duration_s_mean,0.437,0.524,False,0.1286
+s11,Rbot,inverted,world model s43,duration_s_max,0.516,0.787,False,-0.0357
+s11,Rbot,inverted,world model s43,bytes_mean,0.44,-0.462,True,0.0393
+s11,Rbot,inverted,world model s43,bytes_max,0.356,-0.326,True,-0.025
+s11,Rbot,inverted,world model s43,pkts_mean,0.266,-0.486,True,-0.0321
+s11,Rbot,inverted,world model s43,syn_cnt_sum,0.234,1.049,False,-0.0143
+s11,Rbot,inverted,world model s43,ack_cnt_sum,0.209,0.409,False,-0.0036
+s11,Rbot,inverted,world model s43,fin_cnt_sum,-0.5,0.83,True,0.0
+s11,Rbot,inverted,world model s43,rst_cnt_sum,0.114,0.844,False,0.0036
+s11,Rbot,inverted,world model s43,psh_cnt_sum,-0.539,0.245,True,-0.0286
+s11,Rbot,inverted,world model s43,urg_cnt_sum,-0.037,0.0,False,-0.0036
+s11,Rbot,inverted,world model s43,uniq_src_ip,-0.606,0.51,True,-0.0036
+s11,Rbot,inverted,world model s43,uniq_dst_ip,-0.558,-0.198,False,-0.0286
+s11,Rbot,inverted,world model s43,uniq_dst_port,0.153,-0.305,False,-0.0214
+s11,Rbot,inverted,world model s43,uniq_src_port,-0.547,-0.094,False,0.0036
+s11,Rbot,inverted,world model s43,dst_port_entropy,0.192,-0.53,False,-0.0143
+s11,Rbot,inverted,world model s43,dst_ip_entropy,0.169,-0.0,False,0.0429
+s11,Rbot,inverted,world model s43,src_ip_entropy,0.278,0.866,False,-0.0143
+s11,Rbot,inverted,world model s43,fanout_max,0.19,-0.093,False,0.0
+s11,Rbot,inverted,world model s43,fanout_mean,0.43,-0.741,True,-0.0286
+s11,Rbot,inverted,world model s43,port_fanout_max,0.182,0.244,False,-0.0036
+s11,Rbot,inverted,world model s43,top_talker_share,0.159,-0.435,False,-0.0071
+s11,Rbot,inverted,world model s43,seq_port_ratio,-0.285,-0.709,False,-0.0357
+s11,Rbot,inverted,world model s43,ports_per_pair_max,-0.08,-0.432,False,0.0036
+s11,Rbot,inverted,world model s43,outbound_bytes,0.468,-0.489,True,0.0179
+s11,Rbot,inverted,world model s43,inbound_bytes,0.3,-0.478,True,-0.025
+s11,Rbot,inverted,world model s43,byte_asymmetry,0.576,-0.214,True,0.0321
+s11,Rbot,inverted,world model s43,beacon_score,0.601,-0.169,False,-0.0071
+s11,Rbot,inverted,world model s44,n_flows,0.29,-0.074,False,0.0071
+s11,Rbot,inverted,world model s44,flows_per_s,0.043,-0.078,False,0.0
+s11,Rbot,inverted,world model s44,bytes_total,0.385,-0.45,True,-0.0036
+s11,Rbot,inverted,world model s44,bytes_per_s,0.331,-0.45,True,-0.0
+s11,Rbot,inverted,world model s44,pkts_total,0.304,-0.453,True,-0.0071
+s11,Rbot,inverted,world model s44,pkts_per_s,0.16,-0.454,False,0.0
+s11,Rbot,inverted,world model s44,syn_no_ack_rate,0.473,0.233,False,0.0071
+s11,Rbot,inverted,world model s44,has_rst_rate,0.242,0.868,False,0.0
+s11,Rbot,inverted,world model s44,has_fin_rate,0.213,1.167,False,0.0071
+s11,Rbot,inverted,world model s44,one_way_rate,0.414,-0.552,True,-0.0036
+s11,Rbot,inverted,world model s44,tiny_flow_rate,0.639,-0.241,True,-0.0143
+s11,Rbot,inverted,world model s44,priv_port_rate,0.694,-0.117,False,-0.0071
+s11,Rbot,inverted,world model s44,ephemeral_dst_rate,0.004,-0.154,False,0.0714
+s11,Rbot,inverted,world model s44,is_outbound_rate,0.084,0.187,False,0.0357
+s11,Rbot,inverted,world model s44,is_inbound_rate,0.222,0.882,False,0.0
+s11,Rbot,inverted,world model s44,is_internal_rate,0.745,-0.605,True,-0.0071
+s11,Rbot,inverted,world model s44,proto_tcp_rate,0.405,0.341,False,0.0
+s11,Rbot,inverted,world model s44,proto_udp_rate,0.48,1.097,False,0.0071
+s11,Rbot,inverted,world model s44,proto_icmp_rate,0.592,-0.954,True,0.3786
+s11,Rbot,inverted,world model s44,svc_http_rate,0.138,0.701,False,-0.0071
+s11,Rbot,inverted,world model s44,svc_https_rate,0.382,0.646,False,-0.0107
+s11,Rbot,inverted,world model s44,svc_dns_rate,0.711,0.889,False,0.0107
+s11,Rbot,inverted,world model s44,svc_ssh_rate,0.124,-0.326,False,0.0
+s11,Rbot,inverted,world model s44,svc_ftp_rate,0.102,-0.217,False,-0.0036
+s11,Rbot,inverted,world model s44,svc_smtp_rate,0.645,-0.306,True,0.0
+s11,Rbot,inverted,world model s44,svc_smb_rate,0.101,-0.464,False,-0.0071
+s11,Rbot,inverted,world model s44,svc_rdp_rate,0.219,-1.44,True,0.0
+s11,Rbot,inverted,world model s44,svc_db_rate,0.028,-0.28,False,0.0
+s11,Rbot,inverted,world model s44,duration_s_mean,0.437,0.524,False,0.0036
+s11,Rbot,inverted,world model s44,duration_s_max,0.516,0.787,False,-0.0071
+s11,Rbot,inverted,world model s44,bytes_mean,0.44,-0.462,True,-0.0036
+s11,Rbot,inverted,world model s44,bytes_max,0.356,-0.326,True,0.0107
+s11,Rbot,inverted,world model s44,pkts_mean,0.266,-0.486,True,0.0071
+s11,Rbot,inverted,world model s44,syn_cnt_sum,0.234,1.049,False,0.0036
+s11,Rbot,inverted,world model s44,ack_cnt_sum,0.209,0.409,False,-0.0
+s11,Rbot,inverted,world model s44,fin_cnt_sum,-0.5,0.83,True,0.0286
+s11,Rbot,inverted,world model s44,rst_cnt_sum,0.114,0.844,False,-0.0071
+s11,Rbot,inverted,world model s44,psh_cnt_sum,-0.539,0.245,True,0.0071
+s11,Rbot,inverted,world model s44,urg_cnt_sum,-0.037,0.0,False,0.0071
+s11,Rbot,inverted,world model s44,uniq_src_ip,-0.606,0.51,True,-0.0071
+s11,Rbot,inverted,world model s44,uniq_dst_ip,-0.558,-0.198,False,0.0286
+s11,Rbot,inverted,world model s44,uniq_dst_port,0.153,-0.305,False,0.0036
+s11,Rbot,inverted,world model s44,uniq_src_port,-0.547,-0.094,False,-0.0071
+s11,Rbot,inverted,world model s44,dst_port_entropy,0.192,-0.53,False,0.0571
+s11,Rbot,inverted,world model s44,dst_ip_entropy,0.169,-0.0,False,0.0357
+s11,Rbot,inverted,world model s44,src_ip_entropy,0.278,0.866,False,0.0
+s11,Rbot,inverted,world model s44,fanout_max,0.19,-0.093,False,-0.0107
+s11,Rbot,inverted,world model s44,fanout_mean,0.43,-0.741,True,-0.0071
+s11,Rbot,inverted,world model s44,port_fanout_max,0.182,0.244,False,0.0179
+s11,Rbot,inverted,world model s44,top_talker_share,0.159,-0.435,False,0.0
+s11,Rbot,inverted,world model s44,seq_port_ratio,-0.285,-0.709,False,-0.0036
+s11,Rbot,inverted,world model s44,ports_per_pair_max,-0.08,-0.432,False,-0.0071
+s11,Rbot,inverted,world model s44,outbound_bytes,0.468,-0.489,True,0.0036
+s11,Rbot,inverted,world model s44,inbound_bytes,0.3,-0.478,True,0.0179
+s11,Rbot,inverted,world model s44,byte_asymmetry,0.576,-0.214,True,-0.0107
+s11,Rbot,inverted,world model s44,beacon_score,0.601,-0.169,False,0.0
+s02,Neris,inverted,logistic regression,n_flows,0.798,-0.601,True,-0.0083
+s02,Neris,inverted,logistic regression,flows_per_s,0.944,-0.606,True,-0.0156
+s02,Neris,inverted,logistic regression,bytes_total,0.371,0.097,False,-0.0008
+s02,Neris,inverted,logistic regression,bytes_per_s,0.385,0.097,False,-0.0009
+s02,Neris,inverted,logistic regression,pkts_total,0.46,-0.021,False,-0.0158
+s02,Neris,inverted,logistic regression,pkts_per_s,0.475,-0.021,False,-0.0201
+s02,Neris,inverted,logistic regression,syn_no_ack_rate,-0.346,0.828,True,0.0223
+s02,Neris,inverted,logistic regression,has_rst_rate,0.056,1.641,False,0.0584
+s02,Neris,inverted,logistic regression,has_fin_rate,-0.677,0.761,True,0.0294
+s02,Neris,inverted,logistic regression,one_way_rate,-0.515,0.81,True,-0.25
+s02,Neris,inverted,logistic regression,tiny_flow_rate,-0.191,-0.185,False,-0.0055
+s02,Neris,inverted,logistic regression,priv_port_rate,-0.896,0.298,True,0.0267
+s02,Neris,inverted,logistic regression,ephemeral_dst_rate,0.245,-0.517,True,0.0003
+s02,Neris,inverted,logistic regression,is_outbound_rate,0.22,0.052,False,-0.0076
+s02,Neris,inverted,logistic regression,is_inbound_rate,0.854,0.01,False,-0.0263
+s02,Neris,inverted,logistic regression,is_internal_rate,-0.816,-0.049,False,-0.0247
+s02,Neris,inverted,logistic regression,proto_tcp_rate,-0.625,0.979,True,-0.2014
+s02,Neris,inverted,logistic regression,proto_udp_rate,0.786,-1.061,True,0.1829
+s02,Neris,inverted,logistic regression,proto_icmp_rate,-0.488,1.115,True,-0.0201
+s02,Neris,inverted,logistic regression,svc_http_rate,-0.659,0.715,True,-0.0271
+s02,Neris,inverted,logistic regression,svc_https_rate,0.449,0.765,False,-0.0133
+s02,Neris,inverted,logistic regression,svc_dns_rate,-0.724,-0.134,False,0.0167
+s02,Neris,inverted,logistic regression,svc_ssh_rate,-0.063,-0.291,False,0.0146
+s02,Neris,inverted,logistic regression,svc_ftp_rate,-0.034,0.163,False,-0.0004
+s02,Neris,inverted,logistic regression,svc_smtp_rate,0.401,2.437,False,-0.1811
+s02,Neris,inverted,logistic regression,svc_smb_rate,-0.003,1.025,False,0.0035
+s02,Neris,inverted,logistic regression,svc_rdp_rate,-0.046,-0.036,False,0.0001
+s02,Neris,inverted,logistic regression,svc_db_rate,-0.023,0.192,False,-0.0001
+s02,Neris,inverted,logistic regression,duration_s_mean,0.819,-0.165,False,0.0523
+s02,Neris,inverted,logistic regression,duration_s_max,-0.076,0.152,False,-0.078
+s02,Neris,inverted,logistic regression,bytes_mean,0.022,0.254,False,-0.0115
+s02,Neris,inverted,logistic regression,bytes_max,0.309,0.064,False,0.0039
+s02,Neris,inverted,logistic regression,pkts_mean,-0.026,0.174,False,-0.0203
+s02,Neris,inverted,logistic regression,syn_cnt_sum,0.494,0.424,False,-0.0086
+s02,Neris,inverted,logistic regression,ack_cnt_sum,0.495,0.148,False,-0.0053
+s02,Neris,inverted,logistic regression,fin_cnt_sum,0.46,0.098,False,-0.0059
+s02,Neris,inverted,logistic regression,rst_cnt_sum,0.699,1.097,False,-0.0703
+s02,Neris,inverted,logistic regression,psh_cnt_sum,0.471,0.083,False,-0.0169
+s02,Neris,inverted,logistic regression,urg_cnt_sum,0.087,0.049,False,0.0003
+s02,Neris,inverted,logistic regression,uniq_src_ip,1.17,-0.894,True,0.1729
+s02,Neris,inverted,logistic regression,uniq_dst_ip,0.542,-0.755,True,-0.0848
+s02,Neris,inverted,logistic regression,uniq_dst_port,0.898,-0.903,True,-0.0284
+s02,Neris,inverted,logistic regression,uniq_src_port,0.798,-0.455,True,0.0781
+s02,Neris,inverted,logistic regression,dst_port_entropy,0.509,-0.236,True,-0.0072
+s02,Neris,inverted,logistic regression,dst_ip_entropy,0.257,0.095,False,0.0287
+s02,Neris,inverted,logistic regression,src_ip_entropy,1.034,0.081,False,-0.0383
+s02,Neris,inverted,logistic regression,fanout_max,1.177,-1.079,True,0.1231
+s02,Neris,inverted,logistic regression,fanout_mean,-0.094,-0.259,False,0.005
+s02,Neris,inverted,logistic regression,port_fanout_max,1.163,-1.036,True,0.0295
+s02,Neris,inverted,logistic regression,top_talker_share,0.076,-0.467,False,0.0032
+s02,Neris,inverted,logistic regression,seq_port_ratio,-0.018,-0.415,False,-0.0003
+s02,Neris,inverted,logistic regression,ports_per_pair_max,-0.106,0.102,False,0.0035
+s02,Neris,inverted,logistic regression,outbound_bytes,0.409,0.077,False,0.0002
+s02,Neris,inverted,logistic regression,inbound_bytes,0.342,-0.005,False,-0.0035
+s02,Neris,inverted,logistic regression,byte_asymmetry,0.116,0.138,False,0.0013
+s02,Neris,inverted,logistic regression,beacon_score,0.202,0.161,False,0.0002
+s02,Neris,inverted,world model s43,n_flows,0.798,-0.601,True,0.0059
+s02,Neris,inverted,world model s43,flows_per_s,0.944,-0.606,True,0.0023
+s02,Neris,inverted,world model s43,bytes_total,0.371,0.097,False,0.0068
+s02,Neris,inverted,world model s43,bytes_per_s,0.385,0.097,False,-0.0171
+s02,Neris,inverted,world model s43,pkts_total,0.46,-0.021,False,0.0063
+s02,Neris,inverted,world model s43,pkts_per_s,0.475,-0.021,False,0.0043
+s02,Neris,inverted,world model s43,syn_no_ack_rate,-0.346,0.828,True,-0.0389
+s02,Neris,inverted,world model s43,has_rst_rate,0.056,1.641,False,0.0062
+s02,Neris,inverted,world model s43,has_fin_rate,-0.677,0.761,True,0.0157
+s02,Neris,inverted,world model s43,one_way_rate,-0.515,0.81,True,0.0454
+s02,Neris,inverted,world model s43,tiny_flow_rate,-0.191,-0.185,False,0.0061
+s02,Neris,inverted,world model s43,priv_port_rate,-0.896,0.298,True,0.0087
+s02,Neris,inverted,world model s43,ephemeral_dst_rate,0.245,-0.517,True,-0.029
+s02,Neris,inverted,world model s43,is_outbound_rate,0.22,0.052,False,0.0024
+s02,Neris,inverted,world model s43,is_inbound_rate,0.854,0.01,False,-0.0154
+s02,Neris,inverted,world model s43,is_internal_rate,-0.816,-0.049,False,0.018
+s02,Neris,inverted,world model s43,proto_tcp_rate,-0.625,0.979,True,0.0127
+s02,Neris,inverted,world model s43,proto_udp_rate,0.786,-1.061,True,0.0104
+s02,Neris,inverted,world model s43,proto_icmp_rate,-0.488,1.115,True,0.005
+s02,Neris,inverted,world model s43,svc_http_rate,-0.659,0.715,True,0.0011
+s02,Neris,inverted,world model s43,svc_https_rate,0.449,0.765,False,0.0085
+s02,Neris,inverted,world model s43,svc_dns_rate,-0.724,-0.134,False,-0.0051
+s02,Neris,inverted,world model s43,svc_ssh_rate,-0.063,-0.291,False,0.0224
+s02,Neris,inverted,world model s43,svc_ftp_rate,-0.034,0.163,False,-0.001
+s02,Neris,inverted,world model s43,svc_smtp_rate,0.401,2.437,False,-0.0065
+s02,Neris,inverted,world model s43,svc_smb_rate,-0.003,1.025,False,0.0002
+s02,Neris,inverted,world model s43,svc_rdp_rate,-0.046,-0.036,False,0.0005
+s02,Neris,inverted,world model s43,svc_db_rate,-0.023,0.192,False,-0.0002
+s02,Neris,inverted,world model s43,duration_s_mean,0.819,-0.165,False,0.0052
+s02,Neris,inverted,world model s43,duration_s_max,-0.076,0.152,False,-0.005
+s02,Neris,inverted,world model s43,bytes_mean,0.022,0.254,False,0.0001
+s02,Neris,inverted,world model s43,bytes_max,0.309,0.064,False,0.006
+s02,Neris,inverted,world model s43,pkts_mean,-0.026,0.174,False,0.0077
+s02,Neris,inverted,world model s43,syn_cnt_sum,0.494,0.424,False,-0.0187
+s02,Neris,inverted,world model s43,ack_cnt_sum,0.495,0.148,False,0.0014
+s02,Neris,inverted,world model s43,fin_cnt_sum,0.46,0.098,False,0.0101
+s02,Neris,inverted,world model s43,rst_cnt_sum,0.699,1.097,False,-0.0044
+s02,Neris,inverted,world model s43,psh_cnt_sum,0.471,0.083,False,-0.0056
+s02,Neris,inverted,world model s43,urg_cnt_sum,0.087,0.049,False,-0.0159
+s02,Neris,inverted,world model s43,uniq_src_ip,1.17,-0.894,True,0.087
+s02,Neris,inverted,world model s43,uniq_dst_ip,0.542,-0.755,True,0.0013
+s02,Neris,inverted,world model s43,uniq_dst_port,0.898,-0.903,True,0.0097
+s02,Neris,inverted,world model s43,uniq_src_port,0.798,-0.455,True,-0.0033
+s02,Neris,inverted,world model s43,dst_port_entropy,0.509,-0.236,True,-0.0016
+s02,Neris,inverted,world model s43,dst_ip_entropy,0.257,0.095,False,-0.0053
+s02,Neris,inverted,world model s43,src_ip_entropy,1.034,0.081,False,-0.0008
+s02,Neris,inverted,world model s43,fanout_max,1.177,-1.079,True,0.0225
+s02,Neris,inverted,world model s43,fanout_mean,-0.094,-0.259,False,-0.0002
+s02,Neris,inverted,world model s43,port_fanout_max,1.163,-1.036,True,0.0211
+s02,Neris,inverted,world model s43,top_talker_share,0.076,-0.467,False,0.0166
+s02,Neris,inverted,world model s43,seq_port_ratio,-0.018,-0.415,False,0.0069
+s02,Neris,inverted,world model s43,ports_per_pair_max,-0.106,0.102,False,-0.0043
+s02,Neris,inverted,world model s43,outbound_bytes,0.409,0.077,False,-0.0018
+s02,Neris,inverted,world model s43,inbound_bytes,0.342,-0.005,False,0.003
+s02,Neris,inverted,world model s43,byte_asymmetry,0.116,0.138,False,0.002
+s02,Neris,inverted,world model s43,beacon_score,0.202,0.161,False,-0.0018
+s02,Neris,inverted,world model s44,n_flows,0.798,-0.601,True,-0.033
+s02,Neris,inverted,world model s44,flows_per_s,0.944,-0.606,True,0.0099
+s02,Neris,inverted,world model s44,bytes_total,0.371,0.097,False,0.0019
+s02,Neris,inverted,world model s44,bytes_per_s,0.385,0.097,False,0.0065
+s02,Neris,inverted,world model s44,pkts_total,0.46,-0.021,False,0.0186
+s02,Neris,inverted,world model s44,pkts_per_s,0.475,-0.021,False,-0.0043
+s02,Neris,inverted,world model s44,syn_no_ack_rate,-0.346,0.828,True,0.0077
+s02,Neris,inverted,world model s44,has_rst_rate,0.056,1.641,False,-0.002
+s02,Neris,inverted,world model s44,has_fin_rate,-0.677,0.761,True,0.0118
+s02,Neris,inverted,world model s44,one_way_rate,-0.515,0.81,True,0.0191
+s02,Neris,inverted,world model s44,tiny_flow_rate,-0.191,-0.185,False,0.0109
+s02,Neris,inverted,world model s44,priv_port_rate,-0.896,0.298,True,0.0019
+s02,Neris,inverted,world model s44,ephemeral_dst_rate,0.245,-0.517,True,-0.0263
+s02,Neris,inverted,world model s44,is_outbound_rate,0.22,0.052,False,-0.0018
+s02,Neris,inverted,world model s44,is_inbound_rate,0.854,0.01,False,-0.0212
+s02,Neris,inverted,world model s44,is_internal_rate,-0.816,-0.049,False,-0.0325
+s02,Neris,inverted,world model s44,proto_tcp_rate,-0.625,0.979,True,0.0368
+s02,Neris,inverted,world model s44,proto_udp_rate,0.786,-1.061,True,-0.0019
+s02,Neris,inverted,world model s44,proto_icmp_rate,-0.488,1.115,True,-0.002
+s02,Neris,inverted,world model s44,svc_http_rate,-0.659,0.715,True,0.0104
+s02,Neris,inverted,world model s44,svc_https_rate,0.449,0.765,False,0.0072
+s02,Neris,inverted,world model s44,svc_dns_rate,-0.724,-0.134,False,-0.0048
+s02,Neris,inverted,world model s44,svc_ssh_rate,-0.063,-0.291,False,0.0186
+s02,Neris,inverted,world model s44,svc_ftp_rate,-0.034,0.163,False,0.0006
+s02,Neris,inverted,world model s44,svc_smtp_rate,0.401,2.437,False,-0.0455
+s02,Neris,inverted,world model s44,svc_smb_rate,-0.003,1.025,False,0.0028
+s02,Neris,inverted,world model s44,svc_rdp_rate,-0.046,-0.036,False,0.0018
+s02,Neris,inverted,world model s44,svc_db_rate,-0.023,0.192,False,0.0003
+s02,Neris,inverted,world model s44,duration_s_mean,0.819,-0.165,False,-0.0034
+s02,Neris,inverted,world model s44,duration_s_max,-0.076,0.152,False,0.0014
+s02,Neris,inverted,world model s44,bytes_mean,0.022,0.254,False,0.0082
+s02,Neris,inverted,world model s44,bytes_max,0.309,0.064,False,0.0082
+s02,Neris,inverted,world model s44,pkts_mean,-0.026,0.174,False,-0.0014
+s02,Neris,inverted,world model s44,syn_cnt_sum,0.494,0.424,False,-0.016
+s02,Neris,inverted,world model s44,ack_cnt_sum,0.495,0.148,False,0.0135
+s02,Neris,inverted,world model s44,fin_cnt_sum,0.46,0.098,False,-0.0208
+s02,Neris,inverted,world model s44,rst_cnt_sum,0.699,1.097,False,-0.0
+s02,Neris,inverted,world model s44,psh_cnt_sum,0.471,0.083,False,0.022
+s02,Neris,inverted,world model s44,urg_cnt_sum,0.087,0.049,False,0.0088
+s02,Neris,inverted,world model s44,uniq_src_ip,1.17,-0.894,True,0.1512
+s02,Neris,inverted,world model s44,uniq_dst_ip,0.542,-0.755,True,0.0071
+s02,Neris,inverted,world model s44,uniq_dst_port,0.898,-0.903,True,0.0075
+s02,Neris,inverted,world model s44,uniq_src_port,0.798,-0.455,True,-0.0158
+s02,Neris,inverted,world model s44,dst_port_entropy,0.509,-0.236,True,-0.0053
+s02,Neris,inverted,world model s44,dst_ip_entropy,0.257,0.095,False,-0.0119
+s02,Neris,inverted,world model s44,src_ip_entropy,1.034,0.081,False,0.0012
+s02,Neris,inverted,world model s44,fanout_max,1.177,-1.079,True,0.0064
+s02,Neris,inverted,world model s44,fanout_mean,-0.094,-0.259,False,0.0013
+s02,Neris,inverted,world model s44,port_fanout_max,1.163,-1.036,True,0.0194
+s02,Neris,inverted,world model s44,top_talker_share,0.076,-0.467,False,-0.0011
+s02,Neris,inverted,world model s44,seq_port_ratio,-0.018,-0.415,False,-0.0311
+s02,Neris,inverted,world model s44,ports_per_pair_max,-0.106,0.102,False,0.0267
+s02,Neris,inverted,world model s44,outbound_bytes,0.409,0.077,False,-0.0056
+s02,Neris,inverted,world model s44,inbound_bytes,0.342,-0.005,False,-0.001
+s02,Neris,inverted,world model s44,byte_asymmetry,0.116,0.138,False,0.0013
+s02,Neris,inverted,world model s44,beacon_score,0.202,0.161,False,-0.0022
+s13,Virut,inverted,logistic regression,n_flows,0.89,0.014,False,-0.0157
+s13,Virut,inverted,logistic regression,flows_per_s,1.027,-0.09,False,-0.0169
+s13,Virut,inverted,logistic regression,bytes_total,0.528,-0.101,False,0.0014
+s13,Virut,inverted,logistic regression,bytes_per_s,0.561,-0.101,False,0.0016
+s13,Virut,inverted,logistic regression,pkts_total,0.627,0.047,False,-0.0302
+s13,Virut,inverted,logistic regression,pkts_per_s,0.666,0.02,False,-0.0603
+s13,Virut,inverted,logistic regression,syn_no_ack_rate,-0.237,0.25,True,-0.0003
+s13,Virut,inverted,logistic regression,has_rst_rate,0.025,-0.514,False,-0.0009
+s13,Virut,inverted,logistic regression,has_fin_rate,-0.551,-0.562,False,0.0016
+s13,Virut,inverted,logistic regression,one_way_rate,-0.148,-0.075,False,-0.012
+s13,Virut,inverted,logistic regression,tiny_flow_rate,-0.163,-2.434,False,0.0056
+s13,Virut,inverted,logistic regression,priv_port_rate,-0.737,-0.414,False,-0.0451
+s13,Virut,inverted,logistic regression,ephemeral_dst_rate,0.192,-0.469,False,-0.0006
+s13,Virut,inverted,logistic regression,is_outbound_rate,0.317,-1.412,True,0.0059
+s13,Virut,inverted,logistic regression,is_inbound_rate,0.72,2.57,False,0.0087
+s13,Virut,inverted,logistic regression,is_internal_rate,-0.686,-0.343,False,0.0037
+s13,Virut,inverted,logistic regression,proto_tcp_rate,-0.529,-0.877,False,-0.0146
+s13,Virut,inverted,logistic regression,proto_udp_rate,0.716,0.874,False,-0.1808
+s13,Virut,inverted,logistic regression,proto_icmp_rate,-0.48,-0.219,False,-0.0119
+s13,Virut,inverted,logistic regression,svc_http_rate,-0.554,-1.114,False,0.0015
+s13,Virut,inverted,logistic regression,svc_https_rate,0.226,-0.177,False,0.0004
+s13,Virut,inverted,logistic regression,svc_dns_rate,-0.596,-0.176,False,-0.0268
+s13,Virut,inverted,logistic regression,svc_ssh_rate,-0.032,0.189,False,-0.0014
+s13,Virut,inverted,logistic regression,svc_ftp_rate,-0.039,0.084,False,0.0
+s13,Virut,inverted,logistic regression,svc_smtp_rate,0.442,0.877,False,-0.0011
+s13,Virut,inverted,logistic regression,svc_smb_rate,0.023,0.333,False,0.0001
+s13,Virut,inverted,logistic regression,svc_rdp_rate,-0.027,0.107,False,-0.0003
+s13,Virut,inverted,logistic regression,svc_db_rate,-0.036,0.116,False,0.0
+s13,Virut,inverted,logistic regression,duration_s_mean,0.664,7.244,False,-0.877
+s13,Virut,inverted,logistic regression,duration_s_max,-0.123,10.445,False,0.0089
+s13,Virut,inverted,logistic regression,bytes_mean,0.149,-0.197,False,-0.0032
+s13,Virut,inverted,logistic regression,bytes_max,0.447,-0.182,False,-0.0269
+s13,Virut,inverted,logistic regression,pkts_mean,0.087,0.075,False,-0.0071
+s13,Virut,inverted,logistic regression,syn_cnt_sum,0.694,-0.244,True,0.0046
+s13,Virut,inverted,logistic regression,ack_cnt_sum,0.683,-0.272,True,-0.2484
+s13,Virut,inverted,logistic regression,fin_cnt_sum,0.624,-0.696,True,0.0002
+s13,Virut,inverted,logistic regression,rst_cnt_sum,0.779,-0.184,False,0.0023
+s13,Virut,inverted,logistic regression,psh_cnt_sum,0.625,-1.079,True,-0.0149
+s13,Virut,inverted,logistic regression,urg_cnt_sum,0.099,0.212,False,0.0001
+s13,Virut,inverted,logistic regression,uniq_src_ip,0.835,0.255,False,-0.0062
+s13,Virut,inverted,logistic regression,uniq_dst_ip,0.747,-0.888,True,0.0022
+s13,Virut,inverted,logistic regression,uniq_dst_port,0.948,-0.415,True,0.0042
+s13,Virut,inverted,logistic regression,uniq_src_port,0.892,0.064,False,0.0037
+s13,Virut,inverted,logistic regression,dst_port_entropy,0.486,-0.6,True,-0.0222
+s13,Virut,inverted,logistic regression,dst_ip_entropy,0.357,-1.251,True,-0.1954
+s13,Virut,inverted,logistic regression,src_ip_entropy,0.954,1.173,False,-0.0007
+s13,Virut,inverted,logistic regression,fanout_max,1.131,-0.124,False,-0.0012
+s13,Virut,inverted,logistic regression,fanout_mean,-0.004,-2.185,False,-0.1196
+s13,Virut,inverted,logistic regression,port_fanout_max,1.103,-0.139,False,-0.0025
+s13,Virut,inverted,logistic regression,top_talker_share,0.11,-0.251,False,-0.0003
+s13,Virut,inverted,logistic regression,seq_port_ratio,-0.034,0.144,False,0.0001
+s13,Virut,inverted,logistic regression,ports_per_pair_max,0.054,0.677,False,0.0011
+s13,Virut,inverted,logistic regression,outbound_bytes,0.503,0.026,False,0.0019
+s13,Virut,inverted,logistic regression,inbound_bytes,0.55,-0.169,False,0.0
+s13,Virut,inverted,logistic regression,byte_asymmetry,-0.093,0.27,False,-0.0001
+s13,Virut,inverted,logistic regression,beacon_score,0.228,0.5,False,0.0001
+s13,Virut,inverted,world model s43,n_flows,0.89,0.014,False,0.0066
+s13,Virut,inverted,world model s43,flows_per_s,1.027,-0.09,False,0.0333
+s13,Virut,inverted,world model s43,bytes_total,0.528,-0.101,False,-0.018
+s13,Virut,inverted,world model s43,bytes_per_s,0.561,-0.101,False,0.0243
+s13,Virut,inverted,world model s43,pkts_total,0.627,0.047,False,0.0014
+s13,Virut,inverted,world model s43,pkts_per_s,0.666,0.02,False,0.0119
+s13,Virut,inverted,world model s43,syn_no_ack_rate,-0.237,0.25,True,0.2031
+s13,Virut,inverted,world model s43,has_rst_rate,0.025,-0.514,False,-0.0018
+s13,Virut,inverted,world model s43,has_fin_rate,-0.551,-0.562,False,-0.0518
+s13,Virut,inverted,world model s43,one_way_rate,-0.148,-0.075,False,0.0649
+s13,Virut,inverted,world model s43,tiny_flow_rate,-0.163,-2.434,False,-0.0308
+s13,Virut,inverted,world model s43,priv_port_rate,-0.737,-0.414,False,-0.0015
+s13,Virut,inverted,world model s43,ephemeral_dst_rate,0.192,-0.469,False,0.0965
+s13,Virut,inverted,world model s43,is_outbound_rate,0.317,-1.412,True,-0.0012
+s13,Virut,inverted,world model s43,is_inbound_rate,0.72,2.57,False,0.3325
+s13,Virut,inverted,world model s43,is_internal_rate,-0.686,-0.343,False,0.0411
+s13,Virut,inverted,world model s43,proto_tcp_rate,-0.529,-0.877,False,-0.0409
+s13,Virut,inverted,world model s43,proto_udp_rate,0.716,0.874,False,0.0093
+s13,Virut,inverted,world model s43,proto_icmp_rate,-0.48,-0.219,False,-0.0242
+s13,Virut,inverted,world model s43,svc_http_rate,-0.554,-1.114,False,-0.0554
+s13,Virut,inverted,world model s43,svc_https_rate,0.226,-0.177,False,0.6068
+s13,Virut,inverted,world model s43,svc_dns_rate,-0.596,-0.176,False,0.1391
+s13,Virut,inverted,world model s43,svc_ssh_rate,-0.032,0.189,False,0.1227
+s13,Virut,inverted,world model s43,svc_ftp_rate,-0.039,0.084,False,0.0053
+s13,Virut,inverted,world model s43,svc_smtp_rate,0.442,0.877,False,0.0094
+s13,Virut,inverted,world model s43,svc_smb_rate,0.023,0.333,False,0.0012
+s13,Virut,inverted,world model s43,svc_rdp_rate,-0.027,0.107,False,0.0042
+s13,Virut,inverted,world model s43,svc_db_rate,-0.036,0.116,False,-0.0033
+s13,Virut,inverted,world model s43,duration_s_mean,0.664,7.244,False,-0.0513
+s13,Virut,inverted,world model s43,duration_s_max,-0.123,10.445,False,0.1608
+s13,Virut,inverted,world model s43,bytes_mean,0.149,-0.197,False,-0.0027
+s13,Virut,inverted,world model s43,bytes_max,0.447,-0.182,False,0.043
+s13,Virut,inverted,world model s43,pkts_mean,0.087,0.075,False,-0.012
+s13,Virut,inverted,world model s43,syn_cnt_sum,0.694,-0.244,True,0.0567
+s13,Virut,inverted,world model s43,ack_cnt_sum,0.683,-0.272,True,0.0214
+s13,Virut,inverted,world model s43,fin_cnt_sum,0.624,-0.696,True,-0.0418
+s13,Virut,inverted,world model s43,rst_cnt_sum,0.779,-0.184,False,-0.0198
+s13,Virut,inverted,world model s43,psh_cnt_sum,0.625,-1.079,True,0.0003
+s13,Virut,inverted,world model s43,urg_cnt_sum,0.099,0.212,False,0.0001
+s13,Virut,inverted,world model s43,uniq_src_ip,0.835,0.255,False,0.0009
+s13,Virut,inverted,world model s43,uniq_dst_ip,0.747,-0.888,True,-0.0179
+s13,Virut,inverted,world model s43,uniq_dst_port,0.948,-0.415,True,-0.0077
+s13,Virut,inverted,world model s43,uniq_src_port,0.892,0.064,False,0.0045
+s13,Virut,inverted,world model s43,dst_port_entropy,0.486,-0.6,True,-0.0065
+s13,Virut,inverted,world model s43,dst_ip_entropy,0.357,-1.251,True,-0.0117
+s13,Virut,inverted,world model s43,src_ip_entropy,0.954,1.173,False,0.2341
+s13,Virut,inverted,world model s43,fanout_max,1.131,-0.124,False,-0.0347
+s13,Virut,inverted,world model s43,fanout_mean,-0.004,-2.185,False,0.1144
+s13,Virut,inverted,world model s43,port_fanout_max,1.103,-0.139,False,-0.0162
+s13,Virut,inverted,world model s43,top_talker_share,0.11,-0.251,False,-0.0082
+s13,Virut,inverted,world model s43,seq_port_ratio,-0.034,0.144,False,-0.0024
+s13,Virut,inverted,world model s43,ports_per_pair_max,0.054,0.677,False,-0.0309
+s13,Virut,inverted,world model s43,outbound_bytes,0.503,0.026,False,-0.0162
+s13,Virut,inverted,world model s43,inbound_bytes,0.55,-0.169,False,0.0359
+s13,Virut,inverted,world model s43,byte_asymmetry,-0.093,0.27,False,-0.0405
+s13,Virut,inverted,world model s43,beacon_score,0.228,0.5,False,-0.0056
+s13,Virut,inverted,world model s44,n_flows,0.89,0.014,False,-0.0028
+s13,Virut,inverted,world model s44,flows_per_s,1.027,-0.09,False,0.0124
+s13,Virut,inverted,world model s44,bytes_total,0.528,-0.101,False,0.0104
+s13,Virut,inverted,world model s44,bytes_per_s,0.561,-0.101,False,0.0301
+s13,Virut,inverted,world model s44,pkts_total,0.627,0.047,False,-0.009
+s13,Virut,inverted,world model s44,pkts_per_s,0.666,0.02,False,-0.0038
+s13,Virut,inverted,world model s44,syn_no_ack_rate,-0.237,0.25,True,0.0035
+s13,Virut,inverted,world model s44,has_rst_rate,0.025,-0.514,False,-0.0092
+s13,Virut,inverted,world model s44,has_fin_rate,-0.551,-0.562,False,-0.0507
+s13,Virut,inverted,world model s44,one_way_rate,-0.148,-0.075,False,-0.0051
+s13,Virut,inverted,world model s44,tiny_flow_rate,-0.163,-2.434,False,0.0004
+s13,Virut,inverted,world model s44,priv_port_rate,-0.737,-0.414,False,-0.0196
+s13,Virut,inverted,world model s44,ephemeral_dst_rate,0.192,-0.469,False,0.0504
+s13,Virut,inverted,world model s44,is_outbound_rate,0.317,-1.412,True,0.0186
+s13,Virut,inverted,world model s44,is_inbound_rate,0.72,2.57,False,0.2898
+s13,Virut,inverted,world model s44,is_internal_rate,-0.686,-0.343,False,0.034
+s13,Virut,inverted,world model s44,proto_tcp_rate,-0.529,-0.877,False,0.0003
+s13,Virut,inverted,world model s44,proto_udp_rate,0.716,0.874,False,-0.052
+s13,Virut,inverted,world model s44,proto_icmp_rate,-0.48,-0.219,False,0.0092
+s13,Virut,inverted,world model s44,svc_http_rate,-0.554,-1.114,False,-0.0871
+s13,Virut,inverted,world model s44,svc_https_rate,0.226,-0.177,False,0.5277
+s13,Virut,inverted,world model s44,svc_dns_rate,-0.596,-0.176,False,0.1555
+s13,Virut,inverted,world model s44,svc_ssh_rate,-0.032,0.189,False,-0.0286
+s13,Virut,inverted,world model s44,svc_ftp_rate,-0.039,0.084,False,-0.0048
+s13,Virut,inverted,world model s44,svc_smtp_rate,0.442,0.877,False,-0.0923
+s13,Virut,inverted,world model s44,svc_smb_rate,0.023,0.333,False,0.0082
+s13,Virut,inverted,world model s44,svc_rdp_rate,-0.027,0.107,False,0.0099
+s13,Virut,inverted,world model s44,svc_db_rate,-0.036,0.116,False,-0.0052
+s13,Virut,inverted,world model s44,duration_s_mean,0.664,7.244,False,-0.0644
+s13,Virut,inverted,world model s44,duration_s_max,-0.123,10.445,False,0.021
+s13,Virut,inverted,world model s44,bytes_mean,0.149,-0.197,False,-0.0245
+s13,Virut,inverted,world model s44,bytes_max,0.447,-0.182,False,0.0493
+s13,Virut,inverted,world model s44,pkts_mean,0.087,0.075,False,-0.0038
+s13,Virut,inverted,world model s44,syn_cnt_sum,0.694,-0.244,True,0.0687
+s13,Virut,inverted,world model s44,ack_cnt_sum,0.683,-0.272,True,0.0038
+s13,Virut,inverted,world model s44,fin_cnt_sum,0.624,-0.696,True,0.0058
+s13,Virut,inverted,world model s44,rst_cnt_sum,0.779,-0.184,False,-0.0027
+s13,Virut,inverted,world model s44,psh_cnt_sum,0.625,-1.079,True,0.0009
+s13,Virut,inverted,world model s44,urg_cnt_sum,0.099,0.212,False,0.0003
+s13,Virut,inverted,world model s44,uniq_src_ip,0.835,0.255,False,0.0068
+s13,Virut,inverted,world model s44,uniq_dst_ip,0.747,-0.888,True,-0.0143
+s13,Virut,inverted,world model s44,uniq_dst_port,0.948,-0.415,True,-0.0187
+s13,Virut,inverted,world model s44,uniq_src_port,0.892,0.064,False,-0.0118
+s13,Virut,inverted,world model s44,dst_port_entropy,0.486,-0.6,True,0.043
+s13,Virut,inverted,world model s44,dst_ip_entropy,0.357,-1.251,True,-0.0289
+s13,Virut,inverted,world model s44,src_ip_entropy,0.954,1.173,False,0.0058
+s13,Virut,inverted,world model s44,fanout_max,1.131,-0.124,False,-0.0518
+s13,Virut,inverted,world model s44,fanout_mean,-0.004,-2.185,False,0.0285
+s13,Virut,inverted,world model s44,port_fanout_max,1.103,-0.139,False,-0.0584
+s13,Virut,inverted,world model s44,top_talker_share,0.11,-0.251,False,-0.0031
+s13,Virut,inverted,world model s44,seq_port_ratio,-0.034,0.144,False,-0.0113
+s13,Virut,inverted,world model s44,ports_per_pair_max,0.054,0.677,False,-0.024
+s13,Virut,inverted,world model s44,outbound_bytes,0.503,0.026,False,0.0287
+s13,Virut,inverted,world model s44,inbound_bytes,0.55,-0.169,False,0.0621
+s13,Virut,inverted,world model s44,byte_asymmetry,-0.093,0.27,False,-0.0253
+s13,Virut,inverted,world model s44,beacon_score,0.228,0.5,False,-0.0084
+s12,NSIS.ay,control (transfers),logistic regression,n_flows,0.83,3.009,False,-0.0081
+s12,NSIS.ay,control (transfers),logistic regression,flows_per_s,0.931,3.004,False,-0.0271
+s12,NSIS.ay,control (transfers),logistic regression,bytes_total,0.43,2.753,False,-0.0009
+s12,NSIS.ay,control (transfers),logistic regression,bytes_per_s,0.45,2.782,False,-0.0055
+s12,NSIS.ay,control (transfers),logistic regression,pkts_total,0.523,2.708,False,-0.0288
+s12,NSIS.ay,control (transfers),logistic regression,pkts_per_s,0.543,2.54,False,-0.0374
+s12,NSIS.ay,control (transfers),logistic regression,syn_no_ack_rate,-0.277,2.88,True,0.0001
+s12,NSIS.ay,control (transfers),logistic regression,has_rst_rate,0.043,2.764,False,0.0006
+s12,NSIS.ay,control (transfers),logistic regression,has_fin_rate,-0.701,2.666,True,-0.0171
+s12,NSIS.ay,control (transfers),logistic regression,one_way_rate,-0.239,2.147,True,-0.003
+s12,NSIS.ay,control (transfers),logistic regression,tiny_flow_rate,-0.245,2.413,True,0.0186
+s12,NSIS.ay,control (transfers),logistic regression,priv_port_rate,-0.894,3.388,True,0.003
+s12,NSIS.ay,control (transfers),logistic regression,ephemeral_dst_rate,0.225,0.209,False,0.0003
+s12,NSIS.ay,control (transfers),logistic regression,is_outbound_rate,0.212,2.532,False,-0.0012
+s12,NSIS.ay,control (transfers),logistic regression,is_inbound_rate,0.872,0.402,False,-0.016
+s12,NSIS.ay,control (transfers),logistic regression,is_internal_rate,-0.827,3.388,True,-0.0151
+s12,NSIS.ay,control (transfers),logistic regression,proto_tcp_rate,-0.624,2.263,True,0.009
+s12,NSIS.ay,control (transfers),logistic regression,proto_udp_rate,0.782,1.896,False,-0.0392
+s12,NSIS.ay,control (transfers),logistic regression,proto_icmp_rate,-0.523,3.209,True,-0.0059
+s12,NSIS.ay,control (transfers),logistic regression,svc_http_rate,-0.682,2.647,True,-0.0026
+s12,NSIS.ay,control (transfers),logistic regression,svc_https_rate,0.421,2.462,False,0.0003
+s12,NSIS.ay,control (transfers),logistic regression,svc_dns_rate,-0.733,3.691,True,0.0167
+s12,NSIS.ay,control (transfers),logistic regression,svc_ssh_rate,-0.067,1.466,False,-0.0001
+s12,NSIS.ay,control (transfers),logistic regression,svc_ftp_rate,-0.033,0.213,False,0.0
+s12,NSIS.ay,control (transfers),logistic regression,svc_smtp_rate,0.493,1.445,False,-0.0093
+s12,NSIS.ay,control (transfers),logistic regression,svc_smb_rate,0.004,0.365,False,0.0
+s12,NSIS.ay,control (transfers),logistic regression,svc_rdp_rate,-0.06,1.315,False,0.0001
+s12,NSIS.ay,control (transfers),logistic regression,svc_db_rate,-0.025,0.395,False,0.0
+s12,NSIS.ay,control (transfers),logistic regression,duration_s_mean,0.789,-0.369,True,-0.0048
+s12,NSIS.ay,control (transfers),logistic regression,duration_s_max,-0.091,1.055,False,-0.005
+s12,NSIS.ay,control (transfers),logistic regression,bytes_mean,0.044,2.389,False,0.0034
+s12,NSIS.ay,control (transfers),logistic regression,bytes_max,0.363,2.69,False,-0.0117
+s12,NSIS.ay,control (transfers),logistic regression,pkts_mean,-0.004,1.852,False,0.0067
+s12,NSIS.ay,control (transfers),logistic regression,syn_cnt_sum,0.575,3.069,False,-0.0006
+s12,NSIS.ay,control (transfers),logistic regression,ack_cnt_sum,0.568,2.935,False,-0.0371
+s12,NSIS.ay,control (transfers),logistic regression,fin_cnt_sum,0.433,2.123,False,-0.0022
+s12,NSIS.ay,control (transfers),logistic regression,rst_cnt_sum,0.75,3.107,False,-0.019
+s12,NSIS.ay,control (transfers),logistic regression,psh_cnt_sum,0.435,1.954,False,-0.0385
+s12,NSIS.ay,control (transfers),logistic regression,urg_cnt_sum,0.097,0.0,False,0.0
+s12,NSIS.ay,control (transfers),logistic regression,uniq_src_ip,1.16,2.94,False,-0.8237
+s12,NSIS.ay,control (transfers),logistic regression,uniq_dst_ip,0.595,1.997,False,-0.0435
+s12,NSIS.ay,control (transfers),logistic regression,uniq_dst_port,0.892,2.838,False,-0.0005
+s12,NSIS.ay,control (transfers),logistic regression,uniq_src_port,0.832,3.032,False,-0.1187
+s12,NSIS.ay,control (transfers),logistic regression,dst_port_entropy,0.479,2.762,False,-0.0476
+s12,NSIS.ay,control (transfers),logistic regression,dst_ip_entropy,0.265,2.651,False,-0.0016
+s12,NSIS.ay,control (transfers),logistic regression,src_ip_entropy,1.025,2.76,False,-0.0485
+s12,NSIS.ay,control (transfers),logistic regression,fanout_max,1.133,2.907,False,-0.0119
+s12,NSIS.ay,control (transfers),logistic regression,fanout_mean,-0.13,2.529,False,0.0027
+s12,NSIS.ay,control (transfers),logistic regression,port_fanout_max,1.113,2.834,False,-0.0007
+s12,NSIS.ay,control (transfers),logistic regression,top_talker_share,0.058,0.546,False,0.0047
+s12,NSIS.ay,control (transfers),logistic regression,seq_port_ratio,-0.049,-0.065,False,0.0011
+s12,NSIS.ay,control (transfers),logistic regression,ports_per_pair_max,-0.045,1.533,False,-0.002
+s12,NSIS.ay,control (transfers),logistic regression,outbound_bytes,0.444,2.696,False,0.0013
+s12,NSIS.ay,control (transfers),logistic regression,inbound_bytes,0.419,2.71,False,0.0
+s12,NSIS.ay,control (transfers),logistic regression,byte_asymmetry,0.031,-0.47,False,0.0008
+s12,NSIS.ay,control (transfers),logistic regression,beacon_score,0.193,3.013,False,-0.0559
+s12,NSIS.ay,control (transfers),world model s43,n_flows,0.83,3.009,False,-0.003
+s12,NSIS.ay,control (transfers),world model s43,flows_per_s,0.931,3.004,False,-0.0095
+s12,NSIS.ay,control (transfers),world model s43,bytes_total,0.43,2.753,False,-0.0028
+s12,NSIS.ay,control (transfers),world model s43,bytes_per_s,0.45,2.782,False,0.0004
+s12,NSIS.ay,control (transfers),world model s43,pkts_total,0.523,2.708,False,0.0011
+s12,NSIS.ay,control (transfers),world model s43,pkts_per_s,0.543,2.54,False,-0.0018
+s12,NSIS.ay,control (transfers),world model s43,syn_no_ack_rate,-0.277,2.88,True,-0.0042
+s12,NSIS.ay,control (transfers),world model s43,has_rst_rate,0.043,2.764,False,-0.0081
+s12,NSIS.ay,control (transfers),world model s43,has_fin_rate,-0.701,2.666,True,-0.0006
+s12,NSIS.ay,control (transfers),world model s43,one_way_rate,-0.239,2.147,True,-0.0012
+s12,NSIS.ay,control (transfers),world model s43,tiny_flow_rate,-0.245,2.413,True,0.0002
+s12,NSIS.ay,control (transfers),world model s43,priv_port_rate,-0.894,3.388,True,0.0012
+s12,NSIS.ay,control (transfers),world model s43,ephemeral_dst_rate,0.225,0.209,False,-0.0096
+s12,NSIS.ay,control (transfers),world model s43,is_outbound_rate,0.212,2.532,False,-0.0065
+s12,NSIS.ay,control (transfers),world model s43,is_inbound_rate,0.872,0.402,False,-0.0033
+s12,NSIS.ay,control (transfers),world model s43,is_internal_rate,-0.827,3.388,True,0.0007
+s12,NSIS.ay,control (transfers),world model s43,proto_tcp_rate,-0.624,2.263,True,-0.0036
+s12,NSIS.ay,control (transfers),world model s43,proto_udp_rate,0.782,1.896,False,-0.0014
+s12,NSIS.ay,control (transfers),world model s43,proto_icmp_rate,-0.523,3.209,True,0.0005
+s12,NSIS.ay,control (transfers),world model s43,svc_http_rate,-0.682,2.647,True,-0.0006
+s12,NSIS.ay,control (transfers),world model s43,svc_https_rate,0.421,2.462,False,-0.0018
+s12,NSIS.ay,control (transfers),world model s43,svc_dns_rate,-0.733,3.691,True,-0.0005
+s12,NSIS.ay,control (transfers),world model s43,svc_ssh_rate,-0.067,1.466,False,-0.0003
+s12,NSIS.ay,control (transfers),world model s43,svc_ftp_rate,-0.033,0.213,False,-0.0001
+s12,NSIS.ay,control (transfers),world model s43,svc_smtp_rate,0.493,1.445,False,-0.0017
+s12,NSIS.ay,control (transfers),world model s43,svc_smb_rate,0.004,0.365,False,0.0
+s12,NSIS.ay,control (transfers),world model s43,svc_rdp_rate,-0.06,1.315,False,0.0001
+s12,NSIS.ay,control (transfers),world model s43,svc_db_rate,-0.025,0.395,False,-0.0002
+s12,NSIS.ay,control (transfers),world model s43,duration_s_mean,0.789,-0.369,True,-0.0016
+s12,NSIS.ay,control (transfers),world model s43,duration_s_max,-0.091,1.055,False,0.002
+s12,NSIS.ay,control (transfers),world model s43,bytes_mean,0.044,2.389,False,-0.0043
+s12,NSIS.ay,control (transfers),world model s43,bytes_max,0.363,2.69,False,-0.0019
+s12,NSIS.ay,control (transfers),world model s43,pkts_mean,-0.004,1.852,False,-0.0026
+s12,NSIS.ay,control (transfers),world model s43,syn_cnt_sum,0.575,3.069,False,-0.0001
+s12,NSIS.ay,control (transfers),world model s43,ack_cnt_sum,0.568,2.935,False,-0.0005
+s12,NSIS.ay,control (transfers),world model s43,fin_cnt_sum,0.433,2.123,False,0.0023
+s12,NSIS.ay,control (transfers),world model s43,rst_cnt_sum,0.75,3.107,False,-0.0152
+s12,NSIS.ay,control (transfers),world model s43,psh_cnt_sum,0.435,1.954,False,-0.0021
+s12,NSIS.ay,control (transfers),world model s43,urg_cnt_sum,0.097,0.0,False,0.0
+s12,NSIS.ay,control (transfers),world model s43,uniq_src_ip,1.16,2.94,False,0.0009
+s12,NSIS.ay,control (transfers),world model s43,uniq_dst_ip,0.595,1.997,False,0.0042
+s12,NSIS.ay,control (transfers),world model s43,uniq_dst_port,0.892,2.838,False,-0.0011
+s12,NSIS.ay,control (transfers),world model s43,uniq_src_port,0.832,3.032,False,-0.0039
+s12,NSIS.ay,control (transfers),world model s43,dst_port_entropy,0.479,2.762,False,-0.0033
+s12,NSIS.ay,control (transfers),world model s43,dst_ip_entropy,0.265,2.651,False,0.0035
+s12,NSIS.ay,control (transfers),world model s43,src_ip_entropy,1.025,2.76,False,0.0003
+s12,NSIS.ay,control (transfers),world model s43,fanout_max,1.133,2.907,False,-0.0067
+s12,NSIS.ay,control (transfers),world model s43,fanout_mean,-0.13,2.529,False,-0.0015
+s12,NSIS.ay,control (transfers),world model s43,port_fanout_max,1.113,2.834,False,-0.01
+s12,NSIS.ay,control (transfers),world model s43,top_talker_share,0.058,0.546,False,0.0008
+s12,NSIS.ay,control (transfers),world model s43,seq_port_ratio,-0.049,-0.065,False,-0.0023
+s12,NSIS.ay,control (transfers),world model s43,ports_per_pair_max,-0.045,1.533,False,-0.0098
+s12,NSIS.ay,control (transfers),world model s43,outbound_bytes,0.444,2.696,False,-0.0048
+s12,NSIS.ay,control (transfers),world model s43,inbound_bytes,0.419,2.71,False,0.0015
+s12,NSIS.ay,control (transfers),world model s43,byte_asymmetry,0.031,-0.47,False,-0.0026
+s12,NSIS.ay,control (transfers),world model s43,beacon_score,0.193,3.013,False,-0.011
+s12,NSIS.ay,control (transfers),world model s44,n_flows,0.83,3.009,False,-0.0037
+s12,NSIS.ay,control (transfers),world model s44,flows_per_s,0.931,3.004,False,-0.0034
+s12,NSIS.ay,control (transfers),world model s44,bytes_total,0.43,2.753,False,-0.0121
+s12,NSIS.ay,control (transfers),world model s44,bytes_per_s,0.45,2.782,False,0.0019
+s12,NSIS.ay,control (transfers),world model s44,pkts_total,0.523,2.708,False,0.0011
+s12,NSIS.ay,control (transfers),world model s44,pkts_per_s,0.543,2.54,False,-0.0047
+s12,NSIS.ay,control (transfers),world model s44,syn_no_ack_rate,-0.277,2.88,True,-0.0001
+s12,NSIS.ay,control (transfers),world model s44,has_rst_rate,0.043,2.764,False,-0.0035
+s12,NSIS.ay,control (transfers),world model s44,has_fin_rate,-0.701,2.666,True,0.0037
+s12,NSIS.ay,control (transfers),world model s44,one_way_rate,-0.239,2.147,True,-0.0033
+s12,NSIS.ay,control (transfers),world model s44,tiny_flow_rate,-0.245,2.413,True,0.005
+s12,NSIS.ay,control (transfers),world model s44,priv_port_rate,-0.894,3.388,True,0.0005
+s12,NSIS.ay,control (transfers),world model s44,ephemeral_dst_rate,0.225,0.209,False,-0.0014
+s12,NSIS.ay,control (transfers),world model s44,is_outbound_rate,0.212,2.532,False,0.0011
+s12,NSIS.ay,control (transfers),world model s44,is_inbound_rate,0.872,0.402,False,-0.0013
+s12,NSIS.ay,control (transfers),world model s44,is_internal_rate,-0.827,3.388,True,0.0006
+s12,NSIS.ay,control (transfers),world model s44,proto_tcp_rate,-0.624,2.263,True,0.0001
+s12,NSIS.ay,control (transfers),world model s44,proto_udp_rate,0.782,1.896,False,-0.0058
+s12,NSIS.ay,control (transfers),world model s44,proto_icmp_rate,-0.523,3.209,True,0.0003
+s12,NSIS.ay,control (transfers),world model s44,svc_http_rate,-0.682,2.647,True,0.0011
+s12,NSIS.ay,control (transfers),world model s44,svc_https_rate,0.421,2.462,False,-0.0041
+s12,NSIS.ay,control (transfers),world model s44,svc_dns_rate,-0.733,3.691,True,-0.0066
+s12,NSIS.ay,control (transfers),world model s44,svc_ssh_rate,-0.067,1.466,False,-0.0005
+s12,NSIS.ay,control (transfers),world model s44,svc_ftp_rate,-0.033,0.213,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,svc_smtp_rate,0.493,1.445,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,svc_smb_rate,0.004,0.365,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,svc_rdp_rate,-0.06,1.315,False,0.0001
+s12,NSIS.ay,control (transfers),world model s44,svc_db_rate,-0.025,0.395,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,duration_s_mean,0.789,-0.369,True,-0.0103
+s12,NSIS.ay,control (transfers),world model s44,duration_s_max,-0.091,1.055,False,-0.0044
+s12,NSIS.ay,control (transfers),world model s44,bytes_mean,0.044,2.389,False,0.0001
+s12,NSIS.ay,control (transfers),world model s44,bytes_max,0.363,2.69,False,-0.0001
+s12,NSIS.ay,control (transfers),world model s44,pkts_mean,-0.004,1.852,False,0.0013
+s12,NSIS.ay,control (transfers),world model s44,syn_cnt_sum,0.575,3.069,False,-0.0086
+s12,NSIS.ay,control (transfers),world model s44,ack_cnt_sum,0.568,2.935,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,fin_cnt_sum,0.433,2.123,False,0.001
+s12,NSIS.ay,control (transfers),world model s44,rst_cnt_sum,0.75,3.107,False,-0.0008
+s12,NSIS.ay,control (transfers),world model s44,psh_cnt_sum,0.435,1.954,False,0.0013
+s12,NSIS.ay,control (transfers),world model s44,urg_cnt_sum,0.097,0.0,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,uniq_src_ip,1.16,2.94,False,-0.0004
+s12,NSIS.ay,control (transfers),world model s44,uniq_dst_ip,0.595,1.997,False,0.0045
+s12,NSIS.ay,control (transfers),world model s44,uniq_dst_port,0.892,2.838,False,-0.0076
+s12,NSIS.ay,control (transfers),world model s44,uniq_src_port,0.832,3.032,False,0.0007
+s12,NSIS.ay,control (transfers),world model s44,dst_port_entropy,0.479,2.762,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,dst_ip_entropy,0.265,2.651,False,0.0005
+s12,NSIS.ay,control (transfers),world model s44,src_ip_entropy,1.025,2.76,False,-0.0037
+s12,NSIS.ay,control (transfers),world model s44,fanout_max,1.133,2.907,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,fanout_mean,-0.13,2.529,False,0.0
+s12,NSIS.ay,control (transfers),world model s44,port_fanout_max,1.113,2.834,False,-0.0052
+s12,NSIS.ay,control (transfers),world model s44,top_talker_share,0.058,0.546,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,seq_port_ratio,-0.049,-0.065,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,ports_per_pair_max,-0.045,1.533,False,-0.0013
+s12,NSIS.ay,control (transfers),world model s44,outbound_bytes,0.444,2.696,False,-0.0017
+s12,NSIS.ay,control (transfers),world model s44,inbound_bytes,0.419,2.71,False,0.0017
+s12,NSIS.ay,control (transfers),world model s44,byte_asymmetry,0.031,-0.47,False,0.0002
+s12,NSIS.ay,control (transfers),world model s44,beacon_score,0.193,3.013,False,-0.008

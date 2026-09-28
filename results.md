@@ -1736,3 +1736,78 @@ Artefacts:
 - `results/tables/e27_pcap_route.{csv,md}`, `e27_pcap_route_scorecard.csv`, `e27_parity.csv`;
 - code: `src/netwm/engine/predict.py` (`load_ensemble`, the averaged forecast), `backend/inference.py`
   (routing, model-card routes), `backend/tests/test_pcap_route.py`, `scripts/pcap_route_{parity,eval,same_traffic}.py`.
+
+---
+
+## N-6a - Why the world model inverts on some CTU-13 families: direction flips and single-feature reliance (D-039, descriptive)
+
+```
+python scripts/ctu_inversion_diagnostic.py      # GPU if present; seeds 43/44 fold checkpoints + refit LR
+```
+
+**Not a bar, and nothing is tuned.** This is D-039's diagnostic, answering the first half of board
+card N-6. The method is fixed in the script's docstring:
+- **Scenarios:** the three the card names (Murlo s08, Sogou s07, Rbot s11), the two other scenarios
+  that decide an "inverted" verdict (Neris s02, Virut s13), and NSIS s12 as a control that transfers.
+- **Models:** the world model's fold checkpoints for seeds 43 and 44 (seed 42's weights are on the
+  other machine), on the deterministic mean path; and the fold's LR, refit as `lr_baseline.py`
+  fits it.
+- **Direction:** per feature, the standardised mean difference `d` (bot windows minus background, on
+  `y_within_K`) on the fold's training scenarios and on the held-out one. A feature **flips** when the
+  signs differ and both `|d| >= 0.2`.
+- **Reliance:** set one feature at a time, and then the whole flipped set, to its training mean across
+  the held-out scenario, and record the change in ROC-AUC.
+
+*Checks.*
+- The mean-path ROC-AUC reproduces the stored Monte-Carlo one to within 0.011 on every scenario and
+  seed. For example, Murlo gives 0.136 / 0.156 against 0.137 / 0.156 stored.
+- The refit LR reproduces `lr-ctu13-s42`'s ranking: Spearman >= 0.9997, ROC-AUC within 0.0021. Its
+  probabilities differ by up to 0.012, from library versions the stored run did not record, and a
+  first run requiring bit-identical probabilities stopped on that. A separate refit gave Spearman
+  0.998 on s12, so the fit itself also varies very slightly between runs.
+- The script ran from an uncommitted working copy at `8cae357` and was committed unchanged with these
+  results.
+
+| scenario | role | background windows | features that flip | **WM ROC-AUC** s43 / s44 | WM, flipped set neutralised | LR ROC-AUC | LR, flipped set neutralised | the single features that push the world model's ranking most the wrong way (ROC-AUC gain when neutralised, s43 / s44) |
+|---|---|---:|---:|---|---|---:|---:|---|
+| Murlo s08 | inverted | 89 | **25 of 56** | 0.136 / 0.156 | **0.741 / 0.789** | 0.590 | 0.377 | `has_fin_rate` +0.06, `svc_https_rate` +0.12 (s44), `is_outbound_rate` +0.04 / +0.06 |
+| Neris s02 | inverted | 78 | 18 | 0.423 / 0.412 | **0.623 / 0.626** | 0.571 | 0.673 | `uniq_src_ip` +0.09 / +0.15 |
+| Rbot s11 | inverted | 20 | 19 | 0.050 / 0.050 | **0.811** / 0.486 | 0.518 | 0.679 | `ephemeral_dst_rate` +0.13 (s43), `proto_icmp_rate` **+0.38** (s44) |
+| Virut s13 | inverted | 10 | 10 | 0.306 / 0.313 | 0.347 / 0.441 | 0.991 | 0.827 | **`svc_https_rate` +0.61 / +0.53**, `is_inbound_rate` +0.33 / +0.29 |
+| Sogou s07 | inverted | 26 | 3 | 0.167 / 0.179 | 0.175 / 0.188 | 0.739 | 0.709 | `duration_s_max` +0.15 / +0.05, `ephemeral_dst_rate` +0.14 / +0.06 |
+| NSIS s12 | control | 72 | 11 | 0.980 / 0.984 | 0.979 / 0.991 | 0.958 | 0.985 | none above +0.005 |
+
+### What N-6a shows
+
+1. **Three of the five inversions are mostly direction flips.**
+   - On Murlo, Neris s02 and Rbot s11, many network-global features differ between bot and background
+     windows in the opposite direction from the training families: 25, 18 and 19 of 56.
+   - Neutralising those features lifts the world model from well below chance to 0.62-0.81 on both
+     seeds (Rbot s11 on seed 43 only; seed 44 reaches 0.49).
+   - The world model has learned which way these features move when a bot is active in the training
+     families, and on these captures they move the other way. The E25b inversions are
+     therefore a family-specific signature being transferred, as D-039 read them.
+2. **The other two are not flips. The world model leans on one or two features.**
+   - **Virut s13:** neutralising the HTTPS share alone adds about +0.5 to +0.6 ROC-AUC. That verdict
+     rests on 10 background windows in 1,967.
+   - **Sogou s07:** the world model leans on the longest flow duration and on the share of ephemeral
+     destination ports.
+   - LR, on the same 56 inputs, ranks both captures correctly (0.739 and 0.991).
+3. **Rbot s11's ICMP.** On seed 44 the ICMP share alone is worth +0.38 ROC-AUC. s11 is the capture
+   whose 91 ICMP flows have no `State` field (D-036), a data-format artefact rather than bot
+   behaviour.
+4. **The control is robust.** On NSIS no single feature moves the world model's ranking by more than
+   0.005.
+5. **What this does not show.**
+   - The flipped set is defined **with the held-out scenario's labels**, so neutralising it is an
+     explanation, not a remedy a deployment could apply.
+   - Single-feature neutralisation leaves states off the data manifold, and correlated features share
+     the blame, so this measures reliance, not cause.
+   - The second half of N-6, whether per-host features separate the bot host where network-global
+     ones do not, needs the raw CTU-13 flows (`data/raw/ctu13/`), which were not on this machine. It
+     is still open, and D-039's per-host question stays unanswered until it runs.
+
+Artefacts:
+- `results/tables/n6_ctu13_inversion_features.csv` (one row per model, scenario and feature: `d_train`,
+  `d_heldout`, `flips`, `delta_roc_neutralised`) and `n6_ctu13_inversion_summary.csv`;
+- `results/runs/n6-ctu13-inversion/` (`metrics.json` with the LR reproduction check; `diagnostic.log`).

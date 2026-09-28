@@ -1,0 +1,19 @@
+scenario,family,role,model,windows,background,roc_auc,n_flipped_features,roc_auc_flips_neutralised,top5_wrong_way
+s08,Murlo,inverted,logistic regression,2339,89,0.5902,25,0.3768,uniq_src_port +0.125; syn_cnt_sum +0.125; rst_cnt_sum +0.113; is_outbound_rate +0.100; pkts_mean +0.077
+s08,Murlo,inverted,world model s43,2339,89,0.1356,25,0.7406,has_fin_rate +0.061; is_outbound_rate +0.036; svc_https_rate +0.032; psh_cnt_sum +0.032; uniq_dst_port +0.027
+s08,Murlo,inverted,world model s44,2339,89,0.1565,25,0.7886,svc_https_rate +0.118; is_outbound_rate +0.063; n_flows +0.034; priv_port_rate +0.027; one_way_rate +0.027
+s07,Sogou,inverted,logistic regression,44,26,0.7393,3,0.7094,pkts_per_s +0.145; duration_s_max +0.137; dst_port_entropy +0.126; dst_ip_entropy +0.126; tiny_flow_rate +0.124
+s07,Sogou,inverted,world model s43,44,26,0.1667,3,0.1752,duration_s_max +0.150; ephemeral_dst_rate +0.137; port_fanout_max +0.043; proto_icmp_rate +0.043; n_flows +0.041
+s07,Sogou,inverted,world model s44,44,26,0.1795,3,0.188,ephemeral_dst_rate +0.060; duration_s_max +0.051; dst_ip_entropy +0.038; svc_dns_rate +0.011; proto_icmp_rate +0.011
+s11,Rbot,inverted,logistic regression,34,20,0.5179,19,0.6786,proto_udp_rate +0.175; proto_icmp_rate +0.143; tiny_flow_rate +0.129; bytes_per_s +0.093; src_ip_entropy +0.089
+s11,Rbot,inverted,world model s43,34,20,0.05,19,0.8107,ephemeral_dst_rate +0.132; duration_s_mean +0.129; one_way_rate +0.050; svc_smtp_rate +0.046; dst_ip_entropy +0.043
+s11,Rbot,inverted,world model s44,34,20,0.05,19,0.4857,proto_icmp_rate +0.379; ephemeral_dst_rate +0.071; dst_port_entropy +0.057; dst_ip_entropy +0.036; is_outbound_rate +0.036
+s02,Neris,inverted,logistic regression,505,78,0.5708,18,0.6735,proto_udp_rate +0.183; uniq_src_ip +0.173; fanout_max +0.123; uniq_src_port +0.078; has_rst_rate +0.058
+s02,Neris,inverted,world model s43,505,78,0.4233,18,0.623,uniq_src_ip +0.087; one_way_rate +0.045; fanout_max +0.023; svc_ssh_rate +0.022; port_fanout_max +0.021
+s02,Neris,inverted,world model s44,505,78,0.4122,18,0.6255,uniq_src_ip +0.151; proto_tcp_rate +0.037; ports_per_pair_max +0.027; psh_cnt_sum +0.022; port_fanout_max +0.019
+s13,Virut,inverted,logistic regression,1967,9,0.9911,10,0.8272,duration_s_max +0.009; is_inbound_rate +0.009; is_outbound_rate +0.006; tiny_flow_rate +0.006; syn_cnt_sum +0.005
+s13,Virut,inverted,world model s43,1967,9,0.306,10,0.3467,svc_https_rate +0.607; is_inbound_rate +0.332; src_ip_entropy +0.234; syn_no_ack_rate +0.203; duration_s_max +0.161
+s13,Virut,inverted,world model s44,1967,9,0.3131,10,0.4406,svc_https_rate +0.528; is_inbound_rate +0.290; svc_dns_rate +0.156; syn_cnt_sum +0.069; inbound_bytes +0.062
+s12,NSIS.ay,control (transfers),logistic regression,208,72,0.9582,11,0.985,tiny_flow_rate +0.019; svc_dns_rate +0.017; proto_tcp_rate +0.009; pkts_mean +0.007; top_talker_share +0.005
+s12,NSIS.ay,control (transfers),world model s43,208,72,0.9799,11,0.9788,uniq_dst_ip +0.004; dst_ip_entropy +0.003; fin_cnt_sum +0.002; duration_s_max +0.002; inbound_bytes +0.002
+s12,NSIS.ay,control (transfers),world model s44,208,72,0.9845,11,0.9908,tiny_flow_rate +0.005; uniq_dst_ip +0.004; has_fin_rate +0.004; bytes_per_s +0.002; inbound_bytes +0.002
