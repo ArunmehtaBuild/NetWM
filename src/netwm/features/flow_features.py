@@ -441,6 +441,28 @@ def _host_relative_features(df: pd.DataFrame, index: pd.Index) -> pd.DataFrame:
     return out.astype(np.float64)
 
 
+def host_relative_block(
+    expanded: pd.DataFrame, n_windows: int, internal_prefixes: tuple[str, ...]
+) -> pd.DataFrame:
+    """E21's host-relative block alone, over a whole capture (D-042).
+
+    The block needs each host's past, so it cannot be computed in the time chunks the CTU-13 build
+    uses. This computes exactly what ``window_features(use_host_relative=True)`` appends, from the
+    four columns it reads, without building the other 70 columns. ``src_ip``/``dst_ip`` may be
+    strings or integer codes; internal-ness is decided from ``src_internal``/``dst_internal`` when
+    those columns are present (so codes can be used), else from the address prefixes.
+    """
+    df = expanded[["w", "src_ip", "dst_ip", "dst_port"]].copy()
+    if "src_internal" in expanded.columns:
+        src_int, dst_int = expanded["src_internal"].to_numpy(bool), expanded["dst_internal"].to_numpy(bool)
+    else:
+        src_int = expanded["src_ip"].astype(str).str.startswith(internal_prefixes).to_numpy()
+        dst_int = expanded["dst_ip"].astype(str).str.startswith(internal_prefixes).to_numpy()
+    df["is_outbound"] = (src_int & ~dst_int).astype(np.float32)
+    df["is_internal"] = (src_int & dst_int).astype(np.float32)
+    return _host_relative_features(df, pd.RangeIndex(n_windows, name="w"))
+
+
 def host_feature_names(slots: int) -> list[str]:
     """The per-host channel columns for ``slots`` hosts, slot-major, 1-indexed (D-027)."""
     return [f"host{i}_{f}" for i in range(1, slots + 1) for f in HOST_FEATURES]
