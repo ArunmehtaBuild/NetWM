@@ -1,0 +1,215 @@
+{
+  "run": "e25-ctu13-s44",
+  "models_dir": "D:\\Code\\smart2nd\\models",
+  "machine": "LAPTOP-PSLI6M46",
+  "python": "3.10.21",
+  "utc": "2026-09-28T23:15:41+00:00",
+  "torch": "2.5.1+cu121",
+  "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "note": "hashed in place on this machine; weights are untracked",
+  "checkpoints": [
+    {
+      "file": "menti.pt",
+      "bytes": 2460702,
+      "sha256": "e8212a1c193aae67d8636bfcdd445206e1fc02ee0af01e0aaddd7bdee354e678",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
+      "test_days": [
+        "s06"
+      ],
+      "stored_threshold": 0.255,
+      "params": 610432
+    },
+    {
+      "file": "murlo.pt",
+      "bytes": 2460702,
+      "sha256": "f2007dfd0c8b7ac034835b6e86f6291a9aa4f5e65069a53fcb94a8f6abfed1d1",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
+      "test_days": [
+        "s08"
+      ],
+      "stored_threshold": 0.2942,
+      "params": 610432
+    },
+    {
+      "file": "neris.pt",
+      "bytes": 2460702,
+      "sha256": "1f44489ca58d609c8cb1cf6466c3c02504cb31603d00acb71ffd4e766d575952",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
+      "test_days": [
+        "s01",
+        "s02",
+        "s09"
+      ],
+      "stored_threshold": 0.20600000000000002,
+      "params": 610432
+    },
+    {
+      "file": "nsis.pt",
+      "bytes": 2460650,
+      "sha256": "d0f1d309419ba858ff7f26029dd414b79b1be391978e93439039007c9d31fb23",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s13"
+      ],
+      "test_days": [
+        "s12"
+      ],
+      "stored_threshold": 0.1962,
+      "params": 610432
+    },
+    {
+      "file": "rbot.pt",
+      "bytes": 2460650,
+      "sha256": "539a16decf374fb701c1e80c320e38462c4d2e7b9abd03adbb85ab841e156148",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s12",
+        "s13"
+      ],
+      "test_days": [
+        "s03",
+        "s04",
+        "s10",
+        "s11"
+      ],
+      "stored_threshold": 0.01,
+      "params": 610432
+    },
+    {
+      "file": "sogou.pt",
+      "bytes": 2460702,
+      "sha256": "14754712c15f0156d1f98eaef18862c447d5977f291c26ba860354d57265a7c8",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
+      "test_days": [
+        "s07"
+      ],
+      "stored_threshold": 0.2452,
+      "params": 610432
+    },
+    {
+      "file": "virut.pt",
+      "bytes": 2460702,
+      "sha256": "825e3f68471ce6b773b192c20e295ffcdebbd9128c0a4dfa46ba4dfc2796c2da",
+      "git_sha": "7399495",
+      "pos_mode": "interp",
+      "hazard": "factorized",
+      "n_features": 56,
+      "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12"
+      ],
+      "test_days": [
+        "s05",
+        "s13"
+      ],
+      "stored_threshold": 0.2158,
+      "params": 610432
+    }
+  ]
+}
