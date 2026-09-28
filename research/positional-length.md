@@ -44,3 +44,10 @@ unaffected.
 
 A strict-xfail test, `backend/tests/test_pcap_route.py::test_forecast_is_prefix_invariant`, turns
 green when the model is fixed.
+
+**On CTU-13 (results.md "N-8 x E25b").** Scoring each held-out capture as the start of a 96- or an
+8,019-window recording moves E25b's ROC-AUC by at most 0.023 on captures of >= 208 windows, and by up
+to 0.11 on the three captures of <= 61 windows. No scenario crosses 0.50 or 0.70, and the two short
+inversions (Rbot s11, Sogou s07) stay below 0.05. Restarting the recurrent state in fixed-length
+slices costs far more (up to 0.25 on Neris s01), so a streaming sensor must carry the state across the
+feed whatever positional fix is chosen.

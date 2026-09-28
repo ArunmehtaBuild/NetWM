@@ -1822,3 +1822,87 @@ Artefacts:
 - `results/tables/n6_ctu13_inversion_features.csv` (one row per model, scenario and feature: `d_train`,
   `d_heldout`, `flips`, `delta_roc_neutralised`) and `n6_ctu13_inversion_summary.csv`;
 - `results/runs/n6-ctu13-inversion/` (`metrics.json` with the LR reproduction check; `diagnostic.log`).
+
+---
+
+## N-8 x E25b - Does the capture's length move the CTU-13 detection numbers? Barely; it explains no inversion (descriptive)
+
+```
+python scripts/ctu_positional_length.py --seeds 42 43 44   # GPU; seed 42 has all 7 folds here, 43/44 only Neris
+```
+
+**Not a bar, nothing is tuned, and E25b's verdicts are not re-read** (D-037 fixed the rule and the
+stored scores). The question comes from N-8 (`research/positional-length.md`): `CausalContext`
+interpolates its 16 positional vectors to the input length, CTU-13's held-out captures run from 34 to
+8,019 windows, and two of E25b's deciding inversions are the two shortest (s11, 34; s07, 44). The
+method is fixed in the script's docstring:
+- **Models:** the fold checkpoints on this machine: seed 42 for all seven families, seeds 43/44 for
+  Neris only (their other folds are on the RTX 4060 machine; the run folder lists what was skipped).
+  Deterministic mean path, `p_max`, as in N-6a. ROC-AUC on `y_within_K`.
+- **`prefix_of_T'`** - the same single pass, but the positional vectors are interpolated to T' = 96
+  (training `seq_len`) or 8,019 (s03, the longest capture) and the first T are used. Attention is
+  causal and the state recurrent, so this is exactly the score the capture would get as the start of a
+  longer recording. **Only the positional encoding changes: this is the N-8 effect alone.**
+- **`slices_L`** - consecutive slices of L = 34 or 96 windows, each scored alone from a fresh latent
+  state. Every window sees the same positional stretch, but the recurrent state also restarts every L
+  windows, so this mixes N-8 with lost history.
+
+*Check.* The native mean-path ROC-AUC reproduces E25b's stored Monte-Carlo one to within 0.014 on
+every row (largest: Neris s09 seed 43, 0.872 against 0.858).
+
+ROC-AUC, change from native in brackets; "-" where the condition does not apply (T > T', or T <= L).
+
+| seed | family | scenario | windows | background | E25b stored | **native** | prefix_of_96 | prefix_of_8019 | slices_34 | slices_96 |
+|---|---|---|---:|---:|---:|---:|---|---|---|---|
+| 42 | Neris | s01 | 737 | 157 | 0.942 | **0.953** | - | 0.954 (+0.001) | 0.705 (-0.248) | 0.800 (-0.152) |
+| 42 | Neris | s02 | 505 | 78 | 0.597 | **0.610** | - | 0.606 (-0.004) | 0.464 (-0.146) | 0.502 (-0.109) |
+| 42 | Neris | s09 | 677 | 295 | 0.608 | **0.607** | - | 0.603 (-0.004) | 0.656 (+0.049) | 0.643 (+0.036) |
+| 42 | Rbot | s03 | 8,019 | 6,477 | 0.714 | **0.714** | - | 0.714 (+0.000) | 0.706 (-0.008) | 0.713 (-0.000) |
+| 42 | Rbot | s04 | 539 | 285 | 0.595 | **0.592** | - | 0.579 (-0.013) | 0.581 (-0.012) | 0.589 (-0.004) |
+| 42 | Rbot | s10 | 618 | 466 | 0.671 | **0.669** | - | 0.676 (+0.007) | 0.623 (-0.046) | 0.672 (+0.003) |
+| 42 | Rbot | s11 | 34 | 20 | 0.082 | **0.075** | 0.018 (-0.057) | 0.039 (-0.036) | - | - |
+| 42 | Virut | s05 | 61 | 10 | 0.847 | **0.857** | 0.925 (+0.069) | 0.965 (+0.108) | 0.867 (+0.010) | - |
+| 42 | Virut | s13 | 1,967 | 9 | 0.439 | **0.439** | - | 0.453 (+0.014) | 0.473 (+0.034) | 0.428 (-0.011) |
+| 42 | Menti | s06 | 260 | 6 | 0.770 | **0.768** | - | 0.766 (-0.003) | 0.757 (-0.012) | 0.756 (-0.012) |
+| 42 | Sogou | s07 | 44 | 26 | 0.015 | **0.015** | 0.024 (+0.009) | 0.049 (+0.034) | 0.015 (+0.000) | - |
+| 42 | Murlo | s08 | 2,339 | 89 | 0.204 | **0.205** | - | 0.209 (+0.004) | 0.221 (+0.015) | 0.229 (+0.023) |
+| 42 | NSIS.ay | s12 | 208 | 72 | 0.985 | **0.982** | - | 0.989 (+0.007) | 0.978 (-0.005) | 0.984 (+0.002) |
+| 43 | Neris | s01 | 737 | 157 | 0.664 | **0.665** | - | 0.649 (-0.016) | 0.584 (-0.081) | 0.610 (-0.055) |
+| 43 | Neris | s02 | 505 | 78 | 0.425 | **0.420** | - | 0.414 (-0.007) | 0.355 (-0.065) | 0.394 (-0.026) |
+| 43 | Neris | s09 | 677 | 295 | 0.858 | **0.872** | - | 0.849 (-0.023) | 0.814 (-0.058) | 0.840 (-0.032) |
+| 44 | Neris | s01 | 737 | 157 | 0.761 | **0.770** | - | 0.756 (-0.014) | 0.719 (-0.051) | 0.741 (-0.029) |
+| 44 | Neris | s02 | 505 | 78 | 0.413 | **0.416** | - | 0.418 (+0.002) | 0.397 (-0.018) | 0.408 (-0.008) |
+| 44 | Neris | s09 | 677 | 295 | 0.931 | **0.933** | - | 0.933 (-0.000) | 0.936 (+0.003) | 0.922 (-0.011) |
+
+### What this shows
+
+1. **The positional defect alone barely moves E25b's detection numbers.**
+   - On every capture of 208 windows or more, the `prefix_of` conditions move ROC-AUC by at most
+     0.023 (Neris s09, seed 43), and the scores keep a Spearman correlation of >= 0.98 with native.
+   - On the three captures of 61 windows or fewer the move is larger: Virut s05 +0.07 / +0.11, Rbot
+     s11 -0.06 / -0.04, Sogou s07 +0.01 / +0.03.
+   - No `prefix_of` condition moves any scenario across 0.50 or 0.70, D-037's thresholds.
+2. **The two short inversions are not an artefact of being short.** Scored as the start of a
+   96-window or an 8,019-window recording, Rbot s11 stays at 0.02-0.04 and Sogou s07 at 0.02-0.05
+   (seed 42). s11 moves *further* below chance.
+3. **Restarting the latent state matters more than the positional encoding.** Slicing costs Neris
+   s01 up to 0.25 on seed 42 (0.953 to 0.705 at L = 34), and seed 42's s02 drops to 0.464 at L = 34,
+   the one row in the table that crosses 0.50. The `prefix_of` rows for the same scenarios move by at
+   most 0.004, so the loss comes from the history the recurrent state carries, not from N-8. For a
+   streaming sensor this means the state should persist across a live feed rather than be rebuilt per
+   chunk; it says nothing new about N-8's fix.
+4. **N-6a is not touched in substance.** N-6a compares a scenario with itself at one length, so the
+   positional stretch is constant across its conditions. Its six scenarios move by at most 0.057 here
+   (Rbot s11, seed 42, downwards). N-6a itself used seeds 43/44, whose non-Neris folds are not on this
+   machine, so this row set checks it only through seed 42 and the Neris fold.
+5. **A small correction to E25b's "background" column.** It was derived from the rounded base rate.
+   Counted directly, s03 has 6,477 background windows (not 6,479) and Virut s13 has **9** (not 10;
+   N-6a's summary CSV already says 9). Nothing else in E25b depends on that column.
+6. **What this does not show.** Seed 42 for six families and three seeds for Neris only. Detection
+   ROC-AUC only; S2\* is not recomputed. N-8's fix still needs its own pre-registered retrain.
+
+Artefacts:
+- `results/tables/n8_ctu13_positional_length.csv` (one row per seed, scenario and condition, with the
+  change from native, the Spearman correlation with native, the largest score change and any 0.50/0.70
+  crossing);
+- `results/runs/n8-ctu13-positional-length/` (`metrics.json`, which lists the skipped checkpoints, and `run.log`).
