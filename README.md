@@ -77,20 +77,24 @@ than fixtures.
 
 **1. Clone and install:**
 
+Use **Python 3.10** (the version every result was produced on). `requirements.txt` pins numpy < 2,
+which has no Windows wheels for Python 3.13+: a venv on a newer interpreter compiles an experimental
+numpy and `import torch` then crashes.
+
 ```bash
 git clone https://github.com/ArunmehtaBuild/smart2nd.git
 cd smart2nd
-python -m venv .venv
+py -3.10 -m venv .venv
 .venv\Scriptsctivate
+pip install torch --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements.txt
 ```
 
-Torch is installed separately for CUDA (GTX 1650 / CUDA 12.1). Without a GPU, the CPU build that
-`requirements.txt` pulls in runs the demo fine:
-
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-```
+Install torch **before** `requirements.txt`. The PyPI torch that `requirements.txt` would otherwise pull
+in is CPU-only on Windows, and pip then treats it as satisfying the CUDA install. The cu121 build
+runs on the GTX 1650 and the RTX 4060 we trained on. Without a GPU, skip the torch line: the CPU
+build runs the demo fine. Check with
+`python -c "import torch; print(torch.cuda.is_available())"`.
 
 **2. Fetch the dataset:** one command, ~328 MB download, ~1.1 GB extracted into
 `data/raw/cicids2017_improved/` (gitignored).
