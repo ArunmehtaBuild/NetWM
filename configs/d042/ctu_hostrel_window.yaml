@@ -1,0 +1,9 @@
+# D-042 arm H: arm G plus E21's six host-relative features (each internal host against its own
+# trailing past; label-free, causal) - 62 inputs. The only difference from arm G is the input block.
+features:
+  exclude_blocks: [cic_only]
+model:
+  hazard: factorized
+  pos_mode: window
+train:
+  target_steps: 250

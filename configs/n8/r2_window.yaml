@@ -1,0 +1,6 @@
+# D-041 (N-8): the round-2 setup (no --model-config = r2 byte for byte, D-023) with the one change the
+# fix needs: pos_mode window. Reads data/processed/cicids2017, folds Thursday and Friday, 25 epochs.
+#   python scripts/train.py --config configs/cicids2017.yaml --model-config configs/n8/r2_window.yaml \
+#       --test-days thursday friday --epochs 25 --samples 16 --run n8-r2w-s42 --seed 42 --no-figures
+model:
+  pos_mode: window

@@ -1,0 +1,10 @@
+# D-042 arm G: E25's stack (configs/m1v2/e25_ctu13.yaml) on its 56 network-global inputs, with D-041's
+# window positions. Reads data/processed/ctu13_hostrel and drops the host-relative block, so both arms
+# read the same windows and the same 56 columns.
+features:
+  exclude_blocks: [cic_only, host_relative]
+model:
+  hazard: factorized
+  pos_mode: window
+train:
+  target_steps: 250

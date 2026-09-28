@@ -1,0 +1,15 @@
+# D-042: the CTU-13 window matrix (configs/ctu13.yaml, unchanged) plus E21's six host-relative
+# features, computed over each whole capture (they need each host's past, so they cannot be built
+# in the time chunks build_ctu13.py uses).
+#   python scripts/build_ctu13_hostrel.py --config configs/ctu13_hostrel.yaml
+dataset: ctu13
+raw_dir: data/raw/ctu13
+base_dir: data/processed/ctu13
+processed_dir: data/processed/ctu13_hostrel
+window:
+  length_s: 60.0
+  stride_s: 30.0
+horizon_k: 10
+internal_prefixes:
+  - "147.32."
+seed: 42

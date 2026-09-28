@@ -1696,3 +1696,146 @@ matrix.
 
 **Revisit if.** A capture is more than 60 s out of time order, or a residual difference is traced to
 one of D-033's rules.
+
+### D-041 — Pre-registration: the N-8 fix. Window-relative positions, state carried across chunks, and a retrain of both served routes
+*Date: 2026-09-28 · Status: pre-registered (code `4ba2559`; nothing below has been trained) · Evidence to
+come: `results.md` "N-8 fix"*
+
+**Why.** E27 finding 5 and N-8 x E25b showed the defect. `CausalContext` stretches its 16
+positional vectors to the input's length, so a window's score depends on how many windows follow it.
+Streaming was also impossible: every call started from an empty state, so scoring a feed in chunks
+could not equal scoring it in one pass. This entry fixes deployment correctness. **It is not a
+performance sweep.** No hyperparameter changes, and nothing is chosen by its score.
+
+**The change (code `4ba2559`, already tested).**
+- `pos_mode: window`. The key at distance d from its query gets `pos[15 - d]`. Slots before the
+  stream began are masked out, not attended as zeros. This is length-invariant by construction and
+  matches what the attention mask already assumed.
+- `forecast(..., carry=, return_carry=True)` carries the last posterior state and the last 15
+  embeddings. On the mean path, a stream scored chunk by chunk equals the same stream scored at once,
+  to 1e-6 (`tests/test_positional_window.py`).
+- Checkpoints without `pos_mode` load as `interp`, and their scores are bit-identical to before. This
+  was checked on the E20r, E25 and r2 checkpoints, both Monte Carlo and mean path.
+
+**Runs.** Each is the served method with only `pos_mode` changed. All run on the GTX 1650, so the weights
+stay on one machine.
+
+| run | what | command |
+|---|---|---|
+| `m1v2-n8-e20rw-s{42,43,44}` | E20r, 5 folds, 25 epochs | `bash scripts/run_m1v2.sh n8-e20rw configs/n8/e20r_pcap_window.yaml data/processed/cicids2017_m1v2p` |
+| `n8-r2w-s{42,43,44}` | r2's setup, Thursday and Friday folds | `python scripts/train.py --config configs/cicids2017.yaml --model-config configs/n8/r2_window.yaml --test-days thursday friday --epochs 25 --samples 16 --run n8-r2w-s<seed> --seed <seed> --no-figures` |
+| `n8-r2i-s42` | control: r2's setup with **today's code** and `interp`, to separate code drift since `55ee51d` from the positional change | the same, without `--model-config` |
+
+**Gates, in order. Nothing ships unless G1 passes.**
+- **G1, correctness.** All three conditions must hold:
+  - the unit tests pass;
+  - on every checkpoint a route would serve, and on each of its held-out days, the mean-path `p_max`
+    from 60-window chunks with the state carried equals the one-pass `p_max` to max |diff| <= 1e-5;
+  - `backend/tests/test_pcap_route.py::test_forecast_is_prefix_invariant` stops being a strict xfail
+    and passes on the served checkpoints.
+- **G2, PCAP route.** D-038's own bar, unchanged. The mean of `m1v2-n8-e20rw-s{42,43,44}` needs
+  Thursday PR-AUC >= 0.20 and S2\* >= E19's S2\* - 0.03 (0.651 - 0.03 = 0.621), scored by
+  `scorecard.score_run` and `benchmark_table.metrics` as E27 was.
+  - Pass: the PCAP route serves the E20rw mean.
+  - Fail: it keeps E20r, and the defect stays documented.
+- **G3, CSV route.** `n8-r2w-s42`, the same seed and setup as r2, needs Thursday PR-AUC >= 0.540 and
+  Thursday causal F1 >= 0.508 (causal expanding q90, `y_within_K`).
+  - Those bars are r2's 0.640 and 0.608 minus 0.10. The margin is wide because r2 is a single seed
+    at the top of its method's range (E19, its method on the D-035 contract, reaches 0.43 [0.41-0.46]).
+  - Pass: the CSV route serves r2w seed 42.
+  - Fail: it keeps r2.
+
+**Reported, not gated.**
+- The paired differences against E20r and r2, and r2w seeds 43/44.
+- `n8-r2i-s42` against r2 (code drift).
+- Friday numbers and the rollout gain.
+
+**Not allowed.** No reruns except `--resume` after a crash, no change to the gates after a result is
+seen, and no other hyperparameter changes. A failed gate is reported as failed.
+
+**Revisit if.** G1 fails on real data but not in the tests. That would mean a path the tests do not
+cover (the explainer's short slices, `engine/explain.py`, are one candidate).
+
+### D-042 — Pre-registration: does host-local temporal state fix E25b's cross-family inversions? (CTU-13, 7 folds x 3 seeds)
+*Date: 2026-09-28 · Status: pre-registered; nothing below has been built or trained · Depends on: D-041's
+code (`pos_mode: window`)*
+
+**Why now.** N-6b showed the "drowned" pattern on Murlo:
+- the bot host's own traffic ranks s08's windows at 0.93-0.96, where the global statistics sit at
+  0.32-0.34;
+- the bot is never the busiest internal host.
+
+D-039 wanted that diagnostic to pass before any per-host-state run. As written, it did not: a
+label-free per-host **maximum** never reached 0.70. The team has chosen to run the per-host
+experiment anyway, and this entry records that choice. Here "host-local temporal" means **each host
+against its own past**, which a maximum over hosts cannot express.
+
+**The host-local block.** E21's six host-relative features, with the definitions unchanged
+(`flow_features._host_relative_features`, trailing baseline 120 windows, trust after 10):
+- per-host z of distinct ports and of distinct destinations, maximum over hosts;
+- per-host flows over (1 + its trailing mean), maximum;
+- hosts reaching a new peer;
+- the most new ports on one host;
+- new internal hosts.
+
+They are label-free and causal. They are reused as they are, so no new feature is designed after
+seeing CTU-13.
+- **Build.** `scripts/build_ctu13_hostrel.py` computes them over each whole capture from the raw flows
+  (they need each host's past, so they cannot be built in `build_ctu13.py`'s time chunks). It appends
+  them to the existing matrix in `data/processed/ctu13_hostrel/`.
+- **Build checks.** The 70 base columns must equal `data/processed/ctu13` exactly. On a small capture,
+  the block must equal what `window_features(use_host_relative=True)` gives in one pass.
+
+**Arms.** The E25 stack (RSSM, factorised target, 250 steps per fold, E25's folds) with D-041's window
+positions. Seeds 42/43/44, 7 folds each, all on the GTX 1650.
+- **G:** `configs/d042/ctu_global_window.yaml`, the 56 network-global inputs. Runs `d042-g-s<seed>`.
+- **H:** `configs/d042/ctu_hostrel_window.yaml`, the 56 plus the 6 host-relative features (62).
+  Runs `d042-h-s<seed>`.
+- Both read `data/processed/ctu13_hostrel`, so the only difference between them is the input block.
+- LR on each input set: `lr-d042-g`, `lr-d042-h`, by `scripts/lr_baseline.py`.
+
+Command, per arm and seed:
+`python scripts/train.py --data data/processed/ctu13_hostrel --model-config configs/d042/ctu_<arm>_window.yaml --group-folds configs/ctu13_folds.yaml --run d042-<g|h>-s<seed> --seed <seed> --no-figures`.
+
+**The rule, fixed here.** It uses ROC-AUC of the stored `comp` score on `y_within_K`, per held-out
+scenario, as E25b did.
+- **Deciding scenarios:** D-039's s08 (Murlo), s07 (Sogou) and s11 (Rbot).
+- **H helps on a scenario** if ROC(H) - ROC(G) >= +0.10 on at least 2 of 3 seeds, paired by seed.
+- **The result is "host-local state helps"** only if both hold:
+  - H helps on at least 2 of the 3 deciding scenarios;
+  - nothing regresses: no scenario where G has ROC >= 0.70 on at least 2 seeds has H below 0.70 on at
+    least 2 seeds.
+- **Otherwise the result is "does not help".**
+
+**Reported beside it, not deciding.**
+- D-037's family verdicts for G and for H.
+- S2\* where a scenario has at least 20 cells, and S3.
+- LR's H against G.
+- G against E25b, which is the positional change alone, descriptive.
+- The per-scenario uncertainty below.
+
+**Uncertainty (board item: confidence intervals on the final CTU table).**
+- **Method:** a moving-block bootstrap over each scenario's windows. Blocks are 20 windows (2K, 10
+  min), with 2,000 resamples and a percentile 95 % interval on ROC-AUC. A resample with only one class
+  is dropped and counted.
+- **Sensitivity:** block lengths 10 and 40.
+- **Applied to:** E25b's final table (each world-model seed, the three-seed mean score, and LR) and
+  to D-042's arms.
+- **Also reported:** the range across seeds, which is a separate source of uncertainty.
+
+**Predictions, written before any run.**
+- s08 is unlikely to move. The Murlo bot host is active in 2,185 of 2,339 windows from the start of
+  the capture, so its own past is already infected and gives no clean baseline.
+- s07 (44 windows) and s11 (34) give each host at most 24-34 windows of past after the 10-window
+  warm-up.
+
+**What either result licenses.**
+- **"Helps":** per-host temporal information is recorded as M2 evidence. It does not by itself open a
+  GNN (D-039 asks for relational structure beyond per-host features), and the architecture decision
+  waits for M3, as the team has said.
+- **"Does not help":** host-relative summaries in the global state do not fix cross-family inversion.
+  The per-host-sequence model, with each host as its own sequence and a window's risk the maximum
+  over hosts, remains untested and would need its own entry.
+
+**Not allowed.** No change to the baseline length, the minimum history or the feature list. No
+feature selection. No reruns except `--resume` after a crash.

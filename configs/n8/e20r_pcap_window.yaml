@@ -1,0 +1,8 @@
+# D-041 (N-8): E20r exactly (configs/m1v2/e20r_pcap.yaml) with the one change the fix needs - positions
+# by distance within the attention window, so a window's score does not depend on the capture's length
+# and a stream scored in chunks (state carried) equals one pass. Reads data/processed/cicids2017_m1v2p.
+#   bash scripts/run_m1v2.sh n8-e20rw configs/n8/e20r_pcap_window.yaml data/processed/cicids2017_m1v2p
+features:
+  exclude_blocks: [host_relative]
+model:
+  pos_mode: window
