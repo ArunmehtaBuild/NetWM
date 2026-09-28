@@ -1,0 +1,46 @@
+{
+  "run_id": "e27-step8-decompose",
+  "timestamp_utc": "2026-09-28T12:16:23+00:00",
+  "git_sha": "b7b5da6",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1"
+  },
+  "config": {
+    "pcap": "data/cic-2017-pcap/thursday_1640_1850.pcap",
+    "csv": "data/demo/thursday_infiltration.csv",
+    "seed": 42,
+    "decision": "D-038",
+    "command": "scripts/step8_decompose.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap"
+  },
+  "metrics": {
+    "windows": 260,
+    "t0": "2017-07-06 16:40:00",
+    "score_corr": {
+      "routes_as_served (Step 8)": 0.0348,
+      "routes_on_training_state_same_length": 0.8186,
+      "routes_on_training_state_whole_day": 0.8336,
+      "e20r_mean_live_vs_training_state (live-state effect)": 0.111,
+      "r2_live_vs_training_state (CSV parity)": 0.9998,
+      "e20r_mean_same_length_vs_whole_day (length effect)": 0.9988,
+      "r2_same_length_vs_whole_day (length effect)": 0.9993
+    },
+    "causal_q90_alarm_windows": {
+      "r2_as_served": 80,
+      "e20r_mean_as_served": 42,
+      "r2_training_state_same_length": 80,
+      "r2_training_state_whole_day": 87,
+      "e20r_mean_training_state_same_length": 105,
+      "e20r_mean_training_state_whole_day": 110
+    },
+    "mean_score": {
+      "r2_as_served": 0.066,
+      "e20r_mean_as_served": 0.3768,
+      "r2_training_state_same_length": 0.0661,
+      "r2_training_state_whole_day": 0.0658,
+      "e20r_mean_training_state_same_length": 0.1354,
+      "e20r_mean_training_state_whole_day": 0.132
+    }
+  }
+}

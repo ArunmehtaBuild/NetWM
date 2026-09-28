@@ -1766,18 +1766,71 @@ A flow CSV handed to E20r now raises an error rather than feeding it zeros it ne
        `results/tables/e27_parity_live_pcap.csv`; log `results/runs/e27-parity/parity-live-tuesday-d040.log`.
        The run's `git_sha` reads 65035a3: it ran with 0c5f976's converter change in the working
        tree, before that commit.
-   - *Step 8*: the same traffic through both routes. It needs a real Thursday 16:40-18:50 capture. The
-     demo PCAP is synthesised from flow rows (D-031), so its packet features are not real telemetry.
+   - *Step 8: the same traffic through both routes* (`results/runs/e27-same-traffic/`). The traffic
+     is Thursday 16:40-18:50 UTC: the real capture slice (2,409,533 packets) and the
+     `thursday_infiltration` CSV.
+     - Both routes are served as D-038 names them, in the one payload format (schema-validated):
+       - CSV → r2: 70 features, flow telemetry.
+       - PCAP → the mean of the three E20r Thursday folds: 105 features, packet features measured
+         from the capture.
+       - Both use the same 260-window grid from 16:40:00Z and the causal `expanding-10pct` policy.
+     - r2 alarms on 80 windows, the PCAP route on 42. Their per-window risk scores correlate at
+       **0.035**.
+     - *Why so low (`scripts/step8_decompose.py`, descriptive).* The same 260 windows, scored six
+       ways, on the mean-path `p_max`:
+
+       | comparison | score correlation |
+       |---|---:|
+       | r2 vs E20r mean, as served (Step 8) | 0.035 |
+       | r2 vs E20r mean, each on its training matrix's rows, same 260 windows | 0.819 |
+       | r2 vs E20r mean, each on its whole training day | 0.834 |
+       | **E20r mean: live PCAP state vs its training state** | **0.111** |
+       | r2: live CSV state vs its training state | 0.9998 |
+       | E20r mean / r2: 260 windows vs the whole day (length effect) | 0.999 / 0.999 |
+
+       - On the state they were trained on, the two models agree (0.82-0.83).
+       - The CSV route reproduces its training state, and the capture's length barely matters here.
+       - The whole Step 8 disagreement is the live PCAP state. On the real capture the ensemble's
+         mean score is 0.377, against 0.135 on the training rows for the same windows, and its
+         ranking of windows is nearly unrelated (0.111).
+       - Its causal alarms, 42 of 260, are not the 105 it raises on the training state.
+     - **So the PCAP route, served a real capture, does not yet behave like the model E27 evaluated.**
+       The routing is correct; the state is not. No live-PCAP number is quoted, and the demo should
+       not present PCAP-route scores as E27's model until the live state passes check 4 (N-9).
+       Artefacts: `results/runs/e27-step8-decompose/`, `results/tables/e27_step8_decompose.csv`
+       (per-window scores).
+     - *Check 4 on the same Thursday slice* (`--tag thursday-1640`, 252 windows). It shows the same
+       picture as full Tuesday:
+       - `pcap_` block: 18 of 18 within 0.002.
+       - Totals within 1 %: `pkts_total` 0.009 mean relative error, `bytes_total` 0.002.
+       - Flow block: median mean relative error 0.045, 36 of 67 within 5 %.
+       - The largest residuals are again `bwd_init_win_mean` (11.7), `active_mean_mean` (2.6) and the
+         distinct port and host counts (`ports_per_pair_max` 1.13, `uniq_dst_port` 1.05,
+         `uniq_src_ip` 0.87).
+       - `n_flows` is 15 % off, so flow boundaries still differ somewhere.
+       - These residuals, once scaled, are what move the ensemble. Tracing them to the corrected
+         extraction's definitions is the next N-9 step.
+       - Artefacts: `results/runs/e27-parity-thursday-1640/`,
+         `results/tables/e27_parity_live_pcap_thursday-1640.csv`.
+     - The demo PCAP (`data/demo/thursday_demo.pcap`) is synthesised from flow rows (D-031). It does
+       not qualify for this check, and its packets share one IP ID, so `read_packets` drops 19,379
+       of its 80,527 packets as duplicates on upload.
 7. **Deployment.** The E20r weights are not tracked (`models/`). On a fresh clone the PCAP route
    returns `no_model`, by design with no fallback. Tracking the six fold files the demo needs
    (Thursday and Friday for each seed, about 14 MB), or publishing them, is a team decision.
 
 Artefacts:
 - `results/runs/e27-e20r-mean/`, `results/runs/e27-pcap-route/` (rows + verdict; `eval.log`);
-- `results/runs/e27-parity/` (`parity.log`);
+- `results/runs/e27-parity/` (`parity.log`; check 4 on full Tuesday: `parity-live-tuesday.log` before
+  D-040, `parity-live-tuesday-d040.log` after), `results/runs/e27-parity-thursday-1640/`;
+- `results/runs/e27-check4-dedupe-ab/`, `results/runs/e27-same-traffic/`, `results/runs/e27-step8-decompose/`;
+- `results/tables/e27_parity_live_pcap.csv`, `e27_parity_live_pcap_thursday-1640.csv`,
+  `e27_check4_dedupe_ab.csv`, `e27_step8_decompose.csv`;
 - `results/tables/e27_pcap_route.{csv,md}`, `e27_pcap_route_scorecard.csv`, `e27_parity.csv`;
 - code: `src/netwm/engine/predict.py` (`load_ensemble`, the averaged forecast), `backend/inference.py`
-  (routing, model-card routes), `backend/tests/test_pcap_route.py`, `scripts/pcap_route_{parity,eval,same_traffic}.py`.
+  (routing, model-card routes), `backend/tests/test_pcap_route.py`, `scripts/pcap_route_{parity,eval,same_traffic}.py`;
+  `src/netwm/features/flow_aggregator.py` (D-040 sweep), `src/netwm/features/pcap_slice.py`,
+  `scripts/{slice_pcap,check4_dedupe_ab,step8_decompose}.py`.
 
 ---
 

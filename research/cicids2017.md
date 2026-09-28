@@ -145,3 +145,28 @@ Is the 17:00 portscan the *unscripted* scan Engelen et al. mention (in which cas
 post-compromise event and its lead time is meaningless), or genuine post-compromise discovery? To
 resolve: check whether those flows originate from the victim `192.168.10.8` (post-compromise) or
 from the attacker `205.174.165.73` (external, unscripted).
+
+---
+
+## The day captures against the corrected CSVs (E27 check 4, D-040, 2026-09-28)
+
+Measured by running our own `pcap_to_flows` over the UNB day captures and comparing the window state
+with the matrix built from the corrected CSVs
+([CNS2022 release](https://intrusion-detection.distrinet-research.be/CNS2022/CICIDS2017.html)).
+
+- **Format.** The five `*-WorkingHours.pcap` files are pcapng, written by `mergecap`, despite the
+  name. Tuesday (11.0 GB) and Thursday (8.3 GB) match the md5s shipped beside them.
+- **Mirrored duplicates, and the CSVs count them.** Many frames appear twice, about 2 us apart, byte
+  identical from the IP header on. On Tuesday 13:00-14:00, 54,158 of 916,574 frames are copies by
+  `read_packets`' rule. The corrected CSVs' per-flow packet and flag counts *include* the copies. Our
+  flow counts match them only with the copies kept (`pkts_total` median ratio 0.999 kept, 0.939
+  removed). So a converter meant to reproduce the corrected flows must not deduplicate. Our packet-level
+  `pcap_` features were built deduplicated, and stay that way.
+- **A day has more quiet flows than a converter can keep open.** UDP and unclosed TCP flows never see
+  the packet that would end them under a "timeout on the next packet" rule. On a full day they passed
+  a 100,000-session cap, and 2.87 M packets were dropped silently. Timed-out flows have to be swept out
+  by capture time (D-040). A slice below the cap does not show the problem: always compare a full day.
+- **What still differs after that** (full Tuesday, 968 windows): `active_mean`, `bwd_init_win`, the
+  distinct-port and distinct-host counts, `flow_iat_min` and `pkt_len_max`. Totals agree to about 1 %.
+  These look like extraction-definition differences still to be traced in the CNS2022 code
+  ([GintsEngelen/CNS2022_Code](https://github.com/GintsEngelen/CNS2022_Code)).

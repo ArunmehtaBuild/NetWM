@@ -1,0 +1,64 @@
+{
+  "run_id": "e27-same-traffic",
+  "timestamp_utc": "2026-09-28T12:11:17+00:00",
+  "git_sha": "0c5f976",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "csv": "data/demo/thursday_infiltration.csv",
+    "pcap": "data/cic-2017-pcap/thursday_1640_1850.pcap",
+    "decision": "D-038",
+    "command": "scripts/pcap_route_same_traffic.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap"
+  },
+  "metrics": {
+    "csv_route": {
+      "inference": {
+        "input_modality": "csv",
+        "telemetry": "flow",
+        "model_mode": "flow-only",
+        "checkpoints": [
+          "C:\\Users\\tiwar\\Desktop\\work\\security\\models\\e4e7-worldmodel-r2\\thursday.pt"
+        ],
+        "aggregation": null,
+        "packet_features": "unavailable (flow input)",
+        "feature_count": 70
+      },
+      "source_packet_features": "unavailable (flow input)",
+      "windows": 260,
+      "t0": "2017-07-06T16:40:00Z",
+      "threshold_policy": "expanding-10pct",
+      "alarm_statistic": "p_max (mean path)",
+      "alarm_windows": 80,
+      "ground_truth_available": true
+    },
+    "pcap_route": {
+      "inference": {
+        "input_modality": "pcap",
+        "telemetry": "flow + packet",
+        "model_mode": "packet-enriched ensemble of 3",
+        "checkpoints": [
+          "C:\\Users\\tiwar\\Desktop\\work\\security\\models\\m1v2-e20r-s42\\thursday.pt",
+          "C:\\Users\\tiwar\\Desktop\\work\\security\\models\\m1v2-e20r-s43\\thursday.pt",
+          "C:\\Users\\tiwar\\Desktop\\work\\security\\models\\m1v2-e20r-s44\\thursday.pt"
+        ],
+        "aggregation": "arithmetic mean per window, threshold applied to the mean",
+        "packet_features": "measured from the capture",
+        "feature_count": 105
+      },
+      "source_packet_features": "measured from the capture",
+      "windows": 260,
+      "t0": "2017-07-06T16:40:00Z",
+      "threshold_policy": "expanding-10pct",
+      "alarm_statistic": "p_max (mean path), mean of 3 checkpoints",
+      "alarm_windows": 42,
+      "ground_truth_available": false
+    },
+    "shared_windows": 260,
+    "risk_score_corr": 0.0348,
+    "routes_as_d038": true
+  }
+}

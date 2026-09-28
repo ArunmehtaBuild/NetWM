@@ -1564,7 +1564,20 @@ converter keeps the capture duplicates that `read_packets` removes. The acceptan
 pre-registered, since it was scored on the training-matrix state. **No live-PCAP number may be quoted
 until the converter is fixed and check 4 passes** (N-9).
 
-Pending: Step 8 (the same traffic through both routes).
+**Correction and Step 8 (2026-09-28, D-040).**
+- *Check 4's cause.* The cause given above is wrong. On the full day, `pcap_to_flows` filled its
+  100,000-session cap with quiet flows and dropped 2.87 M packets. Duplicates were not the cause: the
+  corrected CSVs count them. D-040 sweeps out timed-out flows. After it, totals match the training
+  matrix to about 1 %, and the flow block's median mean relative error is 0.039 (was 0.312). Several
+  flow features still differ.
+- *Step 8, on the real Thursday 16:40-18:50 slice.* Both routes are served exactly as routed here,
+  but their risk scores correlate at 0.035.
+  - The cause is the live PCAP state. The ensemble on the real capture correlates 0.111 with itself
+    on the training rows for the same windows.
+  - The two models agree at 0.82 when both read their training state.
+  - The CSV route reproduces its training state (0.9998).
+- The acceptance above stands, because it was scored on the training-matrix state. The PCAP route's
+  behaviour on a live capture does not yet match it (N-9).
 
 ---
 
@@ -1625,3 +1638,61 @@ because one infected host is drowned in the network-global state.
 **Revisit if.**
 - A diagnostic localises E25b's inversions to per-host behaviour.
 - Or M3 shows the same inversion pattern on the full feature state.
+
+---
+
+### D-040 — The PCAP flow converter expires timed-out flows; capture duplicates stay in the flow block
+*Date: 2026-09-28 · Status: accepted · Evidence: E27 check 4 (N-9), `results/runs/e27-parity/`,
+`results/runs/e27-check4-dedupe-ab/`, `tests/test_pcap_ingest.py` · Amends D-033's implementation,
+not its rules; corrects the cause D-038's outcome gives for check 4*
+
+**Decision.**
+- `pcap_to_flows` finishes every open flow whose first packet is more than 120 + 60 s behind the
+  current capture time, checked every 60 s of capture time.
+- Capture duplicates are **not** removed from the flow block. The packet block keeps its dedupe.
+
+**Why the sweep.** Check 4's full-day mismatch (ae3ea25) had a different cause from the one recorded
+with it. Its own log says `session cap 100000 reached, 2869997 packets dropped`.
+- D-033's rule already ends a flow 120 s after its first packet, but only when another packet
+  arrives on the same 5-tuple. A flow that goes quiet (UDP, TCP without FIN or RST) stayed open all
+  day.
+- Open flows accumulated until the 100,000-session cap. From then on every new flow was dropped, so
+  the served counts fell towards zero, not up to 2x: `pkts_total`'s worst window was off by 0.995.
+- The sweep changes no output below the cap. Any later packet on a swept tuple would have started a
+  new flow anyway. On Tuesday 13:00-14:00, which never reaches the cap, the flow table is identical
+  before and after (46,799 flows).
+- The one exception is a capture more than 60 s out of time order.
+
+**Why not dedupe the flows.** The corrected CSVs count the mirrored copies. On Tuesday 13:00-14:00,
+the flow counts as served match the training matrix:
+- median ratio to the training matrix 0.999 for `pkts_total`, and 1.000 for the SYN, ACK and PSH
+  sums;
+- with `read_packets`' duplicate rule applied first, they fall to 0.939, 0.966, 0.983 and 0.955;
+- `tiny_flow_rate` rises from 1.29 to 3.03 times the training value.
+
+The packet block's `pcap_` features were built with that rule, and they match the training matrix
+exactly on the full day, so each block keeps the convention its training data used.
+
+**Effect (check 4, full Tuesday, 968 windows).**
+
+| | before (ae3ea25) | after |
+|---|---:|---:|
+| median feature's mean relative error, flow block (67) | 0.312 | 0.039 |
+| median feature's mean relative error, CSV packet block (20) | 0.200 | 0.068 |
+| flow features within 5 % on average | 14 | 39 |
+| CSV packet features within 5 % on average | 4 | 9 |
+| flow + CSV packet features correlating above 0.9 | 10 | 57 |
+| `pcap_` features exact | 18 of 18 | 18 of 18 |
+
+**What remains, and does not change here.** Some features are still far off:
+- `active_mean_mean` and `bwd_init_win_mean`;
+- the distinct-port and distinct-host counts: `ports_per_pair_max`, `uniq_dst_port`,
+  `port_fanout_max`, `uniq_src_ip`;
+- `flow_iat_min_min` and `pkt_len_max_max`.
+
+These look like definition differences between our converter and the corrected extraction, not lost
+packets. Nothing in the model or in E27's stored scores changes: those were computed on the training
+matrix.
+
+**Revisit if.** A capture is more than 60 s out of time order, or a residual difference is traced to
+one of D-033's rules.

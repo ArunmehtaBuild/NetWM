@@ -1,7 +1,7 @@
 {
-  "run_id": "e27-parity",
-  "timestamp_utc": "2026-09-28T12:04:43+00:00",
-  "git_sha": "65035a3",
+  "run_id": "e27-parity-thursday-1640",
+  "timestamp_utc": "2026-09-28T12:22:03+00:00",
+  "git_sha": "b7b5da6",
   "env": {
     "python": "3.10.6",
     "torch": "2.5.1+cu121",
@@ -9,11 +9,12 @@
   },
   "config": {
     "data": "data/processed/cicids2017_m1v2p",
-    "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
-    "day": "tuesday",
+    "pcap": "data/cic-2017-pcap/thursday_1640_1850.pcap",
+    "day": "thursday",
+    "tag": "thursday-1640",
     "seed": 42,
     "decision": "D-038",
-    "command": "scripts/pcap_route_parity.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --day tuesday"
+    "command": "scripts/pcap_route_parity.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap --day thursday --tag thursday-1640"
   },
   "metrics": {
     "verdict": {
@@ -305,28 +306,28 @@
       }
     ],
     "live_pcap": {
-      "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
-      "day": "tuesday",
-      "slice_t0": "2017-07-04 11:53:00",
-      "day_window_offset": 0,
-      "windows_compared": 968,
-      "exact_features": 22,
+      "pcap": "data/cic-2017-pcap/thursday_1640_1850.pcap",
+      "day": "thursday",
+      "slice_t0": "2017-07-06 16:40:00",
+      "day_window_offset": 562,
+      "windows_compared": 252,
+      "exact_features": 19,
       "features": 105,
       "by_block": {
         "flow": {
           "count": 67,
-          "median": 0.398837,
-          "max": 491256.90625
+          "median": 0.301624,
+          "max": 92.5
         },
         "pcap": {
           "count": 18,
           "median": 0.0,
-          "max": 0.0
+          "max": 0.002131
         },
         "pkt": {
           "count": 20,
-          "median": 0.405469,
-          "max": 19.965135
+          "median": 0.447819,
+          "max": 6.5379
         }
       }
     }

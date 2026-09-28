@@ -1,0 +1,55 @@
+{
+  "run_id": "e27-check4-dedupe-ab",
+  "timestamp_utc": "2026-09-28T12:13:53+00:00",
+  "git_sha": "0c5f976",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1"
+  },
+  "config": {
+    "pcap": "data/cic-2017-pcap/tuesday_1300_1400.pcap",
+    "day": "tuesday",
+    "data": "data/processed/cicids2017_m1v2p",
+    "seed": 42,
+    "decision": "D-040",
+    "command": "scripts/check4_dedupe_ab.py --pcap data/cic-2017-pcap/tuesday_1300_1400.pcap --day tuesday"
+  },
+  "metrics": {
+    "pcap": "data/cic-2017-pcap/tuesday_1300_1400.pcap",
+    "day": "tuesday",
+    "flows_as_served": 46799,
+    "flows_deduplicated": 46631,
+    "duplicates_dropped": 54158,
+    "session_cap_drops": 0,
+    "features": 87,
+    "exact_as_served": 3,
+    "exact_deduplicated": 3,
+    "median_ratio": {
+      "pkts_total": {
+        "as_served": 0.9986,
+        "deduplicated": 0.9386
+      },
+      "syn_cnt_sum": {
+        "as_served": 1.0,
+        "deduplicated": 0.9661
+      },
+      "ack_cnt_sum": {
+        "as_served": 1.0001,
+        "deduplicated": 0.9834
+      },
+      "psh_cnt_sum": {
+        "as_served": 1.0,
+        "deduplicated": 0.9548
+      },
+      "n_flows": {
+        "as_served": 1.0868,
+        "deduplicated": 1.0767
+      },
+      "tiny_flow_rate": {
+        "as_served": 1.2872,
+        "deduplicated": 3.026
+      }
+    }
+  }
+}

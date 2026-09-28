@@ -23,7 +23,9 @@
    are left out.
 
 Gating (D-038 criterion 1): checks 1 and 3. Checks 2 and 4 are reported for review.
-Writes results/runs/e27-parity/metrics.json and results/tables/e27_parity.csv.
+Writes results/runs/e27-parity/metrics.json and results/tables/e27_parity.csv; ``--tag x`` writes
+results/runs/e27-parity-x/ and results/tables/e27_parity{,_live_pcap}_x.csv instead, so a second
+slice does not overwrite the first.
 """
 
 from __future__ import annotations
@@ -67,8 +69,10 @@ def main() -> None:
     ap.add_argument("--data", default="data/processed/cicids2017_m1v2p")
     ap.add_argument("--pcap", default=None, help="a real-capture slice for check 4 (the synthesised demo PCAP is not one)")
     ap.add_argument("--day", default="thursday", help="the day the --pcap slice was cut from")
+    ap.add_argument("--tag", default="", help="suffix for the run folder and tables (keeps another slice's results)")
     ap.add_argument("--seed", type=int, default=42, help="torch seed for the Monte-Carlo rollouts")
     args = ap.parse_args()
+    suffix = f"_{args.tag}" if args.tag else ""
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     ensure_dirs()
@@ -164,17 +168,17 @@ def main() -> None:
                                 "max_rel_diff": round(float(rel.max()), 6), "mean_rel_diff": round(float(rel.mean()), 6),
                                 "corr": round(float(np.corrcoef(a, b)[0, 1]), 5) if a.std() > 0 and b.std() > 0 else None})
         pf = pd.DataFrame(per_feature)
-        pf.to_csv(TABLES / "e27_parity_live_pcap.csv", index=False)
+        pf.to_csv(TABLES / f"e27_parity_live_pcap{suffix}.csv", index=False)
         live = {"pcap": str(args.pcap), "day": args.day, "slice_t0": str(t0), "day_window_offset": offset,
                 "windows_compared": int(len(keep)),
                 "exact_features": int((pf["max_rel_diff"] <= 1e-6).sum()), "features": len(names),
                 "by_block": pf.groupby("block")["max_rel_diff"].agg(["count", "median", "max"]).round(6).to_dict("index")}
 
     table = pd.DataFrame(rows)
-    table.to_csv(TABLES / "e27_parity.csv", index=False)
+    table.to_csv(TABLES / f"e27_parity{suffix}.csv", index=False)
     verdict = {"one_method": bool(one_method), "no_lookahead": bool(no_lookahead),
                "passed": bool(one_method and no_lookahead)}
-    save_run("e27-parity", {"verdict": verdict, "rows": rows, "live_pcap": live},
+    save_run("e27-parity" + suffix.replace("_", "-"), {"verdict": verdict, "rows": rows, "live_pcap": live},
              config={**vars(args), "decision": "D-038", "command": " ".join(sys.argv)})
     pd.set_option("display.width", 250)
     print(table.to_string(index=False))

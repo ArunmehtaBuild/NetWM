@@ -1,0 +1,10 @@
+WARNING: No libpcap provider available ! pcap won't be used
+  0.0348  routes_as_served (Step 8)
+  0.8186  routes_on_training_state_same_length
+  0.8336  routes_on_training_state_whole_day
+  0.1110  e20r_mean_live_vs_training_state (live-state effect)
+  0.9998  r2_live_vs_training_state (CSV parity)
+  0.9988  e20r_mean_same_length_vs_whole_day (length effect)
+  0.9993  r2_same_length_vs_whole_day (length effect)
+{'r2_as_served': 80, 'e20r_mean_as_served': 42, 'r2_training_state_same_length': 80, 'r2_training_state_whole_day': 87, 'e20r_mean_training_state_same_length': 105, 'e20r_mean_training_state_whole_day': 110}
+exit=0
