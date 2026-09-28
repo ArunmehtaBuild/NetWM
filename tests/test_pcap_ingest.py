@@ -95,6 +95,19 @@ def test_flow_timeout_runs_from_the_first_packet(tmp_path):
     assert flows["fwd_pkts"].tolist() == [3, 2]  # 0, 50, 100 s | 150, 200 s
 
 
+def test_quiet_flows_expire_instead_of_filling_the_session_cap(tmp_path):
+    """E27 check 4 / D-040: a flow that goes quiet never sees the packet that would close it. Unless
+    expired flows are swept out, a full day fills the session cap and every later flow is dropped
+    (Tuesday: 2.87 M packets)."""
+    a, b = "192.168.10.3", "192.168.10.1"
+    pkts = [IP(src=a, dst=b) / UDP(sport=40000 + i, dport=53) for i in range(20)]
+    for i, p in enumerate(pkts):
+        p.time, p._t = T0 + i * 60.0, True  # one quiet flow a minute for 20 minutes
+    flows = pcap_to_flows(_write(tmp_path / "t.pcap", pkts), max_sessions=5)
+    assert flows.attrs["dropped_packets"] == 0
+    assert len(flows) == 20 and flows["src_port"].tolist() == list(range(40000, 40020))
+
+
 def _rows() -> pd.DataFrame:
     base = pd.Timestamp("2017-07-06 17:00:00")
     return pd.DataFrame([

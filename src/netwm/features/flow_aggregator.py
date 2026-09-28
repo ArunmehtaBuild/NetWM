@@ -10,7 +10,9 @@ that extraction's semantics rather than stock CICFlowMeter's:
   closing ACKs still belong to it, and only a new SYN on the same 5-tuple starts a new flow.
 * **RST ends a flow** immediately (the RST packet is part of it).
 * **A flow lasts at most 120 s from its first packet** (CICFlowMeter's flow timeout); the next packet
-  on the same 5-tuple starts a new flow. Measured on the corrected Thursday CSVs: repeated 5-tuples
+  on the same 5-tuple starts a new flow. Flows past the timeout are also swept out as capture time
+  advances: a flow that simply goes quiet (UDP, TCP without FIN/RST) would otherwise stay open until
+  the session cap fills and every later flow is dropped (E27 check 4, D-040). Measured on the corrected Thursday CSVs: repeated 5-tuples
   restart no sooner than 120.7 s after the previous flow's *start*, while ~850 of them restart less
   than 120 s after its *end* - so the timeout runs from the start, not from the last packet.
 * Lengths are **payload** bytes, as CICFlowMeter reports them; ``flow_iat_*`` spans both directions;
@@ -41,6 +43,11 @@ from netwm.features.pcap_features import PCAPFeatureExtractor
 logger = logging.getLogger(__name__)
 
 FLOW_TIMEOUT_S = 120.0
+# Every SWEEP_EVERY_S of capture time, flows that started more than FLOW_TIMEOUT_S + SWEEP_SLACK_S ago
+# are finished. Any later packet on their tuple would start a new flow anyway, so the output is
+# unchanged unless the capture runs more than SWEEP_SLACK_S out of time order.
+SWEEP_EVERY_S = 60.0
+SWEEP_SLACK_S = 60.0
 ACTIVITY_THRESHOLD_S = 5.0
 A2_KEYS = (
     "packet_count", "ttl_mean", "ttl_variance", "tcp_win_mean", "tcp_win_max", "ip_frag_count",
@@ -131,6 +138,7 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
     open_flows: dict[tuple, dict] = {}
     done: list[dict] = []
     dropped = 0
+    next_sweep = None
 
     reader = RawPcapReader(str(pcap_path))
     linktype = getattr(reader, "linktype", _ETHERNET)
@@ -142,6 +150,13 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
                 continue
             src, dst, proto, sport, dport, ttl, mf, frag_off, flags, seq, window, hdr, plen = p
             ts = _timestamp(meta, nano)
+            if next_sweep is None:
+                next_sweep = ts + SWEEP_EVERY_S
+            elif ts >= next_sweep:
+                horizon = ts - FLOW_TIMEOUT_S - SWEEP_SLACK_S
+                for k in [k for k, f in open_flows.items() if f["first_ts"] < horizon]:
+                    done.append(_finish(open_flows.pop(k)))
+                next_sweep = ts + SWEEP_EVERY_S
             extractor.process_fields(src, dst, proto, sport, dport, ttl, mf, frag_off, seq, window, plen)
 
             fkey, bkey = (src, dst, sport, dport, proto), (dst, src, dport, sport, proto)
