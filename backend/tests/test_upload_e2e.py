@@ -89,7 +89,8 @@ def test_upload_csv_runs_real_inference() -> None:
 
 
 def _synthetic_pcap_bytes(packet_count: int = 50, step_seconds: float = 20.0) -> bytes:
-    """A small synthetic PCAP containing valid IP/TCP packets across ~15-20 minutes."""
+    """A small synthetic PCAP of answered TCP handshakes across ~15-20 minutes (a flow of one packet
+    is not emitted, D-043)."""
     from scapy.all import Ether, IP, TCP, wrpcap
     from tempfile import NamedTemporaryFile
 
@@ -98,7 +99,9 @@ def _synthetic_pcap_bytes(packet_count: int = 50, step_seconds: float = 20.0) ->
     for i in range(packet_count):
         pkt = Ether() / IP(src="192.168.10.14", dst="205.174.165.80") / TCP(sport=1024 + i, dport=80, flags="S")
         pkt.time = base_time + i * step_seconds
-        packets.append(pkt)
+        reply = Ether() / IP(src="205.174.165.80", dst="192.168.10.14") / TCP(sport=80, dport=1024 + i, flags="SA")
+        reply.time = base_time + i * step_seconds + 0.05
+        packets += [pkt, reply]
 
     with NamedTemporaryFile(suffix=".pcap", delete=False) as tmp:
         tmp_name = tmp.name
@@ -156,11 +159,15 @@ def test_demo_runs_real_inference_on_its_slice() -> None:
 
 
 def test_model_card_metrics_come_from_results() -> None:
-    metrics = client.get("/api/model").json()["metrics"]
-    # E18's primary row: the causal budget the dashboard applies (D-034, G-9), not E14's 0.576
-    assert metrics["f1"] == pytest.approx(0.608, abs=1e-3)
-    assert metrics["fpr"] == pytest.approx(0.078, abs=1e-3)
-    assert metrics["pr_auc"] == pytest.approx(0.640, abs=1e-3)
+    card = client.get("/api/model").json()
+    metrics = card["metrics"]
+    # The CSV route's model (r2w seed 42, D-041) at the causal budget the dashboard applies (D-034,
+    # G-9), as D-041's gate evaluation scored it (results/runs/n8-fix-eval/)
+    assert metrics["f1"] == pytest.approx(0.591, abs=1e-3)
+    assert metrics["fpr"] == pytest.approx(0.093, abs=1e-3)
+    assert metrics["pr_auc"] == pytest.approx(0.677, abs=1e-3)
+    pcap = card["routes"]["pcap"]["metrics"]
+    assert pcap["pr_auc"] == pytest.approx(0.514, abs=1e-3) and pcap["f1"] == pytest.approx(0.583, abs=1e-3)
     # LR at the same causal threshold (benchmark-final, G-6); E3's 0.011 used LR's own threshold
     assert metrics["baseline_f1"] == pytest.approx(0.112, abs=1e-3)
     assert metrics["mean_lead_time_windows"] == 0.0

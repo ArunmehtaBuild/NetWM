@@ -1,0 +1,28 @@
+2026-09-28T12:55:19Z start m1v2-n8-e20rw-s42
+2026-09-28T13:09:14Z hand-over: run_chain.sh stopped between steps; run_chain_d041.sh continues D-041, then its gates
+2026-09-28T13:09:15Z m1v2-n8-e20rw-s42 in progress (started by run_chain.sh) - waiting for it
+2026-09-28T13:28:20Z m1v2-n8-e20rw-s42 process ended
+2026-09-28T13:28:20Z m1v2-n8-e20rw-s42 OK
+2026-09-28T13:28:21Z start m1v2-n8-e20rw-s43
+2026-09-28T13:55:23Z m1v2-n8-e20rw-s43 exit=0
+2026-09-28T13:55:23Z m1v2-n8-e20rw-s43 OK
+2026-09-28T13:55:24Z start m1v2-n8-e20rw-s44
+2026-09-28T14:22:10Z m1v2-n8-e20rw-s44 exit=0
+2026-09-28T14:22:10Z m1v2-n8-e20rw-s44 OK
+2026-09-28T14:22:12Z start n8-r2w-s42
+2026-09-28T14:33:22Z n8-r2w-s42 exit=0
+2026-09-28T14:33:23Z n8-r2w-s42 OK
+2026-09-28T14:33:24Z start n8-r2w-s43
+2026-09-28T14:43:49Z n8-r2w-s43 exit=0
+2026-09-28T14:43:49Z n8-r2w-s43 OK
+2026-09-28T14:43:51Z start n8-r2w-s44
+2026-09-28T14:53:52Z n8-r2w-s44 exit=0
+2026-09-28T14:53:52Z n8-r2w-s44 OK
+2026-09-28T14:53:53Z start n8-r2i-s42
+2026-09-28T15:03:31Z n8-r2i-s42 exit=0
+2026-09-28T15:03:31Z n8-r2i-s42 OK
+2026-09-28T15:03:31Z start n8-eval
+2026-09-28T15:04:16Z n8-eval exit=0
+2026-09-28T15:04:16Z start n8-unit-tests
+2026-09-28T15:04:21Z n8-unit-tests exit=0
+2026-09-28T15:04:21Z d041 chain done

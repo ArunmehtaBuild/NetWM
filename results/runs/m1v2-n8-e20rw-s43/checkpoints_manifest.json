@@ -1,0 +1,63 @@
+{
+  "run": "m1v2-n8-e20rw-s43",
+  "machine": "Atharv-laptop",
+  "device": "NVIDIA GeForce GTX 1650",
+  "note": "weights are untracked (models/); this manifest identifies them",
+  "checkpoints": [
+    {
+      "path": "models/m1v2-n8-e20rw-s43/friday.pt",
+      "bytes": 2395234,
+      "sha256": "e8a9a28dc9007022a896b521362f3f943ac4cd8475acb9a3ca2de42509676371",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 105,
+      "test_days": [
+        "friday"
+      ]
+    },
+    {
+      "path": "models/m1v2-n8-e20rw-s43/monday.pt",
+      "bytes": 2395234,
+      "sha256": "196f8a62f4cd761dbe226a0464a37b3892d16c7b77ef7c2937931166cd40c859",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 105,
+      "test_days": [
+        "monday"
+      ]
+    },
+    {
+      "path": "models/m1v2-n8-e20rw-s43/thursday.pt",
+      "bytes": 2397826,
+      "sha256": "3cde3367ec2ea21ad8388a41ed4dae0a7be7fc0c5ca81bd3a97ca024d65b0158",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 105,
+      "test_days": [
+        "thursday"
+      ]
+    },
+    {
+      "path": "models/m1v2-n8-e20rw-s43/tuesday.pt",
+      "bytes": 2397394,
+      "sha256": "60f3fdffac3e1cdf0e3ead896c1f74cd72b75d9552b8b9fed0ac8f96b46db852",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 105,
+      "test_days": [
+        "tuesday"
+      ]
+    },
+    {
+      "path": "models/m1v2-n8-e20rw-s43/wednesday.pt",
+      "bytes": 2397874,
+      "sha256": "fbbb0c9e6041b8ca092479b24bded773174aa444027c4596cb290d77e7b4cdcd",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 105,
+      "test_days": [
+        "wednesday"
+      ]
+    }
+  ]
+}

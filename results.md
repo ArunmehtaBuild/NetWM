@@ -2164,3 +2164,105 @@ one feature at a time measures reliance, not cause.
 Artefacts:
 - `results/tables/n6_ctu13_inversion_s42_features.csv` and `n6_ctu13_inversion_s42_summary.csv`;
 - `results/runs/n6-ctu13-inversion-s42/` (`metrics.json` with the LR reproduction check; `diagnostic.log`).
+
+---
+
+## N-8 fix (D-041) - window positions and carried state: gates G1-G3 pass, and both routes now serve length-invariant models
+
+```
+bash results/runs/n8-logs/run_chain_d041.sh       # E20rw x 3 seeds, r2w x 3 seeds, the r2i control, then:
+python scripts/n8_eval.py                          # D-041's gates G1-G3
+.venv/Scripts/python.exe -m pytest -q tests backend/tests
+```
+
+**What changed (code `4ba2559`, pre-registered in D-041, `1c78e49`).**
+- **Positions.** `pos_mode: window` gives the key at distance d from its query `pos[15 - d]`, so a
+  window's score no longer depends on the capture's length. The old `interp` mode stretched the 16
+  positional vectors to the whole input.
+- **Carried state.** `forecast(..., carry=)` carries the latent state and the last 15 embeddings
+  across calls, so a stream scored in chunks equals the same stream scored in one pass.
+- **Retrained.** The two served methods were retrained with only that change:
+  - E20r becomes E20rw: E20r's exact 105 inputs, 5 folds, seeds 42/43/44;
+  - r2's setup becomes r2w: 70 inputs, Thursday and Friday folds, seeds 42/43/44;
+  - plus a control, `n8-r2i-s42`: r2's setup with today's code and the old positions.
+
+*Procedure notes.*
+1. All runs went one at a time on the GTX 1650 from code `d1b3f22`, which is D-041's amendment
+   (`050adaa`) plus tooling. No run needed a retry. Checkpoint sha256 manifests are in each run
+   folder's `checkpoints_manifest.json`; the weights stay untracked.
+2. Two earlier starts were stopped in their first fold and saved nothing:
+   - a parallel one, stopped at the user's request;
+   - one that read the rebuilt 106-input matrix, stopped and recorded in D-041's amendment.
+   Their logs are in `results/runs/n8-logs/stopped-*`.
+3. The runner was replaced once between runs so that the gates could be scored before D-042. The run in
+   progress was left running and checked like any other run (`chain.status`).
+
+**D-041's gates, applied as written.**
+
+| gate | bar | result |
+|---|---|---|
+| **G1** correctness | unit tests pass | 16 / 16 (`tests/test_positional_window.py`, `tests/test_world_model.py`) |
+| | on every served checkpoint and held-out day, mean-path `p_max` from 60-window chunks with carried state = one pass, max \|diff\| <= 1e-5 | **2.3e-10** over 17 checkpoint-days |
+| | `test_forecast_is_prefix_invariant` no longer a strict xfail and passing on the served checkpoints | passes, plus new tests on the real served checkpoints of both routes; full suite 183 passed, 0 xfailed |
+| **G2** PCAP route: mean of E20rw 42/43/44 | Thursday PR-AUC >= 0.20; S2\* >= E19's 0.651 - 0.03 = 0.621 | PR-AUC **0.514**, S2\* **0.675**: passes |
+| **G3** CSV route: r2w seed 42 | Thursday PR-AUC >= 0.540; Thursday causal F1 >= 0.508 | PR-AUC **0.677**, F1 **0.591**: passes |
+
+So the PCAP route now serves the E20rw mean, and the CSV route serves r2w seed 42 (`backend/inference.py`,
+`models/registry.json`).
+
+**E20r against E20rw, seed by seed.** Causal expanding q90 on `comp`, label `y_within_K`.
+
+| run | Thu PR-AUC | Thu F1 | Fri PR-AUC | S1 precision / FPR | S2\* | S3 | rollout gain Thu / Fri |
+|---|---:|---:|---:|---|---:|---|---|
+| E20r s42 | 0.418 | 0.533 | 0.166 | 0.377 / 0.134 | 0.645 | 4/19 p=0.91 | 0.161 / 0.244 |
+| E20rw s42 | 0.409 | 0.533 | 0.162 | 0.321 / 0.145 | 0.661 | 5/19 p=0.67 | 0.161 / 0.242 |
+| E20r s43 | 0.562 | 0.623 | 0.104 | 0.332 / 0.121 | 0.597 | 5/19 p=0.74 | 0.168 / 0.253 |
+| E20rw s43 | 0.542 | 0.623 | 0.106 | 0.332 / 0.121 | 0.627 | 4/19 p=0.87 | 0.166 / 0.253 |
+| E20r s44 | 0.710 | 0.697 | 0.123 | 0.418 / 0.111 | 0.685 | 4/19 p=0.82 | 0.168 / 0.245 |
+| E20rw s44 | 0.726 | 0.688 | 0.129 | 0.432 / 0.104 | 0.692 | 6/19 p=0.22 | 0.166 / 0.250 |
+| E20r mean (E27) | 0.543 | 0.609 | 0.143 | 0.356 / 0.128 | 0.669 | 4/19 p=0.92 | - |
+| **E20rw mean** | **0.514** | 0.583 | 0.137 | 0.350 / 0.129 | **0.675** | 5/19 p=0.53 | - |
+
+**The CSV route.**
+
+| run | Thu PR-AUC | Thu F1 | Thu FPR | Fri PR-AUC |
+|---|---:|---:|---:|---:|
+| r2, shipped until now (E14 scores) | 0.640 | 0.608 | 0.078 | 0.109 |
+| r2i s42: r2's setup, today's code, `interp` (control) | 0.641 | 0.601 | 0.083 | 0.108 |
+| **r2w s42**: the same, `window` (served now) | **0.677** | 0.591 | 0.093 | 0.118 |
+| r2w s43 | 0.340 | 0.498 | 0.097 | 0.107 |
+| r2w s44 | 0.408 | 0.577 | 0.069 | 0.109 |
+
+### What the N-8 fix shows
+
+1. **The defect is fixed where it matters.**
+   - A served model's score for a window no longer depends on how much of the capture follows it.
+   - A live feed scored in chunks gives the offline scores to 2e-10.
+   - D-034's causal threshold therefore now thresholds a causal score, as "a sensor can run it on a
+     live stream" assumed.
+2. **The fix costs E20r nothing measurable.**
+   - Per seed, Thursday PR-AUC moves by -0.009 / -0.020 / +0.016, and S2\* by +0.016 / +0.030 / +0.007.
+   - The rollout gain is unchanged to 0.002.
+   - The ensemble's Thursday PR-AUC is 0.514 against 0.543, inside the seeds' own spread
+     (0.41-0.73). Its S2\* rises from 0.669 to 0.675.
+3. **The control shows no code drift.** r2's setup trained with today's code and the old positions
+   reproduces r2 (0.641 against 0.640 Thursday PR-AUC). So r2w's differences are the positional change
+   and seed noise, nothing else.
+4. **The CSV route rests on one favourable seed, as r2 did.**
+   - r2w seed 42 passes G3 (0.677), but seeds 43 and 44 reach 0.340 and 0.408.
+   - G3 was written for seed 42, the same seed and setup as r2, and it passes as written.
+   - The spread is the honest statement of what this recipe gives: 0.34-0.68 Thursday PR-AUC.
+5. **Nothing here changes S3.** Early warning against the circular-shift null is still met nowhere:
+   the E20rw mean has 5/19 early, p = 0.53. The claim stays "ranks pre-attack windows above background".
+6. **Scope.** E25b (CTU-13) was scored with `interp`; N-8 x E25b bounded that effect at <= 0.023
+   ROC-AUC on captures of 208 windows or more. D-042 uses window positions throughout.
+
+Artefacts:
+- `results/tables/n8_fix_eval.csv` (detection per run and day), `n8_fix_scorecard.csv` (S1-S4, rollout
+  gain), `n8_fix_parity.csv` (G1, per checkpoint and day);
+- `results/runs/n8-fix-eval/` (verdict), `results/runs/n8-e20rw-mean/` (the PCAP route's per-window
+  scores);
+- `results/runs/m1v2-n8-e20rw-s{42,43,44}/`, `n8-r2w-s{42,43,44}/`, `n8-r2i-s42/`, each with
+  `checkpoints_manifest.json`, and `results/tables/<run>_{forecast,training_curves}.csv`;
+- `results/runs/n8-logs/` (runner scripts, `chain.status`, per-run logs, the stopped starts,
+  `n8-full-tests.log`).

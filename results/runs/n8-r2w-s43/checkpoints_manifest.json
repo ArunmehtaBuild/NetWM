@@ -1,0 +1,30 @@
+{
+  "run": "n8-r2w-s43",
+  "machine": "Atharv-laptop",
+  "device": "NVIDIA GeForce GTX 1650",
+  "note": "weights are untracked (models/); this manifest identifies them",
+  "checkpoints": [
+    {
+      "path": "models/n8-r2w-s43/friday.pt",
+      "bytes": 2356642,
+      "sha256": "c2cbcf54d22277c982fbf7ccab517a930e687341025d9bb511ab8923388e28c9",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 70,
+      "test_days": [
+        "friday"
+      ]
+    },
+    {
+      "path": "models/n8-r2w-s43/thursday.pt",
+      "bytes": 2359298,
+      "sha256": "3e39d9a558374ca994c8c05e128dc0d0dc598e21e5d2fa9b25d6e5f07d5c066a",
+      "pos_mode": "window",
+      "git_sha": "d1b3f22",
+      "n_features": 70,
+      "test_days": [
+        "thursday"
+      ]
+    }
+  ]
+}

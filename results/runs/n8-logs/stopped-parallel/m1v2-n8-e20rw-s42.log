@@ -1,0 +1,14 @@
+106 features x 1 view(s) = 106 model inputs; arch=rssm hazard=direct curriculum=False
+
+== fold: monday test=['monday']  train=['tuesday', 'wednesday', 'thursday', 'friday']  device=cuda
+  epoch   0  total=10.741  recon=0.464  kl=0.245  comp=1.197  imag_comp=1.195
+  epoch   1  total=10.129  recon=0.477  kl=0.409  comp=1.096  imag_comp=1.097
+  epoch   2  total=8.912  recon=0.459  kl=0.738  comp=0.894  imag_comp=0.933
+  epoch   3  total=8.010  recon=0.457  kl=0.502  comp=0.773  imag_comp=0.808
+  epoch   4  total=6.862  recon=0.449  kl=0.753  comp=0.636  imag_comp=0.674
+  epoch   5  total=6.327  recon=0.463  kl=0.564  comp=0.569  imag_comp=0.607
+  epoch   6  total=5.706  recon=0.455  kl=0.734  comp=0.498  imag_comp=0.518
+  epoch   7  total=5.278  recon=0.453  kl=0.522  comp=0.447  imag_comp=0.477
+  epoch   8  total=4.900  recon=0.445  kl=0.871  comp=0.406  imag_comp=0.423
+  epoch   9  total=4.631  recon=0.451  kl=0.378  comp=0.374  imag_comp=0.394
+  epoch  10  total=4.377  recon=0.441  kl=0.438  comp=0.351  imag_comp=0.370

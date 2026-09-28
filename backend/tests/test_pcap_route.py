@@ -1,8 +1,10 @@
-"""D-038: CSV input is served by the flow-only r2, PCAP input by the mean of the three E20r seeds.
+"""D-038 / D-041: CSV input is served by a flow-only model (r2w seed 42), PCAP input by the mean of the
+three E20rw seeds - both retrained with window positions (the N-8 fix).
 
 The routing tests build tiny synthetic checkpoints with E20r's feature layout (flow + CSV packet
-block + the 18 ``pcap_`` features, no ``has_pcap``), so they run on any clone. The last group loads
-the real E20r checkpoints and skips when they are absent (``models/`` is not tracked).
+block + the 18 ``pcap_`` features, no ``has_pcap``) and the served models' ``pos_mode``, so they run
+on any clone. The last group loads the real served checkpoints and skips when they are absent
+(``models/`` is not tracked).
 """
 
 from __future__ import annotations
@@ -34,7 +36,9 @@ from netwm.models.world_model import WorldModelConfig, build_model  # noqa: E402
 T0 = 1_499_353_200.0  # 2017-07-06 15:00:00 UTC
 SPEC = WindowSpec(60.0, 30.0)
 SEEDS = (42, 43, 44)
-REAL = [Path(__file__).resolve().parents[2] / "models" / run / "thursday.pt" for run in inference.PCAP_ENSEMBLE_RUNS]
+MODELS = Path(__file__).resolve().parents[2] / "models"
+REAL = [MODELS / run / "thursday.pt" for run in inference.PCAP_ENSEMBLE_RUNS]
+REAL_CSV = MODELS / inference.CSV_ROUTE_RUN / "thursday.pt"
 
 
 def _capture(path: Path, minutes: int = 30, seed: int = 7) -> Path:
@@ -81,7 +85,7 @@ def _e20r_names(pcap: Path) -> list[str]:
 def _save_ckpt(path: Path, names: list[str], frame: pd.DataFrame, seed: int) -> Path:
     torch.manual_seed(seed)
     cfg = WorldModelConfig(n_features=len(names), embed_dim=16, hidden_dim=16, latent_dim=4, context_len=4,
-                           n_heads=2, n_layers=1, horizon_k=3)
+                           n_heads=2, n_layers=1, horizon_k=3, pos_mode="window")   # as served (D-041)
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({
         "model_state": build_model(cfg).state_dict(),
@@ -254,12 +258,9 @@ def test_no_lookahead_in_scaling_or_threshold(pcap, e20r_like):
     np.testing.assert_array_equal(causal_threshold(full[:cut], 0.9), causal_threshold(full, 0.9)[:cut])
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "E27 finding: CausalContext stretches its learned positional embedding (context_len long) to the "
-    "whole input length (world_model.py, F.interpolate), so a window's score depends on how many "
-    "windows follow it. Pre-existing, every model; a fix needs retraining. strict: passes -> fixed."))
 def test_forecast_is_prefix_invariant(pcap, e20r_like):
-    """A window's score must not change when later windows are appended (a live stream's view)."""
+    """A window's score must not change when later windows are appended (a live stream's view). Was a
+    strict xfail until D-041: the interp positions stretched to the input length (N-8, E27 finding 5)."""
     flows = pcap_to_flows(pcap)
     ensemble = predict.load_ensemble(e20r_like)
     names = ensemble["feature_names"]
@@ -299,6 +300,33 @@ def test_the_real_e20r_checkpoints_are_one_method_reading_real_packets():
     assert params == {593_500}
     configs = [m["model_config"] for m in ensemble["members"]]
     assert all(c == configs[0] for c in configs)
+
+
+@needs_e20r
+def test_the_served_pcap_checkpoints_are_prefix_invariant(pcap):
+    """D-041 G1 on the real served models: window positions, and no window's score moves when the
+    capture continues."""
+    ensemble = predict.load_ensemble(REAL)
+    names = ensemble["feature_names"]
+    feats, *_ = predict.state_matrix(pcap_to_flows(pcap), names, SPEC, pcap)
+    cut = len(feats) // 2
+    for m in ensemble["members"]:
+        assert m["model_config"]["pos_mode"] == "window"
+        x = m["scaler"].transform(feats[names])
+        full = predict._forecast(m, x, 10, 1, True)["p_max"]
+        np.testing.assert_allclose(predict._forecast(m, x[:cut], 10, 1, True)["p_max"], full[:cut], rtol=1e-5, atol=1e-7)
+
+
+@pytest.mark.skipif(not REAL_CSV.exists(), reason="CSV-route checkpoint not in models/")
+def test_the_served_csv_checkpoint_is_prefix_invariant(tmp_path):
+    ckpt = predict.load_checkpoint(REAL_CSV)
+    assert ckpt["model_config"]["pos_mode"] == "window"
+    names = ckpt["feature_names"]
+    feats, *_ = predict.state_matrix(predict.read_flow_csv(_flow_csv(tmp_path / "flows.csv")), names, SPEC, None)
+    x = ckpt["scaler"].transform(feats[names])
+    cut = len(x) // 2
+    full = predict._forecast(ckpt, x, 10, 1, True)["p_max"]
+    np.testing.assert_allclose(predict._forecast(ckpt, x[:cut], 10, 1, True)["p_max"], full[:cut], rtol=1e-5, atol=1e-7)
 
 
 @needs_e20r

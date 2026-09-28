@@ -27,9 +27,12 @@ logger = logging.getLogger("netwm.inference")
 _cached_ckpt: Optional[dict[str, Any]] = None
 _active_model_name: Optional[str] = None
 
-# D-038: PCAP uploads are served by all three E20r seeds, averaged per window - never one seed picked
-# by held-out performance, and never r2, which reads no packet features. CSV uploads stay on r2.
-PCAP_ENSEMBLE_RUNS = ("m1v2-e20r-s42", "m1v2-e20r-s43", "m1v2-e20r-s44")
+# D-038: PCAP uploads are served by all three seeds of the packet model, averaged per window - never one
+# seed picked by held-out performance, and never the CSV model, which reads no packet features.
+# D-041 (N-8 fix, gates G1-G3 passed): both routes serve the retrained window-position checkpoints, whose
+# scores do not depend on the capture's length - E20rw for PCAP, r2w seed 42 for CSV.
+PCAP_ENSEMBLE_RUNS = ("m1v2-n8-e20rw-s42", "m1v2-n8-e20rw-s43", "m1v2-n8-e20rw-s44")
+CSV_ROUTE_RUN = "n8-r2w-s42"
 PCAP_SUFFIXES = {".pcap", ".pcapng"}
 _E20R_FOLDS = {"monday", "tuesday", "wednesday", "thursday", "friday"}
 _ensemble_cache: dict[str, dict[str, Any]] = {}
@@ -56,7 +59,7 @@ def get_pcap_ensemble(day: Optional[str] = None) -> dict[str, Any]:
     if missing:
         raise APIError(
             "no_model",
-            "The PCAP route needs all three E20r checkpoints (D-038); missing: " + ", ".join(missing),
+            "The PCAP route needs all three E20rw checkpoints (D-038, D-041); missing: " + ", ".join(missing),
         )
     from netwm.engine.predict import load_ensemble
 
@@ -74,9 +77,9 @@ def get_registry() -> dict[str, str]:
         except Exception as exc:
             logger.warning("Failed to parse %s: %s", reg_path, exc)
     return {
-        "default": "e4e7-worldmodel-r2/thursday.pt",
-        "thursday": "e4e7-worldmodel-r2/thursday.pt",
-        "friday": "e4e7-worldmodel-r2/friday.pt",
+        "default": f"{CSV_ROUTE_RUN}/thursday.pt",
+        "thursday": f"{CSV_ROUTE_RUN}/thursday.pt",
+        "friday": f"{CSV_ROUTE_RUN}/friday.pt",
     }
 
 
@@ -112,77 +115,63 @@ def get_checkpoint(name: Optional[str] = None) -> Optional[dict[str, Any]]:
         return None
 
 
-# The deployable operating point quoted everywhere (results.md, E18, D-032 amendment): Thursday
-# fold, p_max, the causal expanding 10 % budget the dashboard itself applies (D-034, G-9), against
-# the E3 logistic-regression baseline at its train-tuned threshold on the same fold. PR-AUC is
-# threshold-free and comes from E14, which scored the same arrays. Read from the run folders so the
-# API can never drift from them.
-_E18_RUN = "e18-causal-threshold-e4e7-worldmodel-r2"
-_E14_RUN = "e14-pmax-rescore-e4e7-worldmodel-r2"
+# The deployable operating point of each route, as D-041's gate evaluation scored it
+# (scripts/n8_eval.py): Thursday fold, p_max, the causal expanding 10 % budget the dashboard itself
+# applies (D-034, G-9), label y_within_K; PR-AUC is threshold-free on the same arrays. Read from the run
+# folder so the API can never drift from it.
+_ROUTE_EVAL_RUN = "n8-fix-eval"
+_PCAP_ROUTE_MODEL = "E20rw mean"
 # The PS baseline at the same causal threshold as the model (G-6, D-037): like for like. E3's 0.011
 # was at LR's own train-tuned threshold, a different policy from the model's.
 _BENCHMARK_RUN = "benchmark-final"
 
 
-def _find_row(run_id: str, **match: Any) -> Optional[dict[str, Any]]:
+def _find_row(run_id: str, key: str = "rows", **match: Any) -> Optional[dict[str, Any]]:
     path = settings.repo_root / "results" / "runs" / run_id / "metrics.json"
     try:
         with open(path, "r", encoding="utf-8") as f:
-            rows = json.load(f)["metrics"]["rows"]
+            rows = json.load(f)["metrics"][key]
     except Exception as exc:
         logger.warning("Cannot read metrics from %s: %s", path, exc)
         return None
     return next((r for r in rows if all(r.get(k) == v for k, v in match.items())), None)
 
 
+def _detection(row: Optional[dict[str, Any]]) -> dict[str, float]:
+    return {k: round(float(row[k]), 3) for k in ("f1", "precision", "recall", "fpr", "pr_auc") if k in row} if row else {}
+
+
 def load_headline_metrics() -> dict[str, float]:
-    """Model-card metrics, sourced from results/runs/ (zeros only if a run folder is missing)."""
+    """The CSV route's model-card metrics, sourced from results/runs/ (zeros only if a run folder is missing)."""
     metrics = {k: 0.0 for k in ("f1", "precision", "recall", "fpr", "pr_auc",
                                 "mean_lead_time_windows", "baseline_f1")}
-    wm = _find_row(_E18_RUN, run="e4e7-worldmodel-r2", test_day="thursday", policy="expanding-10pct")
-    if wm:
-        metrics.update(
-            f1=round(wm["f1"], 3),
-            precision=round(wm["precision"], 3),
-            recall=round(wm["recall"], 3),
-            fpr=round(wm["fpr"], 3),
-        )
-        # mean_lead_time_windows stays 0.0: E18's 2 of 4 early warnings do not beat the
-        # circular-shift null (p = 0.33), and a count that does not is not a result (D-022).
-    ranking = _find_row(_E14_RUN, test_day="thursday", threshold_mode="self-budget-10pct")
-    if ranking:
-        metrics["pr_auc"] = round(ranking["pr_auc"], 3)
+    # mean_lead_time_windows stays 0.0: no model's early warnings beat the circular-shift null (S3 is
+    # met nowhere), and a count that does not is not a result (D-022).
+    metrics.update(_detection(_find_row(_ROUTE_EVAL_RUN, key="detection", run=CSV_ROUTE_RUN, day="thursday")))
     base = _find_row(_BENCHMARK_RUN, model="Logistic regression (PS baseline)", day="thursday")
     if base:
         metrics["baseline_f1"] = round(base["f1"], 3)
     return metrics
 
 
-# E27 (D-038): the PCAP route's scored result, written by scripts/pcap_route_eval.py. Until it exists
-# the card says so rather than borrowing r2's numbers for a different input.
-_E27_RUN = "e27-pcap-route"
-_E27_MODEL = "E20r mean of seeds 42/43/44 (PCAP route)"
-
-
 def load_pcap_route_metrics() -> Optional[dict[str, float]]:
-    row = _find_row(_E27_RUN, model=_E27_MODEL, day="thursday")
-    if not row:
-        return None
-    return {k: round(float(row[k]), 3) for k in ("f1", "precision", "recall", "fpr", "pr_auc") if k in row}
+    """The PCAP route's model-card metrics; None until the scored result exists, rather than borrowing the
+    CSV route's numbers for a different input."""
+    return _detection(_find_row(_ROUTE_EVAL_RUN, key="detection", model=_PCAP_ROUTE_MODEL, day="thursday")) or None
 
 
 def model_routes() -> dict[str, Any]:
-    """Which model serves which input, and which of them reads packet-derived features (D-038)."""
+    """Which model serves which input, and which of them reads packet-derived features (D-038, D-041)."""
     paths = pcap_ensemble_paths()
     return {
         "csv": {
-            "model": "r2 (models/e4e7-worldmodel-r2/)",
+            "model": f"r2w seed 42 (models/{CSV_ROUTE_RUN}/): r2's setup with window positions (D-041)",
             "telemetry": "flow",
             "packet_features": "not read: a flow-only model (70 flow features)",
             "metrics": load_headline_metrics(),
         },
         "pcap": {
-            "model": "E20r seeds 42, 43 and 44, arithmetic mean per window (D-038)",
+            "model": "E20rw seeds 42, 43 and 44 (E20r with window positions, D-041), arithmetic mean per window (D-038)",
             "telemetry": "flow + packet",
             "packet_features": "read: 18 pcap_ features measured from the capture (TTL, fragments, "
                                "retransmissions, TCP window, payload sizes, packet timing, SYN-only and "
@@ -207,7 +196,7 @@ def get_model_card() -> dict[str, Any]:
         feature_count = len(ckpt.get("feature_names", []))
         git_sha = str(ckpt.get("git_sha", "unknown"))[:7]
         return {
-            "name": f"netwm-rssm-r2 ({_active_model_name or 'default'})",
+            "name": f"netwm-rssm-r2w ({_active_model_name or 'default'})",
             "trained_on": "CIC-IDS2017 (corrected), Mon-Wed + Fri",
             "window_s": float(ckpt.get("stride_s", 30.0) * 2),
             "stride_s": float(ckpt.get("stride_s", 30.0)),
@@ -217,7 +206,7 @@ def get_model_card() -> dict[str, Any]:
             "stages": stages,
             "metrics": load_headline_metrics(),
             "feature_count": feature_count,
-            # the headline metrics above are r2's, for CSV input; the PCAP route is a different model
+            # the headline metrics above are the CSV route's; the PCAP route is a different model
             "routes": model_routes(),
         }
 
