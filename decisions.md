@@ -1935,3 +1935,26 @@ request everything runs on this machine (GTX 1650, 4 GB), one heavy job at a tim
 - **Not allowed.** No tuning; no change to folds, targets, rule or budget after a result is seen; no
   reruns except `--resume` after a crash; no per-host or graph model, whatever M3 shows (that decision is
   the team's, after M3).
+
+**Amendment (2026-09-29, after the build and before any training; no model result has been seen).**
+- **The `-1` flow does not exist.**
+  - The inspection's first pass over feb28 read 143 rows fewer than the file holds, plus one garbled
+    row labelled `-1`.
+  - A second pass with the same settings reads all 6,568,726 lines, and none carries a `-1` label.
+  - The build, which read the file independently, counted 6,568,726 flows and dropped nothing on feb28.
+  - The bytes read from the external D: drive therefore differed on that one pass: a transient read
+    error.
+  - Rule 2 of Part A drops nothing. `research/cicids2018.md` and `inspect.json` are corrected (the first
+    read is kept there).
+- **Integrity checks run.**
+  - All ten extracted CSVs match the zip's CRC32 (`results/runs/m3-build/extracted_crc_check.log`).
+  - The chunking check passed on feb15: identical matrices over 1,544 windows.
+  - Every day passed the build's flow-count check; 63,195,145 flows in, and 2,609 dropped by rule 1.
+- **One step added before training.** A read error during the build would pass the flow-count check if
+  it changed a value rather than a row. So the build is repeated into `data/processed/cicids2018_verify`
+  (`configs/cicids2018_verify.yaml`) and must be byte-identical to the first
+  (`scripts/compare_builds.py`) before any M3 run starts. If it is not, the differing days are rebuilt
+  and compared again; nothing trains on an unverified matrix.
+- **Scheduling.** One job at a time: the verification build, the comparison, `m3-s42`, `m3-s43`,
+  `m3-s44`, `lr-m3`, then `scripts/m3_family_matrix.py`. The analysis script implements Part B as
+  written.

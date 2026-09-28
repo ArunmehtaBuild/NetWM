@@ -1,0 +1,11 @@
+feb14 (BruteForce  ) flows= 5,898,350 windows=1,480 compromise=0.00% attack=12.97% onsets=[] stages={'BENIGN': 1297, 'INITIAL_ACCESS': 183} build=268.2s
+feb15 (DoS         ) flows= 5,410,102 windows=1,544 compromise=0.00% attack=10.82% onsets=[] stages={'BENIGN': 1422, 'IMPACT': 122} build=241.1s
+feb16 (DoS         ) flows= 7,390,266 windows=1,179 compromise=0.00% attack=3.14% onsets=[] stages={'BENIGN': 1151, 'IMPACT': 28} build=381.5s
+feb20 (DDoS        ) flows= 6,054,702 windows=1,459 compromise=0.00% attack=12.20% onsets=[] stages={'BENIGN': 1299, 'IMPACT': 160} build=308.2s
+feb21 (DDoS        ) flows= 6,962,593 windows=1,458 compromise=0.00% attack=13.72% onsets=[] stages={'BENIGN': 1276, 'IMPACT': 182} build=431.1s
+feb22 (Web         ) flows= 6,071,153 windows=1,470 compromise=0.00% attack=17.69% onsets=[] stages={'BENIGN': 1245, 'INITIAL_ACCESS': 225} build=329.7s
+feb23 (Web         ) flows= 5,973,872 windows=1,386 compromise=0.00% attack=22.22% onsets=[] stages={'BENIGN': 1111, 'INITIAL_ACCESS': 275} build=335.0s
+feb28 (Infiltration) flows= 6,568,726 windows=1,532 compromise=18.93% attack=18.93% onsets=[265, 275, 283, 430, 644] stages={'BENIGN': 1294, 'LATERAL_MOVEMENT': 152, 'COMMAND_AND_CONTROL': 86} build=351.4s
+mar01 (Infiltration) flows= 6,551,401 windows=1,371 compromise=51.06% attack=51.06% onsets=[195, 216] stages={'BENIGN': 942, 'LATERAL_MOVEMENT': 107, 'COMMAND_AND_CONTROL': 322} build=455.8s
+mar02 (Botnet      ) flows= 6,311,371 windows=1,428 compromise=48.46% attack=48.46% onsets=[173] stages={'BENIGN': 745, 'COMMAND_AND_CONTROL': 683} build=453.9s
+wrote data\processed\cicids2018 (10 days)

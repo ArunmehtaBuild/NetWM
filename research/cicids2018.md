@@ -13,7 +13,7 @@ Extracted to `D:/CIC-IDS2018-improved/csv/` (36.0 GB, 10 files); log in
 `D:/CIC-IDS2018-improved/fetch.log`. Nothing else was downloaded (no PCAPs).
 
 **Inspection** (`python scripts/inspect_cicids2018.py --csv-dir D:/CIC-IDS2018-improved/csv`, one
-chunked pass; `results/runs/m3-inspect/inspect.json`): **63,195,002 flows** over ten capture days.
+chunked pass; `results/runs/m3-inspect/inspect.json`): **63,195,145 flows** over ten capture days.
 
 | split | file | flows | first timestamp | last timestamp | benign | attack labels (flows) |
 |---|---|---:|---|---|---:|---|
@@ -24,7 +24,7 @@ chunked pass; `results/runs/m3-inspect/inspect.json`): **63,195,002 flows** over
 | feb21 | Wednesday-21-02-2018.csv | 6,962,593 | 2018-02-21 12:28 | 2018-02-22 00:36 | 5,878,399 | DDoS-HOIC 1,082,293, DDoS-LOIC-UDP 1,730, DDoS-LOIC-UDP - Attempted 171 |
 | feb22 | Thursday-22-02-2018.csv | 6,071,153 | 2018-02-22 12:22 | 2018-02-23 00:36 | 6,070,945 | Web Attack - Brute Force - Attempted 76, Web Attack - Brute Force 69, Web Attack - XSS 40, Web Attack - SQL 16, Web Attack - SQL - Attempted 4, Web Attack - XSS - Attempted 3 |
 | feb23 | Friday-23-02-2018.csv | 5,976,481 | 2018-02-21 12:33 | 2018-02-23 23:46 | 5,976,251 | Web Attack - XSS 73, Web Attack - Brute Force 62, Web Attack - Brute Force - Attempted 61, Web Attack - SQL 23, Web Attack - SQL - Attempted 10, Web Attack - XSS - Attempted 1 |
-| feb28 | Wednesday-28-02-2018.csv | 6,568,583 | 2018-02-28 12:20 | 2018-03-01 01:05 | 6,518,737 | Infiltration - NMAP Portscan 49,740, Infiltration - Dropbox Download 46, Infiltration - Communication Victim Attacker 43, Infiltration - Dropbox Download - Attempted 15, -1 1 |
+| feb28 | Wednesday-28-02-2018.csv | 6,568,726 | 2018-02-28 12:20 | 2018-03-01 01:05 | 6,518,882 | Infiltration - NMAP Portscan 49,740, Infiltration - Dropbox Download 46, Infiltration - Communication Victim Attacker 43, Infiltration - Dropbox Download - Attempted 15 |
 | mar01 | Thursday-01-03-2018.csv | 6,551,401 | 2018-03-01 12:15 | 2018-03-01 23:40 | 6,511,554 | Infiltration - NMAP Portscan 39,634, Infiltration - Communication Victim Attacker 161, Infiltration - Dropbox Download 39, Infiltration - Dropbox Download - Attempted 13 |
 | mar02 | Friday-02-03-2018.csv | 6,311,371 | 2018-03-02 12:46 | 2018-03-03 00:39 | 6,168,188 | Botnet Ares 142,921, Botnet Ares - Attempted 262 |
 
@@ -88,8 +88,7 @@ chunked pass; `results/runs/m3-inspect/inspect.json`): **63,195,002 flows** over
   brute force. The "DDoS-LOIC-UDP - Attempted" flows are the victim's replies.
 - **The web-attack days are tiny.** 22-02 and 23-02 hold only 208 and 230 attack flows (with the
   attempted ones).
-- **Two data problems, both handled by dropping and counting (D-044):**
+- **Two data questions (D-044):** one real, handled by dropping and counting, and one that was not real.
   - 23-02's file holds 2,609 flows stamped 21-22 February (1,216 and 1,393), none of them attack
     traffic. Left in, they would stretch that day's window grid over three days.
-  - One flow in the release is labelled `-1` (28-02, 172.31.65.67 to 104.16.147.229:80); its stage
-    is not guessed.
+  - **No `-1` flow exists (D-044 amendment).** The first inspection pass read 28-02 with 143 rows missing and one garbled row labelled `-1`: a transient read error on the external D: drive. A second pass with the same settings reads every line (6,568,726), the file matches the zip's CRC32, and no line carries a `-1` label. The first read is kept in `inspect.json` under `corrected`.

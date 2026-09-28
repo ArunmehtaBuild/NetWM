@@ -1,0 +1,31 @@
+# M3 (D-044 amendment): a second, independent build of the same days, compared with the first before training.
+#   python scripts/build_cicids2018.py --config configs/cicids2018.yaml
+dataset: cicids2018
+raw_dir: D:/CIC-IDS2018-improved/csv            # the verified extraction (research/cicids2018.md)
+interim_dir: D:/CIC-IDS2018-improved/interim_verify    # hourly shards, deleted after each day is built
+processed_dir: data/processed/cicids2018_verify
+
+window:
+  length_s: 60.0
+  stride_s: 30.0
+
+horizon_k: 10
+
+# the victim network in the AWS deployment (research/cicids2018.md)
+internal_prefixes:
+  - "172.31."
+
+# day -> attack family (D-044), in capture order
+families:
+  feb14: BruteForce
+  feb15: DoS
+  feb16: DoS
+  feb20: DDoS
+  feb21: DDoS
+  feb22: Web
+  feb23: Web
+  feb28: Infiltration
+  mar01: Infiltration
+  mar02: Botnet
+
+seed: 42
