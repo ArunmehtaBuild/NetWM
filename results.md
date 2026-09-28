@@ -2025,3 +2025,52 @@ Artefacts:
 - `results/tables/n6b_ctu13_perhost_hostlevel.csv` (whether the bot is the busiest internal host);
 - `results/runs/n6b-ctu13-perhost/` (`metrics.json` with the grid checks, the bot hosts and the
   internal host counts; `run.log`).
+
+---
+
+## N-6a, seed 42 - the inversion diagnostic on the third seed (D-039, descriptive)
+
+```
+python scripts/ctu_inversion_diagnostic.py --seeds 42      # seed 42's CTU-13 fold checkpoints are on the GTX 1650 machine
+```
+
+This is N-6a's method, unchanged (the script at `06514ba`), on the seed whose weights were not on the
+other machine. The refit LR reproduces `lr-ctu13-s42` exactly on this machine: Spearman 1.0 and
+ROC-AUC identical on all six scenarios. The small differences N-6a reported came from the other
+machine's library versions.
+
+| scenario | role | features that flip | **WM ROC-AUC** s42 | WM, flipped set neutralised | the single features that push seed 42's ranking most the wrong way (ROC-AUC gain when neutralised) | N-6a, s43 / s44, flipped set neutralised |
+|---|---|---:|---:|---:|---|---|
+| Murlo s08 | inverted | 25 | 0.205 | **0.719** | `fin_cnt_sum` +0.05, `is_outbound_rate` +0.05, `svc_https_rate` +0.04 | 0.741 / 0.789 |
+| Neris s02 | inverted | 18 | 0.610 | 0.678 | `one_way_rate` +0.07, `uniq_dst_ip` +0.05 | 0.623 / 0.626 |
+| Rbot s11 | inverted | 19 | 0.075 | **0.700** | `dst_port_entropy` and `dst_ip_entropy` **+0.62** each, `psh_cnt_sum` +0.43, `proto_icmp_rate` +0.39 | 0.811 / 0.486 |
+| Virut s13 | inverted | 10 | 0.439 | **0.750** | **`svc_https_rate` +0.48**, `is_internal_rate` +0.16, `is_inbound_rate` +0.15 | 0.347 / 0.441 |
+| Sogou s07 | inverted | 3 | 0.015 | 0.017 | none above +0.02 | 0.175 / 0.188 |
+| NSIS s12 | control | 11 | 0.982 | 0.991 | none above +0.011 | 0.979 / 0.991 |
+
+**What seed 42 adds to N-6a.**
+1. **The direction-flip reading holds on all three seeds for Murlo and Rbot s11.** Neutralising the
+   flipped set lifts seed 42 from 0.21 to 0.72 on Murlo and from 0.08 to 0.70 on Rbot s11.
+   - On s11, seed 42 leans on destination-port and destination-IP entropy (+0.62 each) and on the
+     ICMP share (+0.39).
+   - The ICMP share is the `State`-less ICMP artefact N-6a flagged on seed 44.
+2. **Neris s02 is not inverted on seed 42 (0.610)**, as E25b already showed. The flipped set still
+   costs it about 0.07.
+3. **Virut s13 on seed 42 is a flip as well as a single-feature reliance.**
+   - The HTTPS share alone is worth +0.48, as on seeds 43/44.
+   - Neutralising the whole flipped set lifts seed 42 to 0.750, where seeds 43/44 reached only
+     0.35-0.44.
+   - N-6a's "not flips" reading of s13 was therefore seed-specific. The verdict rests on 9 background
+     windows (see N-8 x E25b, point 5).
+4. **Sogou s07 is not explained on seed 42.** No flipped set or single feature moves it by more than
+   0.02 (0.015 throughout). The duration and ephemeral-port reliance N-6a found on seeds 43/44 does not
+   appear here. N-6b shows the global statistics themselves separate s07 (0.80-0.92), so the seed-42
+   inversion is spread across the model's weighting, not concentrated in one input.
+5. **The control holds.** On NSIS no single feature moves seed 42 by more than 0.011.
+
+N-6a's caveats apply unchanged. The flipped set is defined with the held-out labels, and neutralising
+one feature at a time measures reliance, not cause.
+
+Artefacts:
+- `results/tables/n6_ctu13_inversion_s42_features.csv` and `n6_ctu13_inversion_s42_summary.csv`;
+- `results/runs/n6-ctu13-inversion-s42/` (`metrics.json` with the LR reproduction check; `diagnostic.log`).

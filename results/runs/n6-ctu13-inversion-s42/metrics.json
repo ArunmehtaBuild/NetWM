@@ -1,0 +1,217 @@
+{
+  "run_id": "n6-ctu13-inversion-s42",
+  "timestamp_utc": "2026-09-28T12:01:50+00:00",
+  "git_sha": "06514ba",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "data": "data/processed/ctu13",
+    "model_config": "configs/m1v2/e25_ctu13.yaml",
+    "group_folds": "configs/ctu13_folds.yaml",
+    "seed": 42,
+    "seeds": [
+      42
+    ],
+    "scenarios": {
+      "s08": "inverted",
+      "s07": "inverted",
+      "s11": "inverted",
+      "s02": "inverted",
+      "s13": "inverted",
+      "s12": "control (transfers)"
+    },
+    "flip_d": 0.2,
+    "device": "cuda",
+    "git_sha_at_start": "06514ba"
+  },
+  "metrics": {
+    "summary": [
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "role": "inverted",
+        "model": "logistic regression",
+        "windows": 2339,
+        "background": 89,
+        "roc_auc": 0.5896,
+        "n_flipped_features": 25,
+        "roc_auc_flips_neutralised": 0.3768,
+        "top5_wrong_way": "uniq_src_port +0.126; syn_cnt_sum +0.125; rst_cnt_sum +0.114; is_outbound_rate +0.101; pkts_mean +0.078"
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "role": "inverted",
+        "model": "world model s42",
+        "windows": 2339,
+        "background": 89,
+        "roc_auc": 0.2053,
+        "n_flipped_features": 25,
+        "roc_auc_flips_neutralised": 0.7194,
+        "top5_wrong_way": "fin_cnt_sum +0.051; is_outbound_rate +0.051; svc_https_rate +0.044; is_inbound_rate +0.042; one_way_rate +0.042"
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "role": "inverted",
+        "model": "logistic regression",
+        "windows": 44,
+        "background": 26,
+        "roc_auc": 0.7372,
+        "n_flipped_features": 3,
+        "roc_auc_flips_neutralised": 0.7115,
+        "top5_wrong_way": "pkts_per_s +0.147; duration_s_max +0.139; dst_ip_entropy +0.128; tiny_flow_rate +0.126; dst_port_entropy +0.126"
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "role": "inverted",
+        "model": "world model s42",
+        "windows": 44,
+        "background": 26,
+        "roc_auc": 0.015,
+        "n_flipped_features": 3,
+        "roc_auc_flips_neutralised": 0.0171,
+        "top5_wrong_way": "ephemeral_dst_rate +0.017; dst_ip_entropy +0.017; duration_s_max +0.013; is_outbound_rate +0.009; svc_dns_rate +0.009"
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "role": "inverted",
+        "model": "logistic regression",
+        "windows": 34,
+        "background": 20,
+        "roc_auc": 0.5179,
+        "n_flipped_features": 19,
+        "roc_auc_flips_neutralised": 0.6786,
+        "top5_wrong_way": "proto_udp_rate +0.175; proto_icmp_rate +0.143; tiny_flow_rate +0.129; bytes_per_s +0.093; pkts_total +0.089"
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "role": "inverted",
+        "model": "world model s42",
+        "windows": 34,
+        "background": 20,
+        "roc_auc": 0.075,
+        "n_flipped_features": 19,
+        "roc_auc_flips_neutralised": 0.7,
+        "top5_wrong_way": "dst_port_entropy +0.618; dst_ip_entropy +0.618; psh_cnt_sum +0.432; proto_icmp_rate +0.389; duration_s_max +0.214"
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "role": "inverted",
+        "model": "logistic regression",
+        "windows": 505,
+        "background": 78,
+        "roc_auc": 0.5712,
+        "n_flipped_features": 18,
+        "roc_auc_flips_neutralised": 0.6725,
+        "top5_wrong_way": "proto_udp_rate +0.180; uniq_src_ip +0.172; fanout_max +0.124; uniq_src_port +0.077; has_rst_rate +0.058"
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "role": "inverted",
+        "model": "world model s42",
+        "windows": 505,
+        "background": 78,
+        "roc_auc": 0.6104,
+        "n_flipped_features": 18,
+        "roc_auc_flips_neutralised": 0.6777,
+        "top5_wrong_way": "one_way_rate +0.067; uniq_dst_ip +0.050; byte_asymmetry +0.045; ports_per_pair_max +0.026; pkts_mean +0.025"
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "role": "inverted",
+        "model": "logistic regression",
+        "windows": 1967,
+        "background": 9,
+        "roc_auc": 0.9911,
+        "n_flipped_features": 10,
+        "roc_auc_flips_neutralised": 0.8315,
+        "top5_wrong_way": "duration_s_max +0.009; is_inbound_rate +0.009; is_outbound_rate +0.006; tiny_flow_rate +0.006; uniq_dst_port +0.004"
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "role": "inverted",
+        "model": "world model s42",
+        "windows": 1967,
+        "background": 9,
+        "roc_auc": 0.439,
+        "n_flipped_features": 10,
+        "roc_auc_flips_neutralised": 0.7501,
+        "top5_wrong_way": "svc_https_rate +0.476; is_internal_rate +0.161; is_inbound_rate +0.149; syn_no_ack_rate +0.147; priv_port_rate +0.142"
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "role": "control (transfers)",
+        "model": "logistic regression",
+        "windows": 208,
+        "background": 72,
+        "roc_auc": 0.9574,
+        "n_flipped_features": 11,
+        "roc_auc_flips_neutralised": 0.9848,
+        "top5_wrong_way": "tiny_flow_rate +0.019; svc_dns_rate +0.017; proto_tcp_rate +0.009; pkts_mean +0.007; top_talker_share +0.005"
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "role": "control (transfers)",
+        "model": "world model s42",
+        "windows": 208,
+        "background": 72,
+        "roc_auc": 0.9823,
+        "n_flipped_features": 11,
+        "roc_auc_flips_neutralised": 0.9909,
+        "top5_wrong_way": "dst_ip_entropy +0.011; ephemeral_dst_rate +0.007; svc_http_rate +0.006; n_flows +0.005; has_fin_rate +0.005"
+      }
+    ],
+    "lr_reproduction": {
+      "s08": {
+        "max_abs": 8.881784197001252e-16,
+        "spearman": 0.9999999999999998,
+        "roc_refit": 0.5895880149812734,
+        "roc_stored": 0.5895880149812734
+      },
+      "s07": {
+        "max_abs": 6.661338147750939e-16,
+        "spearman": 1.0,
+        "roc_refit": 0.7371794871794872,
+        "roc_stored": 0.7371794871794872
+      },
+      "s11": {
+        "max_abs": 4.996003610813204e-16,
+        "spearman": 1.0,
+        "roc_refit": 0.5178571428571428,
+        "roc_stored": 0.5178571428571428
+      },
+      "s02": {
+        "max_abs": 3.3306690738754696e-16,
+        "spearman": 1.0,
+        "roc_refit": 0.5711583498468744,
+        "roc_stored": 0.5711583498468744
+      },
+      "s13": {
+        "max_abs": 5.551115123125783e-16,
+        "spearman": 1.0,
+        "roc_refit": 0.9911474293496765,
+        "roc_stored": 0.9911474293496765
+      },
+      "s12": {
+        "max_abs": 8.326672684688674e-16,
+        "spearman": 1.0,
+        "roc_refit": 0.9574142156862745,
+        "roc_stored": 0.9574142156862745
+      }
+    }
+  }
+}
