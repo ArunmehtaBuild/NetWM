@@ -99,6 +99,12 @@ _RULES: tuple[tuple[re.Pattern[str], StageInfo], ...] = (
         StageInfo(Stage.LATERAL_MOVEMENT, "T1059.006", "Command and Scripting Interpreter: Python"),
     ),
     (
+        # CIC-IDS2018 (D-044): the infected host calling its attacker back (13.58.225.34:31337) is the
+        # C2 channel, not the infiltration step itself. No CIC-IDS2017 label contains "communication".
+        re.compile(r"infiltration.*communication"),
+        StageInfo(Stage.COMMAND_AND_CONTROL, "T1571", "Non-Standard Port"),
+    ),
+    (
         re.compile(r"infiltration"),
         StageInfo(Stage.LATERAL_MOVEMENT, "T1204", "User Execution"),
     ),

@@ -1,0 +1,874 @@
+{
+  "csv_dir": "D:/CIC-IDS2018-improved/csv",
+  "git_sha": "8eaf25c",
+  "days": [
+    {
+      "file": "Wednesday-14-02-2018.csv",
+      "bytes": 3262583806,
+      "rows": 5898350,
+      "ts_min": "2018-02-14 12:28:07.743746",
+      "ts_max": "2018-02-15 00:47:34.715559",
+      "labels": {
+        "BENIGN": 5610799,
+        "FTP-BruteForce - Attempted": 193354,
+        "SSH-BruteForce": 94197
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5610799,
+        "FTP-BruteForce - Attempted | attempted=1": 193324,
+        "SSH-BruteForce | attempted=-1": 94197,
+        "FTP-BruteForce - Attempted | attempted=4": 30
+      },
+      "hostile": {
+        "FTP-BruteForce - Attempted": {
+          "span": [
+            "2018-02-14 14:33:26.718731",
+            "2018-02-14 18:01:21.502581"
+          ],
+          "top_src": {
+            "18.221.219.4": 193324,
+            "13.58.98.64": 30
+          },
+          "top_dst": {
+            "172.31.69.25": 193354
+          },
+          "top_dst_port": {
+            "21": 193354
+          }
+        },
+        "SSH-BruteForce": {
+          "span": [
+            "2018-02-14 18:01:50.374537",
+            "2018-02-14 19:32:29.744191"
+          ],
+          "top_src": {
+            "13.58.98.64": 94197
+          },
+          "top_dst": {
+            "172.31.69.25": 94197
+          },
+          "top_dst_port": {
+            "22": 94197
+          }
+        }
+      }
+    },
+    {
+      "file": "Thursday-15-02-2018.csv",
+      "bytes": 2992535617,
+      "rows": 5410102,
+      "ts_min": "2018-02-15 12:23:15.264383",
+      "ts_max": "2018-02-16 01:14:55.132078",
+      "labels": {
+        "BENIGN": 5372471,
+        "DoS GoldenEye": 22560,
+        "DoS Slowloris": 8490,
+        "DoS GoldenEye - Attempted": 4301,
+        "DoS Slowloris - Attempted": 2280
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5372471,
+        "DoS GoldenEye | attempted=-1": 22560,
+        "DoS Slowloris | attempted=-1": 8490,
+        "DoS GoldenEye - Attempted | attempted=4": 4248,
+        "DoS Slowloris - Attempted | attempted=0": 2280,
+        "DoS GoldenEye - Attempted | attempted=6": 53
+      },
+      "hostile": {
+        "DoS GoldenEye": {
+          "span": [
+            "2018-02-15 13:27:46.807659",
+            "2018-02-15 14:02:59.332681"
+          ],
+          "top_src": {
+            "18.219.211.138": 22560
+          },
+          "top_dst": {
+            "172.31.69.25": 22560
+          },
+          "top_dst_port": {
+            "80": 22560
+          }
+        },
+        "DoS GoldenEye - Attempted": {
+          "span": [
+            "2018-02-15 13:27:42.466479",
+            "2018-02-15 13:57:09.576251"
+          ],
+          "top_src": {
+            "18.219.211.138": 4301
+          },
+          "top_dst": {
+            "172.31.69.25": 4301
+          },
+          "top_dst_port": {
+            "80": 4301
+          }
+        },
+        "DoS Slowloris": {
+          "span": [
+            "2018-02-15 15:00:12.551313",
+            "2018-02-15 15:41:34.311278"
+          ],
+          "top_src": {
+            "18.217.165.70": 8490
+          },
+          "top_dst": {
+            "172.31.69.25": 8490
+          },
+          "top_dst_port": {
+            "80": 8490
+          }
+        },
+        "DoS Slowloris - Attempted": {
+          "span": [
+            "2018-02-15 15:00:12.655326",
+            "2018-02-15 15:41:34.478626"
+          ],
+          "top_src": {
+            "18.217.165.70": 2280
+          },
+          "top_dst": {
+            "172.31.69.25": 2280
+          },
+          "top_dst_port": {
+            "80": 2280
+          }
+        }
+      }
+    },
+    {
+      "file": "Friday-16-02-2018.csv",
+      "bytes": 4211741805,
+      "rows": 7390266,
+      "ts_min": "2018-02-16 12:26:55.181877",
+      "ts_max": "2018-02-16 22:15:24.854148",
+      "labels": {
+        "BENIGN": 5481500,
+        "DoS Hulk": 1803160,
+        "FTP-BruteForce - Attempted": 105520,
+        "DoS Hulk - Attempted": 86
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5481500,
+        "DoS Hulk | attempted=-1": 1803160,
+        "FTP-BruteForce - Attempted | attempted=1": 105520,
+        "DoS Hulk - Attempted | attempted=0": 86
+      },
+      "hostile": {
+        "DoS Hulk": {
+          "span": [
+            "2018-02-16 17:45:27.826666",
+            "2018-02-16 17:58:22.100211"
+          ],
+          "top_src": {
+            "18.219.193.20": 1803160
+          },
+          "top_dst": {
+            "172.31.69.25": 1803160
+          },
+          "top_dst_port": {
+            "80": 1803160
+          }
+        },
+        "FTP-BruteForce - Attempted": {
+          "span": [
+            "2018-02-16 14:12:14.134225",
+            "2018-02-16 15:05:12.984515"
+          ],
+          "top_src": {
+            "13.59.126.31": 105520
+          },
+          "top_dst": {
+            "172.31.69.25": 105520
+          },
+          "top_dst_port": {
+            "21": 105520
+          }
+        },
+        "DoS Hulk - Attempted": {
+          "span": [
+            "2018-02-16 17:58:19.218666",
+            "2018-02-16 17:58:22.122398"
+          ],
+          "top_src": {
+            "18.219.193.20": 86
+          },
+          "top_dst": {
+            "172.31.69.25": 86
+          },
+          "top_dst_port": {
+            "80": 86
+          }
+        }
+      }
+    },
+    {
+      "file": "Tuesday-20-02-2018.csv",
+      "bytes": 3431246090,
+      "rows": 6054702,
+      "ts_min": "2018-02-20 12:28:03.804789",
+      "ts_max": "2018-02-21 00:37:22.354975",
+      "labels": {
+        "BENIGN": 5764497,
+        "DDoS-LOIC-HTTP": 289328,
+        "DDoS-LOIC-UDP": 797,
+        "DDoS-LOIC-UDP - Attempted": 80
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5764497,
+        "DDoS-LOIC-HTTP | attempted=-1": 289328,
+        "DDoS-LOIC-UDP | attempted=-1": 797,
+        "DDoS-LOIC-UDP - Attempted | attempted=6": 80
+      },
+      "hostile": {
+        "DDoS-LOIC-HTTP": {
+          "span": [
+            "2018-02-20 14:13:54.662633",
+            "2018-02-20 15:16:48.272954"
+          ],
+          "top_src": {
+            "18.219.9.1": 29528,
+            "18.218.229.235": 29411,
+            "18.216.200.189": 29208,
+            "52.14.136.135": 24028,
+            "18.218.55.126": 23826
+          },
+          "top_dst": {
+            "172.31.69.25": 289328
+          },
+          "top_dst_port": {
+            "80": 289328
+          }
+        },
+        "DDoS-LOIC-UDP": {
+          "span": [
+            "2018-02-20 17:14:17.478355",
+            "2018-02-20 17:29:15.502209"
+          ],
+          "top_src": {
+            "18.219.32.43": 80,
+            "18.218.55.126": 78,
+            "18.218.229.235": 78,
+            "52.14.136.135": 77,
+            "18.218.115.60": 77
+          },
+          "top_dst": {
+            "172.31.69.25": 797
+          },
+          "top_dst_port": {
+            "80": 797
+          }
+        },
+        "DDoS-LOIC-UDP - Attempted": {
+          "span": [
+            "2018-02-20 17:14:17.478390",
+            "2018-02-20 17:29:15.287596"
+          ],
+          "top_src": {
+            "172.31.69.25": 80
+          },
+          "top_dst": {
+            "18.218.55.126": 8,
+            "18.219.32.43": 8,
+            "52.14.136.135": 8,
+            "18.219.5.43": 8,
+            "18.219.9.1": 8
+          },
+          "top_dst_port": {
+            "0": 80
+          }
+        }
+      }
+    },
+    {
+      "file": "Wednesday-21-02-2018.csv",
+      "bytes": 3952691068,
+      "rows": 6962593,
+      "ts_min": "2018-02-21 12:28:18.495098",
+      "ts_max": "2018-02-22 00:36:49.117402",
+      "labels": {
+        "BENIGN": 5878399,
+        "DDoS-HOIC": 1082293,
+        "DDoS-LOIC-UDP": 1730,
+        "DDoS-LOIC-UDP - Attempted": 171
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5878399,
+        "DDoS-HOIC | attempted=-1": 1082293,
+        "DDoS-LOIC-UDP | attempted=-1": 1730,
+        "DDoS-LOIC-UDP - Attempted | attempted=6": 171
+      },
+      "hostile": {
+        "DDoS-HOIC": {
+          "span": [
+            "2018-02-21 18:11:08.829466",
+            "2018-02-21 19:05:54.052754"
+          ],
+          "top_src": {
+            "18.216.200.189": 109314,
+            "18.218.229.235": 97059,
+            "18.218.115.60": 96393,
+            "18.218.11.51": 96164,
+            "18.218.55.126": 95853
+          },
+          "top_dst": {
+            "172.31.69.28": 1082293
+          },
+          "top_dst_port": {
+            "80": 1082293
+          }
+        },
+        "DDoS-LOIC-UDP": {
+          "span": [
+            "2018-02-21 14:08:51.251323",
+            "2018-02-21 14:43:16.845708"
+          ],
+          "top_src": {
+            "18.218.55.126": 190,
+            "52.14.136.135": 180,
+            "18.219.5.43": 170,
+            "18.216.200.189": 170,
+            "18.219.9.1": 160
+          },
+          "top_dst": {
+            "172.31.69.28": 1730
+          },
+          "top_dst_port": {
+            "80": 1730
+          }
+        },
+        "DDoS-LOIC-UDP - Attempted": {
+          "span": [
+            "2018-02-21 14:08:51.251350",
+            "2018-02-21 14:43:02.204173"
+          ],
+          "top_src": {
+            "172.31.69.28": 171
+          },
+          "top_dst": {
+            "18.218.55.126": 18,
+            "18.219.5.43": 16,
+            "18.216.200.189": 16,
+            "52.14.136.135": 16,
+            "18.219.9.1": 16
+          },
+          "top_dst_port": {
+            "0": 171
+          }
+        }
+      }
+    },
+    {
+      "file": "Thursday-22-02-2018.csv",
+      "bytes": 3473832504,
+      "rows": 6071153,
+      "ts_min": "2018-02-22 12:22:02.060675",
+      "ts_max": "2018-02-23 00:36:53.959518",
+      "labels": {
+        "BENIGN": 6070945,
+        "Web Attack - Brute Force - Attempted": 76,
+        "Web Attack - Brute Force": 69,
+        "Web Attack - XSS": 40,
+        "Web Attack - SQL": 16,
+        "Web Attack - SQL - Attempted": 4,
+        "Web Attack - XSS - Attempted": 3
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 6070945,
+        "Web Attack - Brute Force | attempted=-1": 69,
+        "Web Attack - Brute Force - Attempted | attempted=5": 66,
+        "Web Attack - XSS | attempted=-1": 40,
+        "Web Attack - SQL | attempted=-1": 16,
+        "Web Attack - Brute Force - Attempted | attempted=2": 8,
+        "Web Attack - SQL - Attempted | attempted=2": 3,
+        "Web Attack - Brute Force - Attempted | attempted=0": 2,
+        "Web Attack - XSS - Attempted | attempted=0": 1,
+        "Web Attack - XSS - Attempted | attempted=2": 1,
+        "Web Attack - XSS - Attempted | attempted=3": 1,
+        "Web Attack - SQL - Attempted | attempted=0": 1
+      },
+      "hostile": {
+        "Web Attack - Brute Force": {
+          "span": [
+            "2018-02-22 14:17:51.336902",
+            "2018-02-22 15:23:11.292302"
+          ],
+          "top_src": {
+            "18.218.115.60": 69
+          },
+          "top_dst": {
+            "172.31.69.28": 69
+          },
+          "top_dst_port": {
+            "80": 69
+          }
+        },
+        "Web Attack - Brute Force - Attempted": {
+          "span": [
+            "2018-02-22 14:13:44.965705",
+            "2018-02-22 15:23:11.291950"
+          ],
+          "top_src": {
+            "18.218.115.60": 76
+          },
+          "top_dst": {
+            "172.31.69.28": 76
+          },
+          "top_dst_port": {
+            "80": 76
+          }
+        },
+        "Web Attack - SQL": {
+          "span": [
+            "2018-02-22 20:16:30.418906",
+            "2018-02-22 20:27:51.010619"
+          ],
+          "top_src": {
+            "18.218.115.60": 16
+          },
+          "top_dst": {
+            "172.31.69.28": 16
+          },
+          "top_dst_port": {
+            "80": 16
+          }
+        },
+        "Web Attack - SQL - Attempted": {
+          "span": [
+            "2018-02-22 20:14:30.169342",
+            "2018-02-22 20:18:25.018418"
+          ],
+          "top_src": {
+            "18.218.115.60": 4
+          },
+          "top_dst": {
+            "172.31.69.28": 4
+          },
+          "top_dst_port": {
+            "80": 4
+          }
+        },
+        "Web Attack - XSS": {
+          "span": [
+            "2018-02-22 17:51:39.783923",
+            "2018-02-22 18:28:40.120749"
+          ],
+          "top_src": {
+            "18.218.115.60": 40
+          },
+          "top_dst": {
+            "172.31.69.28": 40
+          },
+          "top_dst_port": {
+            "80": 40
+          }
+        },
+        "Web Attack - XSS - Attempted": {
+          "span": [
+            "2018-02-22 17:51:39.892464",
+            "2018-02-22 17:54:24.926624"
+          ],
+          "top_src": {
+            "18.218.115.60": 3
+          },
+          "top_dst": {
+            "172.31.69.28": 3
+          },
+          "top_dst_port": {
+            "80": 3
+          }
+        }
+      }
+    },
+    {
+      "file": "Friday-23-02-2018.csv",
+      "bytes": 3409376619,
+      "rows": 5976481,
+      "ts_min": "2018-02-21 12:33:55.396864",
+      "ts_max": "2018-02-23 23:46:49.183594",
+      "labels": {
+        "BENIGN": 5976251,
+        "Web Attack - XSS": 73,
+        "Web Attack - Brute Force": 62,
+        "Web Attack - Brute Force - Attempted": 61,
+        "Web Attack - SQL": 23,
+        "Web Attack - SQL - Attempted": 10,
+        "Web Attack - XSS - Attempted": 1
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 5976251,
+        "Web Attack - XSS | attempted=-1": 73,
+        "Web Attack - Brute Force | attempted=-1": 62,
+        "Web Attack - Brute Force - Attempted | attempted=5": 60,
+        "Web Attack - SQL | attempted=-1": 23,
+        "Web Attack - SQL - Attempted | attempted=0": 5,
+        "Web Attack - SQL - Attempted | attempted=2": 5,
+        "Web Attack - Brute Force - Attempted | attempted=0": 1,
+        "Web Attack - XSS - Attempted | attempted=2": 1
+      },
+      "hostile": {
+        "Web Attack - Brute Force": {
+          "span": [
+            "2018-02-23 14:04:30.193975",
+            "2018-02-23 15:02:53.208311"
+          ],
+          "top_src": {
+            "18.218.115.60": 62
+          },
+          "top_dst": {
+            "172.31.69.28": 62
+          },
+          "top_dst_port": {
+            "80": 62
+          }
+        },
+        "Web Attack - Brute Force - Attempted": {
+          "span": [
+            "2018-02-23 14:04:30.426211",
+            "2018-02-23 15:02:53.207863"
+          ],
+          "top_src": {
+            "18.218.115.60": 61
+          },
+          "top_dst": {
+            "172.31.69.28": 61
+          },
+          "top_dst_port": {
+            "80": 61
+          }
+        },
+        "Web Attack - SQL": {
+          "span": [
+            "2018-02-23 19:06:32.126122",
+            "2018-02-23 19:17:19.936453"
+          ],
+          "top_src": {
+            "18.218.115.60": 23
+          },
+          "top_dst": {
+            "172.31.69.28": 23
+          },
+          "top_dst_port": {
+            "80": 23
+          }
+        },
+        "Web Attack - SQL - Attempted": {
+          "span": [
+            "2018-02-23 19:05:22.675686",
+            "2018-02-23 19:17:19.936719"
+          ],
+          "top_src": {
+            "18.218.115.60": 10
+          },
+          "top_dst": {
+            "172.31.69.28": 10
+          },
+          "top_dst_port": {
+            "80": 10
+          }
+        },
+        "Web Attack - XSS": {
+          "span": [
+            "2018-02-23 17:01:04.559707",
+            "2018-02-23 18:10:05.155421"
+          ],
+          "top_src": {
+            "18.218.115.60": 73
+          },
+          "top_dst": {
+            "172.31.69.28": 73
+          },
+          "top_dst_port": {
+            "80": 73
+          }
+        },
+        "Web Attack - XSS - Attempted": {
+          "span": [
+            "2018-02-23 17:01:04.687466",
+            "2018-02-23 17:01:04.687466"
+          ],
+          "top_src": {
+            "18.218.115.60": 1
+          },
+          "top_dst": {
+            "172.31.69.28": 1
+          },
+          "top_dst_port": {
+            "80": 1
+          }
+        }
+      }
+    },
+    {
+      "file": "Wednesday-28-02-2018.csv",
+      "bytes": 3812223732,
+      "rows": 6568583,
+      "ts_min": "2018-02-28 12:20:49.532235",
+      "ts_max": "2018-03-01 01:05:48.618359",
+      "labels": {
+        "BENIGN": 6518737,
+        "Infiltration - NMAP Portscan": 49740,
+        "Infiltration - Dropbox Download": 46,
+        "Infiltration - Communication Victim Attacker": 43,
+        "Infiltration - Dropbox Download - Attempted": 15,
+        "-1": 1
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 6518737,
+        "Infiltration - NMAP Portscan | attempted=-1": 49740,
+        "Infiltration - Dropbox Download | attempted=-1": 46,
+        "Infiltration - Communication Victim Attacker | attempted=-1": 43,
+        "Infiltration - Dropbox Download - Attempted | attempted=4": 15,
+        "-1 | attempted=nan": 1
+      },
+      "hostile": {
+        "-1": {
+          "span": [
+            "2018-02-28 16:46:55.520221",
+            "2018-02-28 16:46:55.520221"
+          ],
+          "top_src": {
+            "172.31.65.67": 1
+          },
+          "top_dst": {
+            "104.16.147.229": 1
+          },
+          "top_dst_port": {
+            "80": 1
+          }
+        },
+        "Infiltration - NMAP Portscan": {
+          "span": [
+            "2018-02-28 14:46:45.730767",
+            "2018-02-28 18:38:40.746732"
+          ],
+          "top_src": {
+            "172.31.69.24": 49740
+          },
+          "top_dst": {
+            "172.31.69.7": 10266,
+            "172.31.69.22": 8256,
+            "172.31.69.15": 8238,
+            "172.31.69.21": 8220,
+            "172.31.69.18": 8202
+          },
+          "top_dst_port": {
+            "135": 1833,
+            "3389": 1241,
+            "445": 1236,
+            "22": 840,
+            "139": 696
+          }
+        },
+        "Infiltration - Communication Victim Attacker": {
+          "span": [
+            "2018-02-28 14:45:40.706215",
+            "2018-02-28 18:39:59.703008"
+          ],
+          "top_src": {
+            "172.31.69.24": 43
+          },
+          "top_dst": {
+            "13.58.225.34": 43
+          },
+          "top_dst_port": {
+            "31337": 43
+          }
+        },
+        "Infiltration - Dropbox Download": {
+          "span": [
+            "2018-02-28 14:33:24.627743",
+            "2018-02-28 17:43:26.452368"
+          ],
+          "top_src": {
+            "172.31.69.24": 46
+          },
+          "top_dst": {
+            "162.125.3.1": 21,
+            "162.125.3.5": 12,
+            "162.125.18.133": 6,
+            "162.125.248.1": 4,
+            "162.125.3.6": 3
+          },
+          "top_dst_port": {
+            "443": 46
+          }
+        },
+        "Infiltration - Dropbox Download - Attempted": {
+          "span": [
+            "2018-02-28 14:33:25.142961",
+            "2018-02-28 17:42:54.554905"
+          ],
+          "top_src": {
+            "172.31.69.24": 15
+          },
+          "top_dst": {
+            "104.16.100.29": 5,
+            "104.16.99.29": 4,
+            "52.85.131.81": 2,
+            "52.85.95.206": 2,
+            "52.85.101.236": 1
+          },
+          "top_dst_port": {
+            "443": 15
+          }
+        }
+      }
+    },
+    {
+      "file": "Thursday-01-03-2018.csv",
+      "bytes": 3808397458,
+      "rows": 6551401,
+      "ts_min": "2018-03-01 12:15:28.926174",
+      "ts_max": "2018-03-01 23:40:14.412141",
+      "labels": {
+        "BENIGN": 6511554,
+        "Infiltration - NMAP Portscan": 39634,
+        "Infiltration - Communication Victim Attacker": 161,
+        "Infiltration - Dropbox Download": 39,
+        "Infiltration - Dropbox Download - Attempted": 13
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 6511554,
+        "Infiltration - NMAP Portscan | attempted=-1": 39634,
+        "Infiltration - Communication Victim Attacker | attempted=-1": 161,
+        "Infiltration - Dropbox Download | attempted=-1": 39,
+        "Infiltration - Dropbox Download - Attempted | attempted=4": 13
+      },
+      "hostile": {
+        "Infiltration - NMAP Portscan": {
+          "span": [
+            "2018-03-01 14:10:17.833657",
+            "2018-03-01 19:37:52.137034"
+          ],
+          "top_src": {
+            "172.31.69.13": 39634
+          },
+          "top_dst": {
+            "172.31.69.7": 8198,
+            "172.31.69.15": 8184,
+            "172.31.69.18": 6156,
+            "172.31.69.22": 6156,
+            "172.31.69.21": 6138
+          },
+          "top_dst_port": {
+            "135": 1310,
+            "445": 1019,
+            "3389": 917,
+            "22": 680,
+            "139": 365
+          }
+        },
+        "Infiltration - Communication Victim Attacker": {
+          "span": [
+            "2018-03-01 13:57:54.262686",
+            "2018-03-01 19:36:10.748927"
+          ],
+          "top_src": {
+            "172.31.69.13": 161
+          },
+          "top_dst": {
+            "13.58.225.34": 161
+          },
+          "top_dst_port": {
+            "31337": 161
+          }
+        },
+        "Infiltration - Dropbox Download": {
+          "span": [
+            "2018-03-01 13:53:10.945186",
+            "2018-03-01 14:32:21.892782"
+          ],
+          "top_src": {
+            "172.31.69.13": 39
+          },
+          "top_dst": {
+            "162.125.18.133": 24,
+            "162.125.3.1": 11,
+            "162.125.248.1": 2,
+            "162.125.3.6": 2
+          },
+          "top_dst_port": {
+            "443": 39
+          }
+        },
+        "Infiltration - Dropbox Download - Attempted": {
+          "span": [
+            "2018-03-01 13:53:11.264488",
+            "2018-03-01 13:58:22.135812"
+          ],
+          "top_src": {
+            "172.31.69.13": 13
+          },
+          "top_dst": {
+            "104.16.100.29": 9,
+            "13.32.168.125": 3,
+            "52.85.112.72": 1
+          },
+          "top_dst_port": {
+            "443": 13
+          }
+        }
+      }
+    },
+    {
+      "file": "Friday-02-03-2018.csv",
+      "bytes": 3689837784,
+      "rows": 6311371,
+      "ts_min": "2018-03-02 12:46:22.317145",
+      "ts_max": "2018-03-03 00:39:53.894472",
+      "labels": {
+        "BENIGN": 6168188,
+        "Botnet Ares": 142921,
+        "Botnet Ares - Attempted": 262
+      },
+      "label_x_attempted": {
+        "BENIGN | attempted=-1": 6168188,
+        "Botnet Ares | attempted=-1": 142921,
+        "Botnet Ares - Attempted | attempted=0": 258,
+        "Botnet Ares - Attempted | attempted=2": 4
+      },
+      "hostile": {
+        "Botnet Ares": {
+          "span": [
+            "2018-03-02 14:13:28.376104",
+            "2018-03-02 19:53:46.504106"
+          ],
+          "top_src": {
+            "172.31.69.30": 15855,
+            "172.31.69.10": 15780,
+            "172.31.69.6": 15672,
+            "172.31.69.17": 15284,
+            "172.31.69.14": 15227
+          },
+          "top_dst": {
+            "18.219.211.138": 142921
+          },
+          "top_dst_port": {
+            "8080": 142921
+          }
+        },
+        "Botnet Ares - Attempted": {
+          "span": [
+            "2018-03-02 19:53:44.791346",
+            "2018-03-02 19:54:51.338871"
+          ],
+          "top_src": {
+            "172.31.69.14": 33,
+            "172.31.69.6": 33,
+            "172.31.69.17": 33,
+            "172.31.69.29": 33,
+            "172.31.69.30": 31
+          },
+          "top_dst": {
+            "18.219.211.138": 262
+          },
+          "top_dst_port": {
+            "8080": 262
+          }
+        }
+      }
+    }
+  ]
+}

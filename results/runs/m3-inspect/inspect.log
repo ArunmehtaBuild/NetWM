@@ -1,0 +1,13 @@
+Wednesday-14-02-2018.csv: 5,898,350 rows, 2018-02-14 12:28:07.743746 .. 2018-02-15 00:47:34.715559, labels: BENIGN 5,610,799, FTP-BruteForce - Attempted 193,354, SSH-BruteForce 94,197
+Thursday-15-02-2018.csv: 5,410,102 rows, 2018-02-15 12:23:15.264383 .. 2018-02-16 01:14:55.132078, labels: BENIGN 5,372,471, DoS GoldenEye 22,560, DoS Slowloris 8,490, DoS GoldenEye - Attempted 4,301, DoS Slowloris - Attempted 2,280
+Friday-16-02-2018.csv: 7,390,266 rows, 2018-02-16 12:26:55.181877 .. 2018-02-16 22:15:24.854148, labels: BENIGN 5,481,500, DoS Hulk 1,803,160, FTP-BruteForce - Attempted 105,520, DoS Hulk - Attempted 86
+Tuesday-20-02-2018.csv: 6,054,702 rows, 2018-02-20 12:28:03.804789 .. 2018-02-21 00:37:22.354975, labels: BENIGN 5,764,497, DDoS-LOIC-HTTP 289,328, DDoS-LOIC-UDP 797, DDoS-LOIC-UDP - Attempted 80
+Wednesday-21-02-2018.csv: 6,962,593 rows, 2018-02-21 12:28:18.495098 .. 2018-02-22 00:36:49.117402, labels: BENIGN 5,878,399, DDoS-HOIC 1,082,293, DDoS-LOIC-UDP 1,730, DDoS-LOIC-UDP - Attempted 171
+C:\Users\tiwar\Desktop\work\security\scripts\inspect_cicids2018.py:49: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  t = pd.to_datetime(g["Timestamp"], errors="coerce")
+Thursday-22-02-2018.csv: 6,071,153 rows, 2018-02-22 12:22:02.060675 .. 2018-02-23 00:36:53.959518, labels: BENIGN 6,070,945, Web Attack - Brute Force - Attempted 76, Web Attack - Brute Force 69, Web Attack - XSS 40, Web Attack - SQL 16, Web Attack - SQL - Attempted 4, Web Attack - XSS - Attempted 3
+Friday-23-02-2018.csv: 5,976,481 rows, 2018-02-21 12:33:55.396864 .. 2018-02-23 23:46:49.183594, labels: BENIGN 5,976,251, Web Attack - XSS 73, Web Attack - Brute Force 62, Web Attack - Brute Force - Attempted 61, Web Attack - SQL 23, Web Attack - SQL - Attempted 10, Web Attack - XSS - Attempted 1
+Wednesday-28-02-2018.csv: 6,568,583 rows, 2018-02-28 12:20:49.532235 .. 2018-03-01 01:05:48.618359, labels: BENIGN 6,518,737, Infiltration - NMAP Portscan 49,740, Infiltration - Dropbox Download 46, Infiltration - Communication Victim Attacker 43, Infiltration - Dropbox Download - Attempted 15, -1 1
+Thursday-01-03-2018.csv: 6,551,401 rows, 2018-03-01 12:15:28.926174 .. 2018-03-01 23:40:14.412141, labels: BENIGN 6,511,554, Infiltration - NMAP Portscan 39,634, Infiltration - Communication Victim Attacker 161, Infiltration - Dropbox Download 39, Infiltration - Dropbox Download - Attempted 13
+Friday-02-03-2018.csv: 6,311,371 rows, 2018-03-02 12:46:22.317145 .. 2018-03-03 00:39:53.894472, labels: BENIGN 6,168,188, Botnet Ares 142,921, Botnet Ares - Attempted 262
+wrote results/runs/m3-inspect/inspect.json

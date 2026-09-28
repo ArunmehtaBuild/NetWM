@@ -1,0 +1,9 @@
+# M3 (D-044): E25's stack (RSSM + factorised target, 250 steps per fold) with D-041's window positions,
+# on the full 70-feature S_t v1 that CTU-13 could not supply. Nothing else is changed.
+#   python scripts/train.py --data data/processed/cicids2018 --model-config configs/m3/m3_stack.yaml \
+#       --group-folds configs/cicids2018_folds.yaml --run m3-s42 --seed 42 --no-figures
+model:
+  hazard: factorized
+  pos_mode: window
+train:
+  target_steps: 250

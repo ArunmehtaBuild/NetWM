@@ -1,0 +1,7 @@
+# M3 (D-044): leave one attack family out. Each fold trains on every other day.
+bruteforce: [feb14]
+dos: [feb15, feb16]
+ddos: [feb20, feb21]
+web: [feb22, feb23]
+infiltration: [feb28, mar01]
+botnet: [mar02]

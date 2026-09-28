@@ -1865,3 +1865,73 @@ feature selection. No reruns except `--resume` after a crash.
   and the architecture decision waits for M3.
 - The uncertainty tables (the board's confidence-interval item) are in results.md, "E25b with
   confidence intervals".
+
+### D-044 — M3 on CIC-IDS2018: data handling, and the pre-registration (6 family folds x 3 seeds, GTX 1650)
+*Date: 2026-09-29 · Status: pre-registered before the build and before any training · Evidence to come:
+results.md "E28 - M3" · Numbered D-044 because D-043 is in use by another session's check-4 work*
+
+**Why.** D-039 named M3 the next transfer test, and asked whether the E25b inversion pattern recurs.
+CIC-IDS2018 keeps the full 70-feature S_t v1 state that CTU-13 could not supply, and has compromise
+onsets. The download was approved in chat (research/cicids2018.md: sha256, inspection). At the user's
+request everything runs on this machine (GTX 1650, 4 GB), one heavy job at a time.
+
+**Part A: data handling, fixed before the build.** Evidence: `results/runs/m3-inspect/inspect.json`.
+- **Release.** The corrected CSVs (Liu et al., CNS 2022) have the corrected CIC-IDS2017 release's
+  exact 91 columns. So `netwm.data.cicids2018` reuses its column map, its `- Attempted` handling (D-009)
+  and its stage mapping. Timestamps are UTC. The victim network is 172.31.0.0/16 (the internal prefix).
+- **Two rules drop rows; the build counts them per day.**
+  1. **Flows stamped before the file's capture date (UTC midnight) are dropped:** 2,609 in feb23's
+     file, dated 21-22 February, none of them attack traffic. Left in, they would stretch the day's
+     window grid over three days. Flows after midnight UTC belong to the same night's capture and stay.
+  2. **The single flow labelled `-1` (feb28) is dropped.** Its stage is not guessed.
+- **One new mapping rule.** `Infiltration - Communication Victim Attacker` becomes Command and Control
+  (T1571), not the generic infiltration stage: it is the victim calling 13.58.225.34:31337.
+  - No CIC-IDS2017 label contains "communication", so M1 is unchanged; this was checked on the raw
+    CSVs.
+  - Every other 2018 label already maps, and `tests/test_cicids2018.py` covers them.
+  - Because D-009 demotes attempted traffic, all FTP brute force (14-02, 16-02) contributes no attack
+    stage.
+- **Families, by day.** BruteForce {feb14}, DoS {feb15, feb16}, DDoS {feb20, feb21}, Web {feb22,
+  feb23}, Infiltration {feb28, mar01}, Botnet {mar02}. Only feb28, mar01 and mar02 contain compromise
+  stages.
+- **Build** (`scripts/build_cicids2018.py`, `configs/cicids2018.yaml`). The same S_t v1, 60 s windows at
+  a 30 s stride, and K = 10 as CIC-IDS2017, built in two passes (hourly shards on D:, then an hour of
+  windows at a time). Two checks:
+  - `--check-chunking` on one day: identical matrices at 120- and 17-window chunks.
+  - Per day: the window flow counts equal twice the rows, less the flows in the first 30 s.
+
+**Part B: the M3 experiment, pre-registered.**
+- **Folds.** Leave one attack family out: 6 folds (`configs/cicids2018_folds.yaml`). Each trains on
+  every other day.
+- **World model.** E25's stack (RSSM, factorised target, `target_steps: 250`) with D-041's window
+  positions, on all 70 S_t v1 inputs (`configs/m3/m3_stack.yaml`). Seeds 42/43/44, runs
+  `m3-s{42,43,44}`:
+  `python scripts/train.py --data data/processed/cicids2018 --model-config configs/m3/m3_stack.yaml
+  --group-folds configs/cicids2018_folds.yaml --run m3-s<seed> --seed <seed> --no-figures`.
+- **Baseline.** LR on the same inputs, folds and scaler (`scripts/lr_baseline.py`, run `lr-m3`).
+- **Target and score per held-out day, fixed by the day's content.** On a day with no compromise stage,
+  `y_within_K` is zero everywhere, so:
+  - **Compromise days (feb28, mar01, mar02):** the ROC-AUC of the stored `comp` score on `y_within_K`,
+    as E25b.
+  - **Attack-only days (the other seven):** the ROC-AUC of the stored `threat` score (the attack
+    channel, as the D-035 scorecard uses) on `y_attack_within_K`.
+  - Beside it: PR-AUC and causal F1 (causal expanding q90) on the same target and score; the number of
+    background windows; S2\* (threat percentile of non-Impact attack onsets) where a day has at least
+    20 cells; and S3.
+  - **Uncertainty:** D-042's moving-block bootstrap (blocks of 20 windows, 2,000 resamples) on each
+    day's primary ROC-AUC, per seed, for the seed mean and for LR.
+- **Family verdicts.** D-037's rule on the primary ROC-AUC, applied as written: transfers / inverted /
+  partial.
+- **D-039's question, answered by a rule fixed here.**
+  - **"The inversion pattern recurs on the full state"** if at least 2 families are inverted, and at
+    least one of those inversions is on a day with at least 100 background windows whose seed-mean
+    interval lies wholly below 0.5.
+  - **"It does not recur"** if no family is inverted.
+  - **"Inconclusive"** otherwise: one inverted family, or inversions only on thinly measured days.
+- **Stated in advance.**
+  - The web days hold about 200 attack flows each, so their positives are few, and their verdicts are
+    reported with that caveat.
+  - A pooled number is never quoted without the family matrix beside it.
+- **Not allowed.** No tuning; no change to folds, targets, rule or budget after a result is seen; no
+  reruns except `--resume` after a crash; no per-host or graph model, whatever M3 shows (that decision is
+  the team's, after M3).
