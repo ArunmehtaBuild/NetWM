@@ -173,12 +173,15 @@ def main() -> None:
 
     feats = pd.DataFrame(rows)
     summ = pd.DataFrame(summary)
-    feats.to_csv(TABLES / "n6_ctu13_inversion_features.csv", index=False)
-    summ.to_csv(TABLES / "n6_ctu13_inversion_summary.csv", index=False)
-    save_run("n6-ctu13-inversion", {"summary": summ.to_dict("records"), "lr_reproduction": lr_check},
+    # the N-6a artefacts are seeds 43/44; any other seed set gets its own names instead of overwriting them
+    tag = "" if seeds == SEEDS else "-s" + "-".join(map(str, seeds))
+    feats.to_csv(TABLES / f"n6_ctu13_inversion{tag.replace('-', '_')}_features.csv", index=False)
+    summ.to_csv(TABLES / f"n6_ctu13_inversion{tag.replace('-', '_')}_summary.csv", index=False)
+    save_run(f"n6-ctu13-inversion{tag}", {"summary": summ.to_dict("records"), "lr_reproduction": lr_check},
              config={**vars(args), "scenarios": SCENARIOS, "seeds": list(seeds), "flip_d": FLIP_D,
                      "device": str(device), "git_sha_at_start": start_sha})
-    print("wrote results/tables/n6_ctu13_inversion_{features,summary}.csv and results/runs/n6-ctu13-inversion/")
+    print(f"wrote results/tables/n6_ctu13_inversion{tag.replace('-', '_')}_{{features,summary}}.csv and "
+          f"results/runs/n6-ctu13-inversion{tag}/")
 
 
 if __name__ == "__main__":
