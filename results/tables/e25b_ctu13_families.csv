@@ -1,0 +1,8 @@
+family,scenarios,verdict,wm_roc_auc_mean,lr_roc_auc_mean,wm_s2_star_mean,lr_s2_star_mean
+Menti,s06,transfers,0.748,0.985,,
+Murlo,s08,inverted,0.166,0.59,0.491,0.632
+NSIS.ay,s12,transfers,0.983,0.957,,
+Neris,"s01, s02, s09",inverted,0.689,0.703,0.691,0.401
+Rbot,"s03, s04, s10, s11",inverted,0.506,0.56,0.625,0.519
+Sogou,s07,inverted,0.116,0.737,,
+Virut,"s05, s13",inverted,0.607,0.751,,
