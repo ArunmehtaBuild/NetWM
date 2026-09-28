@@ -53,6 +53,13 @@ class WorldModelConfig:
     # P(threat) x P(compromise stage | hostile), so the compromise signal is carried by a threat
     # detector trained on every attack family plus a stage classifier over hostile windows.
     hazard: str = "direct"
+    # N-8 (D-041). "interp" stretches the context_len positional vectors to the whole input length,
+    # so a window's score depends on how many windows follow it; every checkpoint before D-041 was
+    # trained that way and keeps it. "window" gives the key at distance d from the query
+    # pos[context_len - 1 - d]: a window's context depends only on its own last context_len windows,
+    # which is what the attention mask already assumed, and a stream scored in chunks (with the
+    # state carried, see NetWorldModel.forecast) equals the same stream scored in one pass.
+    pos_mode: str = "interp"
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()}
@@ -140,8 +147,22 @@ class CausalContext(nn.Module):
             nn.Linear(2 * cfg.embed_dim, cfg.embed_dim),
         )
 
-    def forward(self, embeds: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """embeds: (B, T, E) -> context (B, T, E), attention (B, T, T) averaged over heads."""
+    def forward(
+        self,
+        embeds: torch.Tensor,
+        history: torch.Tensor | None = None,
+        history_valid: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """embeds: (B, T, E) -> context (B, T, E) and attention averaged over heads.
+
+        ``interp``: attention is (B, T, T). ``window``: attention is (B, T, context_len), newest
+        last, and ``history`` (B, H, E) - the embeddings immediately before ``embeds``, with
+        ``history_valid`` (B, H) marking real ones - lets a chunk see the windows before it.
+        """
+        if self.cfg.pos_mode == "window":
+            return self._window_forward(embeds, history, history_valid)
+        if history is not None:
+            raise ValueError("history needs pos_mode='window': 'interp' positions depend on the input length")
         b, t, _ = embeds.shape
         pos = self.pos[:, :t] if t <= self.cfg.context_len else F.interpolate(
             self.pos.transpose(1, 2), size=t, mode="linear", align_corners=False
@@ -157,6 +178,35 @@ class CausalContext(nn.Module):
         attended, weights = self.attn(x, x, x, attn_mask=mask, need_weights=True, average_attn_weights=True)
         h = embeds + attended
         return h + self.ff(self.norm2(h)), weights
+
+    def _window_forward(
+        self, embeds: torch.Tensor, history: torch.Tensor | None, history_valid: torch.Tensor | None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Each query attends to its own last context_len windows, positioned by distance (D-041).
+
+        The window of query t is unfolded explicitly, so the positional vector a key receives
+        depends only on how far back it is - never on the input's length or where a chunk starts.
+        Slots before the stream's first window are masked out, not attended as zeros.
+        """
+        L = self.cfg.context_len
+        b, t, e = embeds.shape
+        if history is None:
+            history = embeds.new_zeros(b, 0, e)
+        h = history.shape[1]
+        if history_valid is None:
+            history_valid = torch.ones(b, h, dtype=torch.bool, device=embeds.device)
+        full = torch.cat([embeds.new_zeros(b, L - 1, e), history, embeds], dim=1)
+        valid = torch.cat([torch.zeros(b, L - 1, dtype=torch.bool, device=embeds.device), history_valid.bool(),
+                           torch.ones(b, t, dtype=torch.bool, device=embeds.device)], dim=1)
+        win = full.unfold(1, L, 1)[:, h:].permute(0, 1, 3, 2)          # (B, T, L, E), oldest first
+        ok = valid.unfold(1, L, 1)[:, h:]                               # (B, T, L)
+        x = self.norm1(win + self.pos.unsqueeze(1))
+        q = x[:, :, -1:].reshape(b * t, 1, e)
+        kv = x.reshape(b * t, L, e)
+        attended, weights = self.attn(q, kv, kv, key_padding_mask=~ok.reshape(b * t, L),
+                                      need_weights=True, average_attn_weights=True)
+        hh = embeds + attended.reshape(b, t, e)
+        return hh + self.ff(self.norm2(hh)), weights.reshape(b, t, L)
 
 
 class GaussianHead(nn.Module):
@@ -248,18 +298,28 @@ class NetWorldModel(nn.Module):
         return RSSMState(prior.h, z, mean, std)
 
     # ---- observation (teacher forcing) -------------------------------------------------------
-    def observe(self, x: torch.Tensor, sample: bool = True) -> dict:
+    def observe(self, x: torch.Tensor, sample: bool = True, carry: dict | None = None) -> dict:
         """Filter a sequence of observed states. x: (B, T, F).
 
         ``sample=False`` takes the mean of both the prior and the posterior, giving a fully
         deterministic filtered trajectory. Training always samples; only the mean-path forecast
         turns it off, so that a lead-time count carries no Monte-Carlo variance at all.
+
+        ``carry`` (``pos_mode="window"`` only) is the previous chunk's ``out["carry"]``: its last
+        posterior state and last context_len - 1 embeddings. Filtering a stream chunk by chunk with
+        the carry is the same computation as filtering it in one pass (D-041).
         """
         b, t, _ = x.shape
         embeds = self.encoder(x)
-        context, attention = self.context(embeds)
-
-        state = self.initial_state(b, x.device)
+        window = self.cfg.pos_mode == "window"
+        if carry is not None and not window:
+            raise ValueError("carry needs pos_mode='window' (N-8, D-041)")
+        if carry is not None:
+            context, attention = self.context(embeds, history=carry["embeds"], history_valid=carry["valid"])
+            state = carry["state"]
+        else:
+            context, attention = self.context(embeds)
+            state = self.initial_state(b, x.device)
         posts, priors, buffers = [], [], []
         for i in range(t):
             prior = self._prior_step(state, context[:, i], sample=sample)
@@ -268,29 +328,58 @@ class NetWorldModel(nn.Module):
             priors.append(prior)
             buffers.append(embeds[:, i])
             state = post
-        return {
+        out = {
             "posts": posts,
             "priors": priors,
             "embeds": embeds,
             "context": context,
             "attention": attention,
         }
+        if window:
+            out["carry"] = self._next_carry(carry, embeds, state)
+        return out
+
+    def _next_carry(self, carry: dict | None, embeds: torch.Tensor, state: "RSSMState") -> dict:
+        """What the next chunk needs: the last state, the last context_len - 1 embeddings (masked
+        where the stream had not started yet) and the last feature vector (for surprise)."""
+        b, t, e = embeds.shape
+        keep = self.cfg.context_len - 1
+        prev_e = embeds.new_zeros(b, keep, e) if carry is None else carry["embeds"]
+        prev_v = (torch.zeros(b, keep, dtype=torch.bool, device=embeds.device) if carry is None
+                  else carry["valid"])
+        all_e = torch.cat([prev_e, embeds], dim=1)[:, -keep:]
+        all_v = torch.cat([prev_v, torch.ones(b, t, dtype=torch.bool, device=embeds.device)], dim=1)[:, -keep:]
+        return {"state": state, "embeds": all_e, "valid": all_v, "feat": state.feat()}
 
     # ---- imagination (no observations) -------------------------------------------------------
     def imagine(
-        self, state: RSSMState, history: torch.Tensor, horizon: int, sample: bool = True
+        self,
+        state: RSSMState,
+        history: torch.Tensor,
+        horizon: int,
+        sample: bool = True,
+        history_valid: torch.Tensor | None = None,
     ) -> dict:
         """Roll the prior forward ``horizon`` steps from ``state``.
 
         ``history`` is the buffer of the last ``context_len`` observation embeddings (B, L, E). Each
         imagined step decodes a predicted state, re-encodes it and appends it to the buffer, so the
         attention context keeps working exactly as it does during observation - the model dreams in
-        the same representation it perceives in.
+        the same representation it perceives in. Under ``pos_mode="window"``, ``history_valid``
+        (B, L) masks buffer slots from before the stream began.
         """
+        window = self.cfg.pos_mode == "window"
         buf = history[:, -self.cfg.context_len :]
+        valid = None
+        if window:
+            valid = (torch.ones(buf.shape[:2], dtype=torch.bool, device=buf.device) if history_valid is None
+                     else history_valid[:, -self.cfg.context_len :].bool())
         states, decoded, risk, stage_logits = [], [], [], []
         for _ in range(horizon):
-            ctx, _ = self.context(buf)
+            if window:
+                ctx, _ = self.context(buf[:, -1:], history=buf[:, :-1], history_valid=valid[:, :-1])
+            else:
+                ctx, _ = self.context(buf)
             state = self._prior_step(state, ctx[:, -1], sample=sample)
             feat = state.feat()
             obs_hat = self.decoder(feat)
@@ -299,6 +388,8 @@ class NetWorldModel(nn.Module):
             risk.append(self._risk_logits(feat))
             stage_logits.append(self.stage_head(feat))
             buf = torch.cat([buf[:, 1:], self.encoder(obs_hat).unsqueeze(1)], dim=1)
+            if window:
+                valid = torch.cat([valid[:, 1:], valid.new_ones(valid.shape[0], 1)], dim=1)
         risk_logits = torch.stack(risk, dim=1)                       # (B, K, n_risk)
         return {
             "states": states,
@@ -458,8 +549,14 @@ class NetWorldModel(nn.Module):
         n_samples: int = 16,
         chunk: int = 64,
         sample: bool = True,
+        carry: dict | None = None,
+        return_carry: bool = False,
     ) -> dict[str, torch.Tensor]:
         """Per-window K-step forecast for one sequence. x: (1, T, F).
+
+        Streaming (``pos_mode="window"``, D-041): pass the previous call's ``out["carry"]`` as
+        ``carry`` (and ``return_carry=True`` to get the next one). On the deterministic mean path a
+        stream scored chunk by chunk gives the same arrays as the whole stream scored at once.
 
         Returns (all on CPU-friendly tensors):
           p_step  (T, K)  mean per-step hazard from the imagined trajectories
@@ -484,16 +581,29 @@ class NetWorldModel(nn.Module):
             # threshold is a quantile of the same series, so ranks are what carry over.
             n_samples = 1
 
-        out = self.observe(x, sample=sample)
+        window = cfg.pos_mode == "window"
+        out = self.observe(x, sample=sample, carry=carry)
         feats = torch.stack([p.feat() for p in out["posts"]], dim=1)
         stage_now = F.softmax(self.stage_head(feats), dim=-1)[0]
 
         pred_next = self.decoder(feats[:, :-1])
         var = self.obs_logvar.exp()
         surprise = 0.5 * (self.obs_logvar + (pred_next - x[:, 1:]) ** 2 / var).mean(-1)[0]
-        surprise = torch.cat([surprise.new_zeros(1), surprise])
+        first = surprise.new_zeros(1)
+        if carry is not None:
+            # the previous chunk's last state predicts this chunk's first window, as in one pass
+            first = 0.5 * (self.obs_logvar + (self.decoder(carry["feat"]) - x[:, 0]) ** 2 / var).mean(-1)
+        surprise = torch.cat([first, surprise])
 
-        attention = self._history_attention(out["attention"][0], cfg.context_len)
+        attention = (out["attention"][0] if window
+                     else self._history_attention(out["attention"][0], cfg.context_len))
+        if window:
+            prev_e = (out["embeds"].new_zeros(0, out["embeds"].shape[-1]) if carry is None
+                      else carry["embeds"][0])
+            prev_v = (torch.zeros(0, dtype=torch.bool, device=x.device) if carry is None
+                      else carry["valid"][0])
+            all_e = torch.cat([prev_e, out["embeds"][0]])
+            all_v = torch.cat([prev_v, torch.ones(t, dtype=torch.bool, device=x.device)])
 
         p_cum_samples = torch.zeros(n_samples, t, horizon)
         p_raw_samples = torch.zeros(n_samples, t, horizon, cfg.n_risk)
@@ -507,9 +617,12 @@ class NetWorldModel(nn.Module):
                 torch.cat([out["posts"][i].mean for i in range(begin, end)]),
                 torch.cat([out["posts"][i].std for i in range(begin, end)]),
             )
-            history = self._history_buffer(out["embeds"][0], idx)
+            if window:
+                history, history_valid = self._window_history(all_e, all_v, idx + len(prev_e))
+            else:
+                history, history_valid = self._history_buffer(out["embeds"][0], idx), None
             for s in range(n_samples):
-                img = self.imagine(state, history, horizon, sample=sample)
+                img = self.imagine(state, history, horizon, sample=sample, history_valid=history_valid)
                 risk = torch.sigmoid(img["risk_logits"])
                 p_raw_samples[s, begin:end] = risk.cpu()
                 p_cum_samples[s, begin:end] = (1 - torch.cumprod(1 - risk[..., 0], dim=1)).cpu()
@@ -555,7 +668,18 @@ class NetWorldModel(nn.Module):
             "stage_future": stage_future,
             "surprise": surprise.cpu(),
             "attention": attention.cpu(),
+            **({"carry": out["carry"]} if return_carry else {}),
         }
+
+    def _window_history(
+        self, embeds: torch.Tensor, valid: torch.Tensor, idx: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Window mode: (len(idx), L, E) buffers ending at each index, with a mask for the slots
+        before the stream began (masked, not attended as zeros)."""
+        offsets = torch.arange(-self.cfg.context_len + 1, 1, device=embeds.device)
+        positions = idx[:, None] + offsets[None, :]
+        ok = (positions >= 0) & valid[positions.clamp(min=0)]
+        return embeds[positions.clamp(min=0)] * ok[..., None], ok
 
     def _history_buffer(self, embeds: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:
         """(len(idx), context_len, E) buffer of the embeddings preceding each index, zero-padded."""

@@ -131,5 +131,6 @@ class DirectForecaster(nn.Module):
             "stage_now": stage_now,
             "stage_future": stage_now[:, None, :].expand(t, horizon, cfg.n_stages).clone(),
             "surprise": torch.zeros(t),
-            "attention": NetWorldModel._history_attention(attention[0], cfg.context_len).cpu(),
+            "attention": (attention[0] if cfg.pos_mode == "window"
+                          else NetWorldModel._history_attention(attention[0], cfg.context_len)).cpu(),
         }
