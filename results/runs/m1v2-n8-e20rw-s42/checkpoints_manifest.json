@@ -1,63 +1,117 @@
 {
   "run": "m1v2-n8-e20rw-s42",
+  "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
   "machine": "Atharv-laptop",
+  "python": "3.10.6",
+  "utc": "2026-09-28T20:07:22+00:00",
+  "torch": "2.5.1+cu121",
   "device": "NVIDIA GeForce GTX 1650",
-  "note": "weights are untracked (models/); this manifest identifies them",
+  "note": "hashed in place on this machine; weights are untracked",
   "checkpoints": [
     {
-      "path": "models/m1v2-n8-e20rw-s42/friday.pt",
+      "file": "friday.pt",
       "bytes": 2395234,
       "sha256": "02fc6a772b061ebacf20698e861c30e9197289544677dd2fbe5375e9bfd9d6b2",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 105,
+      "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+      "train_days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday"
+      ],
       "test_days": [
         "friday"
-      ]
+      ],
+      "stored_threshold": 0.5392,
+      "params": 593500
     },
     {
-      "path": "models/m1v2-n8-e20rw-s42/monday.pt",
+      "file": "monday.pt",
       "bytes": 2395234,
       "sha256": "47208e3869aaa4fdd7561556937483ed9f3f5851f098d89d6ea03b2ee20fbab3",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 105,
+      "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+      "train_days": [
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday"
+      ],
       "test_days": [
         "monday"
-      ]
+      ],
+      "stored_threshold": 0.5,
+      "params": 593500
     },
     {
-      "path": "models/m1v2-n8-e20rw-s42/thursday.pt",
+      "file": "thursday.pt",
       "bytes": 2397826,
       "sha256": "5776f38606291bc4c7db00490abd13f0475049ebb5120a7d5b4942bfda3c233a",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 105,
+      "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+      "train_days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "friday"
+      ],
       "test_days": [
         "thursday"
-      ]
+      ],
+      "stored_threshold": 0.9606,
+      "params": 593500
     },
     {
-      "path": "models/m1v2-n8-e20rw-s42/tuesday.pt",
+      "file": "tuesday.pt",
       "bytes": 2397394,
       "sha256": "c5ed8591690eb622876ef97d4d43fda05b96ccddfc93f33ae989034cd0bd9187",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 105,
+      "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+      "train_days": [
+        "monday",
+        "wednesday",
+        "thursday",
+        "friday"
+      ],
       "test_days": [
         "tuesday"
-      ]
+      ],
+      "stored_threshold": 0.9116,
+      "params": 593500
     },
     {
-      "path": "models/m1v2-n8-e20rw-s42/wednesday.pt",
+      "file": "wednesday.pt",
       "bytes": 2397874,
       "sha256": "d763b10e0353444e92ace9cf56547a4ba128aab95a831cf92aae8e7860571267",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 105,
+      "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+      "train_days": [
+        "monday",
+        "tuesday",
+        "thursday",
+        "friday"
+      ],
       "test_days": [
         "wednesday"
-      ]
+      ],
+      "stored_threshold": 0.7842,
+      "params": 593500
     }
   ]
 }

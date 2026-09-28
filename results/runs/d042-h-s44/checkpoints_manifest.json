@@ -1,91 +1,215 @@
 {
   "run": "d042-h-s44",
+  "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
   "machine": "Atharv-laptop",
+  "python": "3.10.6",
+  "utc": "2026-09-28T20:07:22+00:00",
+  "torch": "2.5.1+cu121",
   "device": "NVIDIA GeForce GTX 1650",
-  "note": "weights are untracked (models/); this manifest identifies them",
+  "note": "hashed in place on this machine; weights are untracked",
   "checkpoints": [
     {
-      "path": "models/d042-h-s44/menti.pt",
+      "file": "menti.pt",
       "bytes": 2467358,
       "sha256": "4b9d0be1c7990ece623a2045b43836e9198a3ec74dceaed7b469f18c758bcaba",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
       "test_days": [
         "s06"
-      ]
+      ],
+      "stored_threshold": 0.1962,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/murlo.pt",
+      "file": "murlo.pt",
       "bytes": 2467358,
       "sha256": "b3b027e0943e2a4aca0a9d99af91de5d5a9ac766e4ad750ed0c3f7927d188553",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
       "test_days": [
         "s08"
-      ]
+      ],
+      "stored_threshold": 0.304,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/neris.pt",
+      "file": "neris.pt",
       "bytes": 2467358,
       "sha256": "5abf964dcd8a82da3e731aef06681da698180d8225345af62ed22c20ba4bb97c",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
       "test_days": [
         "s01",
         "s02",
         "s09"
-      ]
+      ],
+      "stored_threshold": 0.2452,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/nsis.pt",
+      "file": "nsis.pt",
       "bytes": 2467306,
       "sha256": "c1e3932c287a6037a73998b9be75feb6ede80fedc3b6db93338313b910643e24",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s13"
+      ],
       "test_days": [
         "s12"
-      ]
+      ],
+      "stored_threshold": 0.2354,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/rbot.pt",
+      "file": "rbot.pt",
       "bytes": 2467242,
       "sha256": "fe9aab8d97bc9a280aa063a68a55acffbb53b7c7e23aadc86b895133f38db897",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s12",
+        "s13"
+      ],
       "test_days": [
         "s03",
         "s04",
         "s10",
         "s11"
-      ]
+      ],
+      "stored_threshold": 0.1374,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/sogou.pt",
+      "file": "sogou.pt",
       "bytes": 2467358,
       "sha256": "b7259504112bae701c56482bc69aec05ef6fcec0b8b9f2d8536551892c5ef7f4",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+        "s13"
+      ],
       "test_days": [
         "s07"
-      ]
+      ],
+      "stored_threshold": 0.2256,
+      "params": 611980
     },
     {
-      "path": "models/d042-h-s44/virut.pt",
+      "file": "virut.pt",
       "bytes": 2467358,
       "sha256": "27e575c593cedd248e8645e8f80ef346e205f0379e7c2e3b2e4cecd39738c1fe",
-      "pos_mode": "window",
       "git_sha": "26680d2",
+      "pos_mode": "window",
+      "hazard": "factorized",
       "n_features": 62,
+      "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+      "train_days": [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12"
+      ],
       "test_days": [
         "s05",
         "s13"
-      ]
+      ],
+      "stored_threshold": 0.1864,
+      "params": 611980
     }
   ]
 }

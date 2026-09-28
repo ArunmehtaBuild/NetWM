@@ -1,5 +1,5 @@
 {
-  "run": "m1v2-n8-e20rw-s44",
+  "run": "m1v2-e20r-s44",
   "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
   "machine": "Atharv-laptop",
   "python": "3.10.6",
@@ -10,10 +10,10 @@
   "checkpoints": [
     {
       "file": "friday.pt",
-      "bytes": 2395234,
-      "sha256": "ff9c4a2f29d0308d28fffb01a06c93ce9c084b1c48e8a8b3c737b0e8c515d76d",
-      "git_sha": "d1b3f22",
-      "pos_mode": "window",
+      "bytes": 2395170,
+      "sha256": "26ec4acdd15dfd778e865f2142a1ae91318489f9979195c05ea0a05905062c50",
+      "git_sha": "532186e",
+      "pos_mode": "interp",
       "hazard": "direct",
       "n_features": 105,
       "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
@@ -26,15 +26,15 @@
       "test_days": [
         "friday"
       ],
-      "stored_threshold": 0.9606,
+      "stored_threshold": 0.941,
       "params": 593500
     },
     {
       "file": "monday.pt",
-      "bytes": 2395234,
-      "sha256": "38fd1bca0ac6d6b9996c535ace3b8bc05525f09bc49fb6d19685a072bccb397d",
-      "git_sha": "d1b3f22",
-      "pos_mode": "window",
+      "bytes": 2395170,
+      "sha256": "2c75a1cf59d1684bff4c3409f3f07ec771b043fd800edca9660a11b8a8c6addf",
+      "git_sha": "532186e",
+      "pos_mode": "interp",
       "hazard": "direct",
       "n_features": 105,
       "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
@@ -47,15 +47,15 @@
       "test_days": [
         "monday"
       ],
-      "stored_threshold": 0.9214,
+      "stored_threshold": 0.8528,
       "params": 593500
     },
     {
       "file": "thursday.pt",
-      "bytes": 2397826,
-      "sha256": "04372743c80b52d01811e9461ff5c6002dbf0e021bc0c37d8a37c0fc4b861210",
-      "git_sha": "d1b3f22",
-      "pos_mode": "window",
+      "bytes": 2397762,
+      "sha256": "67fe1e6f58f567131be406e338f059b141e2226c9019098c12617b3c1c579590",
+      "git_sha": "532186e",
+      "pos_mode": "interp",
       "hazard": "direct",
       "n_features": 105,
       "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
@@ -68,15 +68,15 @@
       "test_days": [
         "thursday"
       ],
-      "stored_threshold": 0.9508,
+      "stored_threshold": 0.892,
       "params": 593500
     },
     {
       "file": "tuesday.pt",
-      "bytes": 2397394,
-      "sha256": "d0577a0d30fddeb0435947a6a548f3673955214322541ffafe377b01f34eb68f",
-      "git_sha": "d1b3f22",
-      "pos_mode": "window",
+      "bytes": 2397330,
+      "sha256": "6c6cd7530d260bfdf98fd86a603d687d3aac22726535885f50337d3435334b2f",
+      "git_sha": "532186e",
+      "pos_mode": "interp",
       "hazard": "direct",
       "n_features": 105,
       "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
@@ -89,15 +89,15 @@
       "test_days": [
         "tuesday"
       ],
-      "stored_threshold": 0.9017999999999999,
+      "stored_threshold": 0.9312,
       "params": 593500
     },
     {
       "file": "wednesday.pt",
-      "bytes": 2397874,
-      "sha256": "fe8c9908ab95a8de45db0612816b5f753bc1f093c00cc76206b58325b458e7c9",
-      "git_sha": "d1b3f22",
-      "pos_mode": "window",
+      "bytes": 2397810,
+      "sha256": "752131e9aba1475fd317003ec9cb6bc2efa2778f263b103bbddb6837724ac4e7",
+      "git_sha": "532186e",
+      "pos_mode": "interp",
       "hazard": "direct",
       "n_features": 105,
       "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
@@ -110,7 +110,7 @@
       "test_days": [
         "wednesday"
       ],
-      "stored_threshold": 0.843,
+      "stored_threshold": 0.9116,
       "params": 593500
     }
   ]

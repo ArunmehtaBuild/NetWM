@@ -1,5 +1,5 @@
 {
-  "run": "d042-g-s44",
+  "run": "e25-ctu13-s42",
   "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
   "machine": "Atharv-laptop",
   "python": "3.10.6",
@@ -10,10 +10,10 @@
   "checkpoints": [
     {
       "file": "menti.pt",
-      "bytes": 2460766,
-      "sha256": "5544891c6e669a0971f61294c02ecdc1b065fe7f31b86d6b9a26e67d9c9489d3",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460702,
+      "sha256": "2bf3fe6ad8ca2ee42f87490d568f9e68cbcd620023474e9f0b356ab283706cce",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -39,10 +39,10 @@
     },
     {
       "file": "murlo.pt",
-      "bytes": 2460766,
-      "sha256": "edcf51c84810b1a604565a8a71a767a9ca81a5ee0818ac4773402bdca1ffe1b9",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460702,
+      "sha256": "d009943b2876122feba9838585b4d9c1ab550e56e1a4526837212878280c3051",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -63,15 +63,15 @@
       "test_days": [
         "s08"
       ],
-      "stored_threshold": 0.304,
+      "stored_threshold": 0.3628,
       "params": 610432
     },
     {
       "file": "neris.pt",
-      "bytes": 2460766,
-      "sha256": "39ed5e0a9641546f7ecab2010ae8fdcda1cea189b449b9c0eae0b79f49509f01",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460702,
+      "sha256": "759faac9d241350f47c285062960a1a97df0cad6657c10be462c86a12a8e2cb7",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -92,15 +92,15 @@
         "s02",
         "s09"
       ],
-      "stored_threshold": 0.2158,
+      "stored_threshold": 0.2648,
       "params": 610432
     },
     {
       "file": "nsis.pt",
-      "bytes": 2460714,
-      "sha256": "3b7088efe5b05b5125939314731b0a915b974e94c07fafe711a2dedaca7f4e9e",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460650,
+      "sha256": "be15932a2b7c35dd9be45b28b649b78126901bd129ec9f27eeb3d9134941aed1",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -121,15 +121,15 @@
       "test_days": [
         "s12"
       ],
-      "stored_threshold": 0.1962,
+      "stored_threshold": 0.2158,
       "params": 610432
     },
     {
       "file": "rbot.pt",
-      "bytes": 2460650,
-      "sha256": "24202740c62483499401657fe80bed89e5f2d8b93abdc5f17488c6312a98d655",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460586,
+      "sha256": "22a9f39bcc8c51af3df8e09d8154f809507509ce380697a63c0591c1c9860678",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -150,15 +150,15 @@
         "s10",
         "s11"
       ],
-      "stored_threshold": 0.0296,
+      "stored_threshold": 0.1472,
       "params": 610432
     },
     {
       "file": "sogou.pt",
-      "bytes": 2460766,
-      "sha256": "3e4cf864d953250690ca9521d7002b57d77502663b9157e272422e4e2887a50d",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460702,
+      "sha256": "19092495e3fd22591ee946db7497960eeae50f29941c738fc97c5f89eab407ae",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -179,15 +179,15 @@
       "test_days": [
         "s07"
       ],
-      "stored_threshold": 0.2354,
+      "stored_threshold": 0.2452,
       "params": 610432
     },
     {
       "file": "virut.pt",
-      "bytes": 2460766,
-      "sha256": "1b68db79a92eb12a64d7f8163d894b933d3a2218a3217bcea28125c4ee2f90df",
-      "git_sha": "26680d2",
-      "pos_mode": "window",
+      "bytes": 2460702,
+      "sha256": "d3540a2c6c7f5d0738a7c57bdec4cac4ca5a834e2d1fa7b4e07075e6e3b6e57f",
+      "git_sha": "df2c6ef",
+      "pos_mode": "interp",
       "hazard": "factorized",
       "n_features": 56,
       "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
@@ -208,7 +208,7 @@
         "s05",
         "s13"
       ],
-      "stored_threshold": 0.20600000000000002,
+      "stored_threshold": 0.2452,
       "params": 610432
     }
   ]

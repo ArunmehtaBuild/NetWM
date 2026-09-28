@@ -1,30 +1,54 @@
 {
   "run": "n8-r2w-s43",
+  "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
   "machine": "Atharv-laptop",
+  "python": "3.10.6",
+  "utc": "2026-09-28T20:07:22+00:00",
+  "torch": "2.5.1+cu121",
   "device": "NVIDIA GeForce GTX 1650",
-  "note": "weights are untracked (models/); this manifest identifies them",
+  "note": "hashed in place on this machine; weights are untracked",
   "checkpoints": [
     {
-      "path": "models/n8-r2w-s43/friday.pt",
+      "file": "friday.pt",
       "bytes": 2356642,
       "sha256": "c2cbcf54d22277c982fbf7ccab517a930e687341025d9bb511ab8923388e28c9",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday"
+      ],
       "test_days": [
         "friday"
-      ]
+      ],
+      "stored_threshold": 0.9116,
+      "params": 584470
     },
     {
-      "path": "models/n8-r2w-s43/thursday.pt",
+      "file": "thursday.pt",
       "bytes": 2359298,
       "sha256": "3e39d9a558374ca994c8c05e128dc0d0dc598e21e5d2fa9b25d6e5f07d5c066a",
-      "pos_mode": "window",
       "git_sha": "d1b3f22",
+      "pos_mode": "window",
+      "hazard": "direct",
       "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "friday"
+      ],
       "test_days": [
         "thursday"
-      ]
+      ],
+      "stored_threshold": 0.9606,
+      "params": 584470
     }
   ]
 }
