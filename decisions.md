@@ -1756,6 +1756,21 @@ seen, and no other hyperparameter changes. A failed gate is reported as failed.
 **Revisit if.** G1 fails on real data but not in the tests. That would mean a path the tests do not
 cover (the explainer's short slices, `engine/explain.py`, are one candidate).
 
+**Amendment (2026-09-28, before any D-041 run finished; no result had been seen).**
+1. **Inputs.** `data/processed/cicids2017_m1v2p` gained a `has_pcap` column for E26 after E20r was
+   trained. With `exclude_blocks: [host_relative]` alone, the pushed config would have read 106 inputs,
+   not E20r's 105. The config now also drops a new `has_pcap` block (`scripts/train.py`), and
+   E20rw reads exactly E20r's 105 columns in E20r's order. Those 105 columns are unchanged in the
+   rebuilt matrix: a scaler refit on E20r's training days reproduces E20r's stored `mean_`, `std_` and
+   `log_cols` exactly. r2's 70 columns in `data/processed/cicids2017` were checked the same way.
+2. **Scheduling.** At the user's request, every run goes **one at a time**, not three seeds in parallel.
+   The `train.py` arguments are the ones above; only the order changes. Two earlier starts were stopped
+   in their first fold and saved nothing: a parallel one, and a sequential one that read the
+   106-input matrix. Their logs are in `results/runs/n8-logs/stopped-*`. In the sequential start, one
+   process ended after 7 s with exit code 0 and no traceback, and the cause is unknown. So the chain
+   now checks each run's outputs rather than its exit code, and repeats a run once with `--resume` if
+   they are missing.
+
 ### D-042 — Pre-registration: does host-local temporal state fix E25b's cross-family inversions? (CTU-13, 7 folds x 3 seeds)
 *Date: 2026-09-28 · Status: pre-registered; nothing below has been built or trained · Depends on: D-041's
 code (`pos_mode: window`)*

@@ -2,7 +2,9 @@
 # by distance within the attention window, so a window's score does not depend on the capture's length
 # and a stream scored in chunks (state carried) equals one pass. Reads data/processed/cicids2017_m1v2p.
 #   bash scripts/run_m1v2.sh n8-e20rw configs/n8/e20r_pcap_window.yaml data/processed/cicids2017_m1v2p
+# has_pcap is dropped too: the matrix gained it for E26 after E20r trained, and E20r read 105 inputs
+# (amendment recorded in D-041 before any run finished).
 features:
-  exclude_blocks: [host_relative]
+  exclude_blocks: [host_relative, has_pcap]
 model:
   pos_mode: window

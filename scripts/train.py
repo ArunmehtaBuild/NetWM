@@ -91,6 +91,9 @@ FEATURE_BLOCKS: dict[str, tuple[str, ...]] = {
     # E25: S_t v1 columns built from fields Argus does not record - dropped, never learned as constants
     "cic_only": CIC_ONLY_FEATURES,
     "pcap": PACKET_INPUTS,
+    # D-041: has_pcap alone. cicids2017_m1v2p gained it for E26 after E20r trained; E20r's 105 inputs
+    # are the matrix without it (and without the host-relative block).
+    "has_pcap": (HAS_PCAP,),
 }
 
 
