@@ -54,3 +54,17 @@
 
 == fold: menti test=['s06']  train=['s01', 's02', 's03', 's04', 's05', 's07', 's08', 's09', 's10', 's11', 's12', 's13']  device=cuda
   39 batches/epoch -> 7 epochs for ~250 steps
+  epoch   0  total=9.641  recon=0.390  kl=0.620  comp=0.863  imag_comp=0.864
+  epoch   1  total=7.720  recon=0.326  kl=0.579  comp=0.761  imag_comp=0.764
+  epoch   2  total=7.101  recon=0.313  kl=0.561  comp=0.731  imag_comp=0.732
+  epoch   3  total=6.803  recon=0.316  kl=0.657  comp=0.714  imag_comp=0.716
+  epoch   4  total=6.346  recon=0.316  kl=0.632  comp=0.677  imag_comp=0.672
+  epoch   5  total=6.210  recon=0.318  kl=0.609  comp=0.653  imag_comp=0.647
+  epoch   6  total=6.110  recon=0.313  kl=0.616  comp=0.643  imag_comp=0.637
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.9844, "precision": 0.9767, "recall": 0.9921, "fpr": 1.0, "pr_auc": 0.9841, "roc_auc": 0.6975, "warned_early": 4, "episodes": 4, "mean_lead_windows": 7.75}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0078, "precision": 1.0, "recall": 0.0039, "fpr": 0.0, "pr_auc": 0.9841, "roc_auc": 0.6975, "warned_early": 0, "episodes": 4, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.9883, "precision": 0.9769, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.9841, "roc_auc": 0.6975, "warned_early": 4, "episodes": 4, "mean_lead_windows": 7.75}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.5223, "precision": 0.4141, "recall": 0.7069, "fpr": 0.2871, "pr_auc": 0.4188, "roc_auc": 0.7143}
+
+== fold: sogou test=['s07']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's08', 's09', 's10', 's11', 's12', 's13']  device=cuda
+  40 batches/epoch -> 7 epochs for ~250 steps
