@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.inference import get_checkpoint, resolve_demo
+from backend.inference import get_checkpoint, pcap_ensemble_paths, resolve_demo
 from backend.errors import APIError
 from backend.server import app
 from netwm.data.cicids2017 import COLUMN_MAP
@@ -33,6 +33,12 @@ except Exception:
 needs_pcap = pytest.mark.skipif(
     not has_pcap_aggregator,
     reason="PCAP flow aggregator not importable (scapy or flow_aggregator missing)",
+)
+
+# D-038: a PCAP upload is served by the three E20r seeds, never by r2 (models/ is not tracked)
+needs_pcap_ensemble = pytest.mark.skipif(
+    not all(p.exists() for p in pcap_ensemble_paths()),
+    reason="E20r checkpoints (the PCAP route, D-038) not in models/",
 )
 
 
@@ -77,6 +83,9 @@ def test_upload_csv_runs_real_inference() -> None:
     assert payload["mock"] is False
     assert len(payload["timeline"]) > 0
     assert payload["source"]["filename"] == "upload_test.csv"
+    # D-038: a CSV is served by the flow-only r2, and says packet features were unavailable
+    assert payload["inference"]["telemetry"] == "flow"
+    assert payload["inference"]["packet_features"] == "unavailable (flow input)"
 
 
 def _synthetic_pcap_bytes(packet_count: int = 50, step_seconds: float = 20.0) -> bytes:
@@ -101,10 +110,11 @@ def _synthetic_pcap_bytes(packet_count: int = 50, step_seconds: float = 20.0) ->
     return data
 
 
-@needs_model
+@needs_pcap_ensemble
 @needs_pcap
 def test_upload_pcap_runs_real_inference() -> None:
-    """Task R-11: PCAP end-to-end upload test matching the CSV upload coverage."""
+    """Task R-11: PCAP end-to-end upload test matching the CSV upload coverage; since D-038 the
+    capture is served by the packet-enriched E20r ensemble."""
     resp = client.post(
         "/api/analyze",
         files={"file": ("upload_test.pcap", io.BytesIO(_synthetic_pcap_bytes()), "application/vnd.tcpdump.pcap")},
@@ -122,6 +132,9 @@ def test_upload_pcap_runs_real_inference() -> None:
     assert payload["source"]["kind"] == "pcap"
     # a capture carries no labels: the payload must not claim all-benign ground truth
     assert payload["ground_truth"]["available"] is False
+    assert payload["inference"]["telemetry"] == "flow + packet"
+    assert payload["inference"]["model_mode"] == "packet-enriched ensemble of 3"
+    assert payload["inference"]["packet_features"] == "measured from the capture"
 
 
 @needs_model

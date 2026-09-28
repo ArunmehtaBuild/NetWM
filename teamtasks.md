@@ -24,9 +24,10 @@
   - Seed 42 alone had over-read Neris and Virut.
   - Run-up ranking carries to Neris s02/s09 and Rbot s04/s10. It does not carry to Murlo, or to Rbot
     s03, where both models are below chance.
-- **The PCAP route is decided (D-038):** PCAP uploads go to the mean of the three E20r seeds, and CSV
-  stays on r2. It is scored as E27 against a pre-registered acceptance bar. The build is in progress:
-  routing, parity and E27 scoring.
+- **The PCAP route is accepted (D-038, E27):** PCAP uploads go to the mean of the three E20r seeds
+  (Thursday PR-AUC 0.543, S2\* 0.669, S3 not met), and CSV stays on r2. Found on the way: every
+  model's score depends on the capture's length, through the interpolated positional embedding (E27
+  finding 5); a fix needs a pre-registered retrain (N-8). Pending: N-9.
 - **Step 10 is decided (D-039): no GNN and no larger model.** The failures are transfer failures, and
   LR on the same global state is not inverted where the world model is. Whether to run M3
   (CIC-IDS2018) is left to the team.
@@ -53,13 +54,15 @@ produced them, or when the thing it describes demonstrably works end to end - no
 
 | id | task | done when |
 |---|---|---|
-| **N-1** (decision) | **Decided: D-038.** PCAP uploads -> the mean of the three E20r seeds (E27); CSV uploads stay on r2. Being built: routing, parity check, E27 scoring against D-038's acceptance bar | E27 scored in `results.md`; the PCAP route accepted or rejected by D-038's bar |
+| **N-1** (decision) | ~~Which checkpoint ships~~ **Done: D-038 accepted (E27).** PCAP -> the mean of E20r seeds 42/43/44; CSV -> r2. `results.md` E27 | closed; follow-ups N-8, N-9 |
 | **N-2** | ~~Train E22 + real packets with a `has_pcap` mask~~ **Done: E26 (D-037).** The combination does not compose on anticipation (outcome 3), and CSV mode's rollout is worse than persistence | closed |
 | **N-3** | ~~CTU-13 seeds 43 and 44 and an LR floor~~ **Done: E25b** (`c704587`, `8815fd9`, `d2c4185`). 2 of 7 families transfer, 5 inverted; family matrix in `results/tables/e25b_ctu13_*.csv` | closed |
 | **N-4** | **Carry the new results into the submission artefacts**: slides (S-6b), the 2-page doc (G-2), the demo script (G-3). Use D-035's language: "ranks the run-up above background on unseen days", never "warns before". **E25b changes the M2 line:** `docs/architecture.md` still says detection transfers to "Neris, NSIS, Virut: ROC-AUC 0.85-0.99", which is seed 42 only (deferred by the team, 2026-09-28) | every number traced to `results.md` E19-E26 and E25b |
 | **N-5** | **E21's representation for alarm quality.** It cut FPR 0.137 -> 0.110 and raised precision 0.35 -> 0.42 without an anticipation gain; test it against a bar written for alarm cost | a pre-registered bar and a run |
 | **N-6** | **Diagnose E25b's inversions (D-039), descriptive, CPU only.** On Murlo s08, Sogou s07 and Rbot s11, which features drive the world model's score, and in which direction compared with the training families? Do the bot host's windows separate from background hosts on per-host features but not on global ones? This is the evidence D-039 needs before any per-host-state run | a descriptive entry in `results.md`; a pre-registered per-host run only if it points there |
 | **N-7** (decision, team) | **M3, CIC-IDS2018: run it or not.** The corrected flow CSVs are a 9.7 GB zip (`intrusion-detection.distrinet-research.be/CNS2022/Datasets/CSECICIDS2018_improved.zip`), no PCAPs needed. It keeps the full 70-feature state CTU-13 cannot, and adds compromise onsets. It needs a pre-registration and a download the team approves (D-039) | a decision entry |
+| **N-8** | **Positional-length defect (E27 finding 5).** A window's score depends on the capture's length (`CausalContext` interpolates its positional embedding to the input length; Friday: 16 of 36 alarm windows change when only the first half-day is scored). Pre-register a fix (position within the attention window, or a relative bias) and retrain the shipped method's seeds | a pre-registered run; `test_forecast_is_prefix_invariant` passes |
+| **N-9** | **PCAP route follow-ups (D-038).** (a) track or publish the six E20r fold files the demo needs: a fresh clone's PCAP route returns `no_model`, with no fallback by design; (b) check 4, the live PCAP state against the training matrix on a full real day (`pcap_route_parity.py --pcap`); (c) Step 8, the same traffic through both routes on a real Thursday 16:40-18:50 slice (`pcap_route_same_traffic.py`) | results in `results/runs/e27-parity/` and `results/runs/e27-same-traffic/` |
 
 **Order that matters:** G-1 is a one-click owner action and cannot slip past submission. G-9 and G-3
 come before H-15 records, because a 5-minute script cannot make a 2-minute video. G-4 and G-7 are the last

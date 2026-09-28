@@ -1,0 +1,31 @@
+E19 flow-only (r2 method)                    m1v2-e19-s42       S2*=0.634 Thu PR-AUC=0.430 prec=0.347 fpr=0.110 S3 3/19 p=0.9691
+E19 flow-only (r2 method)                    m1v2-e19-s43       S2*=0.680 Thu PR-AUC=0.465 prec=0.311 fpr=0.132 S3 4/19 p=0.8895
+E19 flow-only (r2 method)                    m1v2-e19-s44       S2*=0.639 Thu PR-AUC=0.407 prec=0.318 fpr=0.118 S3 5/19 p=0.3909
+E20r seed 42                                 m1v2-e20r-s42      S2*=0.645 Thu PR-AUC=0.418 prec=0.377 fpr=0.134 S3 4/19 p=0.9078
+E20r seed 43                                 m1v2-e20r-s43      S2*=0.597 Thu PR-AUC=0.562 prec=0.332 fpr=0.121 S3 5/19 p=0.7435
+E20r seed 44                                 m1v2-e20r-s44      S2*=0.685 Thu PR-AUC=0.710 prec=0.418 fpr=0.111 S3 4/19 p=0.8208
+E20r mean of seeds 42/43/44 (PCAP route)     e27-e20r-mean      S2*=0.669 Thu PR-AUC=0.543 prec=0.356 fpr=0.128 S3 4/19 p=0.9232
+
+| model | input | Thu PR-AUC | Thu F1 | Thu precision | Thu recall | Thu FPR | Fri PR-AUC | Fri F1 | S1 precision | S1 FPR | S2* | S3 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| E19 flow-only (r2 method) | CSV (flow) | 0.434 [0.41-0.46] | 0.514 [0.48-0.57] | 0.549 [0.52-0.61] | 0.484 [0.45-0.54] | 0.082 [0.07-0.09] | 0.120 [0.11-0.14] | 0.106 [0.01-0.17] | 0.325 [0.31-0.35] | 0.120 [0.11-0.13] | 0.651 [0.63-0.68] | 3/19 p=0.9691; 4/19 p=0.8895; 5/19 p=0.3909 |
+| E20r seed 42 | PCAP (flow + packet) | 0.418 | 0.533 | 0.537 | 0.530 | 0.094 | 0.166 | 0.285 | 0.377 | 0.134 | 0.645 | 4/19 p=0.9078 |
+| E20r seed 43 | PCAP (flow + packet) | 0.562 | 0.623 | 0.676 | 0.578 | 0.057 | 0.104 | 0.021 | 0.332 | 0.121 | 0.597 | 5/19 p=0.7435 |
+| E20r seed 44 | PCAP (flow + packet) | 0.710 | 0.697 | 0.750 | 0.651 | 0.045 | 0.123 | 0.155 | 0.418 | 0.111 | 0.685 | 4/19 p=0.8208 |
+| E20r mean of seeds 42/43/44 (PCAP route) | PCAP (flow + packet) | 0.543 | 0.609 | 0.623 | 0.596 | 0.074 | 0.143 | 0.116 | 0.356 | 0.128 | 0.669 | 4/19 p=0.9232 |
+| r2 shipped, flow-only (CSV route) | CSV (flow) | 0.640 | 0.608 | 0.613 | 0.602 | 0.078 | 0.109 | 0.061 | - | - | - | - |
+
+D-038 acceptance:
+{
+ "c1_engineering_parity": true,
+ "c1_note": "and the routing tests (backend/tests/test_pcap_route.py) - recorded in results.md",
+ "c2_stability": true,
+ "ensemble_thursday_pr_auc": 0.5432,
+ "c3_anticipation_non_inferior": true,
+ "ensemble_S2_star": 0.6689,
+ "e19_S2_star": 0.6508,
+ "bar_S2_star": 0.6208,
+ "accepted": true,
+ "outcome": "accepted: the E20r mean serves PCAP uploads, r2 serves CSV (D-038)"
+}
+exit=0

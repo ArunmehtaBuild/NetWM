@@ -62,6 +62,30 @@ function renderGlobal(state) {
     horizonPill.textContent = `Horizon K=${payload.horizon_k} (5m lookahead)`;
   }
 
+  // Telemetry / model route (D-038): CSV is served by the flow-only r2, PCAP by the packet-enriched
+  // E20r ensemble. Read from the payload, never inferred from the filename; absent on old fixtures.
+  const modalityPill = document.getElementById("modalityPill");
+  if (modalityPill) {
+    const inf = payload.inference;
+    if (inf) {
+      const packet = inf.telemetry === "flow + packet";
+      const ckpts = Array.isArray(inf.checkpoints) ? inf.checkpoints : [];
+      const model = ckpts.some((c) => String(c).includes("e20r"))
+        ? `E20r ensemble of ${ckpts.length}`
+        : ckpts.some((c) => String(c).includes("worldmodel-r2")) ? "r2" : inf.model_mode;
+      modalityPill.className = packet ? "pill pill-packet" : "pill pill-flow";
+      modalityPill.innerHTML = `<span class="status-dot"></span>${
+        packet ? "Flow + packet telemetry · packet-enriched inference" : "Flow telemetry · flow-only inference"
+      }`;
+      modalityPill.title = packet
+        ? `${String(inf.input_modality).toUpperCase()} input · ${model} (${inf.model_mode}) · packet features ${inf.packet_features} · ${inf.aggregation || ""}`
+        : `${String(inf.input_modality).toUpperCase()} input · ${model} (${inf.model_mode}) · packet-derived features ${inf.packet_features}`;
+      modalityPill.classList.remove("hidden");
+    } else {
+      modalityPill.classList.add("hidden");
+    }
+  }
+
   // Capture Source Info
   const sourceFilename = document.getElementById("sourceFilename");
   if (sourceFilename && payload.source) {

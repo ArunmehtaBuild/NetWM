@@ -24,7 +24,13 @@ from netwm.features.windowing import (
     onset_windows,
     window_stages,
 )
-from netwm.features.packet_windows import HAS_PCAP, read_packets, window_packet_features, with_packets
+from netwm.features.packet_windows import (
+    HAS_PCAP,
+    PACKET_INPUTS,
+    read_packets,
+    window_packet_features,
+    with_packets,
+)
 from netwm.metrics import CAUSAL_WARMUP, causal_threshold, lead_times
 from netwm.models.leadtime import circular_shift_null
 from netwm.labels.mitre_map import (
@@ -58,14 +64,53 @@ def stage_catalogue() -> list[dict[str, Any]]:
     ]
 
 
+#: D-038: the PCAP route's threshold, set explicitly. The E20r checkpoints name no policy, and the
+#: single-checkpoint fallback below ("fixed") would serve their train-tuned scalar, which E14 found
+#: ~100x too high on a held-out day. The route uses D-034's causal budget instead.
+ENSEMBLE_POLICY = "expanding-10pct"
+
+
 def load_checkpoint(path: Path | str, device: torch.device | None = None) -> dict:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = torch.load(Path(path), map_location=device, weights_only=False)
     model = build_model(WorldModelConfig(**ckpt["model_config"])).to(device)
     model.load_state_dict(ckpt["model_state"])
     model.eval()
-    ckpt["model"], ckpt["device"] = model, device
+    ckpt["model"], ckpt["device"], ckpt["path"] = model, device, str(path)
     return ckpt
+
+
+def load_ensemble(paths: "list[Path | str]", device: torch.device | None = None) -> dict:
+    """D-038: several checkpoints of one method served as one model - one state, one mean score.
+
+    The members must read the same features in the same order at the same horizon and stride, and
+    share their training days (one fold), or averaging their windows would mix different questions.
+    The threshold policy is set here, explicitly: the members' stored train-tuned thresholds are
+    never used (D-034).
+    """
+    members = [load_checkpoint(p, device) for p in paths]
+    first = members[0]
+    for m in members[1:]:
+        for key in ("feature_names", "horizon_k", "stride_s"):
+            if list(np.atleast_1d(m[key])) != list(np.atleast_1d(first[key])):
+                raise ValueError(f"{m['path']}: {key} differs from {first['path']} - not one method")
+        if sorted(m.get("train_days", [])) != sorted(first.get("train_days", [])):
+            raise ValueError(f"{m['path']}: trained on other days than {first['path']} - not one fold")
+    return {
+        "members": members,
+        "feature_names": list(first["feature_names"]),
+        "horizon_k": first["horizon_k"],
+        "stride_s": first["stride_s"],
+        "train_days": list(first.get("train_days", [])),
+        "threshold_policy": ENSEMBLE_POLICY,
+        "path": [m["path"] for m in members],
+        "git_sha": [str(m.get("git_sha", "unknown")) for m in members],
+    }
+
+
+def reads_packets(names: "list[str]") -> bool:
+    """Whether a model's inputs include the packet block measured from a capture (E20r, E26)."""
+    return any(n in PACKET_INPUTS for n in names)
 
 
 def read_flow_csv(path: Path | str) -> pd.DataFrame:
@@ -110,7 +155,12 @@ def state_matrix(flows: pd.DataFrame, names: "list[str]", spec: WindowSpec,
     n_windows = int(expanded["w"].max()) + 1
     feats = window_features(expanded, spec.length_s, (VICTIM_SUBNET,), n_windows=n_windows,
                             **feature_flags_from_names(names))
-    if HAS_PCAP in names:
+    if reads_packets(names):
+        if pcap_path is None and HAS_PCAP not in names:
+            # E20r trained only on measured packets: a flow CSV would hand it zeros it has never
+            # seen, and its forecast would look like a packet model's while being nothing of the sort
+            raise ValueError("this model reads packet features measured from a capture and has no "
+                             "absent-packet input: it serves PCAP uploads only (D-038)")
         packet_feats = None
         if pcap_path is not None:
             packet_feats = window_packet_features(read_packets(pcap_path), t0, n_windows,
@@ -136,9 +186,13 @@ def analyze_flows(
     ``pcap_path``: the capture the flows came from. A checkpoint that reads packet features (D-037)
     gets them from it, measured by the same functions that built its training data; without one
     (a flow-CSV upload) they are absent and ``has_pcap`` = 0, exactly as in its CSV-mode training.
+
+    ``ckpt`` is one checkpoint or a :func:`load_ensemble` (D-038). An ensemble's members read the
+    same state; every per-window output is the arithmetic mean over members, and the alarm threshold
+    is applied once, to the mean score.
     """
-    model, device = ckpt["model"], ckpt["device"]
-    scaler, names = ckpt["scaler"], ckpt["feature_names"]
+    members = ckpt.get("members") or [ckpt]
+    names = list(ckpt["feature_names"])
     horizon, stride_s = int(ckpt["horizon_k"]), float(ckpt["stride_s"])
     threshold = float(ckpt.get("threshold", 0.5))
     policy = str(ckpt.get("threshold_policy", "fixed"))
@@ -149,30 +203,21 @@ def analyze_flows(
     spec = WindowSpec(2 * stride_s, stride_s)
 
     feats, expanded, t0, n_windows = state_matrix(flows, names, spec, pcap_path)
-    packets_used = HAS_PCAP in names
-    x = scaler.transform(feats[names])
+    packets_used = reads_packets(names)
+    # each member applies its own fitted scaler to the one shared state
+    xs = [m["scaler"].transform(feats[names]) for m in members]
+    x = xs[0]
+    scaler = members[0]["scaler"]
     # what the model's inputs are called: the feature names, or four views of each (D-035, E21)
     input_names = scaler.output_names() if hasattr(scaler, "output_names") else list(names)
     if progress:
         progress(0.35, f"{len(flows):,} flows -> {n_windows:,} windows")
 
-    tensor = torch.from_numpy(x).unsqueeze(0).to(device)
-    out = model.forecast(tensor, horizon=horizon, n_samples=n_samples)
-    out = {k: v.numpy() for k, v in out.items()}
-    # Alarm statistic is max over the horizon, not the cumulative union: the compromise head answers
-    # "is this state compromised", a property that persists, so the union multiplies one event K
-    # times and saturates (D-019, E13).
-    #
-    # The curves and their Monte-Carlo band come from sampled rollouts, but the *alarm score* is read
-    # off the deterministic mean path: a lead-time count must not move between runs of the same
-    # checkpoint on the same file (E14 saw 1 of 4 and then 2 of 4 at one threshold). Sampling stays
-    # for the band, because a cone drawn from a single deterministic path would be a flat line.
-    statistic = "p_max"
-    if mean_path_score:
-        mean_out = model.forecast(tensor, horizon=horizon, n_samples=1, sample=False)
-        out["p_max_mc"] = out["p_max"]
-        out["p_max"] = mean_out["p_max"].numpy()
-        statistic = "p_max (mean path)"
+    outs = [_forecast(m, xm, horizon, n_samples, mean_path_score) for m, xm in zip(members, xs)]
+    out = _mean_outputs(outs)
+    statistic = "p_max (mean path)" if mean_path_score else "p_max"
+    if len(members) > 1:
+        statistic += f", mean of {len(members)} checkpoints"
     score = out["p_max"]
     # One threshold per window. Fixed policies repeat a scalar; the deployable policy is a series.
     thresholds = np.full(n_windows, threshold)
@@ -200,9 +245,7 @@ def analyze_flows(
     ranked = alarm_idx[np.argsort(score[alarm_idx])[::-1][:explain_limit]] if alarm_idx.size else np.array([], int)
     sampled = np.arange(0, n_windows, explain_every)
     explain_at = sorted(set(ranked.tolist()) | set(sampled.tolist()))
-    explanations = {
-        t: explain_window(model, x, int(t), horizon, device) for t in explain_at
-    }
+    explanations = {t: _explain(members, xs, int(t), horizon) for t in explain_at}
 
     ts = spec.window_start(t0, np.arange(n_windows))
     has_labels = "stage" in flows.columns
@@ -252,12 +295,22 @@ def analyze_flows(
         "source": {
             "flows": int(len(flows)),
             "windows": int(n_windows),
-            # D-037: whether the model read packet features, and whether they were measured
-            "packet_features": ("measured from the capture" if pcap_path is not None else "absent (flow input)")
-            if packets_used else "not used by this model",
+            # D-037 / D-038: whether the model read packet features, and whether they were measured
+            "packet_features": _packet_note(packets_used, pcap_path),
             "t0": t0.isoformat() + "Z",
             "window_s": spec.length_s,
             "stride_s": spec.stride_s,
+        },
+        # D-038: which route served this file - the dashboard's modality indicator reads this
+        "inference": {
+            "input_modality": "pcap" if pcap_path is not None else "csv",
+            "telemetry": "flow + packet" if packets_used and pcap_path is not None else "flow",
+            "model_mode": ("packet-enriched" if packets_used else "flow-only")
+            + (f" ensemble of {len(members)}" if len(members) > 1 else ""),
+            "checkpoints": [str(m.get("path", "unknown")) for m in members],
+            "aggregation": "arithmetic mean per window, threshold applied to the mean" if len(members) > 1 else None,
+            "packet_features": _packet_note(packets_used, pcap_path),
+            "feature_count": len(names),
         },
         "threshold": threshold,
         "threshold_warmup_windows": CAUSAL_WARMUP if policy.startswith("expanding") else 0,
@@ -289,6 +342,57 @@ def analyze_flows(
     if progress:
         progress(1.0, "done")
     return payload
+
+
+@torch.no_grad()
+def _forecast(member: dict, x: np.ndarray, horizon: int, n_samples: int, mean_path_score: bool) -> dict:
+    """One checkpoint's per-window forecast over the whole capture.
+
+    Alarm statistic is max over the horizon, not the cumulative union: the compromise head answers
+    "is this state compromised", a property that persists, so the union multiplies one event K times
+    and saturates (D-019, E13).
+
+    The curves and their Monte-Carlo band come from sampled rollouts, but the *alarm score* is read off
+    the deterministic mean path: a lead-time count must not move between runs of the same checkpoint on
+    the same file (E14 saw 1 of 4 and then 2 of 4 at one threshold). Sampling stays for the band,
+    because a cone drawn from a single deterministic path would be a flat line.
+    """
+    model, device = member["model"], member["device"]
+    tensor = torch.from_numpy(x).unsqueeze(0).to(device)
+    out = {k: v.cpu().numpy() for k, v in model.forecast(tensor, horizon=horizon, n_samples=n_samples).items()}
+    if mean_path_score:
+        mean_out = model.forecast(tensor, horizon=horizon, n_samples=1, sample=False)
+        out["p_max_mc"] = out["p_max"]
+        out["p_max"] = mean_out["p_max"].cpu().numpy()
+    return out
+
+
+def _mean_outputs(outs: "list[dict]") -> dict:
+    """D-038: the ensemble's output is the arithmetic mean of its members', array by array, per window.
+    One member is returned untouched, so the single-checkpoint path is unchanged."""
+    if len(outs) == 1:
+        return outs[0]
+    return {k: np.mean(np.stack([o[k] for o in outs]), axis=0) for k in outs[0]}
+
+
+def _explain(members: "list[dict]", xs: "list[np.ndarray]", t: int, horizon: int) -> dict:
+    """Integrated Gradients for window ``t``, averaged over members. IG is linear in the model, so the
+    mean of the members' attributions is the attribution of the mean score (D-038)."""
+    parts = [explain_window(m["model"], xm, t, horizon, m["device"]) for m, xm in zip(members, xs)]
+    if len(parts) == 1:
+        return parts[0]
+    out = {"t": t, "score": float(np.mean([p["score"] for p in parts]))}
+    for key in ("feature_attribution", "history_attribution", "total_attribution"):
+        if len({np.shape(p[key]) for p in parts}) == 1:
+            out[key] = np.mean(np.stack([p[key] for p in parts]), axis=0)
+    return out
+
+
+def _packet_note(packets_used: bool, pcap_path) -> str:
+    """What the payload says about packet telemetry - never that a flow-only model used it."""
+    if packets_used:
+        return "measured from the capture" if pcap_path is not None else "absent (flow input)"
+    return "unavailable (flow input)" if pcap_path is None else "not used by this model (flow-only)"
 
 
 def _alarm_rows(score, threshold, onsets, ts, stride_s, horizon, persistence: int = 2) -> list[dict]:

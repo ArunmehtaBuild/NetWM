@@ -1610,3 +1610,129 @@ Artefacts:
 - `results/tables/e25-ctu13-s4{3,4}_{forecast,training_curves}.csv`;
 - `results/runs/m1v2-sweep-logs/e25-ctu13-s4{3,4}.log`;
 - `models/e25-ctu13-s4{3,4}/<family>.pt` (untracked; kept on the training machine).
+
+---
+
+## E27 - the PCAP route: the mean of the three E20r seeds serves PCAP uploads, r2 serves CSV (D-038)
+
+```
+.venv/Scripts/python.exe -m pytest -q tests backend/tests                       # routing tests: backend/tests/test_pcap_route.py
+CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py                    # Step 5, checks 1-3
+python scripts/pcap_route_eval.py                                               # Steps 6-7 + D-038's acceptance bar
+CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py --pcap data/cic-2017-pcap/Tuesday-WorkingHours.pcap --day tuesday   # check 4 (pending)
+python scripts/pcap_route_same_traffic.py --pcap <Thursday 16:40-18:50 UTC slice>                                               # Step 8 (pending)
+```
+
+**What E27 is.** The shipped r2 reads 70 flow features, so a PCAP upload used to be turned into flows
+and every packet measurement ignored. D-038, committed (`86dbaa3`) before any ensemble number was
+computed, routes by input:
+- `.csv` → r2, unchanged;
+- `.pcap` / `.pcapng` → all three E20r seeds (`models/m1v2-e20r-s{42,43,44}/`). Each reads the same
+  105-input state: 70 S_t v1 flow features, the 17 CSV packet statistics, and the 18 `pcap_` features
+  measured from the capture (TTL, fragments, retransmissions, TCP window, payload sizes, packet timing,
+  SYN-only and RST shares).
+
+The per-window scores are averaged, and the causal q90 (D-034) is applied once, to the mean. No seed
+is chosen, and a PCAP upload never falls back to r2. Nothing was trained; the scores below are the
+three runs' stored per-window outputs, averaged (run folder `e27-e20r-mean`).
+
+**The checkpoints (Step 2).** On all five folds, the three seeds are one method:
+- the same model config (593,500 parameters);
+- the same 105 inputs in the same order, with no `has_pcap`, so this is a PCAP-only model;
+- scalers that transform the held-out matrix identically, and the same training days.
+
+A flow CSV handed to E20r now raises an error rather than feeding it zeros it never saw.
+
+**Engineering (D-038 criterion 1): passed.**
+- **Tests.** `backend/tests/test_pcap_route.py` has 11 passing tests and 1 expected failure (finding 5
+  below); the full suite has no other failures (158 passed before the split). The tests cover:
+  - CSV → r2 only, with no packet inputs built;
+  - PCAP → all three members, with the packet block built once and shared;
+  - one window grid, and an ensemble score equal to the members' mean;
+  - the causal threshold applied once, to the mean;
+  - a deterministic alarm score;
+  - no fallback to r2 or a fixture;
+  - mixed folds refused;
+  - payloads valid under the v1.1 contract.
+- **Parity (`results/runs/e27-parity/`, `results/tables/e27_parity.csv`).** Each seed, fed its
+  processed held-out matrix, reproduces its stored scores: correlation 0.997-0.9996 on every day, and
+  Thursday PR-AUC stored against live 0.418 / 0.419, 0.562 / 0.568, 0.710 / 0.698. The scaler and the
+  causal threshold are prefix-invariant on Thursday and Friday.
+
+**Results (causal expanding q90; mean [min-max] over seeds where three runs exist).**
+
+| model | input | Thu PR-AUC | Thu F1 | Thu precision | Thu recall | Thu FPR | Fri PR-AUC | Fri F1 | S1 precision | S1 FPR | S2\* | S3 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| r2 shipped, flow-only | CSV (flow) | 0.640 | 0.608 | 0.613 | 0.602 | 0.078 | 0.109 | 0.061 | - | - | - | - |
+| E19, the r2 method | CSV (flow) | 0.434 [0.41-0.46] | 0.514 [0.48-0.57] | 0.549 | 0.484 | 0.082 | 0.120 | 0.106 | 0.325 | 0.120 | 0.651 [0.63-0.68] | not met |
+| E20r seed 42 | PCAP (flow + packet) | 0.418 | 0.533 | 0.537 | 0.530 | 0.094 | 0.166 | 0.285 | 0.377 | 0.134 | 0.645 | 4/19, p 0.91 |
+| E20r seed 43 | PCAP (flow + packet) | 0.562 | 0.623 | 0.676 | 0.578 | 0.057 | 0.104 | 0.021 | 0.332 | 0.121 | 0.597 | 5/19, p 0.74 |
+| E20r seed 44 | PCAP (flow + packet) | 0.710 | 0.697 | 0.750 | 0.651 | 0.045 | 0.123 | 0.155 | 0.418 | 0.111 | 0.685 | 4/19, p 0.82 |
+| **E20r mean (PCAP route)** | PCAP (flow + packet) | **0.543** | **0.609** | 0.623 | 0.596 | 0.074 | 0.143 | 0.116 | 0.356 | 0.128 | **0.669** | 4/19, p 0.92 |
+
+**D-038's acceptance bar: accepted.**
+
+| criterion | result | bar |
+|---|---|---|
+| 1. engineering: tests + parity | passed | - |
+| 2. stability: Thursday PR-AUC | 0.543 | >= 0.20 |
+| 3. anticipation against flow-only E19 | S2\* 0.669 | >= 0.651 - 0.03 = 0.621 |
+
+**What E27 shows**
+1. **The system now has a genuine packet-consuming path.** A PCAP upload is scored by a model that
+   reads TTL, fragments, retransmissions, TCP window, payload sizes and packet timing measured from the
+   capture. r2 remains the flow-only path for CSV. The payload and the dashboard say which route
+   served a file (`inference` block; "Flow + packet telemetry" or "Flow telemetry" pill), and the model
+   card lists both routes.
+2. **Detection on the PCAP route.** Thursday PR-AUC is 0.543, with causal F1 0.609 at 7.4 % FPR.
+   - Against its own seeds: the mean sits inside their range (0.42-0.71), close to the seed average
+     (0.564). It removes the choice of seed; it does not beat the best seed.
+   - Against the flow-only method on the same seeds (E19): 0.543 against 0.434 PR-AUC, and F1 0.609
+     against 0.514.
+   - Against the shipped r2 (one seed, CSV input): PR-AUC 0.543 against 0.640, F1 0.609 against 0.608.
+     r2's seed is the top of its method's range, so E19 is the like-for-like comparison.
+   - Friday's botnet C2, a family no training day contains, stays near the floor for every row (PR-AUC
+     0.10-0.17).
+3. **Anticipation is non-inferior, not improved.** S2\* 0.669 is above E19's mean (0.651) but inside
+   E19's seed range and E20r's. Packets are not claimed to improve anticipation.
+4. **No early warning.** S3 is 4/19 with Fisher p 0.92, so the wording stays "ranks pre-attack windows
+   above background". The output is a risk score, not a probability (E17); the stage is the model's
+   estimate (E9); the why panel shows feature contributions (E11).
+5. **Finding: the forecast is not prefix-invariant.** `CausalContext` linearly interpolates its
+   `context_len` learned positional embeddings to the input's length whenever the input is longer
+   (`src/netwm/models/world_model.py`, `F.interpolate`).
+   - Training sequences are 96 windows (a 6x stretch). Evaluation and the dashboard pass a whole
+     capture, about 970 windows (about 60x).
+   - A window's score therefore depends on how many windows follow it. No future *content* enters,
+     since the attention mask is causal, but the capture's *length* does.
+   - Measured on the real ensemble, scoring the first half of a day on its own against the whole day:
+
+     | | Thursday | Friday |
+     |---|---:|---:|
+     | score correlation | 0.995 | 0.948 |
+     | largest score change | 0.139 | 0.199 |
+     | alarm windows that change | 0 of 38 | 16 of 36 |
+
+   This is pre-existing and shared by every model, r2 included. Every stored number is internally
+   consistent, because all were computed on whole days. But a live stream would score differently
+   from the offline analysis, and inference runs at positional stretches training never saw.
+
+   A fix changes the model and needs retraining, so it is a separate pre-registered experiment and is
+   not done here. `test_forecast_is_prefix_invariant` is marked `xfail(strict=True)` until then. See
+   `research/positional-length.md`.
+6. **Pending.**
+   - *Check 4*: the live PCAP state against the training matrix on a full real day. Its flow half comes
+     from `pcap_to_flows`, not the corrected CSVs, and no full day had compared that before. The
+     Tuesday run was started; its result goes in `results/runs/e27-parity/`.
+   - *Step 8*: the same traffic through both routes. It needs a real Thursday 16:40-18:50 capture. The
+     demo PCAP is synthesised from flow rows (D-031), so its packet features are not real telemetry.
+7. **Deployment.** The E20r weights are not tracked (`models/`). On a fresh clone the PCAP route
+   returns `no_model`, by design with no fallback. Tracking the six fold files the demo needs
+   (Thursday and Friday for each seed, about 14 MB), or publishing them, is a team decision.
+
+Artefacts:
+- `results/runs/e27-e20r-mean/`, `results/runs/e27-pcap-route/` (rows + verdict; `eval.log`);
+- `results/runs/e27-parity/` (`parity.log`);
+- `results/tables/e27_pcap_route.{csv,md}`, `e27_pcap_route_scorecard.csv`, `e27_parity.csv`;
+- code: `src/netwm/engine/predict.py` (`load_ensemble`, the averaged forecast), `backend/inference.py`
+  (routing, model-card routes), `backend/tests/test_pcap_route.py`, `scripts/pcap_route_{parity,eval,same_traffic}.py`.

@@ -12,6 +12,7 @@ how it changed the build.
 | [research/early-warning-nulls.md](research/early-warning-nulls.md) | Why a lead-time count needs a circular-shift null; within-day vs leave-one-day-out separability; negative transfer from auxiliary heads; mean path vs Monte-Carlo; per-seed variance as a disqualifier; three cheap checks that retire a candidate without a training run; fixing the negative set (post-mortem of E12 → E15a → E15 → E16) |
 | [research/state-normalisation.md](research/state-normalisation.md) | Why a train-fitted z-score loses the signal under day-to-day shift; the rank-based inverse normal transform; why whole-capture ranking leaks the future into a lead-time claim and the causal variant does not (S-4, D-025) |
 | [research/ctu13.md](research/ctu13.md) | CTU-13 Dataset Transfer Evaluation: Scenarios, schemas, and adapter plan for M2 |
+| [research/positional-length.md](research/positional-length.md) | E27 finding: the context encoder's interpolated positional embedding makes a window's score depend on the capture's length; size of the effect and fix options (relative positions, ALiBi) |
 
 ## The eight findings that shaped the design
 

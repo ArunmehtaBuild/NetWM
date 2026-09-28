@@ -27,6 +27,43 @@ logger = logging.getLogger("netwm.inference")
 _cached_ckpt: Optional[dict[str, Any]] = None
 _active_model_name: Optional[str] = None
 
+# D-038: PCAP uploads are served by all three E20r seeds, averaged per window - never one seed picked
+# by held-out performance, and never r2, which reads no packet features. CSV uploads stay on r2.
+PCAP_ENSEMBLE_RUNS = ("m1v2-e20r-s42", "m1v2-e20r-s43", "m1v2-e20r-s44")
+PCAP_SUFFIXES = {".pcap", ".pcapng"}
+_E20R_FOLDS = {"monday", "tuesday", "wednesday", "thursday", "friday"}
+_ensemble_cache: dict[str, dict[str, Any]] = {}
+
+
+def is_pcap(path: Path | str) -> bool:
+    return Path(path).suffix.lower() in PCAP_SUFFIXES
+
+
+def pcap_ensemble_paths(day: Optional[str] = None) -> list[Path]:
+    """Each seed's fold for ``day`` (a held-out demo day), else its Thursday fold - r2's default."""
+    fold = str(day).lower() if day and str(day).lower() in _E20R_FOLDS else "thursday"
+    return [settings.models_dir / run / f"{fold}.pt" for run in PCAP_ENSEMBLE_RUNS]
+
+
+def get_pcap_ensemble(day: Optional[str] = None) -> dict[str, Any]:
+    """Load (once per fold) the D-038 ensemble, or fail loudly: a PCAP upload never falls back to r2
+    or to a fixture, because either would present a flow-only answer as a packet-enriched one."""
+    paths = pcap_ensemble_paths(day)
+    key = paths[0].stem
+    if key in _ensemble_cache:
+        return _ensemble_cache[key]
+    missing = [str(p) for p in paths if not p.exists()]
+    if missing:
+        raise APIError(
+            "no_model",
+            "The PCAP route needs all three E20r checkpoints (D-038); missing: " + ", ".join(missing),
+        )
+    from netwm.engine.predict import load_ensemble
+
+    logger.info("Loading the PCAP ensemble: %s", [str(p) for p in paths])
+    _ensemble_cache[key] = load_ensemble(paths)
+    return _ensemble_cache[key]
+
 
 def get_registry() -> dict[str, str]:
     reg_path = settings.models_dir / "registry.json"
@@ -121,6 +158,42 @@ def load_headline_metrics() -> dict[str, float]:
     return metrics
 
 
+# E27 (D-038): the PCAP route's scored result, written by scripts/pcap_route_eval.py. Until it exists
+# the card says so rather than borrowing r2's numbers for a different input.
+_E27_RUN = "e27-pcap-route"
+_E27_MODEL = "E20r mean of seeds 42/43/44 (PCAP route)"
+
+
+def load_pcap_route_metrics() -> Optional[dict[str, float]]:
+    row = _find_row(_E27_RUN, model=_E27_MODEL, day="thursday")
+    if not row:
+        return None
+    return {k: round(float(row[k]), 3) for k in ("f1", "precision", "recall", "fpr", "pr_auc") if k in row}
+
+
+def model_routes() -> dict[str, Any]:
+    """Which model serves which input, and which of them reads packet-derived features (D-038)."""
+    paths = pcap_ensemble_paths()
+    return {
+        "csv": {
+            "model": "r2 (models/e4e7-worldmodel-r2/)",
+            "telemetry": "flow",
+            "packet_features": "not read: a flow-only model (70 flow features)",
+            "metrics": load_headline_metrics(),
+        },
+        "pcap": {
+            "model": "E20r seeds 42, 43 and 44, arithmetic mean per window (D-038)",
+            "telemetry": "flow + packet",
+            "packet_features": "read: 18 pcap_ features measured from the capture (TTL, fragments, "
+                               "retransmissions, TCP window, payload sizes, packet timing, SYN-only and "
+                               "RST shares) beside the 70 flow features and 17 CSV packet statistics",
+            "checkpoints": [str(p.relative_to(settings.models_dir)) for p in paths],
+            "available": all(p.exists() for p in paths),
+            "metrics": load_pcap_route_metrics(),
+        },
+    }
+
+
 def get_model_card() -> dict[str, Any]:
     """Return model card matching ModelResponse schema."""
     from netwm.engine.predict import stage_catalogue
@@ -144,6 +217,8 @@ def get_model_card() -> dict[str, Any]:
             "stages": stages,
             "metrics": load_headline_metrics(),
             "feature_count": feature_count,
+            # the headline metrics above are r2's, for CSV input; the PCAP route is a different model
+            "routes": model_routes(),
         }
 
     # Fallback model card when no checkpoint is present
@@ -210,7 +285,10 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
     # here returned a full-day payload under a 2-hour slice's metadata (R-6).
     if job.kind == "demo":
         demo_csv_path, day = resolve_demo(job.filename)
-        ckpt = get_checkpoint(day)
+        if is_pcap(demo_csv_path):
+            ckpt = get_pcap_ensemble(day)  # D-038: raises rather than fall back
+        else:
+            ckpt = get_checkpoint(day)
         if ckpt is None:
             raise APIError("no_model", f"No checkpoint available for demo day '{day}'")
 
@@ -243,7 +321,11 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
         raise APIError("bad_file", f"Uploaded file not found: {job.file_path or job.filename}")
 
     progress_cb(0.2, "Preparing uploaded file")
-    ckpt = get_checkpoint()
+    if is_pcap(job.file_path):
+        # D-038: packet-enriched route; a missing member is an error, never r2 and never a fixture
+        ckpt = get_pcap_ensemble()
+    else:
+        ckpt = get_checkpoint()
 
     if ckpt is None:
         # Fallback to mock fixture

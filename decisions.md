@@ -1545,6 +1545,22 @@ anticipation reference. This adds a route for PCAP inputs.
 **Revisit if.** A later pre-registered fusion experiment produces a packet-consuming model that passes
 D-037's composition bar; it would then replace this ensemble on the PCAP route.
 
+**D-038 OUTCOME, E27 (2026-09-28).** Accepted on all three criteria:
+- engineering: the routing tests and the parity check passed;
+- stability: Thursday PR-AUC 0.543 (bar 0.20);
+- anticipation: S2\* 0.669 (bar 0.621).
+
+**PCAP uploads are served by the mean of E20r seeds 42/43/44; CSV uploads stay on r2.** The mean lies
+inside the seed range (Thursday PR-AUC 0.42-0.71): it removes the choice of seed, it does not beat the
+best one. No anticipation or early-warning claim follows (S3 4/19, p 0.92).
+
+Found while checking for lookahead: every model's score depends on the capture's length, through
+`CausalContext`'s interpolated positional embedding (E27 finding 5, `research/positional-length.md`).
+It is pre-existing, and a fix needs its own pre-registered retraining.
+
+Pending: check 4 (the live PCAP state on a full real day) and Step 8 (the same traffic through both
+routes).
+
 ---
 
 ### D-039 — Step 10: no GNN and no larger model on the evidence of E24, E26 and E25b

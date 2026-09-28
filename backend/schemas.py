@@ -42,6 +42,8 @@ class ModelResponse(BaseContractModel):
     stages: list[StageItem]
     metrics: ModelMetrics
     feature_count: int
+    # D-038: {"csv": {...}, "pcap": {...}} - which model serves which input, and which reads packets
+    routes: Optional[dict[str, Any]] = None
 
 
 class HealthResponse(BaseContractModel):
@@ -193,6 +195,19 @@ class SourceItem(BaseContractModel):
     window_s: float
     stride_s: float
     in_sample: Optional[bool] = None
+    packet_features: Optional[str] = None
+
+
+class InferenceItem(BaseContractModel):
+    """D-038: which route served the file (older payloads omit this block)."""
+
+    input_modality: str  # csv | pcap
+    telemetry: str  # "flow" | "flow + packet"
+    model_mode: str
+    checkpoints: list[str] = Field(default_factory=list)
+    aggregation: Optional[str] = None
+    packet_features: Optional[str] = None
+    feature_count: Optional[int] = None
 
 
 class AnalysisResultPayload(BaseContractModel):
@@ -214,6 +229,7 @@ class AnalysisResultPayload(BaseContractModel):
     dev_only: Optional[bool] = None
     note: Optional[str] = None
     in_sample: Optional[bool] = None
+    inference: Optional[InferenceItem] = None
 
 
 class FlowItem(BaseContractModel):

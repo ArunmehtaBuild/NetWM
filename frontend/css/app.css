@@ -116,6 +116,17 @@
   background: var(--accent-dim);
 }
 
+/* D-038: which telemetry produced the analysis - flow only (CSV, r2) or flow + packet (PCAP, E20r) */
+.pill.pill-flow {
+  color: var(--text-dim, #9aa7b1);
+}
+
+.pill.pill-packet {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.12);
+}
+
 .status-dot {
   width: 6px;
   height: 6px;
