@@ -1,0 +1,7 @@
+scenario,host_windows,bot_host_windows,bot_is_busiest_internal_host_pos,bot_is_busiest_internal_host_neg
+s08,134161,2185,0.0,0.0
+s07,4761,10,0.0,0.0
+s11,3387,23,0.0,0.15
+s02,45780,409,0.0094,0.0
+s13,100854,1956,0.0,0.0
+s12,14005,165,0.0,0.0

@@ -1,0 +1,50 @@
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+C:\Users\tiwar\Desktop\work\security\scripts\ctu_perhost_diagnostic.py:169: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  share = pairs.groupby("w").apply(lambda d: bool(d.loc[d["flows"].idxmax(), "is_bot"]) if len(d) else False)
+s08 flows           global=0.338 perhost_max=0.343 oracle=0.926 hostlevel=0.284 WM=0.204 / 0.137 / 0.157 LR=0.590 meets=False
+s08 dst_ports       global=0.341 perhost_max=0.508 oracle=0.947 hostlevel=0.3676 WM=0.204 / 0.137 / 0.157 LR=0.590 meets=False
+s08 dst_ips         global=0.315 perhost_max=0.480 oracle=0.930 hostlevel=0.3973 WM=0.204 / 0.137 / 0.157 LR=0.590 meets=False
+s08 bytes           global=0.325 perhost_max=0.328 oracle=0.955 hostlevel=0.4065 WM=0.204 / 0.137 / 0.157 LR=0.590 meets=False
+s08 syn_unanswered  global=0.550 perhost_max=0.575 oracle=0.553 hostlevel=0.5393 WM=0.204 / 0.137 / 0.157 LR=0.590 meets=False
+s08 bot hosts ['147.32.84.165']; bot is busiest internal host in 0.00 of positive windows, 0.0 of background
+s07 flows           global=0.797 perhost_max=0.499 oracle=0.740 hostlevel=0.5527 WM=0.015 / 0.156 / 0.177 LR=0.737 meets=False
+s07 dst_ports       global=0.923 perhost_max=0.854 oracle=0.738 hostlevel=0.5188 WM=0.015 / 0.156 / 0.177 LR=0.737 meets=False
+s07 dst_ips         global=0.912 perhost_max=0.859 oracle=0.739 hostlevel=0.581 WM=0.015 / 0.156 / 0.177 LR=0.737 meets=False
+s07 bytes           global=0.806 perhost_max=0.762 oracle=0.740 hostlevel=0.5902 WM=0.015 / 0.156 / 0.177 LR=0.737 meets=False
+s07 syn_unanswered  global=0.600 perhost_max=0.568 oracle=0.556 hostlevel=0.578 WM=0.015 / 0.156 / 0.177 LR=0.737 meets=False
+s07 bot hosts ['147.32.84.165']; bot is busiest internal host in 0.00 of positive windows, 0.0 of background
+s11 flows           global=0.439 perhost_max=0.498 oracle=0.429 hostlevel=0.7012 WM=0.082 / 0.054 / 0.054 LR=0.518 meets=False
+s11 dst_ports       global=0.379 perhost_max=0.532 oracle=0.452 hostlevel=0.6702 WM=0.082 / 0.054 / 0.054 LR=0.518 meets=False
+s11 dst_ips         global=0.468 perhost_max=0.459 oracle=0.504 hostlevel=0.3953 WM=0.082 / 0.054 / 0.054 LR=0.518 meets=False
+s11 bytes           global=0.393 perhost_max=0.521 oracle=0.421 hostlevel=0.7238 WM=0.082 / 0.054 / 0.054 LR=0.518 meets=False
+s11 syn_unanswered  global=0.518 perhost_max=0.596 oracle=0.500 hostlevel=0.4666 WM=0.082 / 0.054 / 0.054 LR=0.518 meets=False
+s11 bot hosts ['147.32.84.165', '147.32.84.191', '147.32.84.192']; bot is busiest internal host in 0.00 of positive windows, 0.15 of background
+s02 flows           global=0.272 perhost_max=0.335 oracle=0.973 hostlevel=0.87 WM=0.597 / 0.425 / 0.413 LR=0.571 meets=False
+s02 dst_ports       global=0.256 perhost_max=0.218 oracle=0.972 hostlevel=0.8867 WM=0.597 / 0.425 / 0.413 LR=0.571 meets=False
+s02 dst_ips         global=0.305 perhost_max=0.216 oracle=0.974 hostlevel=0.947 WM=0.597 / 0.425 / 0.413 LR=0.571 meets=False
+s02 bytes           global=0.513 perhost_max=0.539 oracle=0.971 hostlevel=0.745 WM=0.597 / 0.425 / 0.413 LR=0.571 meets=False
+s02 syn_unanswered  global=0.886 perhost_max=0.781 oracle=0.963 hostlevel=0.9822 WM=0.597 / 0.425 / 0.413 LR=0.571 meets=False
+s02 bot hosts ['147.32.84.165']; bot is busiest internal host in 0.01 of positive windows, 0.0 of background
+s13 flows           global=0.222 perhost_max=0.244 oracle=0.809 hostlevel=0.8774 WM=0.439 / 0.302 / 0.313 LR=0.991 meets=False
+s13 dst_ports       global=0.237 perhost_max=0.396 oracle=0.803 hostlevel=0.7669 WM=0.439 / 0.302 / 0.313 LR=0.991 meets=False
+s13 dst_ips         global=0.222 perhost_max=0.382 oracle=0.803 hostlevel=0.7727 WM=0.439 / 0.302 / 0.313 LR=0.991 meets=False
+s13 bytes           global=0.276 perhost_max=0.254 oracle=0.838 hostlevel=0.7729 WM=0.439 / 0.302 / 0.313 LR=0.991 meets=False
+s13 syn_unanswered  global=0.512 perhost_max=0.342 oracle=0.689 hostlevel=0.8444 WM=0.439 / 0.302 / 0.313 LR=0.991 meets=False
+s13 bot hosts ['147.32.84.165']; bot is busiest internal host in 0.00 of positive windows, 0.0 of background
+s12 flows           global=0.875 perhost_max=0.927 oracle=0.922 hostlevel=0.5375 WM=0.985 / 0.979 / 0.985 LR=0.957 meets=False
+s12 dst_ports       global=0.866 perhost_max=0.872 oracle=0.921 hostlevel=0.7103 WM=0.985 / 0.979 / 0.985 LR=0.957 meets=False
+s12 dst_ips         global=0.871 perhost_max=0.884 oracle=0.922 hostlevel=0.6758 WM=0.985 / 0.979 / 0.985 LR=0.957 meets=False
+s12 bytes           global=0.888 perhost_max=0.885 oracle=0.924 hostlevel=0.4203 WM=0.985 / 0.979 / 0.985 LR=0.957 meets=False
+s12 syn_unanswered  global=0.909 perhost_max=0.897 oracle=0.526 hostlevel=0.4773 WM=0.985 / 0.979 / 0.985 LR=0.957 meets=False
+s12 bot hosts ['147.32.84.165', '147.32.84.191', '147.32.84.192', '161.200.133.204', '222.160.227.154', '69.104.66.134', '91.188.37.153', '93.103.254.175', '95.65.17.47']; bot is busiest internal host in 0.00 of positive windows, 0.0 of background
+per deciding scenario: {'s07': False, 's08': False, 's11': False}  -> D-039 reopen condition met: False
+wrote results/tables/n6b_ctu13_perhost{,_hostlevel}.csv and results/runs/n6b-ctu13-perhost/

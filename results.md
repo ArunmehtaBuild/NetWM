@@ -1906,3 +1906,122 @@ Artefacts:
   change from native, the Spearman correlation with native, the largest score change and any 0.50/0.70
   crossing);
 - `results/runs/n8-ctu13-positional-length/` (`metrics.json`, which lists the skipped checkpoints, and `run.log`).
+
+---
+
+## N-6b - Does the bot host separate on per-host features where network-global ones fail? Not by a label-free per-host summary (D-039, descriptive)
+
+```
+python scripts/ctu_perhost_diagnostic.py        # reads data/raw/ctu13/scenarioNN.binetflow; CPU, about 10 min
+```
+
+**Not a bar, nothing is trained.** This is the second half of board card N-6 and the diagnostic D-039
+asks for before any per-host-state run. The method and the decision rule are fixed in the script's
+docstring, written before any per-host number was computed:
+- **Scenarios.** s08, s07 and s11 decide (the three D-039 names). Neris s02, Virut s13 and the NSIS
+  s12 control are reported beside them and decide nothing.
+- **Windows.** The raw flows go onto the processed matrix's own grid. The script stops unless the
+  window count and every window's global flow count match `data/processed/ctu13` exactly; they did on
+  all six.
+- **Five statistics per window:** flows, distinct destination ports, distinct destination IPs, bytes,
+  and unanswered TCP SYNs. The direction is fixed in advance: higher is scored as more bot-like, and
+  no ROC-AUC is flipped afterwards. Each is computed four ways:
+  - **(i) global:** over all the window's flows, as the network-global state sees them;
+  - **(ii) per-host max:** the largest value of any internal source host (`147.32.`), which is
+    label-free and so something a per-host state could compute;
+  - **(iii) oracle:** the bot host's own value, with the host picked by the labels (source addresses of
+    `From-Botnet` flows). This is an upper bound;
+  - **(iv) host level:** over every (window, internal host) pair, whether the bot host outranks the
+    other internal hosts. This is D-039's literal wording.
+- **Rule.** D-039's reopen condition counts as met only if, on **each** of s08, s07 and s11, some
+  statistic's per-host max (ii) reaches ROC-AUC >= 0.70 while its global value (i) and the world
+  model on all three seeds stay below 0.70.
+
+ROC-AUC on `y_within_K`. The world model (E25b, seeds 42 / 43 / 44) and LR (56 global features) are
+the models' own numbers, shown for reference.
+
+| scenario (background windows; WM s42/43/44; LR) | statistic | (i) global | **(ii) per-host max** | (iii) oracle: bot host | (iv) bot vs other hosts |
+|---|---|---:|---:|---:|---:|
+| **Murlo s08** (89; 0.204 / 0.137 / 0.157; LR 0.590) | flows | 0.338 | **0.343** | 0.926 | 0.284 |
+| | dst_ports | 0.341 | **0.508** | 0.947 | 0.368 |
+| | dst_ips | 0.315 | **0.480** | 0.930 | 0.397 |
+| | bytes | 0.325 | **0.328** | 0.955 | 0.406 |
+| | syn_unanswered | 0.550 | **0.575** | 0.553 | 0.539 |
+| **Sogou s07** (26; 0.015 / 0.156 / 0.177; LR 0.737) | flows | 0.797 | **0.499** | 0.740 | 0.553 |
+| | dst_ports | 0.923 | **0.854** | 0.738 | 0.519 |
+| | dst_ips | 0.912 | **0.859** | 0.739 | 0.581 |
+| | bytes | 0.806 | **0.762** | 0.740 | 0.590 |
+| | syn_unanswered | 0.600 | **0.568** | 0.556 | 0.578 |
+| **Rbot s11** (20; 0.082 / 0.054 / 0.054; LR 0.518) | flows | 0.439 | **0.498** | 0.429 | 0.701 |
+| | dst_ports | 0.379 | **0.532** | 0.452 | 0.670 |
+| | dst_ips | 0.468 | **0.459** | 0.504 | 0.395 |
+| | bytes | 0.393 | **0.521** | 0.421 | 0.724 |
+| | syn_unanswered | 0.518 | **0.596** | 0.500 | 0.467 |
+| Neris s02 (78; 0.597 / 0.425 / 0.413; LR 0.571) | flows | 0.272 | 0.335 | 0.973 | 0.870 |
+| | dst_ports | 0.256 | 0.218 | 0.972 | 0.887 |
+| | dst_ips | 0.305 | 0.216 | 0.974 | 0.947 |
+| | bytes | 0.513 | 0.539 | 0.971 | 0.745 |
+| | syn_unanswered | 0.886 | 0.781 | 0.963 | 0.982 |
+| Virut s13 (9; 0.439 / 0.302 / 0.313; LR 0.991) | flows | 0.222 | 0.244 | 0.809 | 0.877 |
+| | dst_ports | 0.237 | 0.396 | 0.803 | 0.767 |
+| | dst_ips | 0.222 | 0.382 | 0.803 | 0.773 |
+| | bytes | 0.276 | 0.254 | 0.838 | 0.773 |
+| | syn_unanswered | 0.512 | 0.342 | 0.689 | 0.844 |
+| NSIS s12, control (72; 0.985 / 0.979 / 0.985; LR 0.957) | flows | 0.875 | 0.927 | 0.922 | 0.537 |
+| | dst_ports | 0.866 | 0.872 | 0.921 | 0.710 |
+| | dst_ips | 0.871 | 0.884 | 0.922 | 0.676 |
+| | bytes | 0.888 | 0.885 | 0.924 | 0.420 |
+| | syn_unanswered | 0.909 | 0.897 | 0.526 | 0.477 |
+
+The bot host is the busiest internal source host in **0 %** of the positive windows on s08, s07,
+s11 and s13, and in 0.9 % on s02. Each capture has 272-478 active internal hosts.
+
+### What N-6b shows
+
+1. **D-039's reopen condition is not met, as the rule was written.** It fails on all three deciding
+   scenarios, for two different reasons.
+   - **Sogou s07:** the global statistics already separate (0.80-0.92 on flows, ports, IPs and bytes).
+     The information is in the global state, as LR's 0.737 already suggested. The world model's
+     inversion there is its learned weighting (N-6a), not drowning.
+   - **Murlo s08 and Rbot s11:** the label-free per-host max stays at or below 0.58 and 0.60. It
+     never reaches 0.70.
+2. **On Murlo, the bot host's signal is real, but drowned in the global state and not recoverable by
+   a maximum.**
+   - The bot host's own traffic ranks s08's windows at 0.93-0.96. The global statistics sit at
+     0.32-0.34 and the per-host max at 0.33-0.51.
+   - The bot is never the busiest of s08's 478 internal hosts. At host level it ranks *below* the
+     other active hosts (0.28-0.41).
+   - Murlo is the one family where LR is weak too (0.590, D-039: "Murlo stays open"). This is the
+     "drowned" pattern the evaluators described.
+   - Neris s02 and Virut s13 show the same pattern (oracle 0.80-0.97, global 0.22-0.31 on the
+     counts). They are reported, but they do not decide.
+3. **The oracle is close to the labels by construction, so it is an upper bound and nothing more.**
+   `y_within_K` comes from the bot host's own flows, so the bot host's activity nearly defines it
+   wherever the bot is silent in background windows. The oracle shows that the information exists
+   per host. It does not show that a model could find the host without labels.
+4. **Rbot s11 is not a per-host story.** Even the oracle is at chance (0.42-0.50) on its 34 windows,
+   and N-6a traced its seed-44 inversion to ICMP flows with no `State` field.
+5. **Direction.** Several global and per-host counts sit well below 0.5 on s08, s02 and s13: background
+   windows are *busier* than bot windows. The rule fixed "higher = bot" in advance, so these are
+   reported as they are, not flipped. They are the same direction flips N-6a found on the models'
+   inputs.
+6. **What would need the team.** The reopen condition as written is not met, so no per-host-state run
+   is licensed. Point 2 is new evidence for the "drowned" half of the evaluators' trigger, on Murlo,
+   which D-039 recorded as unsupported. A per-host state that could use it would have to score each
+   host against its own past, not take a maximum over hosts. E21's six host-relative features did
+   something close and did not help on CIC-IDS2017. Whether that justifies a new pre-registration is
+   a team decision, not a result.
+7. **Caveats.**
+   - s12's `From-Botnet` sources include six external addresses, so its oracle is not a single-host
+     number.
+   - s07's bot host is active in only 10 of its 44 windows.
+   - Five statistics are tried per scenario, so a single hit would have been weak evidence. None
+     occurred on s08 or s11.
+
+Artefacts:
+- `results/tables/n6b_ctu13_perhost.csv` (one row per scenario and statistic: `roc_global`,
+  `roc_perhost_max`, `roc_oracle_bot`, `roc_hostlevel_bot_vs_other_hosts`, the E25b references and
+  `meets_rule`);
+- `results/tables/n6b_ctu13_perhost_hostlevel.csv` (whether the bot is the busiest internal host);
+- `results/runs/n6b-ctu13-perhost/` (`metrics.json` with the grid checks, the bot hosts and the
+  internal host counts; `run.log`).

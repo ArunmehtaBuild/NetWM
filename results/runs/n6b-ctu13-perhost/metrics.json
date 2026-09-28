@@ -1,0 +1,602 @@
+{
+  "run_id": "n6b-ctu13-perhost",
+  "timestamp_utc": "2026-09-28T11:52:12+00:00",
+  "git_sha": "9de3590",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "config": "configs/ctu13.yaml",
+    "data": "data/processed/ctu13",
+    "seed": 42,
+    "deciding": [
+      "s08",
+      "s07",
+      "s11"
+    ],
+    "reported": [
+      "s02",
+      "s13",
+      "s12"
+    ],
+    "stats": [
+      "flows",
+      "dst_ports",
+      "dst_ips",
+      "bytes",
+      "syn_unanswered"
+    ],
+    "bar": 0.7,
+    "internal_prefixes": [
+      "147.32."
+    ],
+    "git_sha_at_start": "e181077"
+  },
+  "metrics": {
+    "rows": [
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "decides": true,
+        "windows": 2339,
+        "background": 89,
+        "statistic": "flows",
+        "roc_global": 0.3377,
+        "roc_perhost_max": 0.343,
+        "roc_oracle_bot": 0.9262,
+        "roc_hostlevel_bot_vs_other_hosts": 0.284,
+        "wm_roc_e25b_s42_s43_s44": "0.204 / 0.137 / 0.157",
+        "lr_roc_e25b": 0.5896,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "decides": true,
+        "windows": 2339,
+        "background": 89,
+        "statistic": "dst_ports",
+        "roc_global": 0.3414,
+        "roc_perhost_max": 0.5081,
+        "roc_oracle_bot": 0.9466,
+        "roc_hostlevel_bot_vs_other_hosts": 0.3676,
+        "wm_roc_e25b_s42_s43_s44": "0.204 / 0.137 / 0.157",
+        "lr_roc_e25b": 0.5896,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "decides": true,
+        "windows": 2339,
+        "background": 89,
+        "statistic": "dst_ips",
+        "roc_global": 0.3148,
+        "roc_perhost_max": 0.4799,
+        "roc_oracle_bot": 0.9305,
+        "roc_hostlevel_bot_vs_other_hosts": 0.3973,
+        "wm_roc_e25b_s42_s43_s44": "0.204 / 0.137 / 0.157",
+        "lr_roc_e25b": 0.5896,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "decides": true,
+        "windows": 2339,
+        "background": 89,
+        "statistic": "bytes",
+        "roc_global": 0.3245,
+        "roc_perhost_max": 0.328,
+        "roc_oracle_bot": 0.9551,
+        "roc_hostlevel_bot_vs_other_hosts": 0.4065,
+        "wm_roc_e25b_s42_s43_s44": "0.204 / 0.137 / 0.157",
+        "lr_roc_e25b": 0.5896,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s08",
+        "family": "Murlo",
+        "decides": true,
+        "windows": 2339,
+        "background": 89,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.5503,
+        "roc_perhost_max": 0.5745,
+        "roc_oracle_bot": 0.5528,
+        "roc_hostlevel_bot_vs_other_hosts": 0.5393,
+        "wm_roc_e25b_s42_s43_s44": "0.204 / 0.137 / 0.157",
+        "lr_roc_e25b": 0.5896,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "decides": true,
+        "windows": 44,
+        "background": 26,
+        "statistic": "flows",
+        "roc_global": 0.797,
+        "roc_perhost_max": 0.4989,
+        "roc_oracle_bot": 0.7404,
+        "roc_hostlevel_bot_vs_other_hosts": 0.5527,
+        "wm_roc_e25b_s42_s43_s44": "0.015 / 0.156 / 0.177",
+        "lr_roc_e25b": 0.7372,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "decides": true,
+        "windows": 44,
+        "background": 26,
+        "statistic": "dst_ports",
+        "roc_global": 0.9231,
+        "roc_perhost_max": 0.8536,
+        "roc_oracle_bot": 0.7382,
+        "roc_hostlevel_bot_vs_other_hosts": 0.5188,
+        "wm_roc_e25b_s42_s43_s44": "0.015 / 0.156 / 0.177",
+        "lr_roc_e25b": 0.7372,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "decides": true,
+        "windows": 44,
+        "background": 26,
+        "statistic": "dst_ips",
+        "roc_global": 0.9124,
+        "roc_perhost_max": 0.859,
+        "roc_oracle_bot": 0.7393,
+        "roc_hostlevel_bot_vs_other_hosts": 0.581,
+        "wm_roc_e25b_s42_s43_s44": "0.015 / 0.156 / 0.177",
+        "lr_roc_e25b": 0.7372,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "decides": true,
+        "windows": 44,
+        "background": 26,
+        "statistic": "bytes",
+        "roc_global": 0.8056,
+        "roc_perhost_max": 0.7618,
+        "roc_oracle_bot": 0.7404,
+        "roc_hostlevel_bot_vs_other_hosts": 0.5902,
+        "wm_roc_e25b_s42_s43_s44": "0.015 / 0.156 / 0.177",
+        "lr_roc_e25b": 0.7372,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s07",
+        "family": "Sogou",
+        "decides": true,
+        "windows": 44,
+        "background": 26,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.6004,
+        "roc_perhost_max": 0.5684,
+        "roc_oracle_bot": 0.5556,
+        "roc_hostlevel_bot_vs_other_hosts": 0.578,
+        "wm_roc_e25b_s42_s43_s44": "0.015 / 0.156 / 0.177",
+        "lr_roc_e25b": 0.7372,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "decides": true,
+        "windows": 34,
+        "background": 20,
+        "statistic": "flows",
+        "roc_global": 0.4393,
+        "roc_perhost_max": 0.4982,
+        "roc_oracle_bot": 0.4286,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7012,
+        "wm_roc_e25b_s42_s43_s44": "0.082 / 0.054 / 0.054",
+        "lr_roc_e25b": 0.5179,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "decides": true,
+        "windows": 34,
+        "background": 20,
+        "statistic": "dst_ports",
+        "roc_global": 0.3786,
+        "roc_perhost_max": 0.5321,
+        "roc_oracle_bot": 0.4518,
+        "roc_hostlevel_bot_vs_other_hosts": 0.6702,
+        "wm_roc_e25b_s42_s43_s44": "0.082 / 0.054 / 0.054",
+        "lr_roc_e25b": 0.5179,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "decides": true,
+        "windows": 34,
+        "background": 20,
+        "statistic": "dst_ips",
+        "roc_global": 0.4679,
+        "roc_perhost_max": 0.4589,
+        "roc_oracle_bot": 0.5036,
+        "roc_hostlevel_bot_vs_other_hosts": 0.3953,
+        "wm_roc_e25b_s42_s43_s44": "0.082 / 0.054 / 0.054",
+        "lr_roc_e25b": 0.5179,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "decides": true,
+        "windows": 34,
+        "background": 20,
+        "statistic": "bytes",
+        "roc_global": 0.3929,
+        "roc_perhost_max": 0.5214,
+        "roc_oracle_bot": 0.4214,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7238,
+        "wm_roc_e25b_s42_s43_s44": "0.082 / 0.054 / 0.054",
+        "lr_roc_e25b": 0.5179,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s11",
+        "family": "Rbot",
+        "decides": true,
+        "windows": 34,
+        "background": 20,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.5179,
+        "roc_perhost_max": 0.5964,
+        "roc_oracle_bot": 0.5,
+        "roc_hostlevel_bot_vs_other_hosts": 0.4666,
+        "wm_roc_e25b_s42_s43_s44": "0.082 / 0.054 / 0.054",
+        "lr_roc_e25b": 0.5179,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "decides": false,
+        "windows": 505,
+        "background": 78,
+        "statistic": "flows",
+        "roc_global": 0.2722,
+        "roc_perhost_max": 0.3353,
+        "roc_oracle_bot": 0.9726,
+        "roc_hostlevel_bot_vs_other_hosts": 0.87,
+        "wm_roc_e25b_s42_s43_s44": "0.597 / 0.425 / 0.413",
+        "lr_roc_e25b": 0.5712,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "decides": false,
+        "windows": 505,
+        "background": 78,
+        "statistic": "dst_ports",
+        "roc_global": 0.2559,
+        "roc_perhost_max": 0.2176,
+        "roc_oracle_bot": 0.9721,
+        "roc_hostlevel_bot_vs_other_hosts": 0.8867,
+        "wm_roc_e25b_s42_s43_s44": "0.597 / 0.425 / 0.413",
+        "lr_roc_e25b": 0.5712,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "decides": false,
+        "windows": 505,
+        "background": 78,
+        "statistic": "dst_ips",
+        "roc_global": 0.3047,
+        "roc_perhost_max": 0.2158,
+        "roc_oracle_bot": 0.9741,
+        "roc_hostlevel_bot_vs_other_hosts": 0.947,
+        "wm_roc_e25b_s42_s43_s44": "0.597 / 0.425 / 0.413",
+        "lr_roc_e25b": 0.5712,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "decides": false,
+        "windows": 505,
+        "background": 78,
+        "statistic": "bytes",
+        "roc_global": 0.5129,
+        "roc_perhost_max": 0.5389,
+        "roc_oracle_bot": 0.9711,
+        "roc_hostlevel_bot_vs_other_hosts": 0.745,
+        "wm_roc_e25b_s42_s43_s44": "0.597 / 0.425 / 0.413",
+        "lr_roc_e25b": 0.5712,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s02",
+        "family": "Neris",
+        "decides": false,
+        "windows": 505,
+        "background": 78,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.8862,
+        "roc_perhost_max": 0.7811,
+        "roc_oracle_bot": 0.9626,
+        "roc_hostlevel_bot_vs_other_hosts": 0.9822,
+        "wm_roc_e25b_s42_s43_s44": "0.597 / 0.425 / 0.413",
+        "lr_roc_e25b": 0.5712,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "decides": false,
+        "windows": 1967,
+        "background": 9,
+        "statistic": "flows",
+        "roc_global": 0.2215,
+        "roc_perhost_max": 0.2436,
+        "roc_oracle_bot": 0.809,
+        "roc_hostlevel_bot_vs_other_hosts": 0.8774,
+        "wm_roc_e25b_s42_s43_s44": "0.439 / 0.302 / 0.313",
+        "lr_roc_e25b": 0.9911,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "decides": false,
+        "windows": 1967,
+        "background": 9,
+        "statistic": "dst_ports",
+        "roc_global": 0.2373,
+        "roc_perhost_max": 0.3963,
+        "roc_oracle_bot": 0.803,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7669,
+        "wm_roc_e25b_s42_s43_s44": "0.439 / 0.302 / 0.313",
+        "lr_roc_e25b": 0.9911,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "decides": false,
+        "windows": 1967,
+        "background": 9,
+        "statistic": "dst_ips",
+        "roc_global": 0.2221,
+        "roc_perhost_max": 0.3817,
+        "roc_oracle_bot": 0.8027,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7727,
+        "wm_roc_e25b_s42_s43_s44": "0.439 / 0.302 / 0.313",
+        "lr_roc_e25b": 0.9911,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "decides": false,
+        "windows": 1967,
+        "background": 9,
+        "statistic": "bytes",
+        "roc_global": 0.2755,
+        "roc_perhost_max": 0.2536,
+        "roc_oracle_bot": 0.8382,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7729,
+        "wm_roc_e25b_s42_s43_s44": "0.439 / 0.302 / 0.313",
+        "lr_roc_e25b": 0.9911,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s13",
+        "family": "Virut",
+        "decides": false,
+        "windows": 1967,
+        "background": 9,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.5121,
+        "roc_perhost_max": 0.3421,
+        "roc_oracle_bot": 0.6887,
+        "roc_hostlevel_bot_vs_other_hosts": 0.8444,
+        "wm_roc_e25b_s42_s43_s44": "0.439 / 0.302 / 0.313",
+        "lr_roc_e25b": 0.9911,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "decides": false,
+        "windows": 208,
+        "background": 72,
+        "statistic": "flows",
+        "roc_global": 0.875,
+        "roc_perhost_max": 0.9272,
+        "roc_oracle_bot": 0.9218,
+        "roc_hostlevel_bot_vs_other_hosts": 0.5375,
+        "wm_roc_e25b_s42_s43_s44": "0.985 / 0.979 / 0.985",
+        "lr_roc_e25b": 0.9574,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "decides": false,
+        "windows": 208,
+        "background": 72,
+        "statistic": "dst_ports",
+        "roc_global": 0.8662,
+        "roc_perhost_max": 0.8717,
+        "roc_oracle_bot": 0.9212,
+        "roc_hostlevel_bot_vs_other_hosts": 0.7103,
+        "wm_roc_e25b_s42_s43_s44": "0.985 / 0.979 / 0.985",
+        "lr_roc_e25b": 0.9574,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "decides": false,
+        "windows": 208,
+        "background": 72,
+        "statistic": "dst_ips",
+        "roc_global": 0.8714,
+        "roc_perhost_max": 0.884,
+        "roc_oracle_bot": 0.9216,
+        "roc_hostlevel_bot_vs_other_hosts": 0.6758,
+        "wm_roc_e25b_s42_s43_s44": "0.985 / 0.979 / 0.985",
+        "lr_roc_e25b": 0.9574,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "decides": false,
+        "windows": 208,
+        "background": 72,
+        "statistic": "bytes",
+        "roc_global": 0.8878,
+        "roc_perhost_max": 0.8855,
+        "roc_oracle_bot": 0.9237,
+        "roc_hostlevel_bot_vs_other_hosts": 0.4203,
+        "wm_roc_e25b_s42_s43_s44": "0.985 / 0.979 / 0.985",
+        "lr_roc_e25b": 0.9574,
+        "meets_rule": false
+      },
+      {
+        "scenario": "s12",
+        "family": "NSIS.ay",
+        "decides": false,
+        "windows": 208,
+        "background": 72,
+        "statistic": "syn_unanswered",
+        "roc_global": 0.909,
+        "roc_perhost_max": 0.8974,
+        "roc_oracle_bot": 0.5257,
+        "roc_hostlevel_bot_vs_other_hosts": 0.4773,
+        "wm_roc_e25b_s42_s43_s44": "0.985 / 0.979 / 0.985",
+        "lr_roc_e25b": 0.9574,
+        "meets_rule": false
+      }
+    ],
+    "host_level": [
+      {
+        "scenario": "s08",
+        "host_windows": 134161,
+        "bot_host_windows": 2185,
+        "bot_is_busiest_internal_host_pos": 0.0,
+        "bot_is_busiest_internal_host_neg": 0.0
+      },
+      {
+        "scenario": "s07",
+        "host_windows": 4761,
+        "bot_host_windows": 10,
+        "bot_is_busiest_internal_host_pos": 0.0,
+        "bot_is_busiest_internal_host_neg": 0.0
+      },
+      {
+        "scenario": "s11",
+        "host_windows": 3387,
+        "bot_host_windows": 23,
+        "bot_is_busiest_internal_host_pos": 0.0,
+        "bot_is_busiest_internal_host_neg": 0.15
+      },
+      {
+        "scenario": "s02",
+        "host_windows": 45780,
+        "bot_host_windows": 409,
+        "bot_is_busiest_internal_host_pos": 0.0094,
+        "bot_is_busiest_internal_host_neg": 0.0
+      },
+      {
+        "scenario": "s13",
+        "host_windows": 100854,
+        "bot_host_windows": 1956,
+        "bot_is_busiest_internal_host_pos": 0.0,
+        "bot_is_busiest_internal_host_neg": 0.0
+      },
+      {
+        "scenario": "s12",
+        "host_windows": 14005,
+        "bot_host_windows": 165,
+        "bot_is_busiest_internal_host_pos": 0.0,
+        "bot_is_busiest_internal_host_neg": 0.0
+      }
+    ],
+    "checks": {
+      "s08": {
+        "windows": 2339,
+        "flows": 2954230,
+        "bot_hosts": [
+          "147.32.84.165"
+        ],
+        "internal_hosts": 478
+      },
+      "s07": {
+        "windows": 44,
+        "flows": 114077,
+        "bot_hosts": [
+          "147.32.84.165"
+        ],
+        "internal_hosts": 294
+      },
+      "s11": {
+        "windows": 34,
+        "flows": 107251,
+        "bot_hosts": [
+          "147.32.84.165",
+          "147.32.84.191",
+          "147.32.84.192"
+        ],
+        "internal_hosts": 272
+      },
+      "s02": {
+        "windows": 505,
+        "flows": 1808122,
+        "bot_hosts": [
+          "147.32.84.165"
+        ],
+        "internal_hosts": 392
+      },
+      "s13": {
+        "windows": 1967,
+        "flows": 1925149,
+        "bot_hosts": [
+          "147.32.84.165"
+        ],
+        "internal_hosts": 433
+      },
+      "s12": {
+        "windows": 208,
+        "flows": 325471,
+        "bot_hosts": [
+          "147.32.84.165",
+          "147.32.84.191",
+          "147.32.84.192",
+          "161.200.133.204",
+          "222.160.227.154",
+          "69.104.66.134",
+          "91.188.37.153",
+          "93.103.254.175",
+          "95.65.17.47"
+        ],
+        "internal_hosts": 303
+      }
+    },
+    "meets_rule_per_deciding_scenario": {
+      "s07": false,
+      "s08": false,
+      "s11": false
+    },
+    "reopen_condition_met": false
+  }
+}
