@@ -68,3 +68,17 @@
 
 == fold: sogou test=['s07']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's08', 's09', 's10', 's11', 's12', 's13']  device=cuda
   40 batches/epoch -> 7 epochs for ~250 steps
+  epoch   0  total=9.429  recon=0.391  kl=0.558  comp=0.837  imag_comp=0.839
+  epoch   1  total=7.443  recon=0.320  kl=0.724  comp=0.735  imag_comp=0.735
+  epoch   2  total=6.812  recon=0.307  kl=0.553  comp=0.692  imag_comp=0.688
+  epoch   3  total=6.382  recon=0.309  kl=0.622  comp=0.657  imag_comp=0.655
+  epoch   4  total=6.153  recon=0.309  kl=0.578  comp=0.634  imag_comp=0.634
+  epoch   5  total=6.010  recon=0.308  kl=0.685  comp=0.618  imag_comp=0.608
+  epoch   6  total=5.882  recon=0.310  kl=0.606  comp=0.610  imag_comp=0.599
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.4364, "precision": 0.3243, "recall": 0.6667, "fpr": 0.9615, "pr_auc": 0.3206, "roc_auc": 0.156, "warned_early": 2, "episodes": 2, "mean_lead_windows": 6.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.3206, "roc_auc": 0.156, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.5806, "precision": 0.4091, "recall": 1.0, "fpr": 1.0, "pr_auc": 0.3206, "roc_auc": 0.156, "warned_early": 2, "episodes": 2, "mean_lead_windows": 6.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.6531, "precision": 0.4848, "recall": 1.0, "fpr": 0.6071, "pr_auc": 0.6455, "roc_auc": 0.8147}
+
+== fold: murlo test=['s08']  train=['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's09', 's10', 's11', 's12', 's13']  device=cuda
+  34 batches/epoch -> 8 epochs for ~250 steps
