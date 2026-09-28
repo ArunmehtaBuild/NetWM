@@ -1,0 +1,26 @@
+56 features x 1 view(s) = 56 model inputs; arch=rssm hazard=factorized curriculum=False
+
+== fold: neris test=['s01', 's02', 's09']  train=['s03', 's04', 's05', 's06', 's07', 's08', 's10', 's11', 's12', 's13']  device=cuda
+  35 batches/epoch -> 8 epochs for ~250 steps
+  epoch   0  total=9.718  recon=0.398  kl=0.598  comp=0.859  imag_comp=0.860
+  epoch   1  total=7.904  recon=0.347  kl=0.560  comp=0.771  imag_comp=0.774
+  epoch   2  total=7.343  recon=0.329  kl=0.564  comp=0.741  imag_comp=0.743
+  epoch   3  total=6.922  recon=0.312  kl=0.447  comp=0.711  imag_comp=0.710
+  epoch   4  total=6.571  recon=0.308  kl=0.723  comp=0.679  imag_comp=0.679
+  epoch   5  total=6.355  recon=0.308  kl=0.515  comp=0.660  imag_comp=0.654
+  epoch   6  total=6.106  recon=0.309  kl=0.501  comp=0.639  imag_comp=0.633
+  epoch   7  total=6.108  recon=0.308  kl=0.563  comp=0.634  imag_comp=0.628
+   {"target": "forecast", "threshold_mode": "train-tuned", "f1": 0.7694, "precision": 0.6252, "recall": 1.0, "fpr": 0.7763, "pr_auc": 0.8619, "roc_auc": 0.8581, "warned_early": 2, "episodes": 2, "mean_lead_windows": 10.0}
+   {"target": "forecast", "threshold_mode": "alert-budget-5pct", "f1": 0.0, "precision": 0.0, "recall": 0.0, "fpr": 0.0, "pr_auc": 0.8619, "roc_auc": 0.8581, "warned_early": 0, "episodes": 2, "mean_lead_windows": 0.0}
+   {"target": "forecast", "threshold_mode": "oracle", "f1": 0.847, "precision": 0.8191, "recall": 0.877, "fpr": 0.2508, "pr_auc": 0.8619, "roc_auc": 0.8581, "warned_early": 1, "episodes": 2, "mean_lead_windows": 10.0}
+   {"target": "escalation", "threshold_mode": "oracle", "f1": 0.4683, "precision": 0.375, "recall": 0.6234, "fpr": 0.1333, "pr_auc": 0.4088, "roc_auc": 0.8416}
+
+== fold: rbot test=['s03', 's04', 's10', 's11']  train=['s01', 's02', 's05', 's06', 's07', 's08', 's09', 's12', 's13']  device=cuda
+  17 batches/epoch -> 15 epochs for ~250 steps
+  epoch   0  total=9.105  recon=0.416  kl=0.533  comp=0.640  imag_comp=0.636
+  epoch   1  total=7.641  recon=0.379  kl=0.616  comp=0.611  imag_comp=0.609
+  epoch   2  total=6.937  recon=0.363  kl=0.536  comp=0.590  imag_comp=0.584
+  epoch   3  total=6.645  recon=0.362  kl=0.668  comp=0.571  imag_comp=0.560
+  epoch   4  total=6.358  recon=0.372  kl=0.592  comp=0.568  imag_comp=0.568
+  epoch   5  total=5.949  recon=0.348  kl=0.558  comp=0.542  imag_comp=0.545
+  epoch   6  total=5.749  recon=0.356  kl=0.797  comp=0.527  imag_comp=0.517
