@@ -4,27 +4,35 @@
 (Atharv). Task ids appear in commit messages; numbers live in `results.md`; modelling choices live in
 `decisions.md`.
 
-## Status - 2026-09-27, night (after D-035)
+## Status - 2026-09-28 (after D-037)
 
-**The M1 v2 programme ran end to end, pre-registered (D-035, pushed before any run).** Model changes
-are now judged on a scorecard, not on Thursday F1, which the threshold rule alone moves (E18). The
-scorecard measures anticipation 2-10 minutes before 19 attack onsets on four held-out days, alarm
-cost at the causal threshold, significance against a shuffled-time baseline, and the worst day.
+**D-037 ran as pre-registered.** Every run and verdict is in `results.md` (E26, E25b) and `decisions.md`
+(D-037 outcomes, D-038, D-039).
 
-- **The world model does anticipate, as a ranking.** Pre-onset windows rank above background on
-  held-out days (S2\* 0.65, where chance is 0.5).
-- **The factorised target (E22)** is the one change that passed its bar: S2\* rises to 0.70.
-- **The latent dynamics earn this (E24).** The same encoder without them scores 0.61 and detects worse.
-- **No configuration turns the ranking into early warnings that beat the null**, so D-021 stands.
-- **Real packet features** from all five captures (53.7 M packets) help detection (Thursday PR-AUC
-  0.43 -> 0.56), not anticipation (E20r).
-- **CTU-13 (M2)** is built and run leave-one-family-out: anticipation does not transfer across botnet
-  families (0.55); detection transfers to 3 of 7 (E25).
-
-**Product.** The dashboard, model card and fixtures run the causal threshold, and the alarm panel
-carries the D-022 null (G-9). The why panel is relabelled after E11 fails. The shipped checkpoint is
-still `models/e4e7-worldmodel-r2/`: whether to switch to the E22 stack is open below.
-147 tests pass (126 ML + 21 API).
+- **E22 and real packets do not compose (E26).**
+  - The combined model loses anticipation: S2\* -0.041 against a -0.03 bar.
+  - It keeps the detection gain: Thursday PR-AUC +0.054.
+  - Ship outcome 3: **r2 stays shipped for CSV input.** E22 remains the anticipation reference and
+    E20r the detection reference.
+- **Logistic regression ranks the run-up level with round 2** (S2\* 0.659 against 0.651). The world
+  model's edge over LR is the factorised target (E22, 0.704) and detection: Thursday PR-AUC 0.640
+  against 0.139 at the causal threshold (`results/tables/benchmark_final.md`).
+- **CTU-13 is complete on three seeds, with an LR baseline on the same folds (E25b).**
+  - By D-037's rule, 2 of 7 families transfer: NSIS robustly, Menti on only 6 background windows.
+  - The other 5 are inverted: Murlo and Neris s02 are well measured; three inversions rest on 10-26
+    background windows.
+  - Seed 42 alone had over-read Neris and Virut.
+  - Run-up ranking carries to Neris s02/s09 and Rbot s04/s10. It does not carry to Murlo, or to Rbot
+    s03, where both models are below chance.
+- **The PCAP route is decided (D-038):** PCAP uploads go to the mean of the three E20r seeds, and CSV
+  stays on r2. It is scored as E27 against a pre-registered acceptance bar. The build is in progress:
+  routing, parity and E27 scoring.
+- **Step 10 is decided (D-039): no GNN and no larger model.** The failures are transfer failures, and
+  LR on the same global state is not inverted where the world model is. Whether to run M3
+  (CIC-IDS2018) is left to the team.
+- **No early warning anywhere:** S3 is met in no row, on neither dataset, so D-021 stands.
+- **Second training machine:** RTX 4060 (8 GB) with 16 GB of RAM; two CTU-13 runs in parallel is its
+  ceiling. The README setup was re-tested from a fresh clone (`2920382`).
 
 ## Current tasks
 
@@ -35,21 +43,23 @@ produced them, or when the thing it describes demonstrably works end to end - no
 |---|---|---|---|
 | **Atharv** | **G-2** (gap) | **The architecture document is about 1,750 words, roughly 4 pages; the PS allows 2.** Write the 2-page version the judges read, and keep `docs/architecture.md` as the reference it links to | a 2-page PDF in `docs/` |
 | | **G-3** (gap) | **The demo video is capped at 2 minutes, but `docs/demo_script.md` is timed for 5.** Cut it to 2: the Thursday slice, the 17:00 scan and surprise, the sweep with the why panel, the model card with D-032, the gap line. PCAP upload gets 10 s once A-5b lands | a 2-minute script; H-15 records from it |
-| | **G-6** (gap) | **One benchmark table** as the PS asks: F1, precision, recall and FPR for logistic regression vs NetWM, on Thursday and Friday, with the seed range. The numbers exist in E3, E14 and E10 but are spread across entries | the table in `results.md` and on slide 4 |
+| | **G-6** (gap) | ~~One benchmark table as the PS asks~~ **Done** (`d0231e5`): `results/tables/benchmark_final.md`, LR vs NetWM at the causal threshold, Thursday and Friday, with seed ranges | closed |
 | **Arun** | **G-1** (gap, **owner action**) | **The repo is PRIVATE.** The checklist had marked "public GitHub repo" done. Make it public, or confirm the evaluators will be given access, before submission | `gh repo view` shows PUBLIC, or access is confirmed in writing |
 | **Sanchi** | **S-6b** | Deck from `docs/presentation.md` with the review fixes (branch `s6-s7-features-presentation`, unchanged since 18:49). Use D-032 for the headline, "risk score" not "probability", no "before compromise", flow-only `S_t`, and add E10/E17 to slide 5 | an exported 5-slide deck reviewed by two teammates |
 | **Alok** | | No open cards: A-3c and A-5c were finished on main (`0b22d98`, `a9ff68a`). Next assignment comes from the gap list | |
 | **Harshit** | **H-15** | Rehearse and record from the **2-minute** script (G-3), after R-12. The PCAP half needs A-5b | a recorded run under 2 minutes that follows the script |
 
-### Open after D-035 - not yet assigned
+### Open items - updated after D-037 (2026-09-28), not yet assigned
 
 | id | task | done when |
 |---|---|---|
-| **N-1** (decision) | **Which checkpoint ships.** r2 detects Thursday best among CSV models (PR-AUC 0.640). The E22 stack anticipates better across days (S2\* 0.70 vs r2-method 0.65) but detects Thursday worse (0.39). E20r detects best of all (0.56 mean, 0.71 best seed) but needs a PCAP. Pick one for the demo and the model card | a decision entry; `_E18_RUN`/model card and fixtures follow it |
-| **N-2** | **Train E22 + real packets with a `has_pcap` mask**, so one model reads PCAP uploads with packet features and CSV uploads without (the design's original plan). Score it on the D-035 scorecard | a scorecard row; the dashboard computes `pcap_` features for a PCAP upload |
-| **N-3** | **CTU-13 seeds 43 and 44** (E25 ran seed 42 as pre-registered) and a logistic-regression floor on the same folds | three-seed E25 and a baseline row in `results.md` |
-| **N-4** | **Carry the new results into the submission artefacts**: slides (S-6b), the 2-page doc (G-2), the benchmark table (G-6), the demo script (G-3). Use D-035's language: "ranks the run-up above background on unseen days", never "warns before" | every number traced to `results.md` E19-E25 |
+| **N-1** (decision) | **Decided: D-038.** PCAP uploads -> the mean of the three E20r seeds (E27); CSV uploads stay on r2. Being built: routing, parity check, E27 scoring against D-038's acceptance bar | E27 scored in `results.md`; the PCAP route accepted or rejected by D-038's bar |
+| **N-2** | ~~Train E22 + real packets with a `has_pcap` mask~~ **Done: E26 (D-037).** The combination does not compose on anticipation (outcome 3), and CSV mode's rollout is worse than persistence | closed |
+| **N-3** | ~~CTU-13 seeds 43 and 44 and an LR floor~~ **Done: E25b** (`c704587`, `8815fd9`, `d2c4185`). 2 of 7 families transfer, 5 inverted; family matrix in `results/tables/e25b_ctu13_*.csv` | closed |
+| **N-4** | **Carry the new results into the submission artefacts**: slides (S-6b), the 2-page doc (G-2), the demo script (G-3). Use D-035's language: "ranks the run-up above background on unseen days", never "warns before". **E25b changes the M2 line:** `docs/architecture.md` still says detection transfers to "Neris, NSIS, Virut: ROC-AUC 0.85-0.99", which is seed 42 only (deferred by the team, 2026-09-28) | every number traced to `results.md` E19-E26 and E25b |
 | **N-5** | **E21's representation for alarm quality.** It cut FPR 0.137 -> 0.110 and raised precision 0.35 -> 0.42 without an anticipation gain; test it against a bar written for alarm cost | a pre-registered bar and a run |
+| **N-6** | **Diagnose E25b's inversions (D-039), descriptive, CPU only.** On Murlo s08, Sogou s07 and Rbot s11, which features drive the world model's score, and in which direction compared with the training families? Do the bot host's windows separate from background hosts on per-host features but not on global ones? This is the evidence D-039 needs before any per-host-state run | a descriptive entry in `results.md`; a pre-registered per-host run only if it points there |
+| **N-7** (decision, team) | **M3, CIC-IDS2018: run it or not.** The corrected flow CSVs are a 9.7 GB zip (`intrusion-detection.distrinet-research.be/CNS2022/Datasets/CSECICIDS2018_improved.zip`), no PCAPs needed. It keeps the full 70-feature state CTU-13 cannot, and adds compromise onsets. It needs a pre-registration and a download the team approves (D-039) | a decision entry |
 
 **Order that matters:** G-1 is a one-click owner action and cannot slip past submission. G-9 and G-3
 come before H-15 records, because a 5-minute script cannot make a 2-minute video. G-4 and G-7 are the last
