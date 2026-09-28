@@ -91,6 +91,8 @@ def main() -> None:
     ap.add_argument("--model-config", default="configs/m1v2/e25_ctu13.yaml")
     ap.add_argument("--group-folds", default="configs/ctu13_folds.yaml")
     ap.add_argument("--seed", type=int, default=42, help="nothing here samples; kept for the repo contract")
+    ap.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS),
+                    help="world-model seeds whose fold checkpoints are on this machine (N-6a ran 43 44)")
     args = ap.parse_args()
     set_seed(args.seed)
     ensure_dirs()
@@ -105,6 +107,7 @@ def main() -> None:
     stored_lr = json.loads((RUNS / "lr-ctu13-s42" / "metrics.json").read_text(encoding="utf-8"))["metrics"]["per_day"]
 
     rows, summary, lr_check = [], [], {}
+    seeds = tuple(args.seeds)
     for scen, role in SCENARIOS.items():
         fold = fold_of[scen]
         frame = ds.frame(scen)
@@ -126,9 +129,9 @@ def main() -> None:
         if c["spearman"] < 0.99 or abs(c["roc_refit"] - c["roc_stored"]) > 0.005:
             raise SystemExit(f"{scen}: refit LR does not reproduce lr-ctu13-s42 ({c}) - stop")
 
-        # --- direction, in the fold's scaler space (the seed-43 checkpoint's scaler; the fit is
+        # --- direction, in the fold's scaler space (the first seed's checkpoint scaler; the fit is
         # deterministic, so every seed of a fold has the same one)
-        ref = torch.load(Path("models") / f"e25-ctu13-s{SEEDS[0]}" / f"{fold}.pt", map_location="cpu",
+        ref = torch.load(Path("models") / f"e25-ctu13-s{seeds[0]}" / f"{fold}.pt", map_location="cpu",
                          weights_only=False)
         names, scaler = ref["feature_names"], ref["scaler"]
         assert list(names) == list(lr_names), "world model and LR must read the same inputs"
@@ -140,7 +143,7 @@ def main() -> None:
         flips = (np.sign(d_train) != np.sign(d_held)) & (np.abs(d_train) >= FLIP_D) & (np.abs(d_held) >= FLIP_D)
 
         models = {"logistic regression": lambda x, m=lr: m.predict_proba(x)}
-        for seed in SEEDS:
+        for seed in seeds:
             ck = torch.load(Path("models") / f"e25-ctu13-s{seed}" / f"{fold}.pt", map_location=device,
                             weights_only=False)
             assert list(ck["feature_names"]) == list(names)
@@ -173,7 +176,7 @@ def main() -> None:
     feats.to_csv(TABLES / "n6_ctu13_inversion_features.csv", index=False)
     summ.to_csv(TABLES / "n6_ctu13_inversion_summary.csv", index=False)
     save_run("n6-ctu13-inversion", {"summary": summ.to_dict("records"), "lr_reproduction": lr_check},
-             config={**vars(args), "scenarios": SCENARIOS, "seeds": list(SEEDS), "flip_d": FLIP_D,
+             config={**vars(args), "scenarios": SCENARIOS, "seeds": list(seeds), "flip_d": FLIP_D,
                      "device": str(device), "git_sha_at_start": start_sha})
     print("wrote results/tables/n6_ctu13_inversion_{features,summary}.csv and results/runs/n6-ctu13-inversion/")
 
