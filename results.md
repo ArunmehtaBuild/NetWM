@@ -51,6 +51,7 @@ the commentary column.
 | F8 | final end-to-end demo test (freeze) | the frozen code in a clean worktree, served weights, demo data | `python scripts/final_e2e_demo.py` + `pytest tests backend/tests` | `results/runs/f8-final-e2e/`, `results/figures/f8_dashboard_thursday_demo.jpg` | 7 of 7 checks pass, 187 tests pass; found and fixed: the CSV route had been served on a fixed threshold since D-041 (no alarm on held-out Thursday) |
 | F9 | the demo script's figures on the served CSV model (r2w s42) | the three demo slices through the backend's demo path, the full held-out Thursday | `python scripts/demo_figures.py` | `results/runs/demo-r2w-figures/`, `results/tables/demo_r2w_alarm_runs.csv` | Thursday slice 78 of 260 windows alarmed, 65 on attack windows, 0 of 4 onsets early; full day 18.1 % alarmed, 2 of 4 early, p = 0.34; Friday C2's first alarm precedes the onset, p = 0.31; description, not evaluation |
 | N-9 / D-043 | PCAP converter traced flow by flow; live-state parity for the frozen PCAP route | Tuesday 13:00-14:00 trace, Thursday 16:40 slice, full Tuesday | `python scripts/check4_flow_match.py` + `pcap_route_parity.py --tag ...-d043` + `step8_decompose.py --tag served-...` | `results/runs/check4-flow-match/`, `results/runs/e27-step8-decompose-served-d043/` | served E20rw mean, live vs training state 0.104 -> 0.991; full-day flows = the CSV's 321,644; flow block not exact (3 features 5-9 %); no live detection number |
+| F10 | figures for the served models, drawn from stored scores (no new numbers) | held-out Thursday, CIC-IDS2017: `n8-r2w-s42`, `n8-e20rw-mean`, LR `lr-flow-s42` | `python scripts/served_figures.py` | `results/figures/served/fig1_thursday_timeline.png`, `results/figures/served/fig2_benchmark_vs_lr.png`, `results/figures/served/fig3_training_curves.png` | every plotted metric is recomputed and asserted equal to `results/tables/n8_fix_eval.csv` |
 
 ## Planned experiment set (M1)
 
@@ -2803,3 +2804,29 @@ initial access 51, reconnaissance 1.
   script quotes them rounded.
 
 Artefacts: `results/runs/demo-r2w-figures/` (`metrics.json`, `run.log`), `results/tables/demo_r2w_alarm_runs.csv`.
+
+## F10 - figures for the served models (no new numbers)
+
+**Command.** `python scripts/served_figures.py`
+
+**What it does.** It draws three figures for the two served routes (D-041) from the per-window scores their
+runs already stored (`results/runs/n8-r2w-s42/metrics.json`, `results/runs/n8-e20rw-mean/metrics.json`),
+with logistic regression from `results/runs/lr-flow-s42/metrics.json`. Nothing is trained, rescored or
+tuned. Before drawing, the script recomputes every Thursday metric with `benchmark_table.metrics` (causal
+expanding q90, D-034) and asserts it equals `results/tables/n8_fix_eval.csv`, and LR's 0.139 / 0.112.
+
+- `results/figures/served/fig1_thursday_timeline.png`: the held-out Thursday, one panel per model, with
+  the risk score, the causal threshold, the alarms, the `y_within_K` label and the four onsets.
+- `results/figures/served/fig2_benchmark_vs_lr.png`: PR-AUC, F1, precision, recall and FPR on the held-out
+  Thursday for both routes and LR (the numbers of "N-8 fix (D-041)").
+- `results/figures/served/fig3_training_curves.png`: the per-epoch losses of the Thursday fold
+  (`results/tables/n8-r2w-s42_training_curves.csv`, `results/tables/m1v2-n8-e20rw-s42_training_curves.csv`),
+  including the imagined-state compromise and stage terms. The PCAP route is shown for seed 42 only.
+
+**What they show.**
+- Both routes rise and stay above the causal threshold through the longest labelled stretch; LR's score is
+  noisy all day, and most of its alarms fall outside the label (precision 0.167).
+- The alarms before onsets are not early-warning evidence: on the full day the circular-shift null does
+  not separate them from chance (F9, p = 0.34 for the CSV route; D-021).
+- Both routes also alarm around 13:00, and the PCAP route around 12:30, outside any label. These are
+  counted in their FPR.

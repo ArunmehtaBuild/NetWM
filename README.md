@@ -42,6 +42,9 @@ The CSV route serves its most favourable seed: seeds 43 and 44 of the same recip
 0.408 PR-AUC. The PCAP route averages its three seeds (0.409, 0.542, 0.726). Friday's only compromise is
 a C2 family seen on no training day, and there both routes are near floor (0.118 and 0.137).
 
+Figures for the served models (held-out Thursday timeline, benchmark against LR, training curves) are in
+[results/figures/served/](results/figures/served/), drawn by `python scripts/served_figures.py` ([results.md](results.md) F10).
+
 What the numbers do **not** show:
 - **No early warning is validated.** Pre-attack windows rank above background, but no alarm beats a
   shuffled-time baseline.
