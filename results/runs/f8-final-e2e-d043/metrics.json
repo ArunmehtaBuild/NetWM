@@ -1,0 +1,163 @@
+{
+  "run_id": "f8-final-e2e-d043",
+  "timestamp_utc": "2026-09-29T10:20:15+00:00",
+  "git_sha": "c14355b",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "git_sha_at_start": "c14355b",
+    "demo_csv": "thursday_infiltration.csv",
+    "demo_csv_sha256": "47dc8819297e88221dd845caca4bcb1564489139bd106ae1b430083ca9d2ebf5",
+    "demo_pcap": "thursday_demo.pcap",
+    "demo_pcap_sha256": "e0680ec574897401fd5fe0aa9c8fa0a016258a76d02d31612b08b62e8cca74ce",
+    "note": "slice figures describe one demo slice under its own causal budget - not an evaluation; PCAP-route scores are not quoted as the model's (N-9)"
+  },
+  "metrics": {
+    "checks": {
+      "health ok, model loaded, offline": true,
+      "model card csv route = D-041 gate row n8-r2w-s42": true,
+      "model card pcap route = D-041 gate row n8-e20rw-mean": true,
+      "served weights = frozen checkpoint hashes": true,
+      "demo: live, r2w seed 42, causal 10 % budget, held out": true,
+      "CSV upload = the demo (scores and alarms)": true,
+      "PCAP upload: live mean of the three E20rw seeds, 105 inputs, causal 10 % budget": true
+    },
+    "passed": true,
+    "health": {
+      "status": "ok",
+      "model_loaded": true,
+      "active_checkpoint": "thursday",
+      "offline": true
+    },
+    "model_card_routes": {
+      "csv": {
+        "model": "r2w seed 42 (models/n8-r2w-s42/): r2's setup with window positions (D-041)",
+        "telemetry": "flow",
+        "packet_features": "not read: a flow-only model (70 flow features)",
+        "metrics": {
+          "f1": 0.591,
+          "precision": 0.574,
+          "recall": 0.608,
+          "fpr": 0.093,
+          "pr_auc": 0.677,
+          "mean_lead_time_windows": 0.0,
+          "baseline_f1": 0.112
+        }
+      },
+      "pcap": {
+        "model": "E20rw seeds 42, 43 and 44 (E20r with window positions, D-041), arithmetic mean per window (D-038)",
+        "telemetry": "flow + packet",
+        "packet_features": "read: 18 pcap_ features measured from the capture (TTL, fragments, retransmissions, TCP window, payload sizes, packet timing, SYN-only and RST shares) beside the 70 flow features and 17 CSV packet statistics",
+        "checkpoints": [
+          "m1v2-n8-e20rw-s42\\thursday.pt",
+          "m1v2-n8-e20rw-s43\\thursday.pt",
+          "m1v2-n8-e20rw-s44\\thursday.pt"
+        ],
+        "available": true,
+        "metrics": {
+          "f1": 0.583,
+          "precision": 0.581,
+          "recall": 0.584,
+          "fpr": 0.087,
+          "pr_auc": 0.514
+        }
+      }
+    },
+    "frozen_checkpoints": {
+      "n8-r2w-s42/friday.pt": true,
+      "n8-r2w-s42/thursday.pt": true,
+      "m1v2-n8-e20rw-s42/friday.pt": true,
+      "m1v2-n8-e20rw-s42/monday.pt": true,
+      "m1v2-n8-e20rw-s42/thursday.pt": true,
+      "m1v2-n8-e20rw-s42/tuesday.pt": true,
+      "m1v2-n8-e20rw-s42/wednesday.pt": true,
+      "m1v2-n8-e20rw-s43/friday.pt": true,
+      "m1v2-n8-e20rw-s43/monday.pt": true,
+      "m1v2-n8-e20rw-s43/thursday.pt": true,
+      "m1v2-n8-e20rw-s43/tuesday.pt": true,
+      "m1v2-n8-e20rw-s43/wednesday.pt": true,
+      "m1v2-n8-e20rw-s44/friday.pt": true,
+      "m1v2-n8-e20rw-s44/monday.pt": true,
+      "m1v2-n8-e20rw-s44/thursday.pt": true,
+      "m1v2-n8-e20rw-s44/tuesday.pt": true,
+      "m1v2-n8-e20rw-s44/wednesday.pt": true
+    },
+    "thursday_demo": {
+      "mock": false,
+      "threshold_policy": "expanding-10pct",
+      "alarm_statistic": "p_max (mean path)",
+      "input_modality": "csv",
+      "model_mode": "flow-only",
+      "aggregation": null,
+      "feature_count": 70,
+      "checkpoints": [
+        "n8-r2w-s42/thursday.pt"
+      ],
+      "flows": 169135,
+      "windows": 260,
+      "warmup_windows": 20,
+      "threshold_at_end": 0.1874,
+      "alarmed_windows": 78,
+      "alarmed_on_attack_windows": 65,
+      "alarm_runs": 14,
+      "early_warning": {
+        "episodes": 4,
+        "warned_early": 0,
+        "p_value": 1.0
+      },
+      "in_sample": false
+    },
+    "thursday_csv_upload": {
+      "mock": false,
+      "threshold_policy": "expanding-10pct",
+      "alarm_statistic": "p_max (mean path)",
+      "input_modality": "csv",
+      "model_mode": "flow-only",
+      "aggregation": null,
+      "feature_count": 70,
+      "checkpoints": [
+        "n8-r2w-s42/thursday.pt"
+      ],
+      "flows": 169135,
+      "windows": 260,
+      "warmup_windows": 20,
+      "threshold_at_end": 0.1874,
+      "alarmed_windows": 78,
+      "alarmed_on_attack_windows": 65,
+      "alarm_runs": 14,
+      "early_warning": {
+        "episodes": 4,
+        "warned_early": 0,
+        "p_value": 1.0
+      },
+      "in_sample": null
+    },
+    "thursday_pcap_upload": {
+      "mock": false,
+      "threshold_policy": "expanding-10pct",
+      "alarm_statistic": "p_max (mean path), mean of 3 checkpoints",
+      "input_modality": "pcap",
+      "model_mode": "packet-enriched ensemble of 3",
+      "aggregation": "arithmetic mean per window, threshold applied to the mean",
+      "feature_count": 105,
+      "checkpoints": [
+        "m1v2-n8-e20rw-s42/thursday.pt",
+        "m1v2-n8-e20rw-s43/thursday.pt",
+        "m1v2-n8-e20rw-s44/thursday.pt"
+      ],
+      "flows": 22478,
+      "windows": 70,
+      "warmup_windows": 20,
+      "threshold_at_end": 0.203,
+      "alarmed_windows": 0,
+      "alarmed_on_attack_windows": null,
+      "alarm_runs": 0,
+      "early_warning": null,
+      "in_sample": null
+    }
+  }
+}

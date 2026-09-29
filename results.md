@@ -2724,6 +2724,12 @@ models do on their training states (0.887).
 - Not established: how well E20rw detects or forecasts on live captures. The only live capture scored
   here is one Thursday slice, and no detection number is quoted from it or from the demo capture.
 - Tests: 192 pass (`tests backend/tests`), including one per rule, each failing on the D-040 converter.
+- **F8 re-run at `c14355b`** in a clean worktree (`results/runs/f8-final-e2e-d043/`; the frozen
+  `f8-final-e2e/` is left as recorded): 7 of 7 checks pass and 192 tests pass with none skipped. The
+  Thursday demo and the CSV upload are unchanged (78 alarmed windows, 65 on attack windows). The demo
+  PCAP's summary is unchanged too (no alarm; end threshold 0.2031 -> 0.203): it is synthesised from CSV
+  rows (D-031), so it holds none of the real-capture cases D-043 fixes, and it still says nothing
+  about the model.
 - The runs used the working tree before the D-043 commit, so their `git_sha` fields name the commit
   before it. They used a first version of rule 8 that kept directions in a dictionary; the committed
   version keeps a set and gives the same full-day flow table (equal `flows_sha256` in
