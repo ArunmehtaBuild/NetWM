@@ -1,7 +1,6 @@
 /**
  * NetWM Forecast Cone Helper
  * Prepares the K-step forward simulation datasets for Chart.js
- * See frontend/PLAN.md
  */
 
 /**

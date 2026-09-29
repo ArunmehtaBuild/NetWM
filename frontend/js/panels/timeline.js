@@ -11,7 +11,6 @@
  * 7. Fast in-place chart updates (chart.update('none'))
  * 8. Optional secondary series (p_cum_attack, p_cum_escalate)
  *
- * See frontend/PLAN.md
  */
 
 import { store } from "../store.js";

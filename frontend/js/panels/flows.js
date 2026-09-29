@@ -9,7 +9,7 @@
  *    - Performant capped rendering (max 50 rows)
  *    - Handled states: loading, empty (filtered or no flows), error with retry
  *
- * See frontend/PLAN.md & docs/api_contract.md
+ * See docs/api_contract.md
  */
 
 import { api } from "../api.js";

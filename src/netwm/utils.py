@@ -1,4 +1,4 @@
-"""Small shared helpers: reproducibility, run folders, artefact paths (see CLAUDE.md)."""
+"""Small shared helpers: reproducibility, run folders, artefact paths (every run writes its seed, config and git SHA)."""
 
 from __future__ import annotations
 

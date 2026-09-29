@@ -1,7 +1,6 @@
 /**
  * NetWM Frontend Configuration
  * The only file that knows about API hosts & runtime flags.
- * See frontend/PLAN.md
  */
 
 const search = typeof window !== "undefined" && window.location ? window.location.search : "";

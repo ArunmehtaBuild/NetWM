@@ -1,7 +1,6 @@
 /**
  * NetWM State Store
  * Small framework-free reactive container with pub/sub.
- * See frontend/PLAN.md
  */
 
 class Store {

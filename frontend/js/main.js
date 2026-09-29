@@ -1,7 +1,6 @@
 /**
  * NetWM SOC Dashboard Main Entry Point
  * Orchestrates store, API client, and panel components.
- * See frontend/PLAN.md
  */
 
 import { api } from "./api.js";

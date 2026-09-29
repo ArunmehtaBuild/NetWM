@@ -12,7 +12,7 @@
  * 3. PART 3: Global Explanation ("What drives this capture overall")
  *    - explanation_global: feature_names and mean_abs_attribution
  *
- * See frontend/PLAN.md & docs/api_contract.md
+ * See docs/api_contract.md
  */
 
 import { store } from "../store.js";

@@ -476,7 +476,7 @@ def _lead_summary(score, threshold, onsets, ts, stride_s, horizon) -> dict[str, 
 
 
 def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:
-    """Dispatch on file type. PCAP support is track D's ``flow_aggregator`` (see teamtasks.md)."""
+    """Dispatch on file type. A PCAP is turned into flows by ``flow_aggregator.pcap_to_flows`` (D-033, D-043)."""
     path = Path(path)
     if path.suffix.lower() in {".csv", ".txt"}:
         flows = read_flow_csv(path)

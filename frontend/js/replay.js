@@ -9,7 +9,7 @@
  * 5. SSE stream integration via api.createReplayStream() with offline mock fallback
  * 6. Clean completion state at end of capture
  *
- * See frontend/PLAN.md & docs/api_contract.md
+ * See docs/api_contract.md
  */
 
 import { api } from "./api.js";

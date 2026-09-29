@@ -11,7 +11,7 @@ For every fold checkpoint it reports, on the **held-out** day: the base rate, th
 the Brier score and the expected calibration error (10 equal-width bins), raw and after temperature
 scaling. The temperature is fitted on the checkpoint's own **training** days. That is in-sample by
 necessity: only Thursday and Friday carry compromise positives and each fold tests one of them, so
-no held-out training day with positives exists (teamtasks Y-1). The question answered is therefore
+no held-out training day with positives exists. The question answered is therefore
 "does an in-sample temperature transfer to an unseen day", not held-out calibration.
 
 Outputs results/tables/e17_calibration_summary.csv, results/tables/e17_reliability.csv and

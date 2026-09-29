@@ -13,7 +13,6 @@
  * 5. Interactive clicking/scrubbing to select windows
  * 6. Graceful handling of missing ground truth or stages
  *
- * See frontend/PLAN.md
  */
 
 import { store } from "../store.js";

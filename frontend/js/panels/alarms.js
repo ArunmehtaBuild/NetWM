@@ -13,7 +13,7 @@
  * 4. Interactive row selection linked to store.selectedWindow
  * 5. Robust handling of unlabelled captures
  *
- * See frontend/PLAN.md & docs/api_contract.md v1.1
+ * See docs/api_contract.md v1.1
  */
 
 import { store } from "../store.js";

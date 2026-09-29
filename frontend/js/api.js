@@ -2,7 +2,7 @@
  * NetWM API Client
  * Manages HTTP communication with the FastAPI backend, with graceful offline fallback
  * to frontend/mock/*.json.
- * See frontend/PLAN.md & docs/api_contract.md
+ * See docs/api_contract.md
  */
 
 import { API_BASE, USE_MOCK } from "./config.js";
@@ -429,7 +429,7 @@ export class ApiClient {
 
   /**
    * Poll backend job until done or error
-   * Spec: Poll GET /api/jobs/<id> every 750 ms (frontend/PLAN.md)
+   * Spec: Poll GET /api/jobs/<id> every 750 ms
    */
   async _pollJob(jobId, onProgress = null) {
     const pollInterval = 750;

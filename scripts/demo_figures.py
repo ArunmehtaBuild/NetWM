@@ -1,9 +1,9 @@
-"""The demo script's figures for the served CSV model (r2w seed 42, D-041), measured through the backend's
+"""The demo video's figures for the served CSV model (r2w seed 42, D-041), measured through the backend's
 own demo path - the payload the dashboard draws - on the causal expanding 10 % budget it serves.
 
     python scripts/demo_figures.py
 
-Every number ``docs/demo_script.md`` quotes about a demo slice comes from here, so the script can be checked
+Every number the demo video quotes about a demo slice comes from here, so the script can be checked
 against the screen. Per slice: windows, alarmed windows (on attack windows and on benign ones), each alarm
 run's start and end, onsets warned early against the circular-shift null, surprise on benign windows, at the
 17:00 scan and over the sweep, and the stage and top features at the sweep's strongest alarm. The whole
@@ -33,7 +33,7 @@ from netwm.utils import RUNS, TABLES, git_sha, save_run  # noqa: E402
 
 RUN = "demo-r2w-figures"
 FULL_THURSDAY = ROOT / "data" / "raw" / "cicids2017_improved" / "thursday.csv"
-# Thursday's story, UTC as the dashboard shows it (demo_script.md; S-8 for the scan's own seconds)
+# Thursday's story, UTC as the dashboard shows it (S-8 for the scan's own seconds)
 SCAN = ("2017-07-06T16:59:30Z", "2017-07-06T17:00:00Z")   # windows overlapping 17:00:31-17:00:45
 COMPROMISE = "2017-07-06T17:18:30Z"
 SWEEP = ("2017-07-06T18:04:00Z", "2017-07-06T18:45:00Z")   # the sweeping host is the top talker

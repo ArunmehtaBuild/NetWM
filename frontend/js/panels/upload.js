@@ -2,7 +2,7 @@
  * NetWM Upload & Capture Ingestion Panel
  * Handles drag-drop file upload, format validation, demo scenario selection,
  * live XMLHttpRequest byte-level upload progress, cancel lifecycle, and honest error presentation.
- * See frontend/PLAN.md & docs/api_contract.md
+ * See docs/api_contract.md
  */
 
 import { api } from "../api.js";
