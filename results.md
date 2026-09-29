@@ -49,6 +49,7 @@ the commentary column.
 | F7 | CIC-IDS2018 build (D-044) | 10 days, corrected release | `python scripts/build_cicids2018.py --config configs/cicids2018.yaml` | `results/runs/m3-build/`, `results/runs/m3-inspect/`, `data/processed/cicids2018/` (not committed) | 63.2 M flows, 14,307 windows; built twice, byte-identical; 2,609 early-dated feb23 flows dropped |
 | E28 | M3: CIC-IDS2018 leave-one-family-out (D-044) | 6 folds x 3 seeds + LR | `train.py --data data/processed/cicids2018 --group-folds configs/cicids2018_folds.yaml` + `python scripts/m3_family_matrix.py` | `results/tables/e28_m3_days.csv`, `results/runs/e28-m3-matrix/` | BruteForce and DoS transfer; DDoS, Web, Botnet partial; Infiltration inverted (feb28 0.26-0.42); D-039's question inconclusive by the pre-registered rule; S3 nowhere |
 | F8 | final end-to-end demo test (freeze) | the frozen code in a clean worktree, served weights, demo data | `python scripts/final_e2e_demo.py` + `pytest tests backend/tests` | `results/runs/f8-final-e2e/`, `results/figures/f8_dashboard_thursday_demo.jpg` | 7 of 7 checks pass, 187 tests pass; found and fixed: the CSV route had been served on a fixed threshold since D-041 (no alarm on held-out Thursday) |
+| F9 | the demo script's figures on the served CSV model (r2w s42) | the three demo slices through the backend's demo path, the full held-out Thursday | `python scripts/demo_figures.py` | `results/runs/demo-r2w-figures/`, `results/tables/demo_r2w_alarm_runs.csv` | Thursday slice 78 of 260 windows alarmed, 65 on attack windows, 0 of 4 onsets early; full day 18.1 % alarmed, 2 of 4 early, p = 0.34; Friday C2's first alarm precedes the onset, p = 0.31; description, not evaluation |
 | N-9 / D-043 | PCAP converter traced flow by flow; live-state parity for the frozen PCAP route | Tuesday 13:00-14:00 trace, Thursday 16:40 slice, full Tuesday | `python scripts/check4_flow_match.py` + `pcap_route_parity.py --tag ...-d043` + `step8_decompose.py --tag served-...` | `results/runs/check4-flow-match/`, `results/runs/e27-step8-decompose-served-d043/` | served E20rw mean, live vs training state 0.104 -> 0.991; full-day flows = the CSV's 321,644; flow block not exact (3 features 5-9 %); no live detection number |
 
 ## Planned experiment set (M1)
@@ -2749,3 +2750,56 @@ Artefacts:
   two packets is refused clearly), `tests/test_pcap_ingest.py` (one test per rule, each failing on the
   D-040 converter), `scripts/{check4_flow_match,pcap_converter_cost}.py`, `scripts/step8_decompose.py`
   (`--routes`, `--flow-aggregator`, `--tag`), `scripts/final_e2e_demo.py` (`--run`).
+
+---
+
+## F9 - the demo script's figures on the served CSV model (r2w seed 42)
+
+```
+python scripts/demo_figures.py
+```
+
+**Why.** `docs/demo_script.md` quoted r2, which D-041 replaced. Every figure it now quotes about a demo
+slice is measured here, on the payload the dashboard draws:
+- the backend's own demo path (`backend.inference.run_job_inference`);
+- the served `n8-r2w-s42` checkpoints;
+- the causal expanding 10 % budget.
+
+These figures describe single captures under their own budget. They are **not an evaluation**; that is
+D-041's (`n8_fix_eval.csv`).
+
+| capture | fold | windows | attack windows | alarmed (on attack) | alarm runs | onsets warned early |
+|---|---|---:|---:|---|---:|---|
+| `thursday_infiltration` | thursday.pt | 260 | 110 | 78 (65) | 14 | 0 of 4, p = 1.0 |
+| `friday_botnet_c2` | friday.pt | 240 | 116 | 50 (32) | 6 | 1 of 1, p = 0.307 |
+| `friday_scan_to_ddos` | friday.pt | 360 | 93 | 80 (37) | 9 | - (no compromise onset) |
+| full held-out Thursday (upload path) | thursday.pt | 972 | 236 | 175 (109) | 22 | 2 of 4, p = 0.339 |
+
+**Thursday's story, for the script.**
+- **The scan.** The 17:00 scan window alarms at `p_max` 0.0097, against a threshold of 0.0043 set by a
+  quiet afternoon. Surprise is 0.15 before the scan and about 7.5 at it.
+- **Before the compromise.** Alarms at 17:05, 17:07 and 17:10, then none from the 17:18:30 compromise
+  until the sweep starts at 17:33.
+- **The sweep.** 18:08-18:33 is one 51-window run. Over 18:04-18:45 surprise has a median of 7 and a
+  peak of about 52, and the stage head says reconnaissance on 73 of 83 windows.
+- **The strongest alarm** (18:35, `p_max` 0.229) is pushed up by the database-service share, distinct
+  destination ports and per-host port fan-out.
+
+**Friday C2.** The first alarm (12:55:30-13:02:30) comes before the 13:03:30 onset. The null gives
+p = 0.307, so it is not a warning. The stage head never says C2 on the 116 C2 windows: benign 64,
+initial access 51, reconnaissance 1.
+
+**Stored run, beside it.**
+- **Alarm rate:** the held-out Thursday scores under the same budget alarm on 176 of 972 windows
+  (18.1 %), one more than the upload path's grid.
+- **Rollout vs persistence** (next-state MSE, averaged over steps 2-10):
+  - Thursday 2.47 against 2.66, and Friday 1.72 against 1.84, better on 8 of 9 steps each;
+  - at step 1 it loses: 2.01 against 1.05, and 1.43 against 0.69.
+
+**Repeatability.**
+- Alarms and `p_max` come from the deterministic mean path. F8 gives the same Thursday alarms (78
+  alarmed windows, 65 on attack windows).
+- Surprise and the stage head come from Monte-Carlo samples and move slightly between runs, so the
+  script quotes them rounded.
+
+Artefacts: `results/runs/demo-r2w-figures/` (`metrics.json`, `run.log`), `results/tables/demo_r2w_alarm_runs.csv`.

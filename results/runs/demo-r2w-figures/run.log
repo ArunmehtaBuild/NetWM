@@ -1,0 +1,322 @@
+{
+ "thursday_infiltration": {
+  "checkpoint": [
+   "n8-r2w-s42/thursday.pt"
+  ],
+  "threshold_policy": "expanding-10pct",
+  "mock": false,
+  "in_sample": false,
+  "flows": 169135,
+  "windows": 260,
+  "attack_windows": 110,
+  "alarmed_windows": 78,
+  "alarmed_share": 0.3,
+  "alarmed_on_attack_windows": 65,
+  "alarmed_on_benign_windows": 13,
+  "attack_windows_alarmed_share": 0.591,
+  "alarm_runs": 14,
+  "surprise_benign_median": 0.16,
+  "p_max_median": 0.0046,
+  "p_max_max": 0.2289,
+  "early_warning": {
+   "episodes": 4,
+   "warned_early": 0,
+   "p_value": 1.0
+  },
+  "onsets": [
+   "2017-07-06T17:18:30Z",
+   "2017-07-06T17:28:00Z",
+   "2017-07-06T17:53:00Z",
+   "2017-07-06T18:03:30Z"
+  ],
+  "story": {
+   "surprise_quiet_median_before_scan": 0.15,
+   "scan_windows": [
+    {
+     "ts": "2017-07-06T16:59:30Z",
+     "surprise": 0.15,
+     "p_max": 0.0022,
+     "alarm": false,
+     "threshold": 0.004376
+    },
+    {
+     "ts": "2017-07-06T17:00:00Z",
+     "surprise": 7.47,
+     "p_max": 0.0097,
+     "alarm": true,
+     "threshold": 0.00428
+    }
+   ],
+   "runs_scan_to_compromise": [
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:05:00Z",
+     "last_window": "2017-07-06T17:05:30Z",
+     "windows": 2,
+     "peak_p": 0.0884
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:07:30Z",
+     "last_window": "2017-07-06T17:08:00Z",
+     "windows": 2,
+     "peak_p": 0.0323
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:10:30Z",
+     "last_window": "2017-07-06T17:11:00Z",
+     "windows": 2,
+     "peak_p": 0.0338
+    }
+   ],
+   "runs_compromise_to_sweep": [
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:33:00Z",
+     "last_window": "2017-07-06T17:34:00Z",
+     "windows": 3,
+     "peak_p": 0.0267
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:43:30Z",
+     "last_window": "2017-07-06T17:43:30Z",
+     "windows": 1,
+     "peak_p": 0.0141
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:47:00Z",
+     "last_window": "2017-07-06T17:47:00Z",
+     "windows": 1,
+     "peak_p": 0.011
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T17:48:00Z",
+     "last_window": "2017-07-06T17:48:00Z",
+     "windows": 1,
+     "peak_p": 0.0155
+    }
+   ],
+   "runs_in_sweep": [
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:06:30Z",
+     "last_window": "2017-07-06T18:07:00Z",
+     "windows": 2,
+     "peak_p": 0.0278
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:08:00Z",
+     "last_window": "2017-07-06T18:33:00Z",
+     "windows": 51,
+     "peak_p": 0.2166
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:34:30Z",
+     "last_window": "2017-07-06T18:35:00Z",
+     "windows": 2,
+     "peak_p": 0.2289
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:36:30Z",
+     "last_window": "2017-07-06T18:37:00Z",
+     "windows": 2,
+     "peak_p": 0.1953
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:39:00Z",
+     "last_window": "2017-07-06T18:41:00Z",
+     "windows": 5,
+     "peak_p": 0.2006
+    },
+    {
+     "slice": "thursday_infiltration",
+     "start": "2017-07-06T18:44:00Z",
+     "last_window": "2017-07-06T18:44:30Z",
+     "windows": 2,
+     "peak_p": 0.2001
+    }
+   ],
+   "surprise_sweep": {
+    "min": 0.1,
+    "median": 7.0,
+    "max": 51.9
+   },
+   "sweep_windows": 83,
+   "sweep_alarmed": 64,
+   "sweep_predicted_stage": {
+    "Reconnaissance": 73,
+    "Benign": 7,
+    "Impact": 3
+   },
+   "sweep_peak_alarm": {
+    "ts": "2017-07-06T18:35:00Z",
+    "p_max": 0.2289,
+    "surprise": 7.2,
+    "pred_stage": "Reconnaissance",
+    "top_talker": {
+     "ip": "192.168.10.8",
+     "flows": 1291,
+     "bytes_out": 7495
+    },
+    "top_features": [
+     [
+      "svc_db_rate",
+      "up"
+     ],
+     [
+      "uniq_dst_port",
+      "up"
+     ],
+     [
+      "port_fanout_max",
+      "up"
+     ],
+     [
+      "ports_per_pair_max",
+      "down"
+     ],
+     [
+      "svc_dns_rate",
+      "down"
+     ]
+    ]
+   }
+  }
+ },
+ "friday_botnet_c2": {
+  "checkpoint": [
+   "n8-r2w-s42/friday.pt"
+  ],
+  "threshold_policy": "expanding-10pct",
+  "mock": false,
+  "in_sample": false,
+  "flows": 100486,
+  "windows": 240,
+  "attack_windows": 116,
+  "alarmed_windows": 50,
+  "alarmed_share": 0.208,
+  "alarmed_on_attack_windows": 32,
+  "alarmed_on_benign_windows": 18,
+  "attack_windows_alarmed_share": 0.276,
+  "alarm_runs": 6,
+  "surprise_benign_median": 0.17,
+  "p_max_median": 0.0063,
+  "p_max_max": 0.9209,
+  "early_warning": {
+   "episodes": 1,
+   "warned_early": 1,
+   "p_value": 0.307
+  },
+  "onsets": [
+   "2017-07-07T13:03:30Z"
+  ],
+  "story": {
+   "c2_onset": "2017-07-07T13:03:30Z",
+   "first_alarm_at_or_after_onset": "2017-07-07T13:04:00Z",
+   "minutes_after_onset": 0.5,
+   "alarms_before_onset": [
+    {
+     "slice": "friday_botnet_c2",
+     "start": "2017-07-07T12:55:30Z",
+     "last_window": "2017-07-07T13:02:30Z",
+     "windows": 15,
+     "peak_p": 0.043
+    }
+   ],
+   "predicted_stage_on_c2_windows": {
+    "Benign": 64,
+    "Initial Access": 51,
+    "Reconnaissance": 1
+   }
+  }
+ },
+ "friday_scan_to_ddos": {
+  "checkpoint": [
+   "n8-r2w-s42/friday.pt"
+  ],
+  "threshold_policy": "expanding-10pct",
+  "mock": false,
+  "in_sample": false,
+  "flows": 378514,
+  "windows": 360,
+  "attack_windows": 93,
+  "alarmed_windows": 80,
+  "alarmed_share": 0.222,
+  "alarmed_on_attack_windows": 37,
+  "alarmed_on_benign_windows": 43,
+  "attack_windows_alarmed_share": 0.398,
+  "alarm_runs": 9,
+  "surprise_benign_median": 0.18,
+  "p_max_median": 0.0537,
+  "p_max_max": 0.9895,
+  "early_warning": {
+   "episodes": 0,
+   "warned_early": 0,
+   "p_value": 1.0
+  },
+  "onsets": []
+ },
+ "full_thursday_upload": {
+  "checkpoint": [
+   "n8-r2w-s42/thursday.pt"
+  ],
+  "threshold_policy": "expanding-10pct",
+  "mock": false,
+  "in_sample": null,
+  "flows": 362076,
+  "windows": 972,
+  "attack_windows": 236,
+  "alarmed_windows": 175,
+  "alarmed_share": 0.18,
+  "alarmed_on_attack_windows": 109,
+  "alarmed_on_benign_windows": 66,
+  "attack_windows_alarmed_share": 0.462,
+  "alarm_runs": 22,
+  "surprise_benign_median": 0.18,
+  "p_max_median": 0.0024,
+  "p_max_max": 0.2289,
+  "early_warning": {
+   "episodes": 4,
+   "warned_early": 2,
+   "p_value": 0.339
+  },
+  "onsets": [
+   "2017-07-06T17:18:30Z",
+   "2017-07-06T17:28:00Z",
+   "2017-07-06T17:53:00Z",
+   "2017-07-06T18:03:30Z"
+  ]
+ },
+ "full_thursday_stored_scores": {
+  "run": "n8-r2w-s42",
+  "day": "thursday",
+  "windows": 972,
+  "alarmed_windows": 176,
+  "alarmed_share": 0.181
+ },
+ "rollout_vs_persistence": {
+  "thursday": {
+   "k1_world_model": 2.009,
+   "k1_persistence": 1.052,
+   "k2_10_world_model": 2.473,
+   "k2_10_persistence": 2.661,
+   "steps_2_10_better": 8
+  },
+  "friday": {
+   "k1_world_model": 1.427,
+   "k1_persistence": 0.692,
+   "k2_10_world_model": 1.715,
+   "k2_10_persistence": 1.842,
+   "steps_2_10_better": 8
+  }
+ }
+}
+exit=0
