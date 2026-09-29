@@ -1,0 +1,7 @@
+family,days,verdict,wm_roc_auc_mean,lr_roc_auc_mean,well_measured_inverted_days
+BruteForce,feb14,transfers,0.958,0.454,
+DoS,"feb15, feb16",transfers,0.872,0.845,
+DDoS,"feb20, feb21",partial,0.738,0.588,
+Web,"feb22, feb23",partial,0.707,0.734,
+Infiltration,"feb28, mar01",inverted,0.432,0.606,
+Botnet,mar02,partial,0.722,0.822,

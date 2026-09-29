@@ -1,0 +1,168 @@
+{
+  "run": "m3-s44",
+  "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models",
+  "machine": "Atharv-laptop",
+  "python": "3.10.6",
+  "utc": "2026-09-29T01:31:24+00:00",
+  "torch": "2.5.1+cu121",
+  "device": "NVIDIA GeForce GTX 1650",
+  "note": "hashed in place on this machine; weights are untracked",
+  "checkpoints": [
+    {
+      "file": "botnet.pt",
+      "bytes": 2476178,
+      "sha256": "5f6c85ca8986418992265b83928d894a740dd30611fab6c7844898e9313c5942",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb14",
+        "feb15",
+        "feb16",
+        "feb20",
+        "feb21",
+        "feb22",
+        "feb23",
+        "feb28",
+        "mar01"
+      ],
+      "test_days": [
+        "mar02"
+      ],
+      "stored_threshold": 0.7058,
+      "params": 614044
+    },
+    {
+      "file": "bruteforce.pt",
+      "bytes": 2479138,
+      "sha256": "beefbaf12be54c26fd32ee417bb89be6f927c30f2710a85affbe54bf6a9b02b4",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb15",
+        "feb16",
+        "feb20",
+        "feb21",
+        "feb22",
+        "feb23",
+        "feb28",
+        "mar01",
+        "mar02"
+      ],
+      "test_days": [
+        "feb14"
+      ],
+      "stored_threshold": 0.7744,
+      "params": 614044
+    },
+    {
+      "file": "ddos.pt",
+      "bytes": 2476074,
+      "sha256": "62be12c035e8797d5cc53f89e6875f42a77b2405de27a5a5037f2cdf9e1f3931",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb14",
+        "feb15",
+        "feb16",
+        "feb22",
+        "feb23",
+        "feb28",
+        "mar01",
+        "mar02"
+      ],
+      "test_days": [
+        "feb20",
+        "feb21"
+      ],
+      "stored_threshold": 0.7352,
+      "params": 614044
+    },
+    {
+      "file": "dos.pt",
+      "bytes": 2476022,
+      "sha256": "a31edc696af4c5f94e624b87f3048b408fa59de5e306947de4257ee6ea165857",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb14",
+        "feb20",
+        "feb21",
+        "feb22",
+        "feb23",
+        "feb28",
+        "mar01",
+        "mar02"
+      ],
+      "test_days": [
+        "feb15",
+        "feb16"
+      ],
+      "stored_threshold": 0.8136,
+      "params": 614044
+    },
+    {
+      "file": "infiltration.pt",
+      "bytes": 2479242,
+      "sha256": "4a9379d223aae1a0dcf1c9187ee55f80b878bb4f942417b43ccd1198f0beb4be",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb14",
+        "feb15",
+        "feb16",
+        "feb20",
+        "feb21",
+        "feb22",
+        "feb23",
+        "mar02"
+      ],
+      "test_days": [
+        "feb28",
+        "mar01"
+      ],
+      "stored_threshold": 0.9312,
+      "params": 614044
+    },
+    {
+      "file": "web.pt",
+      "bytes": 2476022,
+      "sha256": "ce4a5b0d77ce873a3812aa3057f4bc2ada752096f79a8e162632b5c2460cdadc",
+      "git_sha": "2f2d380",
+      "pos_mode": "window",
+      "hazard": "factorized",
+      "n_features": 70,
+      "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+      "train_days": [
+        "feb14",
+        "feb15",
+        "feb16",
+        "feb20",
+        "feb21",
+        "feb28",
+        "mar01",
+        "mar02"
+      ],
+      "test_days": [
+        "feb22",
+        "feb23"
+      ],
+      "stored_threshold": 0.7548,
+      "params": 614044
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+              model    run   day       family  score  windows  background  positives  roc_auc  pr_auc  causal_f1  s2_cells  s2_star          s3
+        world model m3-s42 feb14   BruteForce threat     1480        1288        192   0.9925  0.9517     0.8112        16      NaN 1/1 p=0.167
+        world model m3-s42 feb15          DoS threat     1544        1377        167   0.9281  0.7223     0.4519         0      NaN 0/0 p=1.000
+        world model m3-s42 feb16          DoS threat     1179        1142         37   0.8141  0.6479     0.3462         0      NaN 0/0 p=1.000
+        world model m3-s42 feb20         DDoS threat     1459        1281        178   0.8243  0.7383     0.7076         0      NaN 0/0 p=1.000
+        world model m3-s42 feb21         DDoS threat     1458        1258        200   0.6704  0.2137     0.4096         0      NaN 0/0 p=1.000
+        world model m3-s42 feb22          Web threat     1470        1210        260   0.7724  0.3331     0.1311        52   0.7016 1/4 p=0.188
+        world model m3-s42 feb23          Web threat     1386        1078        308   0.6475  0.3413     0.1902        58   0.5393 0/4 p=1.000
+        world model m3-s42 feb28 Infiltration   comp     1532        1242        290   0.2636  0.1228     0.0000        79   0.6865 0/6 p=1.000
+        world model m3-s42 mar01 Infiltration   comp     1371         671        700   0.5059  0.4788     0.0134        23   0.6707 0/2 p=1.000
+        world model m3-s42 mar02       Botnet   comp     1428         736        692   0.6925  0.5708     0.2692        16      NaN 0/1 p=1.000
+        world model m3-s43 feb14   BruteForce threat     1480        1288        192   0.9916  0.9676     0.8391        16      NaN 0/1 p=1.000
+        world model m3-s43 feb15          DoS threat     1544        1377        167   0.8891  0.4395     0.4622         0      NaN 0/0 p=1.000
+        world model m3-s43 feb16          DoS threat     1179        1142         37   0.8833  0.6650     0.4219         0      NaN 0/0 p=1.000
+        world model m3-s43 feb20         DDoS threat     1459        1281        178   0.8566  0.6844     0.5468         0      NaN 0/0 p=1.000
+        world model m3-s43 feb21         DDoS threat     1458        1258        200   0.5665  0.1410     0.0000         0      NaN 0/0 p=1.000
+        world model m3-s43 feb22          Web threat     1470        1210        260   0.7739  0.3385     0.0884        52   0.6881 0/4 p=1.000
+        world model m3-s43 feb23          Web threat     1386        1078        308   0.6374  0.2766     0.0587        58   0.6080 0/4 p=1.000
+        world model m3-s43 feb28 Infiltration   comp     1532        1242        290   0.2854  0.1282     0.0000        79   0.7225 0/6 p=1.000
+        world model m3-s43 mar01 Infiltration   comp     1371         671        700   0.4965  0.4684     0.0334        23   0.5269 0/2 p=1.000
+        world model m3-s43 mar02       Botnet   comp     1428         736        692   0.7840  0.7340     0.2947        16      NaN 0/1 p=1.000
+        world model m3-s44 feb14   BruteForce threat     1480        1288        192   0.8895  0.4104     0.3484        16      NaN 0/1 p=1.000
+        world model m3-s44 feb15          DoS threat     1544        1377        167   0.8758  0.4772     0.3651         0      NaN 0/0 p=1.000
+        world model m3-s44 feb16          DoS threat     1179        1142         37   0.8407  0.6219     0.3714         0      NaN 0/0 p=1.000
+        world model m3-s44 feb20         DDoS threat     1459        1281        178   0.8928  0.7704     0.5839         0      NaN 0/0 p=1.000
+        world model m3-s44 feb21         DDoS threat     1458        1258        200   0.6165  0.1551     0.0211         0      NaN 0/0 p=1.000
+        world model m3-s44 feb22          Web threat     1470        1210        260   0.7294  0.2709     0.0201        52   0.6694 0/4 p=1.000
+        world model m3-s44 feb23          Web threat     1386        1078        308   0.6828  0.3059     0.0171        58   0.6439 0/4 p=1.000
+        world model m3-s44 feb28 Infiltration   comp     1532        1242        290   0.4158  0.1515     0.0000        79   0.6263 0/6 p=1.000
+        world model m3-s44 mar01 Infiltration   comp     1371         671        700   0.6272  0.5513     0.1206        23   0.5023 0/2 p=1.000
+        world model m3-s44 mar02       Botnet   comp     1428         736        692   0.6896  0.5773     0.2527        16      NaN 0/1 p=1.000
+logistic regression  lr-m3 feb14   BruteForce threat     1480        1288        192   0.4539  0.1115     0.0261        16      NaN 1/1 p=0.156
+logistic regression  lr-m3 feb15          DoS threat     1544        1377        167   0.7882  0.4146     0.2578         0      NaN 0/0 p=1.000
+logistic regression  lr-m3 feb16          DoS threat     1179        1142         37   0.9015  0.7503     0.2288         0      NaN 0/0 p=1.000
+logistic regression  lr-m3 feb20         DDoS threat     1459        1281        178   0.8416  0.7651     0.5106         0      NaN 0/0 p=1.000
+logistic regression  lr-m3 feb21         DDoS threat     1458        1258        200   0.3334  0.1001     0.0000         0      NaN 0/0 p=1.000
+logistic regression  lr-m3 feb22          Web threat     1470        1210        260   0.7564  0.3569     0.2541        52   0.6872 1/4 p=0.468
+logistic regression  lr-m3 feb23          Web threat     1386        1078        308   0.7118  0.4161     0.1330        58   0.5746 1/4 p=0.266
+logistic regression  lr-m3 feb28 Infiltration   comp     1532        1242        290   0.5909  0.3290     0.2442        79   0.8406 3/6 p=0.058
+logistic regression  lr-m3 mar01 Infiltration   comp     1371         671        700   0.6205  0.5849     0.1160        23   0.7755 1/2 p=0.113
+logistic regression  lr-m3 mar02       Botnet   comp     1428         736        692   0.8215  0.7505     0.3050        16      NaN 0/1 p=1.000
+
+      family         days   verdict  wm_roc_auc_mean  lr_roc_auc_mean well_measured_inverted_days
+  BruteForce        feb14 transfers            0.958            0.454                            
+         DoS feb15, feb16 transfers            0.872            0.845                            
+        DDoS feb20, feb21   partial            0.738            0.588                            
+         Web feb22, feb23   partial            0.707            0.734                            
+Infiltration feb28, mar01  inverted            0.432            0.606                            
+      Botnet        mar02   partial            0.722            0.822                            
+
+D-039 via D-044: the inversion pattern on the full state -> inconclusive

@@ -2436,3 +2436,119 @@ Artefacts:
   `results/tables/d042-*-s*_{forecast,training_curves}.csv`;
 - `results/runs/n8-logs/` (`run_chain_d042*.sh`, `chain_d042.status`, per-run logs; the build log is
   `d042-build.log`).
+
+---
+
+## E28 - M3: CIC-IDS2018, family by family, on the full 70-feature state (D-044): attack families mostly carry, compromise does not, and D-039's question stays open
+
+```
+python scripts/inspect_cicids2018.py --csv-dir D:/CIC-IDS2018-improved/csv                  # step 2 (research/cicids2018.md)
+python scripts/build_cicids2018.py --config configs/cicids2018.yaml [--check-chunking feb15]
+python scripts/build_cicids2018.py --config configs/cicids2018_verify.yaml && python scripts/compare_builds.py \
+    data/processed/cicids2018 data/processed/cicids2018_verify                                 # must be identical
+python scripts/train.py --data data/processed/cicids2018 --model-config configs/m3/m3_stack.yaml \
+    --group-folds configs/cicids2018_folds.yaml --run m3-s42 --seed 42 --no-figures           # and 43, 44
+python scripts/lr_baseline.py --data data/processed/cicids2018 --model-config configs/m3/m3_stack.yaml \
+    --group-folds configs/cicids2018_folds.yaml --run lr-m3
+python scripts/m3_family_matrix.py
+```
+
+**Setup, pre-registered in D-044 (`721505b`, amended `986e626`, both before any training).**
+- **Data.** Corrected CIC-IDS2018 (Liu et al., CNS 2022): 10 days, 63,195,145 flows. 2,609 early-dated
+  flows in feb23's file were dropped. Same S_t v1 (70 features), window grid and K as CIC-IDS2017.
+- **Model.** E25's stack (RSSM, factorised target, 250 steps per fold) with D-041's window positions.
+- **Folds and baseline.** Six family folds, seeds 42/43/44, and LR on the same inputs.
+- **Primary target, by day.**
+  - Compromise days (feb28, mar01, mar02): `comp` on `y_within_K`.
+  - The seven attack-only days, where `y_within_K` is zero: `threat` on `y_attack_within_K`.
+
+*Procedure notes.*
+1. **The `-1` flow was not real.** The inspection's first pass over feb28 was a transient read error
+   on the external D: drive. Every file matches the zip's CRC32 (D-044 amendment).
+2. **The data were built twice.** The second build ran out of memory on feb20 once, and the missing
+   days were retried at the same chunk size, at the user's request. It was byte-identical to the first
+   on all 10 days before any run started (`results/runs/m3-logs/compare-builds.log`).
+3. **Runs and code.** All runs went one at a time on the GTX 1650. `m3-s42` trained from `daa9d18`;
+   `m3-s43`, `m3-s44` and `lr-m3` from `2f2d380`, which differs only by the freeze manifest. No run
+   needed a retry. Checkpoint sha256 manifests are in each run folder.
+4. **One scorer bug, fixed before anything was read.** The first scorer run stopped on a column name
+   before writing anything: `classify()` reads E25b's `scenario`, and M3's rows say `day`. The call
+   site was fixed; the rule is untouched (`m3-matrix.keyerror.log`).
+
+**Per held-out day.** ROC-AUC on the primary target. WM mean is the per-window mean of the three seeds'
+scores; the bracketed values are D-042's block-bootstrap 95 % interval. S2\* is shown where a day has at
+least 20 pre-onset cells (the DoS and DDoS attacks are Impact, which S2 excludes).
+
+| family | day | primary target | background | positives | **WM ROC-AUC** s42 / s43 / s44 | WM mean [95 %] | LR [95 %] | WM S2\* s42 / 43 / 44 | LR S2\* |
+|---|---|---|---:|---:|---|---|---|---|---:|
+| BruteForce | feb14 | attack | 1,288 | 192 | 0.993 / 0.992 / 0.889 | 0.993 [0.98, 1.00] | 0.454 [0.33, 0.57] | - | - |
+| DoS | feb15 | attack | 1,377 | 167 | 0.928 / 0.889 / 0.876 | 0.909 [0.83, 0.97] | 0.788 [0.70, 0.86] | - | - |
+| DoS | feb16 | attack | 1,142 | 37 | 0.814 / 0.883 / 0.841 | 0.842 [0.40, 1.00] | 0.901 [0.62, 1.00] | - | - |
+| DDoS | feb20 | attack | 1,281 | 178 | 0.824 / 0.857 / 0.893 | 0.870 [0.72, 0.98] | 0.842 [0.65, 0.98] | - | - |
+| DDoS | feb21 | attack | 1,258 | 200 | 0.670 / 0.567 / 0.617 | 0.593 [0.48, 0.71] | 0.333 [0.23, 0.44] | - | - |
+| Web | feb22 | attack | 1,210 | 260 | 0.772 / 0.774 / 0.729 | 0.774 [0.67, 0.88] | 0.756 [0.65, 0.84] | 0.70 / 0.69 / 0.67 | 0.69 |
+| Web | feb23 | attack | 1,078 | 308 | 0.647 / 0.637 / 0.683 | 0.652 [0.53, 0.78] | 0.712 [0.59, 0.82] | 0.54 / 0.61 / 0.64 | 0.57 |
+| Infiltration | feb28 | compromise | 1,242 | 290 | **0.264 / 0.285 / 0.416** | 0.420 [0.30, 0.53] | 0.591 [0.49, 0.67] | 0.69 / 0.72 / 0.63 | 0.84 |
+| Infiltration | mar01 | compromise | 671 | 700 | 0.506 / 0.496 / 0.627 | 0.563 [0.42, 0.70] | 0.621 [0.50, 0.73] | 0.67 / 0.53 / 0.50 | 0.78 |
+| Botnet | mar02 | compromise | 736 | 692 | 0.693 / 0.784 / 0.690 | 0.738 [0.63, 0.84] | 0.822 [0.74, 0.89] | - | - |
+
+**D-037's family verdicts:**
+- **BruteForce: transfers.** World-model mean 0.958, against LR's 0.454.
+- **DoS: transfers** (0.872 against 0.845).
+- **DDoS: partial** (0.738 against 0.588).
+- **Web: partial** (0.707 against 0.734).
+- **Botnet: partial** (0.722 against 0.822).
+- **Infiltration: inverted** (0.432 against 0.606).
+
+**D-039's question, by D-044's rule: inconclusive.**
+- One family is inverted: Infiltration, through feb28 on all three seeds.
+- On feb28, seeds 42 and 43 each sit wholly below 0.5 ([0.15, 0.38] and [0.16, 0.42]). The rule asks
+  for the seed-mean interval, and that is [0.30, 0.53], which touches 0.5.
+- So the inversion is not "well measured" under the rule, and there is no second inverted family.
+
+S3 is met nowhere. The world model's smallest p is 0.167; LR's is 0.058 (feb28, 3 of 6 onsets).
+
+### What E28 shows
+
+1. **On the full 70-feature state, detection of attack families carries across families far better
+   than on CTU-13.**
+   - With each family held out, the world model ranks attack windows at 0.81-0.99 on brute force, both
+     DoS days and one DDoS day, and at 0.64-0.77 on the web days.
+   - That is what "transfers" and "partial" mean here. CTU-13 had five of seven families inverted on
+     the 56-feature Argus state (E25b).
+2. **Compromise is where it fails, as on CIC-IDS2017 and CTU-13.**
+   - *Infiltration:* the compromise score is inverted on feb28 and at chance on mar01, while LR
+     is not inverted there (0.59, 0.62).
+   - *Botnet:* only partial (0.69-0.78), and LR does better (0.82).
+   - The world model learns what compromise looks like from the other compromise families. When the
+     held-out family's C2 and lateral movement look different, the score does not carry. Friday's C2
+     on CIC-IDS2017 behaves the same way.
+3. **The world model beats LR decisively where LR fails outright.**
+   - Brute force: 0.99 against 0.45.
+   - DDoS feb21: 0.59 against an inverted 0.33.
+4. **LR is better on the compromise days** (feb28, mar01, mar02), and slightly better on feb16 and
+   feb23. Its intervals overlap the world model's on feb16 and feb23.
+5. **Anticipation is measurable on four days.**
+   - Web: feb22 0.67-0.70, feb23 0.54-0.64.
+   - Infiltration feb28 and mar01: 0.50-0.72.
+   - LR ranks the infiltration run-ups higher (0.84 and 0.78).
+   - Early warning against the null is not met anywhere.
+6. **Scope.** M3 is cross-family transfer on flow state in one more network. It holds no mixed-traffic
+   PCAPs, so it says nothing about the packet block. The attack families are external and loud; the
+   compromise families are few (two infiltration days and one botnet day).
+7. **What this means for the architecture decision.**
+   - D-039 reopens a GNN or per-host path only if M3 shows the inversion pattern on the full state.
+     By the pre-registered rule the answer is inconclusive, not "recurs".
+   - The failure M3 does show is specific: the compromise score does not transfer to an unseen
+     compromise family.
+   - That decision is the team's.
+
+Artefacts:
+- `results/tables/e28_m3_days.csv` (every seed, LR and day: target, score, background, positives,
+  ROC-AUC, PR-AUC, causal F1, S2\*, S3), `e28_m3_families.csv` and `e28_m3_ci.csv`;
+- `results/runs/e28-m3-matrix/` (the verdict and the answer to D-039's question);
+- `results/runs/m3-s{42,43,44}/` (each with `checkpoints_manifest.json`) and `results/runs/lr-m3/`;
+- `results/tables/m3-s*_{forecast,training_curves}.csv`;
+- `results/runs/m3-logs/` (the runner, `m3.status`, per-run logs, both builds' comparison and the
+  out-of-memory retry), `results/runs/m3-build/` (build logs, chunking check, CRC check) and
+  `results/runs/m3-inspect/`.

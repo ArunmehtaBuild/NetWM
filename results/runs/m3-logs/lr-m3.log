@@ -1,0 +1,7 @@
+fold bruteforce: train ['feb15', 'feb16', 'feb20', 'feb21', 'feb22', 'feb23', 'feb28', 'mar01', 'mar02'] -> ['feb14']
+fold dos: train ['feb14', 'feb20', 'feb21', 'feb22', 'feb23', 'feb28', 'mar01', 'mar02'] -> ['feb15', 'feb16']
+fold ddos: train ['feb14', 'feb15', 'feb16', 'feb22', 'feb23', 'feb28', 'mar01', 'mar02'] -> ['feb20', 'feb21']
+fold web: train ['feb14', 'feb15', 'feb16', 'feb20', 'feb21', 'feb28', 'mar01', 'mar02'] -> ['feb22', 'feb23']
+fold infiltration: train ['feb14', 'feb15', 'feb16', 'feb20', 'feb21', 'feb22', 'feb23', 'mar02'] -> ['feb28', 'mar01']
+fold botnet: train ['feb14', 'feb15', 'feb16', 'feb20', 'feb21', 'feb22', 'feb23', 'feb28', 'mar01'] -> ['mar02']
+wrote results/runs/lr-m3/metrics.json (70 features)

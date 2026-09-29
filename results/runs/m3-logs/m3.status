@@ -1,0 +1,29 @@
+2026-09-28T22:27:55Z start verify-build
+2026-09-28T22:48:57Z verify-build exit=1
+2026-09-28T22:48:57Z start compare-builds
+2026-09-28T22:48:59Z compare-builds exit=1
+2026-09-28T22:48:59Z builds differ - stopping before any training
+2026-09-28T22:49:53Z restart: the first verify-build ran out of memory on feb20 (feb14-16 built); resuming at 250,000-row chunks
+2026-09-28T22:49:53Z start verify-build
+2026-09-28T22:50:27Z restart (user): retry the missing days at 1 M-row chunks, then 500,000, then 250,000 only if a size crashes
+2026-09-28T22:50:35Z start verify-build-1000000
+2026-09-28T23:25:04Z verify-build-1000000 exit=0
+2026-09-28T23:25:04Z start compare-builds
+2026-09-28T23:25:06Z compare-builds exit=0
+2026-09-28T23:25:06Z builds identical - training starts
+2026-09-28T23:25:06Z start m3-s42
+2026-09-29T00:07:42Z m3-s42 exit=0
+2026-09-29T00:07:42Z m3-s42 OK
+2026-09-29T00:07:43Z start m3-s43
+2026-09-29T00:48:48Z m3-s43 exit=0
+2026-09-29T00:48:48Z m3-s43 OK
+2026-09-29T00:48:48Z start m3-s44
+2026-09-29T01:28:35Z m3-s44 exit=0
+2026-09-29T01:28:36Z m3-s44 OK
+2026-09-29T01:28:36Z start lr-m3
+2026-09-29T01:29:31Z lr-m3 exit=0
+2026-09-29T01:29:31Z start m3-matrix
+2026-09-29T01:29:59Z m3-matrix exit=1
+2026-09-29T01:29:59Z m3 chain done
+2026-09-29T01:30:15Z m3-matrix crashed on a column name (classify reads 'scenario', M3 rows say 'day') before writing anything; fixed at the call site, rerun
+2026-09-29T01:30:44Z m3-matrix rerun exit=0

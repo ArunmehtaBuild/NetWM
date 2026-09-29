@@ -1958,3 +1958,14 @@ request everything runs on this machine (GTX 1650, 4 GB), one heavy job at a tim
 - **Scheduling.** One job at a time: the verification build, the comparison, `m3-s42`, `m3-s43`,
   `m3-s44`, `lr-m3`, then `scripts/m3_family_matrix.py`. The analysis script implements Part B as
   written.
+
+**Outcome (2026-09-29, results.md "E28 - M3"): D-039's question is inconclusive under this entry's rule.**
+- One family is inverted: Infiltration, on feb28 across all three seeds. Seeds 42/43 lie wholly below
+  0.5, but the seed-mean interval [0.30, 0.53] touches it, so the inversion is not well measured by the
+  rule.
+- The attack families transfer or partly transfer: BruteForce and DoS transfer; DDoS, Web and Botnet
+  are partial.
+- The failure M3 shows is the compromise score on an unseen compromise family, where LR is not
+  inverted.
+- S3 is met nowhere.
+- The architecture decision is the team's.

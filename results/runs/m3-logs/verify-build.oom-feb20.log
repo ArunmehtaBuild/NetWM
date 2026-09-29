@@ -1,0 +1,28 @@
+feb14 (BruteForce  ) flows= 5,898,350 windows=1,480 compromise=0.00% attack=12.97% onsets=[] stages={'BENIGN': 1297, 'INITIAL_ACCESS': 183} build=305.5s
+feb15 (DoS         ) flows= 5,410,102 windows=1,544 compromise=0.00% attack=10.82% onsets=[] stages={'BENIGN': 1422, 'IMPACT': 122} build=289.1s
+feb16 (DoS         ) flows= 7,390,266 windows=1,179 compromise=0.00% attack=3.14% onsets=[] stages={'BENIGN': 1151, 'IMPACT': 28} build=424.1s
+Traceback (most recent call last):
+  File "C:\Users\tiwar\Desktop\work\security\scripts\build_cicids2018.py", line 220, in <module>
+    main()
+  File "C:\Users\tiwar\Desktop\work\security\scripts\build_cicids2018.py", line 199, in main
+    frame, meta = build_split(adapter, split, cfg, args.chunk_rows, args.chunk_windows)
+  File "C:\Users\tiwar\Desktop\work\security\scripts\build_cicids2018.py", line 146, in build_split
+    lo, hi, rows = pass1(adapter, split, shard_dir, chunk_rows)
+  File "C:\Users\tiwar\Desktop\work\security\scripts\build_cicids2018.py", line 63, in pass1
+    for i, df in enumerate(adapter.iter_chunks(split, chunk)):
+  File "C:\Users\tiwar\Desktop\work\security\src\netwm\data\cicids2018.py", line 87, in iter_chunks
+    for df in reader:
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\io\parsers\readers.py", line 1843, in __next__
+    return self.get_chunk()
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\io\parsers\readers.py", line 1985, in get_chunk
+    return self.read(nrows=size)
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\io\parsers\readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\io\parsers\c_parser_wrapper.py", line 239, in read
+    data = self._reader.read(nrows)
+  File "pandas/_libs/parsers.pyx", line 820, in pandas._libs.parsers.TextReader.read
+  File "pandas/_libs/parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "pandas/_libs/parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "pandas/_libs/parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "pandas/_libs/parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: out of memory

@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "C:\Users\tiwar\Desktop\work\security\scripts\m3_family_matrix.py", line 151, in <module>
+    main()
+  File "C:\Users\tiwar\Desktop\work\security\scripts\m3_family_matrix.py", line 119, in main
+    verdict = classify(g)
+  File "C:\Users\tiwar\Desktop\work\security\scripts\ctu_family_matrix.py", line 81, in classify
+    per_scen = fam.groupby("scenario")["roc_auc"]
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\core\frame.py", line 9210, in groupby
+    return DataFrameGroupBy(
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\core\groupby\groupby.py", line 1331, in __init__
+    grouper, exclusions, obj = get_grouper(
+  File "C:\Users\tiwar\Desktop\work\security\.venv\lib\site-packages\pandas\core\groupby\grouper.py", line 1043, in get_grouper
+    raise KeyError(gpr)
+KeyError: 'scenario'

@@ -116,7 +116,7 @@ def main() -> None:
     fams = []
     for family, g in wm.groupby("family", sort=False):
         lr = days[(days["model"] == "logistic regression") & (days["family"] == family)]
-        verdict = classify(g)
+        verdict = classify(g.rename(columns={"day": "scenario"}))  # classify() reads E25b's column name
         well = []
         for d in g["day"].unique():
             m = ci[(ci["day"] == d) & (ci["series"] == "WM mean of seeds")]
