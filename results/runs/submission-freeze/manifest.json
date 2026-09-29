@@ -1,12 +1,12 @@
 {
   "tag": "submission-freeze",
   "scope": "The submission freeze: the M1-M3 evidence, rebuilt from the current tree, plus N-9's converter work after tag m1-m3-evidence-freeze (left as it was): D-043, the PCAP converter traced flow by flow against the corrected CSVs, and D-046, the served weights tracked. No model or checkpoint changed after the M1-M3 tag; the code, weights and evidence the submission is judged on",
-  "built_at_git_sha": "e57ed34",
+  "built_at_git_sha": "a3ef488",
   "working_tree_clean_for_evidence": true,
   "built_on": {
     "machine": "Atharv-laptop",
     "python": "3.10.6",
-    "utc": "2026-09-29T11:49:11+00:00",
+    "utc": "2026-09-29T16:51:37+00:00",
     "torch": "2.5.1+cu121",
     "device": "NVIDIA GeForce GTX 1650"
   },
@@ -27,7 +27,7 @@
     "D-046": "D-046 \u2014 N-9(a): the served weights are tracked in the repository"
   },
   "decisions_md_sha256": "9b1e4b76a06f729d92e0193ecc33cc1f940640aec874edc980cb82db2d90c532",
-  "results_md_sha256": "5a9f0de177e505d2b047e14724dd701503f2751cf294a7d1fa100c77086e2c96",
+  "results_md_sha256": "2d31c92e8fd6bbd435dc5424abaf44d936c18f998c43b478794879b5b211cd9b",
   "m1_cicids2017": {
     "served": {
       "csv_route": {
@@ -2472,7 +2472,7 @@
     }
   ],
   "results_md_references": {
-    "checked": 223,
+    "checked": 231,
     "missing": [],
     "rows": [
       {
@@ -2839,6 +2839,21 @@
         "status": "folder",
         "files": 1,
         "sha256": "4b828dbd1170303492cedb4d128ebc265638c94e7a350f74190270b9edcf3ac3"
+      },
+      {
+        "path": "results/figures/served/fig1_thursday_timeline.png",
+        "status": "file",
+        "sha256": "9e7fe32f8890a72a6d761540f9cb9fec0658826fa34aae44a2f43c51df9ef11b"
+      },
+      {
+        "path": "results/figures/served/fig2_benchmark_vs_lr.png",
+        "status": "file",
+        "sha256": "99de9e52963ffbae6c41e013905d4699e1aac0f9dba822820705a45d15a329e0"
+      },
+      {
+        "path": "results/figures/served/fig3_training_curves.png",
+        "status": "file",
+        "sha256": "b5ec805c8cad713f15b0730dd89258e528225424023be8f99751998d3d51b4a6"
       },
       {
         "path": "results/tables/e1_window_stats.csv",
@@ -3624,6 +3639,31 @@
         "status": "folder",
         "files": 1,
         "sha256": "e9077bf7c4f4ba7498b0fe1cf399aa56bd8154a8be44961bfdaa66e71e8cefcf"
+      },
+      {
+        "path": "results/runs/n8-r2w-s42/metrics.json",
+        "status": "file",
+        "sha256": "dc60bab88c4ba9f760c636a29323be107ccceb28492eb360ccf9634eb0b8fd8d"
+      },
+      {
+        "path": "results/runs/n8-e20rw-mean/metrics.json",
+        "status": "file",
+        "sha256": "bdce3109bd66fe3fa7f693153a6cdaacf2ebaf3e2b6afd182641fe15c7b80761"
+      },
+      {
+        "path": "results/runs/lr-flow-s42/metrics.json",
+        "status": "file",
+        "sha256": "f0c8b6a0a128cf9ae21f75b62d68dfd286a5b649470695a9f5e2d8fdfd561128"
+      },
+      {
+        "path": "results/tables/n8-r2w-s42_training_curves.csv",
+        "status": "file",
+        "sha256": "a99c24cdd58080d7546183e3133816882912078558bd5f6e31a7bace24dc5bd6"
+      },
+      {
+        "path": "results/tables/m1v2-n8-e20rw-s42_training_curves.csv",
+        "status": "file",
+        "sha256": "c86b97ce57c0f16adf6069176be0a2aca04220869e72e062f4ba7037586529b5"
       }
     ]
   },
@@ -3761,9 +3801,9 @@
     }
   },
   "tracked_results_files": {
-    "count": 653,
+    "count": 656,
     "list": "results/runs/submission-freeze/files.csv",
-    "list_sha256": "74bbf6612d0ae569b2cb848894b9c0e79a586349be05db70b8effaee9f070eeb"
+    "list_sha256": "a2b74990d6242430a4f5ec89482a165817652b4f9c23437a71f263b8acdd66d8"
   },
   "ready_to_tag": true
 }
