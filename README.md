@@ -58,10 +58,10 @@ These limits are in [docs/architecture.md](docs/architecture.md) §6.
 Use **Python 3.10**. `requirements.txt` pins numpy < 2, which has no Windows wheels for Python 3.13+.
 
 ```bash
-git clone https://github.com/ArunmehtaBuild/smart2nd.git
-cd smart2nd
-py -3.10 -m venv .venv
-.venv\Scripts\activate
+git clone https://github.com/ArunmehtaBuild/NetWM.git
+cd NetWM
+py -3.10 -m venv .venv                 # Linux / macOS: python3.10 -m venv .venv
+.venv\Scripts\activate                 # Linux / macOS: source .venv/bin/activate
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements.txt
 ```
@@ -84,7 +84,8 @@ python scripts/make_demo_samples.py   # cut the demo slices into data/demo/
 The served weights are in the repository, so nothing needs training. With the venv active:
 
 ```bash
-run_demo.bat
+run_demo.bat        # Windows
+./run_demo.sh       # Linux / macOS
 ```
 
 This starts the API on `127.0.0.1:5000` and the dashboard on `127.0.0.1:8080`, and opens the browser.

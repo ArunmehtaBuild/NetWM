@@ -1,2 +1,4 @@
 # Vendored assets are stored byte-exact so the recorded sha256 stays verifiable
 frontend/vendor/** -text
+# shell scripts must keep LF to run, on any checkout
+*.sh text eol=lf
