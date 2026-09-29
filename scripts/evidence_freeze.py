@@ -1,11 +1,13 @@
-"""The M1/M2 evidence freeze: what the current scientific conclusions rest on, content-hashed.
+"""The M1-M3 evidence freeze: what the submission's scientific conclusions rest on, content-hashed.
 
     python scripts/checkpoint_hashes.py --runs <every local run below>     # on this machine
     python scripts/checkpoint_hashes.py --runs e25-ctu13-s43 e25-ctu13-s44 # on the RTX 4060 (the only copy)
-    python scripts/evidence_freeze.py                                      # then tag m1-m2-evidence-freeze
+    python scripts/evidence_freeze.py                                      # then tag m1-m3-evidence-freeze
 
-This is the M1/M2 *evidence* freeze, not the final project freeze (M3, the architecture decision and the
-documentation come after it). It records, from stored artefacts only:
+This is the final *evidence* freeze. D-045 (N-7) keeps the architecture and starts no further training
+run, so nothing after this tag adds evidence; the documentation and submission artefacts that follow cite
+it. The earlier M1/M2 freeze is the tag ``m1-m2-evidence-freeze``, built by this script as it stood there.
+It records, from stored artefacts only:
 
 - **M1 (CIC-IDS2017).** The models each route serves after D-041 (CSV: r2w seed 42; PCAP: the E20rw
   mean of seeds 42/43/44, D-038's aggregation) with the gate verdict that licensed them; the models
@@ -13,6 +15,9 @@ documentation come after it). It records, from stored artefacts only:
   git SHA each was trained at; the threshold policy.
 - **M2 (CTU-13).** E25b's runs (seeds 42/43/44) and LR, its tables and confidence intervals, and
   D-042's arms, LR, comparison and decision.
+- **M3 (CIC-IDS2018).** E28's runs (seeds 42/43/44) and LR, its tables, intervals and verdicts, the
+  inspection, build and chain logs; both builds hashed, and they must be identical.
+- **The architecture decision** (D-045) and the items still open (N-9).
 - **Data.** SHA-256 of the processed matrices and the raw inputs they were built from.
 - **Every artefact results.md quotes**, checked to exist and hashed; and every tracked file under results/.
 
@@ -21,7 +26,7 @@ machine that holds the weights (``scripts/checkpoint_hashes.py``). Nothing is co
 A checkpoint counts as the run's only if it was trained at the run's recorded start SHA; the stray
 seed-43/44 ``neris.pt`` on the GTX 1650 (an earlier run, see results.md "N-8 x E25b") fails that check.
 
-Writes ``results/runs/m1-m2-evidence-freeze/manifest.json`` and ``files.csv``; prints whether it is
+Writes ``results/runs/m1-m3-evidence-freeze/manifest.json`` and ``files.csv``; prints whether it is
 ready to tag.
 """
 
@@ -41,12 +46,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from netwm.freeze import check_references, machine_info, sha256_file
 from netwm.utils import RUNS, git_sha
 
-TAG = "m1-m2-evidence-freeze"
+TAG = "m1-m3-evidence-freeze"
 SEEDS = (42, 43, 44)
 E20RW = [f"m1v2-n8-e20rw-s{s}" for s in SEEDS]
 E20R = [f"m1v2-e20r-s{s}" for s in SEEDS]
 E25B = [f"e25-ctu13-s{s}" for s in SEEDS]
 D042 = [f"d042-{a}-s{s}" for a in "gh" for s in SEEDS]
+M3_RUNS = [f"m3-s{s}" for s in SEEDS]
 #: weights that exist only on the RTX 4060 - their hashes must come from there
 ONLY_ON_4060 = {"e25-ctu13-s43", "e25-ctu13-s44"}
 
@@ -102,8 +108,33 @@ M2 = {
               "run_folders": ["d042-compare", "ctu-ci-d042-g", "ctu-ci-d042-h"],
               "decision": "does not help (decisions.md D-042 outcome)"},
 }
+M3 = {
+    "E28": {"runs": M3_RUNS, "lr": ["lr-m3"],
+            "configs": ["configs/cicids2018.yaml", "configs/cicids2018_verify.yaml", "configs/cicids2018_folds.yaml",
+                        "configs/m3/m3_stack.yaml"],
+            "data": "data/processed/cicids2018", "verify_data": "data/processed/cicids2018_verify",
+            "tables": ["e28_m3_days.csv", "e28_m3_families.csv", "e28_m3_ci.csv"],
+            "run_folders": ["e28-m3-matrix", "m3-logs", "m3-build", "m3-inspect"],
+            "decision": "D-037 verdicts: BruteForce and DoS transfer; DDoS, Web, Botnet partial; Infiltration "
+                        "inverted (feb28). D-039's question inconclusive by D-044's rule; S3 met nowhere"},
+}
 RAW = ["data/raw/CICIDS2017_improved.zip", "data/raw/cicids2017_improved", "data/raw/ctu13"]
-DECISIONS = ("D-019", "D-034", "D-035", "D-036", "D-037", "D-038", "D-039", "D-040", "D-041", "D-042")
+#: CIC-IDS2018 is read from where the build config points (an external drive), with the zip beside it
+RAW_CONFIGS = ["configs/cicids2018.yaml"]
+DECISIONS = ("D-019", "D-034", "D-035", "D-036", "D-037", "D-038", "D-039", "D-040", "D-041", "D-042", "D-044",
+             "D-045")
+OPEN_ITEMS = {
+    "N-9": "live-PCAP parity: the upload converter's state still differs from the training matrix on a full "
+           "capture (D-040), so no live-PCAP detection number is quoted (teamtasks.md N-9)",
+}
+
+
+def raw_inputs() -> list[str]:
+    paths = list(RAW)
+    for c in RAW_CONFIGS:
+        raw = Path(yaml.safe_load(Path(c).read_text(encoding="utf-8"))["raw_dir"])
+        paths += [z.as_posix() for z in sorted(raw.parent.glob("*.zip"))] + [raw.as_posix()]
+    return paths
 
 
 def head_sha256(path: str) -> str:
@@ -167,12 +198,19 @@ def run_record(run: str, problems: list[str]) -> dict:
 
 
 def group(spec: dict, problems: list[str]) -> dict:
-    out = {k: v for k, v in spec.items() if k not in ("runs", "lr", "configs", "data", "tables", "run_folders")}
+    out = {k: v for k, v in spec.items() if k not in ("runs", "lr", "configs", "data", "verify_data", "tables",
+                                                      "run_folders")}
     out["runs"] = [run_record(r, problems) for r in spec.get("runs", [])]
     out["lr"] = [run_record(r, problems) for r in spec.get("lr", [])]
     out["configs"] = {c: head_sha256(c) for c in spec.get("configs", [])}
     if spec.get("data"):
         out["data"] = hash_tree(Path(spec["data"]))
+    if spec.get("verify_data"):
+        # an independent second build: every file must hash the same as the first
+        out["verify_data"] = hash_tree(Path(spec["verify_data"]))
+        out["builds_identical"] = out["verify_data"]["files"] == out["data"]["files"]
+        if not out["builds_identical"]:
+            problems.append(f"{spec['data']} and {spec['verify_data']} differ")
     out["tables"] = {t: sha256_file(Path("results/tables") / t) for t in spec.get("tables", [])}
     out["run_folders"] = {r: hash_tree(RUNS / r)["files"] for r in spec.get("run_folders", [])}
     return out
@@ -180,7 +218,7 @@ def group(spec: dict, problems: list[str]) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--skip-raw", action="store_true", help="do not hash the raw inputs (several GB)")
+    ap.add_argument("--skip-raw", action="store_true", help="do not hash the raw inputs (tens of GB)")
     args = ap.parse_args()
     problems: list[str] = []
     head = git_sha()
@@ -199,8 +237,9 @@ def main() -> None:
         problems.append("D-041 gates did not all pass - the served models are not licensed")
     manifest = {
         "tag": TAG,
-        "scope": "M1/M2 evidence freeze - not the final project freeze (M3, the architecture decision and the "
-                 "documentation freeze come after it)",
+        "scope": "M1-M3 evidence freeze - the final evidence freeze. D-045 keeps the architecture and starts no "
+                 "further training run; the documentation and submission artefacts that follow cite this tag. "
+                 "The M1/M2 freeze is the tag m1-m2-evidence-freeze",
         "built_at_git_sha": head, "working_tree_clean_for_evidence": not dirty, "built_on": machine_info(),
         "decisions": {d: next((ln.strip("# ").strip() for ln in decisions_md.splitlines() if ln.startswith(f"### {d} ")), None)
                       for d in DECISIONS},
@@ -216,7 +255,11 @@ def main() -> None:
             "run_folders": {r: hash_tree(RUNS / r)["files"] for r in M1["run_folders"]},
         },
         "m2_ctu13": {k: group(v, problems) for k, v in M2.items()},
-        "raw_inputs": "skipped" if args.skip_raw else [hash_tree(Path(p)) for p in RAW if Path(p).exists()],
+        "m3_cicids2018": {k: group(v, problems) for k, v in M3.items()},
+        "architecture_decision": "D-045 (N-7): stay with the Transformer + RSSM world model on the network-global "
+                                 "state; no per-host model and no GNN (deferred, untested); no further training run",
+        "open_items": OPEN_ITEMS,
+        "raw_inputs": "skipped" if args.skip_raw else [hash_tree(Path(p)) for p in raw_inputs() if Path(p).exists()],
         "results_md_references": {"checked": len(refs), "missing": missing, "rows": refs},
         "problems": problems,
     }
