@@ -29,13 +29,15 @@ attached, not a flow classifier with a time axis bolted on.
 | **flow CSV** | **r2w seed 42** (`models/n8-r2w-s42/`, 584,470 parameters) | r2's setup with window positions: 70 flow features, Thursday fold by default and Friday on request | passed D-041's gate G3 |
 | **PCAP** | **E20rw, seeds 42/43/44**, the arithmetic mean per window (`models/m1v2-n8-e20rw-s4{2,3,4}/`, 593,500 parameters each) | E20r with window positions: 105 inputs. Each seed's fold for a held-out demo day, else Thursday | D-038's aggregation; passed D-041's gate G2 |
 | **CTU-13** | **none: benchmark only** | E25's stack (factorised target, 56 Argus flow features), trained per botnet family to measure cross-family transfer (M2) | never served; it answers a research question |
+| **CIC-IDS2018** | **none: benchmark only** | the same stack with window positions on the full 70 flow features, trained per attack family (M3, D-044) | never served; it answers the same question on a second network |
 
 - **Separate routes.** A PCAP upload never falls back to the CSV model, and a flow CSV is never fed to
   the packet model. That model would see zeros for packet features it never trained without.
 - **One served model.** Both routes' checkpoints are identified by SHA-256 in
   `results/runs/<run>/checkpoints_manifest.json`.
 - **Frozen evidence.** The M1/M2 evidence behind this document is frozen by
-  `scripts/evidence_freeze.py` (tag `m1-m2-evidence-freeze`).
+  `scripts/evidence_freeze.py` (tag `m1-m2-evidence-freeze`). M3 came after that freeze; it is
+  results.md E28, with checkpoint manifests in its run folders.
 
 ## 2. Network state `S_t`
 
@@ -143,12 +145,16 @@ These numbers come from `results/tables/n8_fix_eval.csv` and `n8_fix_scorecard.c
   - Its alarm precision is 0.350 at an FPR of 0.129 (S1).
   - Early warning against a circular-shift null is **not met**: 5 of 19 onsets warned early, p = 0.53.
 
-## 7. The CTU-13 benchmark (M2, not served)
+## 7. Cross-family benchmarks (not served)
 
-Seven botnet families, each held out in turn (E25b, 3 seeds, LR alongside), on a 56-feature Argus flow
-state. The result is reported **family by family, with 95 % block-bootstrap intervals**. Several
-captures have almost no background traffic, so there is no pooled number, and the strong families must
-not stand in for the weak ones.
+Both benchmarks hold each attack family out in turn and train on the rest (3 seeds, LR alongside).
+Results are reported **family by family, with 95 % block-bootstrap intervals**. There is no pooled
+number: strong families must not stand in for weak ones.
+
+### M2: CTU-13 (E25b)
+
+Seven botnet families on a 56-feature Argus flow state. Several captures have almost no background
+traffic, which widens their intervals.
 - **Detection transfers firmly to one family: NSIS** (0.98 on every seed, interval above 0.97).
 - **Separation is modest on Rbot's largest capture (s03).** The seed mean is 0.70 [0.65, 0.75], while
   LR is at chance.
@@ -167,15 +173,46 @@ not stand in for the weak ones.
 - **Anticipation on CTU-13** carries to two Neris and two Rbot captures, fails on Murlo and Rbot s03,
   and never beats the null.
 
+### M3: CIC-IDS2018 (E28, D-044)
+
+Ten capture days (63.2 M flows, corrected release), six attack families, on the full 70-feature state
+CTU-13 could not supply. How each day is scored depends on what it contains:
+- **Compromise days** (two Infiltration, one Botnet): the compromise score.
+- **The seven attack-only days:** the attack score. Those days have no compromise to detect.
+
+The data were built twice and came out byte-identical before anything trained.
+- **Held-out attack families are mostly recognised.**
+  - BruteForce transfers (0.89-0.99, where LR is at 0.45); DoS transfers (0.81-0.93).
+  - DDoS is partial: 0.82-0.89 on one day, 0.57-0.67 on the other, where LR inverts (0.33).
+  - Web is partial (0.64-0.77).
+  - This is the contrast with CTU-13, where five of seven families inverted on the 56-feature state.
+- **Compromise does not carry to an unseen compromise family.**
+  - Infiltration is inverted on 28-02: 0.26-0.42 on the three seeds, two of them with intervals wholly
+    below 0.5. It is at chance on 01-03 (0.50-0.63). LR is not inverted on either day (0.59, 0.62).
+  - Botnet is partial (0.69-0.78), below LR (0.82).
+  - These rest on three compromise days only.
+- **Whether CTU-13's inversion pattern recurs is inconclusive** under D-044's pre-registered rule. Only
+  one family inverts, and its three-seed interval (0.30-0.53) touches 0.5.
+- **Anticipation** is measurable on four days (0.50-0.72). LR ranks the infiltration run-ups higher
+  (0.78-0.84). It never beats the null.
+- **Wide interval on one day.** The Hulk DoS day has only 37 positive windows, so its interval spans
+  0.40-1.00.
+
 ## 8. Current limitations
 
 1. **No validated early warning.** No configuration's early alarms beat a shuffled-time baseline on
-   CIC-IDS2017 or CTU-13. The claim is limited to "ranks pre-attack windows above background" (D-021).
-   The candidate causes (statistic, threshold, target, representation) were each tested and ruled out
-   (E13-E16).
-2. **No reliable cross-family transfer.** Within a day, pre-onset windows separate at ROC-AUC
-   0.88-0.96. Across days and across botnet families the signal falls to chance or inverts (E12, E16,
-   E25b). CIC-IDS2017 has only two compromise families, so M3 (CIC-IDS2018) is the next transfer test.
+   CIC-IDS2017, CTU-13 or CIC-IDS2018. The claim is limited to "ranks pre-attack windows above
+   background" (D-021). The candidate causes (statistic, threshold, target, representation) were each
+   tested and ruled out (E13-E16).
+2. **Cross-family transfer holds for attack families, not for compromise.**
+   - Within a day, pre-onset windows separate at ROC-AUC 0.88-0.96 (E12).
+   - On CIC-IDS2018's full state, held-out attack families are recognised at 0.57-0.99 (E28).
+   - The compromise score does not carry to an unseen compromise family:
+     - inverted on one CIC-IDS2018 infiltration day and at chance on the other (E28);
+     - near floor on CIC-IDS2017's Friday C2 (§6);
+     - inverted or unestablished on most CTU-13 botnet families (E25b).
+   - Whether that is one general pattern is inconclusive by D-044's rule. What to build next is the
+     team's decision.
 3. **Scores are risk scores, not calibrated probabilities (E17).** Hence the alert budget rather than
    a probability threshold.
 4. **The PCAP route's numbers describe the model on the training-matrix state.** On a full real
@@ -205,6 +242,6 @@ uvicorn backend.server:app --port 5000                                    # API;
 
 - **Traceability.** Every number carries an experiment id, threshold policy, seed and git SHA in
   `results/runs/<id>/metrics.json`, and every modelling choice its reason in `decisions.md`
-  (D-001 … D-042).
+  (D-001 … D-044).
 - **Weights.** They are not tracked: `models/` stays local. Each run's `checkpoints_manifest.json`
   identifies its weights by SHA-256.
