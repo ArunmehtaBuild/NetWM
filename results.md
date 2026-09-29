@@ -2552,7 +2552,8 @@ S3 is met nowhere. The world model's smallest p is 0.167; LR's is 0.058 (feb28, 
      By the pre-registered rule the answer is inconclusive, not "recurs".
    - The failure M3 does show is specific: the compromise score does not transfer to an unseen
      compromise family.
-   - That decision is the team's.
+   - That decision is the team's. *(Decided after E28: stay, no per-host model and no GNN, decisions.md
+     D-045.)*
 
 Artefacts:
 - `results/tables/e28_m3_days.csv` (every seed, LR and day: target, score, background, positives,

@@ -95,6 +95,13 @@ to the input's length, and chunked scoring was impossible.
 **Not in the served models.** The factorised risk target (E22) passed its own bar but was not composed
 with real packets (E26, outcome 3). Neither served route uses it; the CTU-13 benchmark does.
 
+**Not built: per-host or graph models (N-7, D-045).** The architecture stays as above.
+- The cheapest host-local variant, six per-host-relative features beside the global state, failed its
+  pre-registered rule (D-042).
+- M3 places the weakness in compromise transfer to an unseen family, not in the global state as a
+  whole (E28).
+- Neither a per-host-sequence model nor a GNN has been trained. Both are future work, untested.
+
 ## 4. Forecasting and alarms
 
 From each window's filtered state the model imagines K = 10 steps (5 minutes, D-013).
@@ -211,8 +218,9 @@ The data were built twice and came out byte-identical before anything trained.
      - inverted on one CIC-IDS2018 infiltration day and at chance on the other (E28);
      - near floor on CIC-IDS2017's Friday C2 (§6);
      - inverted or unestablished on most CTU-13 botnet families (E25b).
-   - Whether that is one general pattern is inconclusive by D-044's rule. What to build next is the
-     team's decision.
+   - Whether that is one general pattern is inconclusive by D-044's rule.
+   - The architecture stays as it is (D-045). No per-host or graph model has been built or tested
+     against this weakness.
 3. **Scores are risk scores, not calibrated probabilities (E17).** Hence the alert budget rather than
    a probability threshold.
 4. **The PCAP route's numbers describe the model on the training-matrix state.** On a full real
@@ -242,6 +250,6 @@ uvicorn backend.server:app --port 5000                                    # API;
 
 - **Traceability.** Every number carries an experiment id, threshold policy, seed and git SHA in
   `results/runs/<id>/metrics.json`, and every modelling choice its reason in `decisions.md`
-  (D-001 … D-044).
+  (D-001 … D-045).
 - **Weights.** They are not tracked: `models/` stays local. Each run's `checkpoints_manifest.json`
   identifies its weights by SHA-256.

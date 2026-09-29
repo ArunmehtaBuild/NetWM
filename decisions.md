@@ -1969,3 +1969,82 @@ request everything runs on this machine (GTX 1650, 4 GB), one heavy job at a tim
   inverted.
 - S3 is met nowhere.
 - The architecture decision is the team's.
+
+### D-045 — N-7, the architecture decision: stay with the Transformer + RSSM world model; no per-host model and no GNN
+*Date: 2026-09-29 · Status: accepted (team decision, N-7) · Evidence: D-039, D-042's outcome, E25b and its
+intervals, E28 (D-044's outcome), E26 · D-039 stands; D-043 is another session's check-4 work*
+
+**Decision.**
+- The submission architecture is the one that ships after D-041 (`docs/architecture.md` §3):
+  - an encoder, then a Transformer encoder over the last 16 windows (window positions, state carried
+    across chunks);
+  - the RSSM latent, with its next-state decoder, stage head and risk heads;
+  - all on the network-global state `S_t`.
+- Both served routes stay as they are: CSV r2w seed 42, PCAP the E20rw mean of seeds 42/43/44.
+- No per-host model and no GNN is built before the submission freeze. Both are future work.
+- No further training run is started to improve the compromise result.
+- The project moves to the freeze: the M1-M3 evidence manifest and its tag, then the submission
+  artefacts and a final end-to-end demo test.
+
+**Why.**
+- **The cheapest host-local test has run, and it failed its rule (D-042).** It added E21's six
+  host-relative features beside the global state.
+  - It helped on 1 of the 3 deciding scenarios: Sogou s07, on seeds 43/44.
+  - Murlo (s08) and Rbot s11 did not move.
+  - Two scenarios where the global state transfers regressed: s05 and s06.
+  - Its other effects were family-specific: Rbot s04 rose on every seed, and Rbot s10 fell on every
+    seed.
+- **M3 narrows the problem (E28).** On the full 70-feature state:
+  - **The held-out attack families carry.** BruteForce and DoS transfer by D-037's rule; DDoS and Web
+    partially.
+  - **The compromise families do not.**
+    - Botnet is partial, and below LR (family mean ROC-AUC 0.72 against 0.82).
+    - Infiltration is inverted on feb28 (0.26-0.42 across seeds), where LR is not (0.59).
+  - **D-039's question is inconclusive** by D-044's rule: one inverted family, whose seed-mean
+    interval touches 0.5.
+  - So there is no longer evidence that the global-state representation is broadly broken. CTU-13's
+    five inverted families were measured on a 56-feature Argus state (E25b).
+- **The weakness that persists is specific: the compromise score on an unseen compromise family.** It
+  shows in three places:
+  - CIC-IDS2018's Infiltration and Botnet (E28);
+  - CIC-IDS2017's Friday C2, near floor for every model (E27; after D-041 the served routes' Friday
+    PR-AUC is 0.12 and 0.14, `results/tables/n8_fix_eval.csv`);
+  - most CTU-13 families (E25b).
+  Early warning against the null (S3) is met on none of the three datasets.
+- **No result shows that a per-host or graph representation would fix it.**
+  - D-039 set an order: a per-host state first, then a GNN only after a per-host run passes and
+    relational structure is shown to matter beyond per-host features.
+  - D-042 was that per-host run, in its cheapest form, and it did not pass.
+  - The per-host-sequence model has no result either way. In it, each host is its own sequence and a
+    window's risk is the maximum over hosts.
+- **A GNN would be a new research project, not a controlled correction.** It changes several things
+  at once:
+  - how hosts are identified;
+  - how the graph and its edges are built;
+  - message passing and temporal graph dynamics;
+  - the training and evaluation protocol.
+
+  Showing that a gain came from relational structure, and not from one more dataset-specific effect,
+  would need its own pre-registered programme on all three datasets. That cannot be evaluated fully
+  before the freeze.
+
+**What this does not say.**
+- It does not say the current model is strong across families. On compromise it is not.
+- It does not say a GNN or per-host model was tried and found wanting. Neither has been trained.
+  - No document, slide or answer may imply that one was tested.
+  - The wording is "deferred, untested".
+
+**The account the submission gives (D-035's language).**
+- The world model learns network dynamics: its rollouts beat "nothing changes" over steps 2-10 (E10).
+- Detection transfers unevenly across families. On the full state it carries to unseen attack
+  families (E28).
+- Compromise transfer to an unseen family is weak.
+- It ranks pre-attack windows above background. Early warning against the null has not been
+  demonstrated (D-021).
+
+**Revisit if (after the submission).**
+- **A per-host model.** A pre-registered per-host-sequence run beats its global-state arm on the unseen
+  compromise families (CTU-13 s08 and s11; CIC-IDS2018 feb28 and mar01), by a rule like D-042's. It
+  must not regress the families that transfer.
+- **A GNN.** Only after that run passes, per D-039, and only if relational structure is then shown to
+  matter beyond per-host features.
