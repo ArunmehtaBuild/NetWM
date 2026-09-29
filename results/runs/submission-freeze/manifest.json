@@ -1,12 +1,12 @@
 {
   "tag": "submission-freeze",
   "scope": "The submission freeze: the M1-M3 evidence, rebuilt from the current tree, plus N-9's converter work after tag m1-m3-evidence-freeze (left as it was): D-043, the PCAP converter traced flow by flow against the corrected CSVs, and D-046, the served weights tracked. No model or checkpoint changed after the M1-M3 tag; the code, weights and evidence the submission is judged on",
-  "built_at_git_sha": "e5d8d1b",
+  "built_at_git_sha": "e57ed34",
   "working_tree_clean_for_evidence": true,
   "built_on": {
     "machine": "Atharv-laptop",
     "python": "3.10.6",
-    "utc": "2026-09-29T10:57:41+00:00",
+    "utc": "2026-09-29T11:49:11+00:00",
     "torch": "2.5.1+cu121",
     "device": "NVIDIA GeForce GTX 1650"
   },
@@ -759,7 +759,7 @@
     "serving_code_at_head": {
       "backend/inference.py": "d1e331300f47ffe771bb8c3c65d73127e8e66e87037140cdb6d44f4f8d7ff632",
       "models/registry.json": "77c658467aa3e879635d60e761e6292c83e3f9a5b6f9554d6464b2f31b3aeebc",
-      "src/netwm/engine/predict.py": "e4606c3932b2cbdc7254ae57eae602383cdf7fd1a5fc6cb153a73ce89e9d1b98",
+      "src/netwm/engine/predict.py": "a4294b1775caed7215be3b9e336da9472a2cd562fee1779d17ab674a333ae561",
       "src/netwm/models/world_model.py": "dc68af5a30dec85d4d1fe26f1277dcd1e3291b20e94f4777d693ba9b271197e9",
       "src/netwm/metrics.py": "d4f205de3454f0f48b98b531987582290aca2ff459e59ff1bb5b7109bbb83e3a",
       "src/netwm/features/flow_aggregator.py": "bfe2e695e8b1982f561b5b1d7bd27cd24e9360213a4d1b0f9a829d1e01b01945"
