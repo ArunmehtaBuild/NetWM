@@ -115,8 +115,9 @@ mis-terminates TCP flows and mislabels attack onsets, and onset time is the quan
 python scripts/make_demo_samples.py
 ```
 
-**4. Run the demo:** the FastAPI backend on `:5000`, the dashboard on `:8080`. The submission
-checkpoints (`models/e4e7-worldmodel-r2/`) are in the repo, so no training is needed.
+**4. Run the demo:** the FastAPI backend on `:5000`, the dashboard on `:8080`. The served
+checkpoints are in the repo, so no training is needed: `models/n8-r2w-s42/` for CSV input and
+`models/m1v2-n8-e20rw-s{42,43,44}/` for PCAP input (D-041, D-046).
 
 ```bash
 run_demo.bat

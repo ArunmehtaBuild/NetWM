@@ -18,7 +18,7 @@ action (Arun). This list is what has to be true before that switch, and how to c
 | item | where | state |
 |---|---|---|
 | Setup instructions, cold-tested on a fresh clone | `README.md` (A-README, `c5680e7`) | re-test after Step 8 edits |
-| Shipped weights + training config | `models/e4e7-worldmodel-r2/*.pt` (tracked), `configs/cicids2017.yaml` | present |
+| Served weights + training config | `models/n8-r2w-s42/`, `models/m1v2-n8-e20rw-s{42,43,44}/` (17 files, tracked, D-046); r2's `models/e4e7-worldmodel-r2/` (tracked); `configs/` | present; a fresh clone passes F8 (`results/runs/f8-fresh-clone/`) |
 | Reference weights for the claims made (E22, E20r, E26) | `models/m1v2-e*/` are **untracked** (about 36 MB per three-seed run) | **decide**: track seed 42 of each reference, or publish as a release asset |
 | Every number's source | `results.md` + `results/tables` + `results/runs/*/metrics.json` | present |
 | Reproduction commands | the command block at the top of every `results.md` entry | present |

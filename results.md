@@ -2724,6 +2724,9 @@ models do on their training states (0.887).
 - Not established: how well E20rw detects or forecasts on live captures. The only live capture scored
   here is one Thursday slice, and no detection number is quoted from it or from the demo capture.
 - Tests: 192 pass (`tests backend/tests`), including one per rule, each failing on the D-040 converter.
+- **N-9(a), resolved (D-046).** The 17 served fold files are tracked, so a fresh clone serves both routes.
+  F8 on a fresh `git clone` of the commit that adds them, with no weights copied in (only the
+  gitignored demo CSVs and the raw Thursday CSV two tests read, as F8's setup): `results/runs/f8-fresh-clone/`.
 - **F8 re-run at `c14355b`** in a clean worktree (`results/runs/f8-final-e2e-d043/`; the frozen
   `f8-final-e2e/` is left as recorded): 7 of 7 checks pass and 192 tests pass with none skipped. The
   Thursday demo and the CSV upload are unchanged (78 alarmed windows, 65 on attack windows). The demo

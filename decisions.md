@@ -2131,3 +2131,28 @@ residuals of 4-6 % on the Thursday slice.
 
 **Revisit if.** A residual is traced to a further extraction rule, or another capture shows a rule
 that the two days checked here did not.
+
+---
+
+### D-046 — N-9(a): the served weights are tracked in the repository
+*Date: 2026-09-29 · Status: accepted · Evidence: the 17 files equal their runs' `checkpoints_manifest.json`
+SHA-256 (F8 check 3); `results/runs/f8-fresh-clone/` · Resolves N-9(a); follows the precedent of
+`models/e4e7-worldmodel-r2/` (tracked since `fd827cf`)*
+
+**Decision.** The 17 fold files the two served routes load are committed:
+- CSV route, r2w seed 42 (D-041): `models/n8-r2w-s42/{thursday,friday}.pt`, the folds `registry.json` names;
+- PCAP route, the E20rw mean (D-038, D-041): `models/m1v2-n8-e20rw-s{42,43,44}/{monday..friday}.pt`.
+
+Together 38.8 MB. Every other run's weights stay local, identified by their manifests.
+
+**Why.**
+- **A fresh clone could not serve.** Its PCAP route returned `no_model` (by design, no fallback), and since
+  D-041 its CSV route had no checkpoint either, because `registry.json` points at `n8-r2w-s42/`.
+- **Tracking, not a release asset.** It needs no download step, ties the weights to the commit that
+  serves them, and matches how r2's served weights were kept. The files are 2.4 MB each, far below any
+  hosting limit.
+- **All five E20rw folds, not only the six files the demo reads.** A PCAP upload served for a demo day
+  loads that day's fold, and F8's frozen-hash check covers all 17. With fewer, a fresh clone would
+  fail F8.
+
+**Revisit if.** The served models change: track the new ones and untrack these in the same commit.

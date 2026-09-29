@@ -253,6 +253,7 @@ uvicorn backend.server:app --port 5000                                    # API;
 
 - **Traceability.** Every number carries an experiment id, threshold policy, seed and git SHA in
   `results/runs/<id>/metrics.json`, and every modelling choice its reason in `decisions.md`
-  (D-001 … D-045).
-- **Weights.** They are not tracked: `models/` stays local. Each run's `checkpoints_manifest.json`
-  identifies its weights by SHA-256.
+  (D-001 … D-046).
+- **Weights.** The 17 served fold files are tracked (D-046): `models/n8-r2w-s42/` (CSV route) and
+  `models/m1v2-n8-e20rw-s{42,43,44}/` (PCAP route). Every other run's weights stay local. Each run's
+  `checkpoints_manifest.json` identifies its weights by SHA-256.
