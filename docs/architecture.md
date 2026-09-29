@@ -35,9 +35,12 @@ attached, not a flow classifier with a time axis bolted on.
   the packet model. That model would see zeros for packet features it never trained without.
 - **One served model.** Both routes' checkpoints are identified by SHA-256 in
   `results/runs/<run>/checkpoints_manifest.json`.
-- **Frozen evidence.** The M1/M2 evidence behind this document is frozen by
-  `scripts/evidence_freeze.py` (tag `m1-m2-evidence-freeze`). M3 came after that freeze; it is
-  results.md E28, with checkpoint manifests in its run folders.
+- **Frozen evidence.** The M1-M3 evidence behind this document is frozen by
+  `scripts/evidence_freeze.py`: tag `m1-m3-evidence-freeze`, manifest
+  `results/runs/m1-m3-evidence-freeze/manifest.json`.
+  - It holds the served checkpoints and their gate verdicts, both benchmarks' runs, tables and
+    intervals, the data and raw-input hashes, and the architecture decision (D-045).
+  - No training run follows it. The earlier M1/M2 freeze is the tag `m1-m2-evidence-freeze`.
 
 ## 2. Network state `S_t`
 

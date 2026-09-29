@@ -48,6 +48,7 @@ the commentary column.
 | D-042 | host-local temporal state on CTU-13 | 7 folds x 3 seeds, arms G/H + LR | `bash results/runs/n8-logs/run_chain_d042_par.sh` + `python scripts/d042_compare.py` | `results/tables/d042_scenario_matrix.csv`, `results/runs/d042-compare/` | does not help: +0.44/+0.50 on Sogou (seeds 43/44) only, nothing on Murlo or Rbot s11, regresses s05/s06 |
 | F7 | CIC-IDS2018 build (D-044) | 10 days, corrected release | `python scripts/build_cicids2018.py --config configs/cicids2018.yaml` | `results/runs/m3-build/`, `results/runs/m3-inspect/`, `data/processed/cicids2018/` (not committed) | 63.2 M flows, 14,307 windows; built twice, byte-identical; 2,609 early-dated feb23 flows dropped |
 | E28 | M3: CIC-IDS2018 leave-one-family-out (D-044) | 6 folds x 3 seeds + LR | `train.py --data data/processed/cicids2018 --group-folds configs/cicids2018_folds.yaml` + `python scripts/m3_family_matrix.py` | `results/tables/e28_m3_days.csv`, `results/runs/e28-m3-matrix/` | BruteForce and DoS transfer; DDoS, Web, Botnet partial; Infiltration inverted (feb28 0.26-0.42); D-039's question inconclusive by the pre-registered rule; S3 nowhere |
+| F8 | final end-to-end demo test (freeze) | the frozen code in a clean worktree, served weights, demo data | `python scripts/final_e2e_demo.py` + `pytest tests backend/tests` | `results/runs/f8-final-e2e/`, `results/figures/f8_dashboard_thursday_demo.jpg` | 7 of 7 checks pass, 187 tests pass; found and fixed: the CSV route had been served on a fixed threshold since D-041 (no alarm on held-out Thursday) |
 
 ## Planned experiment set (M1)
 
@@ -2564,3 +2565,66 @@ Artefacts:
 - `results/runs/m3-logs/` (the runner, `m3.status`, per-run logs, both builds' comparison and the
   out-of-memory retry), `results/runs/m3-build/` (build logs, chunking check, CRC check) and
   `results/runs/m3-inspect/`.
+
+---
+
+## F8 - the final end-to-end demo test: both routes serve the frozen models live and offline, after one serving fix
+
+```
+python scripts/final_e2e_demo.py                      # the API in-process, outbound connections refused
+python -m pytest -q -rs tests backend/tests
+```
+
+**Setup.**
+- **Code.** Run in a clean git worktree at `a4bd3e8`, not in the shared checkout: another session's
+  uncommitted D-043 work changes the PCAP flow converter there.
+- **Weights and data.** The worktree holds copies of the served weights, each checked against its
+  run's `checkpoints_manifest.json`, plus the demo slices and the raw Thursday CSV two tests read.
+- **Live check.** The same flow was also run live: the API on :5000 and the dashboard on :8080, in a
+  browser.
+
+**Found, and fixed before the freeze (`a4bd3e8`; decisions.md D-041, serving note).**
+- **The bug.** The first live run served the Thursday demo with `threshold_policy: fixed` at 0.9214,
+  and raised no alarm on the held-out day.
+  - r2's checkpoints named their alarm policy; the D-041 window-position checkpoints store only their
+    train-tuned threshold.
+  - So from the swap (`26680d2`) the CSV route was served on that fixed threshold, which does not
+    transfer to a held-out day (E14).
+- **The fix.** A checkpoint that names no policy is now served on D-034's causal expanding 10 % budget.
+  That is the policy D-041's gates were scored at, and the one the PCAP ensemble already named.
+- **What it does not touch.** No checkpoint changed, and no gate number or model-card figure changes.
+
+**Checks** (`results/runs/f8-final-e2e/metrics.json`): 7 of 7 pass.
+1. `/api/health` is ok, with a model loaded and `offline: true`.
+2. The model card equals D-041's gate rows for held-out Thursday:
+   - CSV route: F1 0.591, precision 0.574, recall 0.608, FPR 0.093, PR-AUC 0.677;
+   - PCAP route: 0.583, 0.581, 0.584, 0.087, 0.514.
+3. All 17 served fold files hash to their frozen SHA-256.
+4. The Thursday demo is served live (`mock: false`) by r2w seed 42, on the causal 10 % budget, and is
+   flagged held out.
+5. The same slice uploaded as a CSV gives identical scores and alarms.
+6. The demo PCAP uploaded is served by the mean of the three E20rw seeds on 105 inputs, on the same
+   policy.
+7. The test suite: 187 passed, none skipped (`pytest.log`), including the two new serving tests.
+
+**What the demo slices show (description of one slice under its own causal budget, not an evaluation).**
+
+| slice | route | windows | alarmed windows | on attack windows | alarm runs | onsets warned early |
+|---|---|---:|---:|---:|---:|---|
+| `thursday_infiltration` (demo, and as an upload) | CSV, r2w seed 42 | 260 | 78 | 65 | 14 | 0 of 4 (null p = 1.0) |
+| `thursday_demo.pcap` (upload) | PCAP, E20rw mean | 70 | 0 | - (unlabelled) | 0 | - |
+
+- **The PCAP demo raises no alarm.**
+  - Its first windows score highest (`p_max` 0.47, falling to 0.03 by window 19), so the causal
+    threshold is still above 0.35 when the 17:00 scan arrives (`p_max` about 0.07).
+  - The capture is trimmed (benign flows cut to 4 packets, payloads to 8 bytes), and its demo entry
+    already says to use the CSV demo for model behaviour.
+  - As N-9 requires, no PCAP-route score is quoted as the model's. The PCAP half shows ingestion and
+    routing end to end, nothing more.
+- **The dashboard** (`results/figures/f8_dashboard_thursday_demo.jpg`) shows:
+  - the causal threshold series ("Top 10% of this capture so far");
+  - the alarms over the scan and the internal sweep;
+  - the honest outcome line: 0 of 4 episodes warned early.
+
+Artefacts: `results/runs/f8-final-e2e/` (`metrics.json` with the checks, the model card, frozen hashes
+and the three payload summaries; `e2e.log`; `pytest.log`), `results/figures/f8_dashboard_thursday_demo.jpg`.

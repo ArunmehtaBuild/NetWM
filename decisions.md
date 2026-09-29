@@ -1771,6 +1771,20 @@ cover (the explainer's short slices, `engine/explain.py`, are one candidate).
    now checks each run's outputs rather than its exit code, and repeats a run once with `--resume` if
    they are missing.
 
+**Serving note (2026-09-29, found by the final end-to-end test F8; no evidence changes).**
+- **What went wrong.** r2's checkpoints named their alarm policy (`self-budget-10pct`, which the engine
+  serves as the causal expanding 10 % budget). The window-position checkpoints trained here store only
+  their train-tuned threshold. So from the swap (`26680d2`) to `a4bd3e8`, the engine served the CSV
+  route as a "fixed" policy at 0.9214, and it raised no alarm on the held-out Thursday demo.
+- **Not affected.** The PCAP route names its policy (D-038). G3 and every D-041 number were scored at
+  the causal expanding q90 on stored scores (`scripts/n8_eval.py`), so the gate verdicts and the model
+  card stand.
+- **Fix.** `backend/inference.py` serves a checkpoint that names no policy on D-034's
+  (`SERVED_POLICY = "expanding-10pct"`).
+  - The checkpoints are untouched, so their frozen SHA-256 still hold.
+  - Two tests in `backend/tests/test_pcap_route.py` fail without the fix: one synthetic, one on the
+    real served checkpoint.
+
 ### D-042 — Pre-registration: does host-local temporal state fix E25b's cross-family inversions? (CTU-13, 7 folds x 3 seeds)
 *Date: 2026-09-28 · Status: pre-registered; nothing below has been built or trained · Depends on: D-041's
 code (`pos_mode: window`)*
