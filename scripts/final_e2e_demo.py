@@ -15,11 +15,13 @@ Checks, and exits non-zero if any fails:
 
 The slice figures it records (alarmed windows, alarms on attack windows, early warnings) describe one demo
 slice under its own causal budget; they are not an evaluation. The PCAP route's are not quoted as the
-model's (N-9: live-PCAP state parity is open). Writes ``results/runs/f8-final-e2e/``.
+model's (N-9). Writes ``results/runs/f8-final-e2e/``, or ``--run <id>`` for a later re-run, so the frozen
+record (tag ``m1-m3-evidence-freeze``) is not overwritten.
 """
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import socket
@@ -83,6 +85,9 @@ def summary(payload: dict) -> dict:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--run", default=RUN, help="run folder under results/runs/")
+    args = ap.parse_args()
     refuse_remote_connections()
     from fastapi.testclient import TestClient
 
@@ -146,7 +151,7 @@ def main() -> None:
         s_pcap["mock"] is False and s_pcap["checkpoints"] == pcap_ckpts and s_pcap["feature_count"] == 105
         and s_pcap["input_modality"] == "pcap" and s_pcap["threshold_policy"] == "expanding-10pct")
 
-    save_run(RUN, {"checks": checks, "passed": all(checks.values()), "health": health,
+    save_run(args.run, {"checks": checks, "passed": all(checks.values()), "health": health,
                    "model_card_routes": card["routes"], "frozen_checkpoints": frozen,
                    "thursday_demo": s_demo, "thursday_csv_upload": s_csv, "thursday_pcap_upload": s_pcap},
              config={"git_sha_at_start": git_sha(), "demo_csv": DEMO_CSV.name, "demo_csv_sha256": sha256(DEMO_CSV),

@@ -1031,7 +1031,8 @@ seeds, at 16.8 % of windows alarmed (precision 0.614, FPR 0.078)**, with the cau
 ---
 
 ### D-033 — PCAP flows follow the corrected extraction's semantics, measured from its CSVs
-*Date: 2026-09-27 · Status: accepted · Evidence: A-3c, `tests/test_pcap_ingest.py` · Supersedes the demo capture in D-031*
+*Date: 2026-09-27 · Status: accepted, partly superseded by D-043 (RST, the init windows; D-043 adds six
+further rules read flow by flow) · Evidence: A-3c, `tests/test_pcap_ingest.py` · Supersedes the demo capture in D-031*
 
 **Decision.** `flow_aggregator.pcap_to_flows` reproduces the flows of the corrected CIC-IDS2017 release
 (D-001), because the model was trained on them.
@@ -2062,3 +2063,71 @@ intervals, E28 (D-044's outcome), E26 · D-039 stands; D-043 is another session'
   must not regress the families that transfer.
 - **A GNN.** Only after that run passes, per D-039, and only if relational structure is then shown to
   matter beyond per-host features.
+
+---
+
+### D-043 — The PCAP flow converter follows the corrected CSVs flow by flow (N-9)
+*Date: 2026-09-29 · Status: accepted · Evidence: `results/runs/check4-flow-match{-pre-d043,}/`,
+`results/runs/e27-parity-thursday-1640-d043/`, `results/runs/e27-parity-tuesday-d043/`,
+`results/runs/e27-step8-decompose-served-{pre-d043,d043}/`, `tests/test_pcap_ingest.py` · Supersedes
+D-033's "RST ends a flow" and its init-window rule; keeps D-040's sweep. Numbered D-043 as reserved
+while D-044/D-045 were written*
+
+**Decision.** `flow_aggregator.pcap_to_flows` changes in eight places, each read off a flow-by-flow match
+with the corrected CIC-IDS2017 CSVs, not assumed:
+1. **An RST does not end a flow.** Like the second FIN, it lets a following pure SYN start a new one,
+   so each refused connection attempt (SYN, RST, SYN, RST on one tuple) is its own flow.
+2. **A flow of one packet is not emitted.** No day checked holds a single-packet TCP or UDP flow
+   (Tuesday: none with duration 0 in 321,644 TCP/UDP rows; Thursday: none with 1+0 or 0+1 packets).
+3. **The final active period is not counted** in `active_mean`: only periods closed by an idle gap.
+4. **`fwd_data_pkts` skips the flow's first packet.**
+5. **`bwd_init_win` is the last backward packet's window** (CICFlowMeter overwrites it on every
+   backward packet); `fwd_init_win` stays the first forward packet's.
+6. **IP fragments.** A later fragment is not read as TCP/UDP (its first bytes are payload), and a UDP
+   payload is the bytes the packet carries, not the datagram length its header declares.
+7. **Gaps between packets are absolute**, so a capture that is a microsecond out of time order (the
+   mirror) gives no negative IAT.
+8. **A flow continuing a timed-out one keeps its direction** (CICFlowMeter carries the old flow's
+   endpoints into the new one), unless the new flow starts with a pure SYN.
+
+Mirrored duplicates stay in the flow block (D-040). A capture with no flow of two or more packets is
+now refused with a clear error, rather than failing inside the windowing.
+
+**Why.** Step 8 (E27) showed the PCAP route, served a real capture, scoring a state it was never
+evaluated on. `scripts/check4_flow_match.py` pairs every converter flow with its CSV row (5-tuple and
+first-packet time) on Tuesday 13:00-14:00. Before the change (`check4_flow_match_pairs_pre-d043.csv.gz`):
+- 3,749 flows existed only on our side, 1,993 of them one packet; most were packets the CSV keeps
+  inside a longer flow (the split came at an RST: the CSV counts 2 RSTs where we counted 1);
+- on 38,176 paired flows, `active_mean` agreed on 0.9 %, `fwd_data_pkts` on 33 % and `bwd_init_win`
+  on 67 %; every one of the 29,162 paired flows without an idle gap had CSV `active_mean` 0.
+
+After it, 38,387 flows against the CSV's 38,389 on that hour; 38,252 pair exactly, and every one of
+the 35 compared columns agrees on at least 99.78 % of them. The demo capture's read-back (a test)
+showed rule 1's SYN-after-RST clause: 28 refused-retry rows the CSV keeps separate.
+
+**Effect.**
+
+| | before | after |
+|---|---:|---:|
+| check 4, Thursday 16:40 slice: flow features within 5 % (of 67) | 36 | 66 |
+| check 4, Thursday 16:40 slice: CSV packet features within 5 % (of 20) | 10 | 20 |
+| check 4, full Tuesday: flow features within 5 % (of 67) | 39 | 64 |
+| check 4, full Tuesday: CSV packet features within 5 % (of 20) | 9 | 20 |
+| **Step 8, served E20rw mean: live capture vs its training state** | **0.104** | **0.991** |
+| Step 8: CSV route vs PCAP route, as served | 0.035 | 0.906 |
+
+The `pcap_` block (18 features, from `read_packets`) is unchanged and within 0.002.
+
+**Cost (full Tuesday, the converter alone, `scripts/pcap_converter_cost.py`).** No session-cap drop
+either way. 321,644 flows, the corrected CSV's exact Tuesday TCP/UDP count (was 349,575). Peak memory
+3,137 and 3,154 MB in two runs, about 15 % above D-040's 2,727 MB; the peak working set is not stable
+to better than a few hundred MB between identical runs on this machine.
+
+**What this does not claim.** It restores input parity: the frozen E20rw mean now reads, from a real
+capture, essentially the state it was evaluated on. It is not a measurement of how well E20rw detects
+or forecasts on live captures, and no PCAP-route detection number is quoted from the demo. The flow
+block is not bit-exact: `active_mean_mean`, `uniq_src_ip`, `fanout_mean` and `uniq_dst_port` keep
+residuals of 4-6 % on the Thursday slice.
+
+**Revisit if.** A residual is traced to a further extraction rule, or another capture shows a rule
+that the two days checked here did not.

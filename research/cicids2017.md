@@ -166,7 +166,18 @@ with the matrix built from the corrected CSVs
   the packet that would end them under a "timeout on the next packet" rule. On a full day they passed
   a 100,000-session cap, and 2.87 M packets were dropped silently. Timed-out flows have to be swept out
   by capture time (D-040). A slice below the cap does not show the problem: always compare a full day.
-- **What still differs after that** (full Tuesday, 968 windows): `active_mean`, `bwd_init_win`, the
-  distinct-port and distinct-host counts, `flow_iat_min` and `pkt_len_max`. Totals agree to about 1 %.
-  These look like extraction-definition differences still to be traced in the CNS2022 code
-  ([GintsEngelen/CNS2022_Code](https://github.com/GintsEngelen/CNS2022_Code)).
+- **What the corrected extraction does, read flow by flow (D-043, 2026-09-29).** These were traced by
+  pairing our flows with the CSV rows on one hour of Tuesday (`scripts/check4_flow_match.py`), not by
+  reading the CNS2022 code. Each is consistent with CICFlowMeter's own behaviour:
+  - an RST does not end a flow, though a following SYN starts a new one;
+  - no flow of a single packet is ever written (none on Tuesday or Thursday);
+  - `Active Mean` leaves out the final active period, so a flow with no 5 s idle gap reads 0;
+  - `Fwd Act Data Pkts` does not count the flow's first packet;
+  - `Bwd Init Win Bytes` is the *last* backward packet's window, overwritten on each one (0 after an RST);
+  - a flow continuing a timed-out one keeps that flow's direction;
+  - a later IP fragment is not read as a transport packet, and IATs are never negative.
+- **What still differs after that** (full Tuesday): `active_mean` (9 %), the host fan-out and the
+  distinct-source count (5 %); everything else is within 5 % and 56 of 67 flow features within 1 %. At
+  the model, the difference is small: the served PCAP ensemble's live scores follow its training-state
+  scores at 0.991 on the Thursday 16:40 slice. The CNS2022 code
+  ([GintsEngelen/CNS2022_Code](https://github.com/GintsEngelen/CNS2022_Code)) is where to look next.

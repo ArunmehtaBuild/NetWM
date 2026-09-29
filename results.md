@@ -49,6 +49,7 @@ the commentary column.
 | F7 | CIC-IDS2018 build (D-044) | 10 days, corrected release | `python scripts/build_cicids2018.py --config configs/cicids2018.yaml` | `results/runs/m3-build/`, `results/runs/m3-inspect/`, `data/processed/cicids2018/` (not committed) | 63.2 M flows, 14,307 windows; built twice, byte-identical; 2,609 early-dated feb23 flows dropped |
 | E28 | M3: CIC-IDS2018 leave-one-family-out (D-044) | 6 folds x 3 seeds + LR | `train.py --data data/processed/cicids2018 --group-folds configs/cicids2018_folds.yaml` + `python scripts/m3_family_matrix.py` | `results/tables/e28_m3_days.csv`, `results/runs/e28-m3-matrix/` | BruteForce and DoS transfer; DDoS, Web, Botnet partial; Infiltration inverted (feb28 0.26-0.42); D-039's question inconclusive by the pre-registered rule; S3 nowhere |
 | F8 | final end-to-end demo test (freeze) | the frozen code in a clean worktree, served weights, demo data | `python scripts/final_e2e_demo.py` + `pytest tests backend/tests` | `results/runs/f8-final-e2e/`, `results/figures/f8_dashboard_thursday_demo.jpg` | 7 of 7 checks pass, 187 tests pass; found and fixed: the CSV route had been served on a fixed threshold since D-041 (no alarm on held-out Thursday) |
+| N-9 / D-043 | PCAP converter traced flow by flow; live-state parity for the frozen PCAP route | Tuesday 13:00-14:00 trace, Thursday 16:40 slice, full Tuesday | `python scripts/check4_flow_match.py` + `pcap_route_parity.py --tag ...-d043` + `step8_decompose.py --tag served-...` | `results/runs/check4-flow-match/`, `results/runs/e27-step8-decompose-served-d043/` | served E20rw mean, live vs training state 0.104 -> 0.991; full-day flows = the CSV's 321,644; flow block not exact (3 features 5-9 %); no live detection number |
 
 ## Planned experiment set (M1)
 
@@ -2628,3 +2629,113 @@ python -m pytest -q -rs tests backend/tests
 
 Artefacts: `results/runs/f8-final-e2e/` (`metrics.json` with the checks, the model card, frozen hashes
 and the three payload summaries; `e2e.log`; `pytest.log`), `results/figures/f8_dashboard_thursday_demo.jpg`.
+
+---
+
+## N-9 (D-043) - the PCAP converter traced flow by flow: the frozen PCAP route now reads live captures as it was evaluated
+
+```
+python scripts/check4_flow_match.py --pcap data/cic-2017-pcap/tuesday_1300_1400.pcap --day tuesday      # flow-by-flow trace
+CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap --day thursday --tag thursday-1640-d043
+CUDA_VISIBLE_DEVICES="" python scripts/pcap_route_parity.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --day tuesday --tag tuesday-d043
+git show 0c5f976:src/netwm/features/flow_aggregator.py > <tmp>/flow_aggregator_0c5f976.py               # the converter before D-043
+CUDA_VISIBLE_DEVICES="" python scripts/step8_decompose.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap --flow-aggregator <tmp>/flow_aggregator_0c5f976.py --tag served-pre-d043
+CUDA_VISIBLE_DEVICES="" python scripts/step8_decompose.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap --tag served-d043
+python scripts/pcap_converter_cost.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --flow-aggregator <tmp>/flow_aggregator_0c5f976.py --tag pre-d043
+python scripts/pcap_converter_cost.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --tag d043
+```
+
+**The question (N-9's converter part).** Does a live capture become the representation the frozen PCAP
+route (the E20rw mean, D-041) was evaluated on? It is a question about the input, not about the model:
+no checkpoint changes. How well E20rw detects on live captures is a separate question, not answered here.
+
+**The trace (`check4_flow_match.py`, Tuesday 13:00-14:00).** Every flow `pcap_to_flows` builds is paired
+with the corrected CSV's row for the same flow: same 5-tuple, same first-packet time.
+
+| | D-040 converter | D-043 converter |
+|---|---:|---:|
+| flows (CSV: 38,389 TCP/UDP) | 41,925 | 38,387 |
+| paired exactly | 38,175 | 38,252 |
+| ours only (of them one packet) | 3,749 (1,993) | 135 (0) |
+| CSV only | 213 | 137 |
+| columns agreeing on >= 99.9 % of pairs (of 35) | 9 | 33 |
+| lowest column | `active_mean` 0.9 % | `fwd_seg_size_min` 99.78 % |
+
+What the before table showed, and the rule D-043 takes from it:
+- **Extra flows.** 3,749 flows existed only on our side, 1,993 of them a single packet. Most were
+  packets the CSV keeps inside a longer flow; the split came at an RST (where they differ, the CSV counts
+  two RSTs and we counted one). Rule: an RST does not end a flow, but a following pure SYN starts a new
+  one. The SYN clause came from the demo read-back test: 28 refused-retry rows the CSV keeps separate.
+- **No single-packet flows.** None of the 321,644 Tuesday TCP/UDP rows has duration 0, and no Thursday
+  row has 1+0 or 0+1 packets. Rule: a flow of one packet is not emitted.
+- **`active_mean`.** All 29,162 paired flows without an idle gap have CSV `active_mean` 0. Rule: the final
+  active period is not counted.
+- **`fwd_data_pkts`.** Ours was exactly one higher on 25,500 flows (24,080 of them UDP). Rule: the first
+  packet is not counted.
+- **`bwd_init_win`.** It differed on 12,455 TCP flows: ours was the SYN-ACK window, the CSV's a small
+  scaled value, or 0 after an RST. Rule: the last backward packet's window. The HTTPS flow read by hand
+  (192.168.10.5:52873 to 50.63.161.74:443) is now 303, as in the CSV (was 14,600).
+- **Fragments.** `pkt_len_max_max` was driven by later IP fragments read as UDP with a 33 KB declared
+  length. Rule: later fragments are not read as TCP/UDP; UDP payload is the bytes carried.
+- **Negative gaps.** The mirror records some packets a microsecond out of order. Rule: absolute gaps.
+- **Direction.** Continuation flows after the 120 s timeout were reversed when a reply came first.
+  Rule: a continuation keeps its connection's direction.
+
+Mirrored duplicates stay in the flow block (D-040): the corrected CSVs count them.
+
+**Check 4: the served state against the training matrix.**
+
+| | flow features (67): exact / < 1 % / < 5 % | CSV packet features (20): < 5 % | flow block median mean rel. error | `pcap_` (18) |
+|---|---|---:|---:|---|
+| Thursday 16:40 slice, D-040 | 2 / 24 / 36 | 10 | 0.045 | within 0.002 |
+| Thursday 16:40 slice, D-043 | 3 / 56 / 66 | 20 | 0.0016 | within 0.002 |
+| full Tuesday, D-040 | 4 / 21 / 39 | 9 | 0.039 | exact |
+| full Tuesday, D-043 | 14 / 56 / 64 | 20 | 0.0010 | exact |
+
+- Still above 5 % on full Tuesday: `active_mean_mean` (0.090, correlation 0.97), `fanout_mean` (0.054)
+  and `uniq_src_ip` (0.052, correlation 0.79). On the Thursday slice only `active_mean_mean` (0.059).
+- **So the flow block is not exact**, which is the letter of N-9's done-when. What those residuals
+  do to the model is what Step 8 measures.
+
+**Step 8: what the served models score** (`step8_decompose.py`, Thursday 16:40-18:50, 260 windows,
+mean-path `p_max`; the served routes: r2w seed 42 for CSV, the E20rw mean for PCAP).
+
+| | D-040 converter | D-043 converter |
+|---|---:|---:|
+| **PCAP route: live capture vs its own training state, same windows** | **0.104** | **0.991** |
+| PCAP route mean score, live (training state: 0.138) | 0.382 | 0.129 |
+| PCAP route causal-q90 alarm windows, live (training state: 102) | 36 | 100 |
+| CSV route vs PCAP route, as served | 0.035 | 0.906 |
+| CSV route vs PCAP route, both on training state | 0.887 | 0.887 |
+| CSV route: live CSV vs training state | 1.000 | 1.000 |
+| length effect, PCAP / CSV route (D-041) | 0.9999 / 0.9998 | 0.9999 / 0.9998 |
+
+The frozen E20rw mean now reads a real capture as it was evaluated: its live scores follow its
+training-state scores at 0.991, and the two routes agree as served (0.906) about as much as the two
+models do on their training states (0.887).
+
+**Full-day regression (D-043 keeps one entry per 5-tuple for the whole capture).**
+- Check 4 on full Tuesday ran to completion: `exit=0`, no session-cap drop (`e27-parity-tuesday-d043/parity.log`).
+- The converter alone (`pcap_converter_cost.py`, each converter in its own process): D-040 peaked at 2,727 MB and gave 349,575 flows; D-043 peaks at 3,137 and 3,154 MB in two runs (about 15 % more; the peak working set is not stable to better than a few hundred MB between identical runs here) and gives 321,644 flows, the corrected CSV's exact Tuesday TCP/UDP count. Wall time is not comparable across these runs: identical code took from about 6 to 13 minutes depending on what else the machine ran.
+
+**What this does and does not establish.**
+- Established: N-9's converter correctness, measured at the model. The residual feature differences
+  above move the served ensemble's scores little (0.991).
+- Not established: how well E20rw detects or forecasts on live captures. The only live capture scored
+  here is one Thursday slice, and no detection number is quoted from it or from the demo capture.
+- Tests: 192 pass (`tests backend/tests`), including one per rule, each failing on the D-040 converter.
+- The runs used the working tree before the D-043 commit, so their `git_sha` fields name the commit
+  before it. They used a first version of rule 8 that kept directions in a dictionary; the committed
+  version keeps a set and gives the same full-day flow table (equal `flows_sha256` in
+  `pcap-converter-cost-scratch-d043-dict/` and `pcap-converter-cost-d043/`).
+
+Artefacts:
+- `results/runs/check4-flow-match{-pre-d043,}/`, `results/tables/check4_flow_match_{columns,unmatched}{_pre-d043,}.csv`, `check4_flow_match_pairs{_pre-d043,}.csv.gz`;
+- `results/runs/e27-parity-thursday-1640-d043/`, `results/runs/e27-parity-tuesday-d043/` and their
+  `results/tables/e27_parity{,_live_pcap}_{thursday-1640,tuesday}-d043.csv`;
+- `results/runs/e27-step8-decompose-served-{pre-d043,d043}/`, `results/tables/e27_step8_decompose_served-{pre-d043,d043}.csv`;
+- `results/runs/pcap-converter-cost-{pre-d043,d043,scratch-d043-dict}/`;
+- code: `src/netwm/features/flow_aggregator.py`, `src/netwm/engine/predict.py` (a capture with no flow of
+  two packets is refused clearly), `tests/test_pcap_ingest.py` (one test per rule, each failing on the
+  D-040 converter), `scripts/{check4_flow_match,pcap_converter_cost}.py`, `scripts/step8_decompose.py`
+  (`--routes`, `--flow-aggregator`, `--tag`), `scripts/final_e2e_demo.py` (`--run`).

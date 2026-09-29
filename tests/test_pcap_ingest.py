@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 
 scapy = pytest.importorskip("scapy.all")
-from scapy.all import IP, TCP, UDP, wrpcap  # noqa: E402
+from scapy.all import IP, TCP, UDP, fragment, wrpcap  # noqa: E402
 
 from netwm.data.base import CANONICAL_COLUMNS  # noqa: E402
 from netwm.features.flow_aggregator import pcap_to_flows  # noqa: E402
@@ -41,6 +41,7 @@ def _handshake_and_dns(path: Path) -> Path:
         IP(src=a, dst=b) / TCP(sport=50000, dport=80, flags="A"),
         IP(src=a, dst=b) / TCP(sport=50000, dport=80, flags="PA") / (b"x" * 100),
         IP(src=a, dst="192.168.10.3") / UDP(sport=53000, dport=53) / (b"q" * 30),
+        IP(src="192.168.10.3", dst=a) / UDP(sport=53, dport=53000) / (b"r" * 60),  # answered: a flow of one packet is not emitted (D-043)
     ])
 
 
@@ -86,6 +87,76 @@ def test_teardown_stays_in_its_flow_and_a_new_syn_starts_another(tmp_path):
     assert (reset["fwd_pkts"], reset["bwd_pkts"], reset["rst_cnt"]) == (1, 1, 1)
 
 
+def test_rst_keeps_the_flow_and_a_retried_syn_starts_another(tmp_path):
+    """D-043: the corrected CSVs keep an RST, its mirrored copy and what follows in one flow, but each
+    refused connection attempt (SYN, RST, SYN, RST on one tuple) is a flow of its own."""
+    a, b = "192.168.10.15", "52.8.72.161"
+    refused = [IP(src=a, dst=b, id=1) / TCP(sport=58077, dport=443, flags="S"),
+               IP(src=b, dst=a, id=2) / TCP(sport=443, dport=58077, flags="RA"),
+               IP(src=b, dst=a, id=3) / TCP(sport=443, dport=58077, flags="RA"),  # another RST: same flow
+               IP(src=a, dst=b, id=4) / TCP(sport=58077, dport=443, flags="S"),   # the retry: a new flow
+               IP(src=b, dst=a, id=5) / TCP(sport=443, dport=58077, flags="RA")]
+    flows = pcap_to_flows(_write(tmp_path / "t.pcap", refused))
+    assert (flows["fwd_pkts"].tolist(), flows["bwd_pkts"].tolist(), flows["rst_cnt"].tolist()) == ([1, 1], [2, 1], [2, 1])
+
+
+def test_single_packet_flows_are_not_emitted(tmp_path):
+    """D-043: no day of the corrected CSVs holds a TCP or UDP flow of one packet."""
+    a, b = "192.168.10.3", "192.168.10.1"
+    pkts = [IP(src=a, dst=b, id=1) / UDP(sport=61000, dport=53) / (b"q" * 20),   # unanswered
+            IP(src=a, dst=b, id=2) / UDP(sport=61001, dport=53) / (b"q" * 20),
+            IP(src=b, dst=a, id=3) / UDP(sport=53, dport=61001) / (b"r" * 40)]
+    flows = pcap_to_flows(_write(tmp_path / "t.pcap", pkts))
+    assert flows["src_port"].tolist() == [61001]
+
+
+def test_flow_statistics_follow_the_corrected_csvs(tmp_path):
+    """D-043, read off a flow-by-flow match with the corrected CSVs (scripts/check4_flow_match.py):
+    the final active period is not counted, fwd_data_pkts skips the first packet, bwd_init_win is the
+    last backward packet's window, and a gap between out-of-order packets is never negative."""
+    a, b = "192.168.10.8", "50.63.161.74"
+    pkts = [IP(src=a, dst=b, id=1) / TCP(sport=52873, dport=443, flags="PA", window=8192) / (b"x" * 50),
+            IP(src=b, dst=a, id=2) / TCP(sport=443, dport=52873, flags="A", window=29200),
+            IP(src=a, dst=b, id=3) / TCP(sport=52873, dport=443, flags="PA", window=8192) / (b"y" * 50),
+            IP(src=b, dst=a, id=4) / TCP(sport=443, dport=52873, flags="A", window=303),
+            IP(src=b, dst=a, id=5) / TCP(sport=443, dport=52873, flags="A", window=301)]
+    times = [0.0, 0.1, 10.0, 10.2, 10.2 - 1e-6]  # an idle gap, then a reply a microsecond out of order
+    for p, t in zip(pkts, times):
+        p.time, p._t = T0 + t, True
+    row = pcap_to_flows(_write(tmp_path / "t.pcap", pkts)).iloc[0]
+    assert row["active_mean"] == pytest.approx(100_000, abs=1)  # 0-0.1 s; the final 10.0-10.2 s is not counted
+    assert row["idle_mean"] == pytest.approx(9_900_000, abs=1)
+    assert row["fwd_data_pkts"] == 1  # two forward data packets, the first not counted
+    assert (row["fwd_init_win"], row["bwd_init_win"]) == (8192, 301)
+    assert row["flow_iat_min"] >= 0
+
+
+def test_a_later_ip_fragment_is_not_read_as_a_transport_header(tmp_path):
+    """D-043: a later fragment's first bytes are payload; a UDP payload is what the packet carries."""
+    a, b = "192.168.10.12", "192.168.10.3"
+    frags = fragment(IP(src=a, dst=b, id=7) / UDP(sport=773, dport=2049) / (b"z" * 3000), fragsize=1480)
+    reply = IP(src=b, dst=a, id=8) / UDP(sport=2049, dport=773) / (b"r" * 100)
+    flows = pcap_to_flows(_write(tmp_path / "t.pcap", [*frags, reply]))
+    assert len(flows) == 1 and (flows.iloc[0]["src_port"], flows.iloc[0]["dst_port"]) == (773, 2049)
+    assert flows.iloc[0]["fwd_pkts"] == 1 and flows.iloc[0]["pkt_len_max"] == 1480 - 8
+
+
+def test_a_timed_out_connection_keeps_its_direction(tmp_path):
+    """D-043: the flow continuing a timed-out one keeps its client-to-server direction, even when the
+    first packet after the timeout is the server's."""
+    a, b = "192.168.10.25", "172.217.12.138"
+    pkts = [IP(src=a, dst=b, id=1) / TCP(sport=50161, dport=443, flags="S"),
+            IP(src=b, dst=a, id=2) / TCP(sport=443, dport=50161, flags="SA"),
+            IP(src=a, dst=b, id=3) / TCP(sport=50161, dport=443, flags="A"),
+            IP(src=b, dst=a, id=4) / TCP(sport=443, dport=50161, flags="FA"),  # after the 120 s timeout
+            IP(src=a, dst=b, id=5) / TCP(sport=50161, dport=443, flags="FA")]
+    for p, t in zip(pkts, [0.0, 0.1, 0.2, 125.0, 125.1]):
+        p.time, p._t = T0 + t, True
+    flows = pcap_to_flows(_write(tmp_path / "t.pcap", pkts))
+    assert flows["src_ip"].tolist() == [a, a] and flows["src_port"].tolist() == [50161, 50161]
+    assert (flows.iloc[1]["fwd_pkts"], flows.iloc[1]["bwd_pkts"]) == (1, 1)
+
+
 def test_flow_timeout_runs_from_the_first_packet(tmp_path):
     a, b = "192.168.10.3", "192.168.10.1"
     pkts = [IP(src=a, dst=b) / UDP(sport=62028, dport=53) for _ in range(5)]
@@ -100,9 +171,12 @@ def test_quiet_flows_expire_instead_of_filling_the_session_cap(tmp_path):
     expired flows are swept out, a full day fills the session cap and every later flow is dropped
     (Tuesday: 2.87 M packets)."""
     a, b = "192.168.10.3", "192.168.10.1"
-    pkts = [IP(src=a, dst=b) / UDP(sport=40000 + i, dport=53) for i in range(20)]
-    for i, p in enumerate(pkts):
-        p.time, p._t = T0 + i * 60.0, True  # one quiet flow a minute for 20 minutes
+    pkts = []
+    for i in range(20):  # one quiet query-and-answer flow a minute for 20 minutes
+        q = IP(src=a, dst=b, id=2 * i) / UDP(sport=40000 + i, dport=53)
+        r = IP(src=b, dst=a, id=2 * i + 1) / UDP(sport=53, dport=40000 + i)
+        q.time, q._t, r.time, r._t = T0 + i * 60.0, True, T0 + i * 60.0 + 0.01, True
+        pkts += [q, r]
     flows = pcap_to_flows(_write(tmp_path / "t.pcap", pkts), max_sessions=5)
     assert flows.attrs["dropped_packets"] == 0
     assert len(flows) == 20 and flows["src_port"].tolist() == list(range(40000, 40020))

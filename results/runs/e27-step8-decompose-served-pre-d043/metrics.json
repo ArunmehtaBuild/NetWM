@@ -1,0 +1,58 @@
+{
+  "run_id": "e27-step8-decompose-served-pre-d043",
+  "timestamp_utc": "2026-09-29T08:54:02+00:00",
+  "git_sha": "ca05b39",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1"
+  },
+  "config": {
+    "pcap": "data/cic-2017-pcap/thursday_1640_1850.pcap",
+    "csv": "data/demo/thursday_infiltration.csv",
+    "routes": "served",
+    "flow_aggregator": "C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/flow_aggregator_0c5f976.py",
+    "tag": "served-pre-d043",
+    "seed": 42,
+    "decision": "D-038",
+    "command": "scripts/step8_decompose.py --pcap data/cic-2017-pcap/thursday_1640_1850.pcap --flow-aggregator C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/flow_aggregator_0c5f976.py --tag served-pre-d043"
+  },
+  "metrics": {
+    "windows": 260,
+    "t0": "2017-07-06 16:40:00",
+    "routes": {
+      "csv": "n8-r2w-s42",
+      "pcap": [
+        "m1v2-n8-e20rw-s42",
+        "m1v2-n8-e20rw-s43",
+        "m1v2-n8-e20rw-s44"
+      ]
+    },
+    "flow_aggregator": "C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/flow_aggregator_0c5f976.py",
+    "score_corr": {
+      "routes_as_served (Step 8)": 0.0353,
+      "routes_on_training_state_same_length": 0.887,
+      "routes_on_training_state_whole_day": 0.8874,
+      "pcap_route_live_vs_training_state (live-state effect)": 0.1035,
+      "csv_route_live_vs_training_state (CSV parity)": 1.0,
+      "pcap_route_same_length_vs_whole_day (length effect)": 0.9999,
+      "csv_route_same_length_vs_whole_day (length effect)": 0.9998
+    },
+    "causal_q90_alarm_windows": {
+      "csv_route_as_served": 78,
+      "pcap_route_as_served": 36,
+      "csv_route_training_state_same_length": 78,
+      "csv_route_training_state_whole_day": 90,
+      "pcap_route_training_state_same_length": 102,
+      "pcap_route_training_state_whole_day": 113
+    },
+    "mean_score": {
+      "csv_route_as_served": 0.0521,
+      "pcap_route_as_served": 0.3817,
+      "csv_route_training_state_same_length": 0.0521,
+      "csv_route_training_state_whole_day": 0.052,
+      "pcap_route_training_state_same_length": 0.1378,
+      "pcap_route_training_state_whole_day": 0.1376
+    }
+  }
+}

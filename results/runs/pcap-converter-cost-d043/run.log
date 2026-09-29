@@ -1,0 +1,3 @@
+WARNING: No libpcap provider available ! pcap won't be used
+{'pcap': 'D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap', 'flow_aggregator': 'netwm.features.flow_aggregator', 'seconds': 794.0, 'peak_memory_mb': 3137.2, 'peak_memory_mb_before_converting': 120.8, 'flows': 321644, 'dropped_packets_session_cap': 0, 'flows_sha256': 'dc7260b19bccd8a91dfb256760c2b55dbee375619620c23d9bdcd882e0d414f3'}
+exit=0

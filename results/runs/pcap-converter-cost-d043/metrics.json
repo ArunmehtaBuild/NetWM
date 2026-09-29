@@ -1,0 +1,28 @@
+{
+  "run_id": "pcap-converter-cost-d043",
+  "timestamp_utc": "2026-09-29T10:05:20+00:00",
+  "git_sha": "ca05b39",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
+    "flow_aggregator": null,
+    "tag": "d043",
+    "decision": "D-043",
+    "command": "scripts/pcap_converter_cost.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --tag d043"
+  },
+  "metrics": {
+    "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
+    "flow_aggregator": "netwm.features.flow_aggregator",
+    "seconds": 794.0,
+    "peak_memory_mb": 3137.2,
+    "peak_memory_mb_before_converting": 120.8,
+    "flows": 321644,
+    "dropped_packets_session_cap": 0,
+    "flows_sha256": "dc7260b19bccd8a91dfb256760c2b55dbee375619620c23d9bdcd882e0d414f3"
+  }
+}

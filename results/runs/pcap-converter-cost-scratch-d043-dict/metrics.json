@@ -1,0 +1,28 @@
+{
+  "run_id": "pcap-converter-cost-scratch-d043-dict",
+  "timestamp_utc": "2026-09-29T09:51:56+00:00",
+  "git_sha": "ca05b39",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
+    "flow_aggregator": "C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/fa_d043_dict.py",
+    "tag": "scratch-d043-dict",
+    "decision": "D-043",
+    "command": "scripts/pcap_converter_cost.py --pcap D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap --flow-aggregator C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/fa_d043_dict.py --tag scratch-d043-dict"
+  },
+  "metrics": {
+    "pcap": "D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap",
+    "flow_aggregator": "C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/fa_d043_dict.py",
+    "seconds": 353.8,
+    "peak_memory_mb": 3153.9,
+    "peak_memory_mb_before_converting": 121.1,
+    "flows": 321644,
+    "dropped_packets_session_cap": 0,
+    "flows_sha256": "dc7260b19bccd8a91dfb256760c2b55dbee375619620c23d9bdcd882e0d414f3"
+  }
+}

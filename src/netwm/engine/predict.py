@@ -491,6 +491,9 @@ def analyze_file(path: Path | str, ckpt: dict, **kwargs) -> dict[str, Any]:
         # the canonical schema, and a stage column is what marks a payload as labelled, so without
         # this the dashboard would report "no attacks" as the truth for any PCAP.
         flows = pcap_to_flows(path).drop(columns=["label", "stage", "attempted"], errors="ignore")
+        if flows.empty:
+            # single-packet flows are not emitted (D-043), so a tiny capture can hold no flow at all
+            raise ValueError(f"{path.name}: no TCP/UDP flow of two or more packets in the capture")
         kwargs.setdefault("pcap_path", path)
     else:
         raise ValueError(f"unsupported file type: {path.suffix}")

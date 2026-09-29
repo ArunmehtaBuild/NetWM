@@ -1,0 +1,3 @@
+WARNING: No libpcap provider available ! pcap won't be used
+{'pcap': 'D:/CIC-2017-PCAP/Tuesday-WorkingHours.pcap', 'flow_aggregator': 'C:/Users/tiwar/AppData/Local/Temp/claude/C--Users-tiwar-Desktop-work-security/b4143d46-e2a3-4753-af84-e5e1928b3216/scratchpad/flow_aggregator_0c5f976.py', 'seconds': 384.9, 'peak_memory_mb': 2727.4, 'peak_memory_mb_before_converting': 120.6, 'flows': 349575, 'dropped_packets_session_cap': 0}
+exit=0

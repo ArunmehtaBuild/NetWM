@@ -5,7 +5,7 @@ how it changed the build.
 
 | Note | Covers |
 |---|---|
-| [research/cicids2017.md](research/cicids2017.md) | CIC-IDS2017: capture setup, attack schedule, IPs, documented dataset flaws, corrected release; the day captures against the corrected CSVs (mirrored duplicates are counted, the session-cap failure, residual differences; D-040) |
+| [research/cicids2017.md](research/cicids2017.md) | CIC-IDS2017: capture setup, attack schedule, IPs, documented dataset flaws, corrected release; the day captures against the corrected CSVs (mirrored duplicates are counted, the session-cap failure; D-040), and what the corrected extraction does flow by flow: RST, single-packet flows, active time, init windows, direction (D-043) |
 | [research/world-models.md](research/world-models.md) | What a world model is (PlaNet/Dreamer RSSM), why it differs from a sequence classifier, how it maps onto network telemetry |
 | [research/mitre-mapping.md](research/mitre-mapping.md) | CIC-IDS2017 attack labels → MITRE ATT&CK tactics/techniques, and the ordered stage scale |
 | [research/related-work.md](research/related-work.md) | Prior art in attack forecasting / prediction, and how NetWM differs |

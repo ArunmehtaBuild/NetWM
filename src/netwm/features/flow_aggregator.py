@@ -3,12 +3,17 @@
 The model was trained on flows from the *corrected* CIC-IDS2017 release (D-001), so this follows
 that extraction's semantics rather than stock CICFlowMeter's:
 
-* **A flow is a bidirectional 5-tuple**; its forward direction is the direction of its first packet.
+* **A flow is a bidirectional 5-tuple**; its forward direction is the direction of its first packet,
+  except that a flow continuing a timed-out one keeps that flow's direction (D-043).
 * **TCP teardown does not split the flow.** Stock CICFlowMeter ends a flow at the *first* FIN, and
   the FIN-ACK / last ACK that follow become a spurious one- or two-packet "flow" - one of the
   defects the corrected release fixed. Here a flow is *closing* once both sides have sent FIN; the
   closing ACKs still belong to it, and only a new SYN on the same 5-tuple starts a new flow.
-* **RST ends a flow** immediately (the RST packet is part of it).
+* **RST does not end a flow** (D-043): the corrected CSVs keep the RST, its mirrored copy and what
+  follows in the same flow. Like the second FIN, it lets a new SYN on the tuple start a new flow, so
+  refused connection attempts (SYN, RST, SYN, RST) stay one flow each.
+* **A flow of one packet is not emitted** (D-043): the corrected CSVs hold no single-packet TCP or
+  UDP flow on any day checked.
 * **A flow lasts at most 120 s from its first packet** (CICFlowMeter's flow timeout); the next packet
   on the same 5-tuple starts a new flow. Flows past the timeout are also swept out as capture time
   advances: a flow that simply goes quiet (UDP, TCP without FIN/RST) would otherwise stay open until
@@ -17,8 +22,15 @@ that extraction's semantics rather than stock CICFlowMeter's:
   than 120 s after its *end* - so the timeout runs from the start, not from the last packet.
 * Lengths are **payload** bytes, as CICFlowMeter reports them; ``flow_iat_*`` spans both directions;
   ``fwd_seg_size_min`` is the smallest forward transport-header size; ``active_mean`` /
-  ``idle_mean`` use CICFlowMeter's 5 s activity threshold; ``*_init_win`` is the TCP window of the
-  first packet in each direction, 0 when unobserved. Times are microseconds.
+  ``idle_mean`` use CICFlowMeter's 5 s activity threshold, and the final active period is not
+  counted; ``fwd_init_win`` is the TCP window of the first forward packet and ``bwd_init_win`` that
+  of the *last* backward packet (CICFlowMeter overwrites it), 0 when unobserved; ``fwd_data_pkts``
+  does not count the flow's first packet; gaps between packets are absolute, so a capture that is a
+  microsecond out of order gives no negative IAT. Times are microseconds.
+* **IP fragments:** a later fragment has no transport header and is not read as TCP/UDP, and a UDP
+  payload is the bytes this packet carries, not the datagram length its header declares.
+* Every D-043 rule was read off a flow-by-flow match with the corrected CSVs
+  (``scripts/check4_flow_match.py``), not assumed.
 
 Packets are parsed from raw header bytes rather than dissected by scapy: dissection was about two
 thirds of the runtime (A-3c profile: 6 MB took 19.5 s). A capture carries no labels, so no
@@ -90,17 +102,20 @@ def _parse(frame: bytes, linktype: int):
     if vihl >> 4 != 4:
         return None
     ihl = (vihl & 0x0F) * 4
+    mf, frag_off = bool(frag & 0x2000), frag & 0x1FFF
+    if frag_off:
+        return None  # a later fragment: its first bytes are payload, not a transport header
     src = ".".join(str(b) for b in frame[off + 12 : off + 16])
     dst = ".".join(str(b) for b in frame[off + 16 : off + 20])
     l4 = off + ihl
-    mf, frag_off = bool(frag & 0x2000), frag & 0x1FFF
     if proto == 6 and len(frame) >= l4 + 16:
         sport, dport, seq, _, offs, flags, window = struct.unpack_from("!HHIIBBH", frame, l4)
         hdr = (offs >> 4) * 4
         return src, dst, proto, sport, dport, ttl, mf, frag_off, flags, seq, window, hdr, max(0, total_len - ihl - hdr)
     if proto == 17 and len(frame) >= l4 + 8:
-        sport, dport, ulen = struct.unpack_from("!HHH", frame, l4)
-        return src, dst, proto, sport, dport, ttl, mf, frag_off, 0, None, None, 8, max(0, ulen - 8)
+        sport, dport = struct.unpack_from("!HH", frame, l4)
+        # the bytes this packet carries: a first fragment's header declares the whole datagram
+        return src, dst, proto, sport, dport, ttl, mf, frag_off, 0, None, None, 8, max(0, total_len - ihl - 8)
     return None
 
 
@@ -114,7 +129,7 @@ def _new_flow(ts, src, dst, sport, dport, proto) -> dict:
         # per-direction statistics behind the CSV packet block (D-037: a PCAP upload must build the
         # same 17 pkt_ features the model trained on from the CSVs)
         "fwd_len": [], "bwd_len": [], "fwd_last": None, "bwd_last": None, "fwd_iat": [], "bwd_iat": [],
-        "fwd_rst": 0, "bwd_rst": 0, "fwd_hdr": 0, "fwd_data": 0,
+        "fwd_rst": 0, "bwd_rst": 0, "fwd_hdr": 0, "fwd_data": 0, "rst_seen": False,
     }
 
 
@@ -123,8 +138,9 @@ def _sample_std(values: list) -> float:
 
 
 def _finish(f: dict) -> dict:
-    if f["end_active"] - f["start_active"] > 0:
-        f["active"].append(f["end_active"] - f["start_active"])
+    # The final active period is not counted: the corrected CSVs give active_mean 0 to every flow
+    # without an idle gap (29,162 of 29,162 on Tuesday 13:00-14:00), and count only the periods
+    # that an idle gap closed (D-043).
     return f
 
 
@@ -139,6 +155,16 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
     done: list[dict] = []
     dropped = 0
     next_sweep = None
+    # A flow that continues a timed-out one keeps its direction, as CICFlowMeter carries the old
+    # flow's endpoints into the new one. Held for the whole capture, so kept small: the oriented
+    # 5-tuple (the open_flows key) of each tuple's last retired flow, never both orientations.
+    directed: set[tuple] = set()
+
+    def retire(key: tuple) -> None:
+        src_, dst_, sport_, dport_, proto_ = key
+        directed.discard((dst_, src_, dport_, sport_, proto_))
+        directed.add(key)
+        done.append(_finish(open_flows.pop(key)))
 
     reader = RawPcapReader(str(pcap_path))
     linktype = getattr(reader, "linktype", _ETHERNET)
@@ -155,7 +181,7 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
             elif ts >= next_sweep:
                 horizon = ts - FLOW_TIMEOUT_S - SWEEP_SLACK_S
                 for k in [k for k, f in open_flows.items() if f["first_ts"] < horizon]:
-                    done.append(_finish(open_flows.pop(k)))
+                    retire(k)
                 next_sweep = ts + SWEEP_EVERY_S
             extractor.process_fields(src, dst, proto, sport, dport, ttl, mf, frag_off, seq, window, plen)
 
@@ -163,21 +189,26 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
             key = fkey if fkey in open_flows else bkey if bkey in open_flows else None
             if key is not None:
                 f = open_flows[key]
-                closing = f["fin_fwd"] and f["fin_bwd"]
+                closing = (f["fin_fwd"] and f["fin_bwd"]) or f["rst_seen"]
                 if ts - f["first_ts"] > FLOW_TIMEOUT_S or (closing and flags & SYN and not flags & ACK):
-                    done.append(_finish(open_flows.pop(key)))  # timed out, or a new connection on the tuple
+                    retire(key)  # timed out, or a new connection on the tuple
                     key = None
             if key is None:
                 if len(open_flows) >= max_sessions:
                     dropped += 1
                     continue
                 key = fkey
-                open_flows[key] = _new_flow(ts, src, dst, sport, dport, proto)
+                pure_syn = flags & SYN and not flags & ACK
+                if not pure_syn and bkey in directed:
+                    key = bkey  # a continuation that began with a reply keeps the connection's direction
+                    open_flows[key] = _new_flow(ts, dst, src, dport, sport, proto)
+                else:
+                    open_flows[key] = _new_flow(ts, src, dst, sport, dport, proto)
             f = open_flows[key]
             fwd = key == fkey
 
             if f["lengths"]:
-                f["iats"].append(ts - f["last_ts"])
+                f["iats"].append(abs(ts - f["last_ts"]))
             gap = ts - f["end_active"]
             if gap > ACTIVITY_THRESHOLD_S:
                 if f["end_active"] - f["start_active"] > 0:
@@ -190,14 +221,14 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
             side = "fwd" if fwd else "bwd"
             f[f"{side}_len"].append(plen)
             if f[f"{side}_last"] is not None:
-                f[f"{side}_iat"].append(ts - f[f"{side}_last"])
+                f[f"{side}_iat"].append(abs(ts - f[f"{side}_last"]))
             f[f"{side}_last"] = ts
             if fwd:
                 f["fwd_pkts"] += 1
                 f["fwd_bytes"] += plen
                 f["fwd_seg_min"] = hdr if f["fwd_seg_min"] is None else min(f["fwd_seg_min"], hdr)
                 f["fwd_hdr"] += hdr
-                f["fwd_data"] += int(plen > 0)
+                f["fwd_data"] += int(plen > 0 and f["fwd_pkts"] > 1)  # the first packet is not counted
             else:
                 f["bwd_pkts"] += 1
                 f["bwd_bytes"] += plen
@@ -205,14 +236,16 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
                 for bit in range(8):
                     if flags & (1 << bit):
                         f["flag_counts"][bit] += 1
-                side = "fwd_init_win" if fwd else "bwd_init_win"
-                if f[side] < 0:  # the first TCP packet in each direction, SYN or not (as the CSVs)
-                    f[side] = window
+                if fwd:
+                    if f["fwd_init_win"] < 0:  # the first forward TCP packet, SYN or not (as the CSVs)
+                        f["fwd_init_win"] = window
+                else:
+                    f["bwd_init_win"] = window  # the last backward packet's: CICFlowMeter overwrites it
                 if flags & FIN:
                     f["fin_fwd" if fwd else "fin_bwd"] = True
                 if flags & RST:
-                    f["fwd_rst" if fwd else "bwd_rst"] += 1
-                    done.append(_finish(open_flows.pop(key)))
+                    f["fwd_rst" if fwd else "bwd_rst"] += 1  # counted; the flow goes on (D-043)
+                    f["rst_seen"] = True  # ...until a new SYN on the tuple, as after both FINs
     finally:
         reader.close()
     done.extend(_finish(f) for f in open_flows.values())
@@ -223,6 +256,8 @@ def pcap_to_flows(pcap_path: Path | str, max_sessions: int = 100_000) -> pd.Data
     a2 = extractor.get_session_features()
     rows = []
     for f in done:
+        if f["fwd_pkts"] + f["bwd_pkts"] < 2:
+            continue  # the corrected CSVs hold no single-packet flow (D-043)
         lengths, iats = np.asarray(f["lengths"], float), np.asarray(f["iats"], float) * 1e6
         fc = f["flag_counts"]
         key = (f["src_ip"], f["dst_ip"], f["src_port"], f["dst_port"], f["protocol"])

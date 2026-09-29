@@ -1,0 +1,149 @@
+{
+  "run_id": "check4-flow-match",
+  "timestamp_utc": "2026-09-28T13:28:19+00:00",
+  "git_sha": "d1b3f22",
+  "env": {
+    "python": "3.10.6",
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "config": {
+    "pcap": "data/cic-2017-pcap/tuesday_1300_1400.pcap",
+    "day": "tuesday",
+    "raw": "data/raw/cicids2017_improved",
+    "edge_s": 150.0,
+    "tolerance_ms": 5.0,
+    "seed": 42,
+    "decision": "D-040",
+    "command": "scripts/check4_flow_match.py --pcap data/cic-2017-pcap/tuesday_1300_1400.pcap --day tuesday"
+  },
+  "metrics": {
+    "pcap": "data/cic-2017-pcap/tuesday_1300_1400.pcap",
+    "day": "tuesday",
+    "range": [
+      "2017-07-04 13:02:30.000660",
+      "2017-07-04 13:57:29.713494"
+    ],
+    "flows_pcap": 38387,
+    "flows_csv_all_protocols": 38422,
+    "flows_csv_tcp_udp": 38389,
+    "csv_other_protocols": {
+      "0": 32,
+      "1": 1
+    },
+    "paired_exact": 38252,
+    "paired_near": 0,
+    "pcap_only": {
+      "flows": 135,
+      "by_protocol": {
+        "6": 109,
+        "17": 26
+      },
+      "pkts_distribution": {
+        "2": 9,
+        "3": 11,
+        "4": 49,
+        "6": 4,
+        "7": 1,
+        "8": 2,
+        "10": 59
+      },
+      "other_side_has_tuple_reversed": 46,
+      "other_side_has_tuple_at_other_time": 87,
+      "top_dst_ports": {
+        "443": 57,
+        "123": 26,
+        "45860": 11,
+        "36522": 11,
+        "58110": 11,
+        "80": 6,
+        "50180": 5,
+        "50183": 5
+      },
+      "top_src_ips": {
+        "192.168.10.25": 71,
+        "192.168.10.50": 22,
+        "192.168.10.5": 15,
+        "198.252.206.25": 11,
+        "172.217.10.35": 5,
+        "172.217.6.206": 5,
+        "192.168.10.12": 3,
+        "172.217.12.138": 1
+      }
+    },
+    "csv_only": {
+      "flows": 137,
+      "by_protocol": {
+        "6": 111,
+        "17": 26
+      },
+      "pkts_distribution": {
+        "2": 9,
+        "3": 12,
+        "4": 49,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 3,
+        "9": 4,
+        "10": 57
+      },
+      "other_side_has_tuple_reversed": 46,
+      "other_side_has_tuple_at_other_time": 87,
+      "top_dst_ports": {
+        "443": 82,
+        "123": 26,
+        "139": 22,
+        "80": 5,
+        "3268": 1,
+        "389": 1
+      },
+      "top_src_ips": {
+        "192.168.10.25": 83,
+        "192.168.10.5": 14,
+        "192.168.10.12": 14,
+        "192.168.10.50": 13,
+        "192.168.10.16": 12,
+        "192.168.10.3": 1
+      }
+    },
+    "columns_equal_on_pairs": {
+      "fwd_seg_size_min": 0.9978,
+      "fwd_init_win": 0.9978,
+      "fwd_hdr_bytes": 0.9995,
+      "fwd_data_pkts": 0.9997,
+      "bwd_bytes": 1.0,
+      "flow_iat_mean": 1.0,
+      "duration_us": 1.0,
+      "fwd_pkts": 1.0,
+      "flow_iat_min": 1.0,
+      "fin_cnt": 1.0,
+      "syn_cnt": 1.0,
+      "rst_cnt": 1.0,
+      "psh_cnt": 1.0,
+      "ack_cnt": 1.0,
+      "bwd_pkts": 1.0,
+      "fwd_bytes": 1.0,
+      "cwr_cnt": 1.0,
+      "urg_cnt": 1.0,
+      "pkt_len_max": 1.0,
+      "ece_cnt": 1.0,
+      "pkt_len_mean": 1.0,
+      "pkt_len_std": 1.0,
+      "down_up_ratio": 1.0,
+      "pkt_len_min": 1.0,
+      "bwd_init_win": 1.0,
+      "active_mean": 1.0,
+      "idle_mean": 1.0,
+      "fwd_pkt_len_std": 1.0,
+      "bwd_pkt_len_std": 1.0,
+      "fwd_iat_std": 1.0,
+      "flow_iat_std": 1.0,
+      "flow_iat_max": 1.0,
+      "fwd_rst_cnt": 1.0,
+      "bwd_iat_std": 1.0,
+      "bwd_rst_cnt": 1.0
+    }
+  }
+}
