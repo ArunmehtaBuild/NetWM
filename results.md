@@ -2726,7 +2726,8 @@ models do on their training states (0.887).
 - Tests: 192 pass (`tests backend/tests`), including one per rule, each failing on the D-040 converter.
 - **N-9(a), resolved (D-046).** The 17 served fold files are tracked, so a fresh clone serves both routes.
   F8 on a fresh `git clone` of the commit that adds them, with no weights copied in (only the
-  gitignored demo CSVs and the raw Thursday CSV two tests read, as F8's setup): `results/runs/f8-fresh-clone/`.
+  gitignored demo CSVs and the raw Thursday CSV two tests read, as F8's setup): `results/runs/f8-fresh-clone/`: 7 of 7 checks
+  and 192 tests pass, none skipped.
 - **F8 re-run at `c14355b`** in a clean worktree (`results/runs/f8-final-e2e-d043/`; the frozen
   `f8-final-e2e/` is left as recorded): 7 of 7 checks pass and 192 tests pass with none skipped. The
   Thursday demo and the CSV upload are unchanged (78 alarmed windows, 65 on attack windows). The demo
