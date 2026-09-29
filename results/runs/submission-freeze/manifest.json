@@ -1,0 +1,3769 @@
+{
+  "tag": "submission-freeze",
+  "scope": "The submission freeze: the M1-M3 evidence, rebuilt from the current tree, plus N-9's converter work after tag m1-m3-evidence-freeze (left as it was): D-043, the PCAP converter traced flow by flow against the corrected CSVs, and D-046, the served weights tracked. No model or checkpoint changed after the M1-M3 tag; the code, weights and evidence the submission is judged on",
+  "built_at_git_sha": "e5d8d1b",
+  "working_tree_clean_for_evidence": true,
+  "built_on": {
+    "machine": "Atharv-laptop",
+    "python": "3.10.6",
+    "utc": "2026-09-29T10:57:41+00:00",
+    "torch": "2.5.1+cu121",
+    "device": "NVIDIA GeForce GTX 1650"
+  },
+  "decisions": {
+    "D-019": "D-019 \u2014 Alarm score = max over the horizon, and lead time is measured per episode",
+    "D-034": "D-034 \u2014 Pre-registration: a causal alert budget replaces the whole-capture one (G-8, E18)",
+    "D-035": "D-035 \u2014 Pre-registration: the M1 v2 programme, and the scorecard that replaces Thursday F1",
+    "D-036": "D-036 \u2014 CTU-13 flows become MITRE stages by their own labels; Argus-only state (E25)",
+    "D-037": "D-037 \u2014 Pre-registration: do E22 and real packets compose? (E26), CTU-13 completion (E25b), and the ship rule",
+    "D-038": "D-038 \u2014 Pre-registration: PCAP uploads are served by the mean of the three E20r seeds; CSV uploads stay on r2 (E27)",
+    "D-039": "D-039 \u2014 Step 10: no GNN and no larger model on the evidence of E24, E26 and E25b",
+    "D-040": "D-040 \u2014 The PCAP flow converter expires timed-out flows; capture duplicates stay in the flow block",
+    "D-041": "D-041 \u2014 Pre-registration: the N-8 fix. Window-relative positions, state carried across chunks, and a retrain of both served routes",
+    "D-042": "D-042 \u2014 Pre-registration: does host-local temporal state fix E25b's cross-family inversions? (CTU-13, 7 folds x 3 seeds)",
+    "D-044": "D-044 \u2014 M3 on CIC-IDS2018: data handling, and the pre-registration (6 family folds x 3 seeds, GTX 1650)",
+    "D-045": "D-045 \u2014 N-7, the architecture decision: stay with the Transformer + RSSM world model; no per-host model and no GNN",
+    "D-043": "D-043 \u2014 The PCAP flow converter follows the corrected CSVs flow by flow (N-9)",
+    "D-046": "D-046 \u2014 N-9(a): the served weights are tracked in the repository"
+  },
+  "decisions_md_sha256": "9b1e4b76a06f729d92e0193ecc33cc1f940640aec874edc980cb82db2d90c532",
+  "results_md_sha256": "5a9f0de177e505d2b047e14724dd701503f2751cf294a7d1fa100c77086e2c96",
+  "m1_cicids2017": {
+    "served": {
+      "csv_route": {
+        "decision": "D-041 gate G3 (r2's setup, window positions)",
+        "folds_served": "Thursday by default, Friday on request (models/registry.json)",
+        "runs": [
+          {
+            "run": "n8-r2w-s42",
+            "metrics_json_sha256": "dc60bab88c4ba9f760c636a29323be107ccceb28492eb360ccf9634eb0b8fd8d",
+            "git_sha": "d1b3f22",
+            "git_sha_at_start": "d1b3f22",
+            "seed": 42,
+            "device": "NVIDIA GeForce GTX 1650",
+            "complete": true,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2356642,
+                  "sha256": "a1e99a6bf672344f2628ec60436c11c36c62c43245c1b9f15244b01c17d09cfe",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 70,
+                  "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 584470
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2359298,
+                  "sha256": "05492a1462d35a2e25bcff7978d6858f7230e748cfef7b69498a37291d78c6d3",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 70,
+                  "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 584470
+                }
+              ],
+              "check": "ok: 2 folds, all trained at the run's start SHA d1b3f22"
+            }
+          }
+        ],
+        "lr": [],
+        "configs": {
+          "configs/cicids2017.yaml": "aeda43eb9b8d5a9500257c9489c7ec515a45b00e035f978009d12bc5ffbf8d50",
+          "configs/n8/r2_window.yaml": "4e1b346b15ec3e7e32db73d3a6be1d513dad6cbb9e305514543e5237bee2ce7f"
+        },
+        "data": {
+          "path": "data/processed/cicids2017",
+          "files": {
+            "friday.parquet": "cf2334d08ad446a6302a56e5517781cbbbb2dd49ac57616967d024272014e301",
+            "meta.json": "47cf9e8912aa3955123ff01709dd5b929d74eb3950ead8908901a274c679891b",
+            "monday.parquet": "ef752fa58c7bea83eac97d7e1f1ffe062a297ffa1e4642f2583bac1b3eadfef7",
+            "thursday.parquet": "640853d1775cca6f1c61e0da2123ae13cc4649ca03a9a6b81a80cd2ea907cda4",
+            "tuesday.parquet": "1d564d2b2ac5735bbb786ea5801211ac59516c29930ab05bedbe797d85a46f2a",
+            "wednesday.parquet": "36f007f993e6ef977c1038fcd604b4f066a179c1276c12ab0c6282879b45ed65"
+          },
+          "bytes": 1757781
+        },
+        "tables": {},
+        "run_folders": {}
+      },
+      "pcap_route": {
+        "decision": "D-038 aggregation, D-041 gate G2 (E20r with window positions)",
+        "ensemble": "the arithmetic mean, per window, of the three seeds' outputs (netwm.engine.predict._mean_outputs); members must share inputs, horizon, stride and fold",
+        "folds_served": "each seed's fold for a held-out demo day, else its Thursday fold (backend/inference.pcap_ensemble_paths)",
+        "runs": [
+          {
+            "run": "m1v2-n8-e20rw-s42",
+            "metrics_json_sha256": "bfcf095dfffda915204e441db23b9ca36a5bccb88201a930248cba81463dcb72",
+            "git_sha": "d1b3f22",
+            "git_sha_at_start": "d1b3f22",
+            "seed": 42,
+            "device": "NVIDIA GeForce GTX 1650",
+            "complete": true,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395234,
+                  "sha256": "02fc6a772b061ebacf20698e861c30e9197289544677dd2fbe5375e9bfd9d6b2",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395234,
+                  "sha256": "47208e3869aaa4fdd7561556937483ed9f3f5851f098d89d6ea03b2ee20fbab3",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397826,
+                  "sha256": "5776f38606291bc4c7db00490abd13f0475049ebb5120a7d5b4942bfda3c233a",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397394,
+                  "sha256": "c5ed8591690eb622876ef97d4d43fda05b96ccddfc93f33ae989034cd0bd9187",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397874,
+                  "sha256": "d763b10e0353444e92ace9cf56547a4ba128aab95a831cf92aae8e7860571267",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds, all trained at the run's start SHA d1b3f22"
+            }
+          },
+          {
+            "run": "m1v2-n8-e20rw-s43",
+            "metrics_json_sha256": "2a4137b7642ceb6de69f76b53173a76196c433146f4bb5123ba49bbdaaa97851",
+            "git_sha": "d1b3f22",
+            "git_sha_at_start": "d1b3f22",
+            "seed": 43,
+            "device": "NVIDIA GeForce GTX 1650",
+            "complete": true,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395234,
+                  "sha256": "e8a9a28dc9007022a896b521362f3f943ac4cd8475acb9a3ca2de42509676371",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395234,
+                  "sha256": "196f8a62f4cd761dbe226a0464a37b3892d16c7b77ef7c2937931166cd40c859",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397826,
+                  "sha256": "3cde3367ec2ea21ad8388a41ed4dae0a7be7fc0c5ca81bd3a97ca024d65b0158",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397394,
+                  "sha256": "60f3fdffac3e1cdf0e3ead896c1f74cd72b75d9552b8b9fed0ac8f96b46db852",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397874,
+                  "sha256": "fbbb0c9e6041b8ca092479b24bded773174aa444027c4596cb290d77e7b4cdcd",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds, all trained at the run's start SHA d1b3f22"
+            }
+          },
+          {
+            "run": "m1v2-n8-e20rw-s44",
+            "metrics_json_sha256": "bb7f358090be73a1da79d669042049bb9a7d5024710511d742198ace73e4fe05",
+            "git_sha": "d1b3f22",
+            "git_sha_at_start": "d1b3f22",
+            "seed": 44,
+            "device": "NVIDIA GeForce GTX 1650",
+            "complete": true,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395234,
+                  "sha256": "ff9c4a2f29d0308d28fffb01a06c93ce9c084b1c48e8a8b3c737b0e8c515d76d",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395234,
+                  "sha256": "38fd1bca0ac6d6b9996c535ace3b8bc05525f09bc49fb6d19685a072bccb397d",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397826,
+                  "sha256": "04372743c80b52d01811e9461ff5c6002dbf0e021bc0c37d8a37c0fc4b861210",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397394,
+                  "sha256": "d0577a0d30fddeb0435947a6a548f3673955214322541ffafe377b01f34eb68f",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397874,
+                  "sha256": "fe8c9908ab95a8de45db0612816b5f753bc1f093c00cc76206b58325b458e7c9",
+                  "git_sha": "d1b3f22",
+                  "pos_mode": "window",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds, all trained at the run's start SHA d1b3f22"
+            }
+          }
+        ],
+        "lr": [],
+        "configs": {
+          "configs/n8/e20r_pcap_window.yaml": "74285c9ea810b8665051eb78a998cf5fbbd4e40d067d997a075b9427c0f7d6f5"
+        },
+        "data": {
+          "path": "data/processed/cicids2017_m1v2p",
+          "files": {
+            "friday.parquet": "8a4ba73cbe6c4ce892f8dbbb7ef8090e06531866fca01fe77fb99d81cced6c5b",
+            "meta.json": "a0ec90463002708c3d75a64efb122488c82e22c0fd84be71456f6b45adfa3fa0",
+            "monday.parquet": "dea5fd19dc9b3fe8671b9778dac6c3f330efc0e82d3e4184c888fbceb3e0022e",
+            "thursday.parquet": "0373e1ca32cb9a490b60af88490cb2164953547f8c5efbf4420a575b437ef1a5",
+            "tuesday.parquet": "3060e63c17023fac01ad2fe4ca71012100c18ae66b6eee8b2f02c861566f3909",
+            "wednesday.parquet": "89d1d0cff2e1ccf68211894722774e075000b758e0395c6e5dac66f80bf28b28"
+          },
+          "bytes": 3057430
+        },
+        "tables": {},
+        "run_folders": {}
+      },
+      "gate_run": "n8-fix-eval",
+      "d041_gate_verdict": {
+        "G1_chunked_equals_one_pass": true,
+        "G2_pcap_route": {
+          "thursday_pr_auc": 0.5138,
+          "S2_star": 0.6754,
+          "e19_S2_star": 0.6508,
+          "bar_S2_star": 0.6208,
+          "passes": true
+        },
+        "G3_csv_route": {
+          "thursday_pr_auc": 0.676989566188194,
+          "thursday_f1": 0.5906432748538012,
+          "passes": true
+        },
+        "pcap_route_serves": "E20rw mean",
+        "csv_route_serves": "r2w seed 42"
+      }
+    },
+    "replaced": {
+      "r2": {
+        "served_until": "D-041 (26680d2); reproduced by the n8-r2i-s42 control",
+        "runs": [
+          {
+            "run": "e4e7-worldmodel-r2",
+            "metrics_json_sha256": "4cf29ea6a62479bd714a0be8bc1be86f2f3fd466b2cbb02be270deafa77ee5dd",
+            "git_sha": "55ee51d",
+            "git_sha_at_start": null,
+            "seed": 42,
+            "device": null,
+            "complete": null,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:19+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2355618,
+                  "sha256": "aa5b58a906a7cf7a8767a5dc064d01eba55a573e7968b63792311532fd21b3ed",
+                  "git_sha": "55ee51d",
+                  "pos_mode": "interp",
+                  "n_features": 70,
+                  "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 584470
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2358274,
+                  "sha256": "ffa863766cacc7e30623f39187b629a999595d3a2bf09b9ef3dba0ca98367b83",
+                  "git_sha": "55ee51d",
+                  "pos_mode": "interp",
+                  "n_features": 70,
+                  "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 584470
+                }
+              ],
+              "check": "ok: 2 folds; pre-D-037 run, save-time SHAs ['55ee51d'] (no start SHA recorded to check against)"
+            }
+          }
+        ],
+        "lr": [],
+        "configs": {
+          "configs/cicids2017.yaml": "aeda43eb9b8d5a9500257c9489c7ec515a45b00e035f978009d12bc5ffbf8d50"
+        },
+        "data": {
+          "path": "data/processed/cicids2017",
+          "files": {
+            "friday.parquet": "cf2334d08ad446a6302a56e5517781cbbbb2dd49ac57616967d024272014e301",
+            "meta.json": "47cf9e8912aa3955123ff01709dd5b929d74eb3950ead8908901a274c679891b",
+            "monday.parquet": "ef752fa58c7bea83eac97d7e1f1ffe062a297ffa1e4642f2583bac1b3eadfef7",
+            "thursday.parquet": "640853d1775cca6f1c61e0da2123ae13cc4649ca03a9a6b81a80cd2ea907cda4",
+            "tuesday.parquet": "1d564d2b2ac5735bbb786ea5801211ac59516c29930ab05bedbe797d85a46f2a",
+            "wednesday.parquet": "36f007f993e6ef977c1038fcd604b4f066a179c1276c12ab0c6282879b45ed65"
+          },
+          "bytes": 1757781
+        },
+        "tables": {},
+        "run_folders": {}
+      },
+      "E20r": {
+        "served_until": "D-041 (26680d2); aggregation run e27-e20r-mean (D-038)",
+        "runs": [
+          {
+            "run": "m1v2-e20r-s42",
+            "metrics_json_sha256": "cc939d80ffd377dda101b2a8d13675810cfe9767315690a25e56f053e6c5e25d",
+            "git_sha": "532186e",
+            "git_sha_at_start": null,
+            "seed": 42,
+            "device": null,
+            "complete": null,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395170,
+                  "sha256": "b1c35198cc9050a2b5af5413e6ff437e0abacea7bae67600e817eddca1e31a7e",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395170,
+                  "sha256": "f42e69a37e8663a5d9378638054f3a1e8dfb8209a7fe5fc72ff785f01c17f1df",
+                  "git_sha": "c4b6741",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397762,
+                  "sha256": "58675702c3aa765e10807aa7f679d5d8c5ef94573787e268cb2c63f983cc2c01",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397330,
+                  "sha256": "8c4ea27db3b93a832802f76f60b127403f9ff4f3e623b6018a4d4da07bcb5f47",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397810,
+                  "sha256": "32cc424d8a991b5ac003ce8cf562423f8dfcdbffb192b25721b0993431ddc1f6",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds; pre-D-037 run, save-time SHAs ['532186e', 'c4b6741'] (no start SHA recorded to check against)"
+            }
+          },
+          {
+            "run": "m1v2-e20r-s43",
+            "metrics_json_sha256": "142f8956a38d25ee4081179922b51c17ce02d8c662f68d388a2cae22233663db",
+            "git_sha": "532186e",
+            "git_sha_at_start": null,
+            "seed": 43,
+            "device": null,
+            "complete": null,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395170,
+                  "sha256": "cbeae6ddb66fa40bf8d753c437eafcf05ded08e979bcbd7140b6e6a1d7c253ef",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395170,
+                  "sha256": "6b5ae8d6e534e806e7f93083728de6376d3668af9470ec36d9f2c34926c85939",
+                  "git_sha": "c4b6741",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397762,
+                  "sha256": "8c30817b86e3ffe9b605998f8c7e921457d9429e682554536701e31726e45a66",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397330,
+                  "sha256": "0b40045151b96604dd2dfd9d77ed9a848445f5a8746299a0eee1539ca3289bef",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397810,
+                  "sha256": "7bfdadf443b5cd87e69ff3dab60cb4a9059aef4926004006e95d45f5cb6563b6",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds; pre-D-037 run, save-time SHAs ['532186e', 'c4b6741'] (no start SHA recorded to check against)"
+            }
+          },
+          {
+            "run": "m1v2-e20r-s44",
+            "metrics_json_sha256": "090a76f7577ec84de5fc4623b2a8efce663dba538e6b08fd631bf6f373d08e5b",
+            "git_sha": "532186e",
+            "git_sha_at_start": null,
+            "seed": 44,
+            "device": null,
+            "complete": null,
+            "checkpoints": {
+              "hashed_on": {
+                "machine": "Atharv-laptop",
+                "device": "NVIDIA GeForce GTX 1650",
+                "utc": "2026-09-28T20:07:22+00:00",
+                "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+              },
+              "files": [
+                {
+                  "file": "friday.pt",
+                  "bytes": 2395170,
+                  "sha256": "26ec4acdd15dfd778e865f2142a1ae91318489f9979195c05ea0a05905062c50",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "friday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "monday.pt",
+                  "bytes": 2395170,
+                  "sha256": "2c75a1cf59d1684bff4c3409f3f07ec771b043fd800edca9660a11b8a8c6addf",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "monday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "thursday.pt",
+                  "bytes": 2397762,
+                  "sha256": "67fe1e6f58f567131be406e338f059b141e2226c9019098c12617b3c1c579590",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "thursday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "tuesday.pt",
+                  "bytes": 2397330,
+                  "sha256": "6c6cd7530d260bfdf98fd86a603d687d3aac22726535885f50337d3435334b2f",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "tuesday"
+                  ],
+                  "params": 593500
+                },
+                {
+                  "file": "wednesday.pt",
+                  "bytes": 2397810,
+                  "sha256": "752131e9aba1475fd317003ec9cb6bc2efa2778f263b103bbddb6837724ac4e7",
+                  "git_sha": "532186e",
+                  "pos_mode": "interp",
+                  "n_features": 105,
+                  "feature_schema_sha256": "52977eab1b235486fa0fe253f35ab6f6f4888eee4d2ac6649b79f97de026897c",
+                  "test_days": [
+                    "wednesday"
+                  ],
+                  "params": 593500
+                }
+              ],
+              "check": "ok: 5 folds; pre-D-037 run, save-time SHAs ['532186e'] (no start SHA recorded to check against)"
+            }
+          }
+        ],
+        "lr": [],
+        "configs": {
+          "configs/m1v2/e20r_pcap.yaml": "0db71562e3c97db1a041c8a0047d75329f26f3a149b471263b50ea5fbbe35287"
+        },
+        "data": {
+          "path": "data/processed/cicids2017_m1v2p",
+          "files": {
+            "friday.parquet": "8a4ba73cbe6c4ce892f8dbbb7ef8090e06531866fca01fe77fb99d81cced6c5b",
+            "meta.json": "a0ec90463002708c3d75a64efb122488c82e22c0fd84be71456f6b45adfa3fa0",
+            "monday.parquet": "dea5fd19dc9b3fe8671b9778dac6c3f330efc0e82d3e4184c888fbceb3e0022e",
+            "thursday.parquet": "0373e1ca32cb9a490b60af88490cb2164953547f8c5efbf4420a575b437ef1a5",
+            "tuesday.parquet": "3060e63c17023fac01ad2fe4ca71012100c18ae66b6eee8b2f02c861566f3909",
+            "wednesday.parquet": "89d1d0cff2e1ccf68211894722774e075000b758e0395c6e5dac66f80bf28b28"
+          },
+          "bytes": 3057430
+        },
+        "tables": {},
+        "run_folders": {}
+      }
+    },
+    "threshold_policy": {
+      "alarm_statistic": "p_max: the maximum over the K = 10 rollout steps of the compromise hazard, on the deterministic mean path (E14, D-019)",
+      "threshold": "causal expanding 90th percentile of the score over windows before t, no alarm in the first 20 windows (netwm.metrics.causal_threshold, CAUSAL_WARMUP = 20; D-034)",
+      "backend_policy": "expanding-10pct (backend/schemas.py)",
+      "label": "y_within_K (an attack or compromise window within the next K = 10 windows)",
+      "stored_train_tuned_thresholds": "recorded per checkpoint; not served"
+    },
+    "serving_code_at_head": {
+      "backend/inference.py": "d1e331300f47ffe771bb8c3c65d73127e8e66e87037140cdb6d44f4f8d7ff632",
+      "models/registry.json": "77c658467aa3e879635d60e761e6292c83e3f9a5b6f9554d6464b2f31b3aeebc",
+      "src/netwm/engine/predict.py": "e4606c3932b2cbdc7254ae57eae602383cdf7fd1a5fc6cb153a73ce89e9d1b98",
+      "src/netwm/models/world_model.py": "dc68af5a30dec85d4d1fe26f1277dcd1e3291b20e94f4777d693ba9b271197e9",
+      "src/netwm/metrics.py": "d4f205de3454f0f48b98b531987582290aca2ff459e59ff1bb5b7109bbb83e3a",
+      "src/netwm/features/flow_aggregator.py": "bfe2e695e8b1982f561b5b1d7bd27cd24e9360213a4d1b0f9a829d1e01b01945"
+    },
+    "tables": {
+      "n8_fix_eval.csv": "ad138d353d48cb5ae52b2adfea6d56291d43e59e41d58b0c3a094b74a3cf254a",
+      "n8_fix_scorecard.csv": "d04d9e34a707d2b5afd444b72f2c40854a5e8fc37f5baf7d878cd70b1c67cfd3",
+      "n8_fix_parity.csv": "d4fa869ce0ddeb9e92d89ea0e81b456732424b2445f4732b16ee1cbfa6314211",
+      "benchmark_final.csv": "5913640035138c3e53947b4f5acbd85a314ff0625ffaa03eb37211a716218b1e",
+      "benchmark_final.md": "86203473f3561007a2c85e8c33ea62fdc52ca7c185a708d81c3b810ef7bf1bef",
+      "e27_pcap_route.csv": "a086bb16d66aeffbdda781d91e59259a38b35c959abb9012e6b28fe361d10f83",
+      "e27_pcap_route_scorecard.csv": "f7ddd643297d52f8c4cb38a86a0b6ee314c8b10e19478887b3c2983d7ed83b34"
+    },
+    "run_folders": {
+      "n8-fix-eval": {
+        "metrics.json": "f4a1e29ebb387d1fd3ee55ef42996310c9b556b616f60f11d1c3d3b2635bb3b2"
+      },
+      "n8-e20rw-mean": {
+        "metrics.json": "bdce3109bd66fe3fa7f693153a6cdaacf2ebaf3e2b6afd182641fe15c7b80761"
+      },
+      "n8-r2i-s42": {
+        "checkpoints_manifest.json": "56058d68287ca6be72093ee5df8127c93bfabf646bbc0287581bdfe0cb8dbebd",
+        "metrics.json": "40b4a1470650ddae5567aff6eb8ce78755eed4fb1def189e2626c11806618ad3"
+      },
+      "e27-e20r-mean": {
+        "metrics.json": "bc5dc2f89e03b96984206ba7520467675ceed5a433c94ffb73ad148ecac05454"
+      },
+      "e27-pcap-route": {
+        "eval.log": "03c62d95818f5e9e64c4b459c15cc8893b3e187583103fd0ae5773e861a539d8",
+        "metrics.json": "c30ff2d4b19d323b63be090f3a302ce927e5b6be2bc69767d99f5fdb49d1e4c2"
+      },
+      "benchmark-final": {
+        "metrics.json": "1507708c9cf7f701964ec4a1b0261f7fda6a52060f7ecb8f950f60221a27bcc6"
+      },
+      "e14-pmax-rescore-e4e7-worldmodel-r2": {
+        "metrics.json": "9cf5660209bdaa9753029c5146c1361264a00ceedd899eb7b15b6cde6c023399"
+      },
+      "e18-causal-threshold-e4e7-worldmodel-r2": {
+        "metrics.json": "1a5807e82734880aba52854863c037d4934b4c5019efc5f0abf972d489ce280d"
+      }
+    }
+  },
+  "m2_ctu13": {
+    "E25b": {
+      "runs": [
+        {
+          "run": "e25-ctu13-s42",
+          "metrics_json_sha256": "58c89fe7365d55689f4a335b38a15c0a8458312a6db29b321a1cdd3d99e6384c",
+          "git_sha": "df2c6ef",
+          "git_sha_at_start": null,
+          "seed": 42,
+          "device": null,
+          "complete": null,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460702,
+                "sha256": "2bf3fe6ad8ca2ee42f87490d568f9e68cbcd620023474e9f0b356ab283706cce",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460702,
+                "sha256": "d009943b2876122feba9838585b4d9c1ab550e56e1a4526837212878280c3051",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460702,
+                "sha256": "759faac9d241350f47c285062960a1a97df0cad6657c10be462c86a12a8e2cb7",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460650,
+                "sha256": "be15932a2b7c35dd9be45b28b649b78126901bd129ec9f27eeb3d9134941aed1",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460586,
+                "sha256": "22a9f39bcc8c51af3df8e09d8154f809507509ce380697a63c0591c1c9860678",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460702,
+                "sha256": "19092495e3fd22591ee946db7497960eeae50f29941c738fc97c5f89eab407ae",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460702,
+                "sha256": "d3540a2c6c7f5d0738a7c57bdec4cac4ca5a834e2d1fa7b4e07075e6e3b6e57f",
+                "git_sha": "df2c6ef",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds; pre-D-037 run, save-time SHAs ['df2c6ef'] (no start SHA recorded to check against)"
+          }
+        },
+        {
+          "run": "e25-ctu13-s43",
+          "metrics_json_sha256": "368cf260c21b7dccbc2736025a3643f55169828e8ab64878ffa722ca1cd88c4d",
+          "git_sha": "a0dfb52",
+          "git_sha_at_start": "7399495",
+          "seed": 43,
+          "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "LAPTOP-PSLI6M46",
+              "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+              "utc": "2026-09-28T23:15:26+00:00",
+              "models_dir": "D:\\Code\\smart2nd\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460702,
+                "sha256": "08d1362d53eb5e0437229042fbfb35cd842707bed39918ac7353383f53aa3d7c",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460702,
+                "sha256": "06bfb75590f957779a5e3c54963075d6e55f129f1b84358ad2f585471d7ef05f",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460702,
+                "sha256": "f30f6cf859bb1de48d5bd302615e561cdcb5ccd0a0bfdb406a5c5fc98701760b",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460650,
+                "sha256": "5d60f69236a4f186aa8791e7caff82f584f25475f5ac7dd7504488c9a53ce69b",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460650,
+                "sha256": "a4384fa89ed3ee372b8cb8f4274b48b6d99766917a355d7ba33e0b95445d4010",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460702,
+                "sha256": "855bf907242504472234f8dbb5f55ab240ac9fe921757993d1eb6eb096cf7f92",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460702,
+                "sha256": "f91852c844978b347e28fffac293c305cbdf5081333f754f6d56ce61d8d7f429",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 7399495"
+          }
+        },
+        {
+          "run": "e25-ctu13-s44",
+          "metrics_json_sha256": "1eb99e939f96b0985d4d8e588c99af4463a3478f15c80f8f7ad25d8c30668ab3",
+          "git_sha": "a0dfb52",
+          "git_sha_at_start": "7399495",
+          "seed": 44,
+          "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "LAPTOP-PSLI6M46",
+              "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+              "utc": "2026-09-28T23:15:41+00:00",
+              "models_dir": "D:\\Code\\smart2nd\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460702,
+                "sha256": "e8212a1c193aae67d8636bfcdd445206e1fc02ee0af01e0aaddd7bdee354e678",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460702,
+                "sha256": "f2007dfd0c8b7ac034835b6e86f6291a9aa4f5e65069a53fcb94a8f6abfed1d1",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460702,
+                "sha256": "1f44489ca58d609c8cb1cf6466c3c02504cb31603d00acb71ffd4e766d575952",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460650,
+                "sha256": "d0f1d309419ba858ff7f26029dd414b79b1be391978e93439039007c9d31fb23",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460650,
+                "sha256": "539a16decf374fb701c1e80c320e38462c4d2e7b9abd03adbb85ab841e156148",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460702,
+                "sha256": "14754712c15f0156d1f98eaef18862c447d5977f291c26ba860354d57265a7c8",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460702,
+                "sha256": "825e3f68471ce6b773b192c20e295ffcdebbd9128c0a4dfa46ba4dfc2796c2da",
+                "git_sha": "7399495",
+                "pos_mode": "interp",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 7399495"
+          }
+        }
+      ],
+      "lr": [
+        {
+          "run": "lr-ctu13-s42",
+          "metrics_json_sha256": "af6640b05aba35d4c4db8532278341b6a392a7f3dbda8616df612de8e8f69c5c",
+          "git_sha": "d9af382",
+          "git_sha_at_start": "c05b4a9",
+          "seed": null,
+          "device": null,
+          "complete": true,
+          "checkpoints": "none (deterministic baseline; refit by scripts/lr_baseline.py)"
+        }
+      ],
+      "configs": {
+        "configs/ctu13.yaml": "395c4de0847e76c45e588771723371f303385b89ba8ccafa3a3de36cc66f2cea",
+        "configs/m1v2/e25_ctu13.yaml": "08e0b8fed6fe2bdbbed037a201887bb55bd19d9d32544bf91dc9faa613a08e7c",
+        "configs/ctu13_folds.yaml": "8e54f0a0ff4396a1e16108edf282206f15f344be58c3ff3a6f42fb2250527000"
+      },
+      "data": {
+        "path": "data/processed/ctu13",
+        "files": {
+          "meta.json": "31387b8b5bc646b7ccb9486d99dd61d94b5a6bfab18977f580b28eb6446a56cc",
+          "s01.parquet": "07609d08e3ea935edb2063840004463c223c7c5738f53580128029d086b4fb0c",
+          "s02.parquet": "c9d02a70e80ac2c7a90b452c12f6b219bae2c7b27d51d7436a012cc10442458c",
+          "s03.parquet": "a4af25c047b267a3bebf92e6ae92aa63e127307ad195ab162ce86548d00e0590",
+          "s04.parquet": "5f616d208dd11252659ec0333515cc838b9adb2a14c5412afeee08ab0fe1659a",
+          "s05.parquet": "df65051fba90ade42f5e8477937f547a4b65ffea3e2b597a1fe9e1fe757d5249",
+          "s06.parquet": "86aeb5beec14ff6137f58a702b07e5dfecf633178a45b781b3a47958db9a0ad2",
+          "s07.parquet": "c1b48d430f786262b37d671c8b845769e04140075e1c394c8778fcc611ee5d3e",
+          "s08.parquet": "b5def62ba643cd7ffbaae62cb32a84aba741fecb00bbd7c96c6400a207390f76",
+          "s09.parquet": "b2b014a0c7f99719a54eeca3eeb4a9afa1c5953de101d20258cf479b7424f648",
+          "s10.parquet": "b8a4477470f321466a9d42523ef761bbe91c106f135e6f51a65cba5ef2ff55ad",
+          "s11.parquet": "9f71a858e603c6ea90cce8d76f7d24e869c725923a0b61fcff22c7ac8b74711e",
+          "s12.parquet": "72cfae13e018ea6a6982f84e3535c243000897c8666b1e89f2e510556005f0d6",
+          "s13.parquet": "b159be01fed3834a070df0f063062a109eb5941119a577f9d9c89656758b60f6"
+        },
+        "bytes": 4509438
+      },
+      "tables": {
+        "e25b_ctu13_scenarios.csv": "72f49bebf1739566f99fcb076c2ada4c22575fb8d21f8584fe4f66c069a61101",
+        "e25b_ctu13_scenario_matrix.csv": "bd3dfd8d0260ef2ca5db8926114a3a150a60dbdd6144425ee57582c25058bfd6",
+        "e25b_ctu13_families.csv": "55661ded3a4ef64fe0c2b60f76bf1b62767a443377083d900a22085dca38f1cc",
+        "ctu_ci_e25b.csv": "b43eb053a00de807cbb44c4b0a3e41e07c8079dca8c1d0c8a6ff742f6adab67a"
+      },
+      "run_folders": {
+        "e25b-ctu13-matrix": {
+          "matrix.log": "6ab75194cc8e76a171536c2affbb775118240ef9842b8665a14c77e7032b367a",
+          "metrics.json": "066a21fb89161429719a8505edacb883a0d860b6a06b4307de387e7f0524063e"
+        },
+        "ctu-ci-e25b": {
+          "metrics.json": "b013080150da5da95e27101850129e975da9cf94828c7819322a45152e1e6343"
+        }
+      }
+    },
+    "D-042": {
+      "decision": "does not help (decisions.md D-042 outcome)",
+      "runs": [
+        {
+          "run": "d042-g-s42",
+          "metrics_json_sha256": "e239a8541155643c3211ea4f76230dc1391f7bfc92c1179a9cc22bdd6ce9a2ff",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 42,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460766,
+                "sha256": "35240772b8ae1d6e7369f04fe459d071a55d49a1f1beb126d964fbd1aae824b4",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460766,
+                "sha256": "89db61d4041d770e63f9e2bc55ff20d895714fd20a0a5ee676d2b1763e67a6a2",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460766,
+                "sha256": "bc4538fa33fee5e2088084c960e19f1e4ea88cff4c6887d054186b6bd2af9441",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460714,
+                "sha256": "dd6fb817dd8bc614d01092842617862e65648dfc1d625ff6d1a35dc4a381a9a1",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460650,
+                "sha256": "70583fc3cd924eafc98cb28aa27e63b82eeb6e6c6ab02cff31538b6374e77001",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460766,
+                "sha256": "3672d5b8d603fdeb550922d83a80296bbf4437f4eac14b115e5d2f52b4a8111f",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460766,
+                "sha256": "63a5ab8c127c94e5364d69dfd052a69e0b6aa044eff3f2f03b9eeb98ed702eee",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        },
+        {
+          "run": "d042-g-s43",
+          "metrics_json_sha256": "e36b85723e2d0444f733fa34269c43ce0f63c4123680afc04b5543bf48f7e94d",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 43,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460766,
+                "sha256": "fb5d19687bcf961a316907ea2b388675bce778e026afdce38de46a9ff655f272",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460766,
+                "sha256": "6e5a8373f534cab24b3606f6f1f1f3f06add6cd4c809514b248c51fcf3f50544",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460766,
+                "sha256": "b0b9a8df908db5094b5d12069ef1fc8a59f11697246e6cc8054acb7fe919b308",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460714,
+                "sha256": "73f217da92d56cb6acaebad65cac41557d0b1ddb08c0f4345ca493aee54d143a",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460650,
+                "sha256": "8485b66442d9842e9d0cbd85919ada314038351b317436fb5149e5eba9c2dc9e",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460766,
+                "sha256": "0d3c497b1c4ff55253e2a7d7ab3a3d3f5137f7fb428f9c4f72c45c29082f1047",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460766,
+                "sha256": "759d63f38d1844c56868c6a93030645a5a99dc731bf5ffe1778a3f503a784a6c",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        },
+        {
+          "run": "d042-g-s44",
+          "metrics_json_sha256": "4df6a087d2970c4696375428dee771707b2bf64e4014579e6633b930b7d32c43",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 44,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2460766,
+                "sha256": "5544891c6e669a0971f61294c02ecdc1b065fe7f31b86d6b9a26e67d9c9489d3",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2460766,
+                "sha256": "edcf51c84810b1a604565a8a71a767a9ca81a5ee0818ac4773402bdca1ffe1b9",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2460766,
+                "sha256": "39ed5e0a9641546f7ecab2010ae8fdcda1cea189b449b9c0eae0b79f49509f01",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2460714,
+                "sha256": "3b7088efe5b05b5125939314731b0a915b974e94c07fafe711a2dedaca7f4e9e",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2460650,
+                "sha256": "24202740c62483499401657fe80bed89e5f2d8b93abdc5f17488c6312a98d655",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2460766,
+                "sha256": "3e4cf864d953250690ca9521d7002b57d77502663b9157e272422e4e2887a50d",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 610432
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2460766,
+                "sha256": "1b68db79a92eb12a64d7f8163d894b933d3a2218a3217bcea28125c4ee2f90df",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 56,
+                "feature_schema_sha256": "6a4aa47dea24107be1994eac163e8ab0837a75b58e89c2866ddc7b4632b22257",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 610432
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        },
+        {
+          "run": "d042-h-s42",
+          "metrics_json_sha256": "845690efcea74d551faf0f70816b6353112933156776997afea9a86eff1035f7",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 42,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2467358,
+                "sha256": "a99366cf536a388890e298983db8c76013f75a6364dc7fa0b9da6b45b71fecbc",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2467358,
+                "sha256": "2e38167558f4471d83135194220f91d8caa701889f5ba9667cc69a891d0ff681",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2467358,
+                "sha256": "4bdfe86f3b164eef7d51831bb990c717c79a81129fa5cede31b2f39a15fb9542",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2467306,
+                "sha256": "ab71163e4cfc83251ac1062e923bba7b44e70f9eee02f0e9e653b863189e3544",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2467242,
+                "sha256": "7c8b091983518a317915f1eac27be57c8c177c7e311e9a85d8e46d0271ebb180",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2467358,
+                "sha256": "e3bef032a4fd4c1838d71b5b7b7f19782841808b29510370135e7df05c2a32fb",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2467358,
+                "sha256": "3aef462926929406c42983e0aacf2fed6296c7c4bf54e4fa98488b6c52e24ac0",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 611980
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        },
+        {
+          "run": "d042-h-s43",
+          "metrics_json_sha256": "bb9f0e4a886ecde0576e9f05288f049a9d7cc445ae704825e3ffb78e2799649a",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 43,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2467358,
+                "sha256": "3f0834c2ce4b770ddb67a3a5d74ea24e0bceb16f4d7a3f543ffc4530f4ce9437",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2467358,
+                "sha256": "b6a62f0f7d016304e426e2a8d41dcae87381d980caab955984d0f4099a6e873d",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2467358,
+                "sha256": "0b531c5149640e4ff240eac20bd1779624a0e0c887024f9e5c6b1c95019feeaf",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2467306,
+                "sha256": "2d3c51d71b09659903133357a0dcd94ac9d35b4483c288d709ad77ddab7c253d",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2467242,
+                "sha256": "096621621146e464fed7fe547cb584304711b8afeec26526ca0c8011daeae2e7",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2467358,
+                "sha256": "e9a842f70737a9c679bc41f2c7095bf8faf6bb465977e2b969a55d2565fad27c",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2467358,
+                "sha256": "34cfa77ce69b2d781a7fd3731cdac37c0cfc9ebc6750e5c66a465be830b7e6c1",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 611980
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        },
+        {
+          "run": "d042-h-s44",
+          "metrics_json_sha256": "6a2d03a7e83a8c3285f05cc8870b50ad0895c01215dd4a7210ef0a083f6d9f0f",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": 44,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-28T20:07:22+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "menti.pt",
+                "bytes": 2467358,
+                "sha256": "4b9d0be1c7990ece623a2045b43836e9198a3ec74dceaed7b469f18c758bcaba",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s06"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "murlo.pt",
+                "bytes": 2467358,
+                "sha256": "b3b027e0943e2a4aca0a9d99af91de5d5a9ac766e4ad750ed0c3f7927d188553",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s08"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "neris.pt",
+                "bytes": 2467358,
+                "sha256": "5abf964dcd8a82da3e731aef06681da698180d8225345af62ed22c20ba4bb97c",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s01",
+                  "s02",
+                  "s09"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "nsis.pt",
+                "bytes": 2467306,
+                "sha256": "c1e3932c287a6037a73998b9be75feb6ede80fedc3b6db93338313b910643e24",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s12"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "rbot.pt",
+                "bytes": 2467242,
+                "sha256": "fe9aab8d97bc9a280aa063a68a55acffbb53b7c7e23aadc86b895133f38db897",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s03",
+                  "s04",
+                  "s10",
+                  "s11"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "sogou.pt",
+                "bytes": 2467358,
+                "sha256": "b7259504112bae701c56482bc69aec05ef6fcec0b8b9f2d8536551892c5ef7f4",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s07"
+                ],
+                "params": 611980
+              },
+              {
+                "file": "virut.pt",
+                "bytes": 2467358,
+                "sha256": "27e575c593cedd248e8645e8f80ef346e205f0379e7c2e3b2e4cecd39738c1fe",
+                "git_sha": "26680d2",
+                "pos_mode": "window",
+                "n_features": 62,
+                "feature_schema_sha256": "51ae1b5c9eb4d230c202fe69a6e0a6aa92c7a44dc73ef213b5ba5073bd3771e4",
+                "test_days": [
+                  "s05",
+                  "s13"
+                ],
+                "params": 611980
+              }
+            ],
+            "check": "ok: 7 folds, all trained at the run's start SHA 26680d2"
+          }
+        }
+      ],
+      "lr": [
+        {
+          "run": "lr-d042-g",
+          "metrics_json_sha256": "ab85064517e489259a4de9b5c5ace63c528459f32a2daacf0bd9aba883ab4f69",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": null,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": "none (deterministic baseline; refit by scripts/lr_baseline.py)"
+        },
+        {
+          "run": "lr-d042-h",
+          "metrics_json_sha256": "6ac1aaeb9be7717f8e1cb700460a51cf6b1991032eccdb6ae86a27efc759c59c",
+          "git_sha": "26680d2",
+          "git_sha_at_start": "26680d2",
+          "seed": null,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": "none (deterministic baseline; refit by scripts/lr_baseline.py)"
+        }
+      ],
+      "configs": {
+        "configs/ctu13_hostrel.yaml": "311eca428cef985c15da4f3359070e87a669684dd3872da4b1de437b3428a421",
+        "configs/d042/ctu_global_window.yaml": "26176b3438ec77c09b2dd309e609fa0d94125ad931c39e020054c1b2942127b7",
+        "configs/d042/ctu_hostrel_window.yaml": "090fa6e22d9287ffa666074fbf8f406e8b99b9f557c120abb8ef2f2bae9dbed8",
+        "configs/ctu13_folds.yaml": "8e54f0a0ff4396a1e16108edf282206f15f344be58c3ff3a6f42fb2250527000"
+      },
+      "data": {
+        "path": "data/processed/ctu13_hostrel",
+        "files": {
+          "meta.json": "e45323526f524006d47143ac09242aac91c7ff7c3aa4a5a40ddf3258c8052b8c",
+          "s01.parquet": "6dde9dc386010f6a6e4ad440f3795b4c3a538a743225f5f12516b32d78d16872",
+          "s02.parquet": "85e74295cb2fd1a024fc44c6262f2b0956640987a5ea5a1a7c21df3eb3bef5ca",
+          "s03.parquet": "1c0e8f2233864365603c297e2215889cf579b7b9cdebe79501cd66773a658449",
+          "s04.parquet": "0da1bdb1e18ef607444df6406e083316eb9ad06b3c9cb86af2fa22b8759687d2",
+          "s05.parquet": "f366993e10f731893b3ac48f5070a7d5197b0fb7c34a781d783044ac217b20ae",
+          "s06.parquet": "2a5b3d9efde5865bacb27fd226c372bc00b299f2a95d7a3d8457bee545dc0db8",
+          "s07.parquet": "3fc23cfc141d269e14bb9e703d6ebae68c97acfa292a559206da1150eb893f8b",
+          "s08.parquet": "c861820c39cab67f54a8c1cc9f0bcb716222963a5ad49f08bc97b2796233a554",
+          "s09.parquet": "a4a6e1bf0b52f1674cd1bdd83d6fc01e5d6dbfb8f04b40fe0208ee1831166d9e",
+          "s10.parquet": "8294ed9a3f4ce4985ab50b86800f051a8400561c8d815a0aa07ea10f95f6b71e",
+          "s11.parquet": "3b05fa52b080f9f5f5b53fd2bc31ea6c8f65ebdfc7e8e95ed825bd66edd4f074",
+          "s12.parquet": "82e151022ab815a45a3292957b6237190413ead893e2a1c978e2a7141f16edac",
+          "s13.parquet": "cae7630c2e76325fdf9bde32251fe5932157ab75cbd9af99cbe24100d3c3fe57"
+        },
+        "bytes": 4772335
+      },
+      "tables": {
+        "d042_scenarios.csv": "1c1bde1965f3b1351280b83d9c1a460cedc9564df13010b9832cb6b9f8b5a616",
+        "d042_scenario_matrix.csv": "523a90d75d9800ef6c5338735efa271696c5588ffb9d1eb21dcc4a3f3ed18743",
+        "d042_paired.csv": "d522fd5261b92ea538958cd7330f7f30f12c78c48e4d1a6360c8c8743d6ef5b1",
+        "d042_families.csv": "0d59dae07c3ab2dc34cd5e3da702f9cbef00be688d14ccccf35c63f210de8eb4",
+        "ctu_ci_d042-g.csv": "e25967bfa70de753bd49f517e86806508bd2be0a7db3780ffed006cb5839f4e0",
+        "ctu_ci_d042-h.csv": "42141877e0dc524cfd8429fdc48197d630bd33c57f336c2a3d20f5178e4ef713"
+      },
+      "run_folders": {
+        "d042-compare": {
+          "metrics.json": "3f748b680f6e1c728d26d29e7e6d55ddb0e9c570d1f9bca86c9ca9bbb289cd7b"
+        },
+        "ctu-ci-d042-g": {
+          "metrics.json": "7237f7af560d43bcd75a00e281961f1852201d65e8ca1cb59629060c8f5276a8"
+        },
+        "ctu-ci-d042-h": {
+          "metrics.json": "59d86948009c95343de5db37482856ef6a1d09cdc827c97d489bc3910faaabdf"
+        }
+      }
+    }
+  },
+  "m3_cicids2018": {
+    "E28": {
+      "decision": "D-037 verdicts: BruteForce and DoS transfer; DDoS, Web, Botnet partial; Infiltration inverted (feb28). D-039's question inconclusive by D-044's rule; S3 met nowhere",
+      "runs": [
+        {
+          "run": "m3-s42",
+          "metrics_json_sha256": "4546b8aacad3c9130aa7dcc76dd5b00a026f54a71fad4d6a856c3f29fd2f0861",
+          "git_sha": "2f2d380",
+          "git_sha_at_start": "daa9d18",
+          "seed": 42,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-29T01:31:20+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "botnet.pt",
+                "bytes": 2476178,
+                "sha256": "6f411793670f804214bb9422322a45ca9eb88d4e892d0e0cd8fb9841c8d7d3b5",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "mar02"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "bruteforce.pt",
+                "bytes": 2479138,
+                "sha256": "66d0b6bc57123535a1b5406474d268a748c85ec1761c111463acf09e34b0a18a",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb14"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "ddos.pt",
+                "bytes": 2476074,
+                "sha256": "d6a36a189fad91de372c0806f3ab30bc7785364258b07b6a9bc9dd3a49631963",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb20",
+                  "feb21"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "dos.pt",
+                "bytes": 2476022,
+                "sha256": "4c85323881bfedd77cf01dca3a00380c4e466528cd1de2a43bfd85885d7b6f7d",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb15",
+                  "feb16"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "infiltration.pt",
+                "bytes": 2479242,
+                "sha256": "061d9c2324b1fba9eaa0908c2dfd83d7d69350b2e94e933f3b075961a1a7abd1",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb28",
+                  "mar01"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "web.pt",
+                "bytes": 2476022,
+                "sha256": "965b547829d111eaa741992e33b8e45ab820afc41f4e0ae4a9b82dd91a264db2",
+                "git_sha": "daa9d18",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb22",
+                  "feb23"
+                ],
+                "params": 614044
+              }
+            ],
+            "check": "ok: 6 folds, all trained at the run's start SHA daa9d18"
+          }
+        },
+        {
+          "run": "m3-s43",
+          "metrics_json_sha256": "7632251b84a5f3cb4dd9eb7560a4caa142e3dd08efebe44498159e9e4e63bf7a",
+          "git_sha": "2f2d380",
+          "git_sha_at_start": "2f2d380",
+          "seed": 43,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-29T01:31:24+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "botnet.pt",
+                "bytes": 2476178,
+                "sha256": "0dce7ac731cdd756f1ed5c74ea37b7f05a4aa7d6945ca2893c4f24f67d808668",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "mar02"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "bruteforce.pt",
+                "bytes": 2479138,
+                "sha256": "6144135ef0002452ed19b63a39307640d7130e6a2fa7f2d1cd20866bf112985c",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb14"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "ddos.pt",
+                "bytes": 2476074,
+                "sha256": "a585141dcb5db80af28556eb80e2c5a8e837cd2dc019db2237012283d5e7d64f",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb20",
+                  "feb21"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "dos.pt",
+                "bytes": 2476022,
+                "sha256": "7a1f62cabee0ee07007c100d2bb8a3689bf2bcb160c395089ece0ab93a65f61c",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb15",
+                  "feb16"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "infiltration.pt",
+                "bytes": 2479242,
+                "sha256": "2f2fc3f6186a7e4942e0ec413c36cafeb28eaf2b9a4fd0449b47d7a09bd24865",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb28",
+                  "mar01"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "web.pt",
+                "bytes": 2476022,
+                "sha256": "e6d1bd08f82fc3d424c916617fdedcfb2e3ad783d800cb1a4063f835e748cc1d",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb22",
+                  "feb23"
+                ],
+                "params": 614044
+              }
+            ],
+            "check": "ok: 6 folds, all trained at the run's start SHA 2f2d380"
+          }
+        },
+        {
+          "run": "m3-s44",
+          "metrics_json_sha256": "25d0d43db0d27270661fdeda4e8385dc85efab5ee7e99a537eabaac7d10da07c",
+          "git_sha": "2f2d380",
+          "git_sha_at_start": "2f2d380",
+          "seed": 44,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": {
+            "hashed_on": {
+              "machine": "Atharv-laptop",
+              "device": "NVIDIA GeForce GTX 1650",
+              "utc": "2026-09-29T01:31:24+00:00",
+              "models_dir": "C:\\Users\\tiwar\\Desktop\\work\\security\\models"
+            },
+            "files": [
+              {
+                "file": "botnet.pt",
+                "bytes": 2476178,
+                "sha256": "5f6c85ca8986418992265b83928d894a740dd30611fab6c7844898e9313c5942",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "mar02"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "bruteforce.pt",
+                "bytes": 2479138,
+                "sha256": "beefbaf12be54c26fd32ee417bb89be6f927c30f2710a85affbe54bf6a9b02b4",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb14"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "ddos.pt",
+                "bytes": 2476074,
+                "sha256": "62be12c035e8797d5cc53f89e6875f42a77b2405de27a5a5037f2cdf9e1f3931",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb20",
+                  "feb21"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "dos.pt",
+                "bytes": 2476022,
+                "sha256": "a31edc696af4c5f94e624b87f3048b408fa59de5e306947de4257ee6ea165857",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb15",
+                  "feb16"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "infiltration.pt",
+                "bytes": 2479242,
+                "sha256": "4a9379d223aae1a0dcf1c9187ee55f80b878bb4f942417b43ccd1198f0beb4be",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb28",
+                  "mar01"
+                ],
+                "params": 614044
+              },
+              {
+                "file": "web.pt",
+                "bytes": 2476022,
+                "sha256": "ce4a5b0d77ce873a3812aa3057f4bc2ada752096f79a8e162632b5c2460cdadc",
+                "git_sha": "2f2d380",
+                "pos_mode": "window",
+                "n_features": 70,
+                "feature_schema_sha256": "9f59b0de3e19b6dc939e27a547f525b18dd8c130655350572c10b4a0e876823e",
+                "test_days": [
+                  "feb22",
+                  "feb23"
+                ],
+                "params": 614044
+              }
+            ],
+            "check": "ok: 6 folds, all trained at the run's start SHA 2f2d380"
+          }
+        }
+      ],
+      "lr": [
+        {
+          "run": "lr-m3",
+          "metrics_json_sha256": "9e98729d05d2524b4271683a8714b0c28d685c28bae6f8fb1d16f8e5552bc7f2",
+          "git_sha": "2f2d380",
+          "git_sha_at_start": "2f2d380",
+          "seed": null,
+          "device": "NVIDIA GeForce GTX 1650",
+          "complete": true,
+          "checkpoints": "none (deterministic baseline; refit by scripts/lr_baseline.py)"
+        }
+      ],
+      "configs": {
+        "configs/cicids2018.yaml": "0ce6e26fe92e6d3487dd96c1d977fbf07b918ef6aa9c62ad9a43a439cdc86f86",
+        "configs/cicids2018_verify.yaml": "f64a1382637ce0b5f41286edae07c68ed2a15840e2adea643795a6deeace4059",
+        "configs/cicids2018_folds.yaml": "fa3acff9829f8b11b4d66131b90074f6ac0d55d1f1ebdaf967331e4c2050e792",
+        "configs/m3/m3_stack.yaml": "e4eeaf3a2b2c247036f0dd73452ad147b716d66b522b59407d96f5b53c52c61f"
+      },
+      "data": {
+        "path": "data/processed/cicids2018",
+        "files": {
+          "feb14.parquet": "5114a5f37815f922aab13e9a0e0f0274077b433b349ea6324f3493f130afe734",
+          "feb15.parquet": "b708a738c9e4504eaf16dbf2dfa4445e880e03c4583e227978783301d050c014",
+          "feb16.parquet": "6e8c5994b0c9cccde34fbc9dbf31fb465526315ed1373769fd32441f602625c8",
+          "feb20.parquet": "5432802ce89eff59ee78dae45cc205f223971b48c56d69a8edbae384b3a396e0",
+          "feb21.parquet": "f5358fe202f8b1185068771883d549bc4812527337cb18ab760b138e5fbbd9cd",
+          "feb22.parquet": "2358059d81aeb656521133ff0df188500f8a9548d8d7434028a8e70f64982fe1",
+          "feb23.parquet": "140d2a13b5d2a95512491bbb3ea2014a6333453eeddfee615145c0c25e29d231",
+          "feb28.parquet": "3fd5248e8d873c3c0cd2cad0373957de01e946dcc27ba8ca0bcabaf8605804b2",
+          "mar01.parquet": "d77ba0cbb5ef0c4abb01993b19c94506dd8d64b8e41a64f96cfdb85b8e466a1a",
+          "mar02.parquet": "02a459f2793dfdd9d614956c640a622ff5523c00e16d25ddb348b830dbfd6717",
+          "meta.json": "5f50da20bfe5cce399af2e1876d5e4467f510335ff479ecf3f6722c13305a822"
+        },
+        "bytes": 5002958
+      },
+      "verify_data": {
+        "path": "data/processed/cicids2018_verify",
+        "files": {
+          "feb14.parquet": "5114a5f37815f922aab13e9a0e0f0274077b433b349ea6324f3493f130afe734",
+          "feb15.parquet": "b708a738c9e4504eaf16dbf2dfa4445e880e03c4583e227978783301d050c014",
+          "feb16.parquet": "6e8c5994b0c9cccde34fbc9dbf31fb465526315ed1373769fd32441f602625c8",
+          "feb20.parquet": "5432802ce89eff59ee78dae45cc205f223971b48c56d69a8edbae384b3a396e0",
+          "feb21.parquet": "f5358fe202f8b1185068771883d549bc4812527337cb18ab760b138e5fbbd9cd",
+          "feb22.parquet": "2358059d81aeb656521133ff0df188500f8a9548d8d7434028a8e70f64982fe1",
+          "feb23.parquet": "140d2a13b5d2a95512491bbb3ea2014a6333453eeddfee615145c0c25e29d231",
+          "feb28.parquet": "3fd5248e8d873c3c0cd2cad0373957de01e946dcc27ba8ca0bcabaf8605804b2",
+          "mar01.parquet": "d77ba0cbb5ef0c4abb01993b19c94506dd8d64b8e41a64f96cfdb85b8e466a1a",
+          "mar02.parquet": "02a459f2793dfdd9d614956c640a622ff5523c00e16d25ddb348b830dbfd6717",
+          "meta.json": "d1e24680593642f9caf81a8c8499ef25e41b27f7ebf36097cf1910d149452903"
+        },
+        "bytes": 5002972
+      },
+      "builds_compared": {
+        "day_matrices_byte_identical": true,
+        "meta_identical_but_bookkeeping": true,
+        "bookkeeping_set_aside": [
+          "git_sha",
+          "config.interim_dir",
+          "config.processed_dir",
+          "splits[].build_s"
+        ]
+      },
+      "builds_identical": true,
+      "tables": {
+        "e28_m3_days.csv": "ba39f0af679de65fb7586f40db55647932c5d7faba4dc668d101ef2d6c91cee3",
+        "e28_m3_families.csv": "bb1e4f119190d47a1acfb209d8cc212a0a750181d7c62489264cb2cd810743c3",
+        "e28_m3_ci.csv": "ddd2db394af74fd7049fe19222f14a62093f8bd0fefcdb378a7cf583549a04f8"
+      },
+      "run_folders": {
+        "e28-m3-matrix": {
+          "metrics.json": "2acfc19d5bcce38f751f649b11d0b784b52040d6422e25fc86330f1f3d932fb3"
+        },
+        "m3-logs": {
+          "chain.out": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "compare-builds.after-oom.log": "2cff961629cb34ca6b64e9509367795a6ddd288618993ed512034b7ea437adb9",
+          "compare-builds.log": "8f58675436c2b786f8baa801a216e24beda575c11e38677e7d69a3250321246d",
+          "freeze_build.log": "5ce2b61e9d8c3dbd9f36f19a08d69576f7bb2857c04b9c241e8b40795a04986c",
+          "lr-m3.log": "9820ea1a8e9fc95d15c14d4a91740cbf6770523df3dfa528cd0498298518d623",
+          "m3-matrix.keyerror.log": "30f691489d054435f4fe334cbfe48cf5055feee7bba191974dfcd87de9054418",
+          "m3-matrix.log": "2d38a85651605328d01fdaaf3b0416739dc96d66a3736c2d5d0a85b2668d3bd0",
+          "m3-s42.log": "77091afd5bfb1a4010d8ab7a9025d3e3ea9f691282adcb77a911241662203bc7",
+          "m3-s43.log": "4f419a92d8429850147f96dca02607b2933fe5012ffc021c4c0a186406a491d5",
+          "m3-s44.log": "9361a867f5b7b36e0a00cbd5d013ee1e55ee3918512ca6dbe95a738a7c95c9fb",
+          "m3.status": "adca016d3d6f5a556d98b6f30ab12d9258518afc802ca239218cb64cc24ac583",
+          "run_m3.sh": "bf7963f273a31bf24c628c6ade6b46b97de374d5978120b57a98d43deb09be73",
+          "verify-build-1000000.log": "87fb52203aa5e3a52eca9b0e3c2dcfd119c96bd207f18c679fa85708cf93f3c2",
+          "verify-build.oom-feb20.log": "aa2a8507bbe4e043c31fd54edda06905ad3a14408a974cba4a2015b7fe5de261"
+        },
+        "m3-build": {
+          "build.log": "d18b4c31fde372dd36ea8d5cb6713143b41ebed5d47b8ac1ce65c16913f8067d",
+          "build.status": "dfef4358410230a688f726f684f36a3f43a0e0e2f3f20b01ae9266459f1d9764",
+          "check_chunking.log": "2d8402a1fdc46d9cad1bba58bc32e63567721c22d72d0910286f87cd12198e5b",
+          "extracted_crc_check.log": "e5d459b9a9e329557a35995fe87b6ca17f2b6e2f008dadab0a2ad7e0a6352495",
+          "run_build.sh": "b5507882d210754c41f162808251a70d6ec77b5bf033f219b58c7e8d096f4cc2"
+        },
+        "m3-inspect": {
+          "inspect.json": "e55e534e9dd69bbed96a08723a4b5821996bf03b1f4a757bb01ba673c97c77cc",
+          "inspect.log": "3693b2eeb80d646588368c12ba156d5044881782aeeca2e4ba26b17561ed2447"
+        }
+      }
+    }
+  },
+  "architecture_decision": "D-045 (N-7): stay with the Transformer + RSSM world model on the network-global state; no per-host model and no GNN (deferred, untested); no further training run",
+  "open_items": {
+    "N-9": {
+      "status": "open",
+      "converter_correctness": "substantially validated (D-043): the served PCAP route's live scores follow its training-state scores at 0.9909 (were 0.1035, Thursday 16:40 slice); full Tuesday gives 321,644 flows, the corrected CSV's count; one regression test per converter rule",
+      "exact_parity_criterion": "not met: check 4's flow block is not exact on full Tuesday (14 of 67 flow features exact, 64 within 5 %); still at 5 % or more: {'active_mean_mean': 0.0901, 'uniq_src_ip': 0.0521, 'fanout_mean': 0.0536}",
+      "pcap_model_quality_validation": "not performed: no live-PCAP detection or forecasting number is claimed, from the demo capture or anywhere"
+    },
+    "N-9(a)": {
+      "status": "resolved (D-046)",
+      "detail": "the 17 served fold files are tracked and equal their manifests (17 of 17); a fresh clone with no weights copied in passes F8 (results/runs/f8-fresh-clone/: passed = True)"
+    }
+  },
+  "raw_inputs": [
+    {
+      "path": "data/raw/CICIDS2017_improved.zip",
+      "sha256": "97fdb91d339e2d8cf5627f981b831e5e7e400b981c58181c451a38fd03c48883",
+      "bytes": 343549013
+    },
+    {
+      "path": "data/raw/cicids2017_improved",
+      "files": {
+        "friday.csv": "ebd499e6f23bd59f9cb81bec28178491b02b925fa5640a24215c9437d79482d0",
+        "monday.csv": "51fe5dc962626efb4ae70dce0303072fb780da0932822b651202ee9c2fbc1aff",
+        "thursday.csv": "78a4d11eaf473d099e30e71ddb01e0f38218e844c0a9cdd36602145d674af482",
+        "tuesday.csv": "e2a0a5b631dfc6b455cc9f9a88b944110637d70a7f74171473925f76f38b6b0c",
+        "wednesday.csv": "bf46c5f3c792e8817381f724511229569606918eaf07ac986d7a2592b6341bc2"
+      },
+      "bytes": 1152270765
+    },
+    {
+      "path": "data/raw/ctu13",
+      "files": {
+        "fetch.log": "9e04c4f68e59c78f1e0da3b971bcb66c5a40b263aaa5782b918fb3bb4947d98e",
+        "fetch.sh": "e475dee477dc0b4129ad46b3ef71c31bf34d097ba1e74fd74588b8b8beb21d11",
+        "scenario01.binetflow": "be09f7f6a06beef0134152dc88bff85f0027db4affe07b3fbe956bbb49be5430",
+        "scenario02.binetflow": "7b5bbca3cc8acc5ac13153ec96cf0168a9e2e8ba084b36576e9853ffebb72dca",
+        "scenario03.binetflow": "0ebcd1df082bb5f85f8254c3857b02fdbb597c9b2ee7c50f908cc24ca92c0054",
+        "scenario04.binetflow": "30353fcffe971e97839ccffaa1675535490420f1ba1f65e5c90f6a815a8ab2c0",
+        "scenario05.binetflow": "ef5c9ed6895d4ca5aec723449dae30054ccd1f6b091713a52ffcb681ff78a02c",
+        "scenario06.binetflow": "801800eeda9a5a44868b1e3e492f93dc6d52b5d14566c1d8431c9e85d0d2adaa",
+        "scenario07.binetflow": "df0b5338190b967bd340a0d6c1bb3c34d1bbfb4b7ffa764c2dd26f77f1a26680",
+        "scenario08.binetflow": "c3884b629e152e3144c2d7250d01939c199fa8a135a88f0c775ee3be0237f01f",
+        "scenario09.binetflow": "c8de257b6207ec3624467da62e91841073256fbdad5434db5eb5667588178bab",
+        "scenario10.binetflow": "840a7030d57cb965a4e6e19c61e89b20647a4aefe5608c2da90623710e7cd74f",
+        "scenario11.binetflow": "cee542d4b5efe4fa1cd59b87ece5aaea9a13d8f0abe56cd07cee31590736428c",
+        "scenario12.binetflow": "1098f0addacedc321c7baefad63ef0d9a0f26630d0155087d37e8da770dd9f2e",
+        "scenario13.binetflow": "d1d8aaea885870c64615261bd78ebf569e7d5b41adab2a6f3008702f4ded4503"
+      },
+      "bytes": 2728326451
+    },
+    {
+      "path": "D:/CIC-IDS2018-improved/CSECICIDS2018_improved.zip",
+      "sha256": "7f7b6f8065a88527bcb6e1579f088e1d0480a49903c5fd7e4e907ab238344f6e",
+      "bytes": 10426851729
+    },
+    {
+      "path": "D:/CIC-IDS2018-improved/csv",
+      "files": {
+        "Friday-02-03-2018.csv": "f4641bab290bc07f48c560267250748f25ba0fa77029d02fe1d1c01bef3731d5",
+        "Friday-16-02-2018.csv": "a16b76a454a25fa4fd84c320f32e3164b22c09f537be3e77450ddeb2168a7622",
+        "Friday-23-02-2018.csv": "67aa9220ec27aaccd433a76853f10afdb3a2652284f573414c1dd39283241986",
+        "Thursday-01-03-2018.csv": "55b29d7b05cbe04192d31bdfe23e6c900c40d2497e26b21916e85c3cd64fc9e8",
+        "Thursday-15-02-2018.csv": "a4be06a9776310dee18e3dae93d6dfef385e8d61db2e1775fc4c104ba0ee09cb",
+        "Thursday-22-02-2018.csv": "cdfe956ccc1dcf18ab0e2c23fcae1aa4bfcb4f78f09d79eae58df1f44f80c6ff",
+        "Tuesday-20-02-2018.csv": "2c4cead8541ea84e6ef3be19c7fc1c61371c065bd3d3636a12f397bb1e9c22f0",
+        "Wednesday-14-02-2018.csv": "4ceed4ba26973004e3a86ae0c57d6a4ddd9742f1b222f44209cd7c1c48618fdb",
+        "Wednesday-21-02-2018.csv": "e41d41605d8ad0138eff538e3814621ae56185eea534c8e4929794f790c4d5f1",
+        "Wednesday-28-02-2018.csv": "419c3860788ba909b396ee8259c0f883da2cb58eb9f6d878407fed097225c2fa"
+      },
+      "bytes": 36044466483
+    }
+  ],
+  "results_md_references": {
+    "checked": 223,
+    "missing": [],
+    "rows": [
+      {
+        "path": "results/tables/e1_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e1_*_timeline.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e1-dataset-audit/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "09bf534bcb5d51644ea7ddee1f8c557d4fa92432e0738e6d93e7aa06601254bb"
+      },
+      {
+        "path": "results/runs/f2-trend-build/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "5f1e93f42c148375cd10cb125a4199787fbeeebf1fe0e9e6f5c5622be908662c"
+      },
+      {
+        "path": "results/runs/f1-v1-recheck/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "e53d1215bed827af000e4e94c9a72be15cea27249c27fc76926f7fa73803ebf2"
+      },
+      {
+        "path": "results/tables/f2*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/f3-hosts-build/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "3332333c29901196ede529058bf2b4cb3c8fc7b82677d50a2c5d0de58a718318"
+      },
+      {
+        "path": "results/tables/f2f3_feature_builds.csv",
+        "status": "file",
+        "sha256": "c69484b69e172ca66c9008df0db75c2e0d2627f91981e2e59eb85d580f9f45ec"
+      },
+      {
+        "path": "results/tables/f3_host_channel_stats.csv",
+        "status": "file",
+        "sha256": "15676b239c38d550a4c8eb257dbf126fa7838edde9a98751900c23746ffb317a"
+      },
+      {
+        "path": "results/tables/e2e3_baselines_lags0.csv",
+        "status": "file",
+        "sha256": "ceb14489fee214e1a040168a6d3daac2109f82b7d6a71f370648017d7fb1143d"
+      },
+      {
+        "path": "results/figures/e3_*_logreg_forecast.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e3_lead_times_lags0.csv",
+        "status": "file",
+        "sha256": "19064adb8b248410010227767d772984769c3530526556934b99978a16728e7d"
+      },
+      {
+        "path": "results/tables/e4e7-worldmodel_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e5_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e12_precursor_effect_sizes.csv",
+        "status": "file",
+        "sha256": "aaded04628ca52c5b28f64c96c92d2464266fa3b416dd9ff6f041b328f5f731b"
+      },
+      {
+        "path": "results/figures/e12_precursors.png",
+        "status": "file",
+        "sha256": "d8f65f7fe861a31ceafd2e941c5f1b6425ec2ee168236a6bfface7eeca16578d"
+      },
+      {
+        "path": "results/tables/e4e7-worldmodel-r2_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e13_scoring_rules_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e14_pmax_rescore_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e14_*.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e2e3_baselines_lags4.csv",
+        "status": "file",
+        "sha256": "a61a337c2c051c7a14bf8f55d370dbe38efbe5e473ebb91822eddb5b252843df"
+      },
+      {
+        "path": "results/tables/e10_ablation_summary.csv",
+        "status": "file",
+        "sha256": "31d15df0c3d6628850728bdd6310a562ecbf9df8bd7ae82d12277c62ba63159d"
+      },
+      {
+        "path": "results/tables/e17_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e17_reliability.png",
+        "status": "file",
+        "sha256": "ffec746e2fef84161914823cf681c5e5e1b8ed5aa4d9967926057141221cf19e"
+      },
+      {
+        "path": "results/tables/e9_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e9_*.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e9-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e11_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e11_*.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e11-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/f4-m1v2-build/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "77212eebfcb9f4c72397f6be0f3f961bb169da82f221a354a58f27db99309f17"
+      },
+      {
+        "path": "results/runs/f5-pcap-build-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/f6-ctu13-build/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "a2953cdbc77689a91da5ce03b35e7df045331098a0163912bf8a97ccd54121d5"
+      },
+      {
+        "path": "results/tables/scorecard_e19.csv",
+        "status": "file",
+        "sha256": "414079ec9c69b4adc9e7b5806496b5ee51f9f5be4cdeac3cf58d097378f006bd"
+      },
+      {
+        "path": "results/tables/scorecard_e20.csv",
+        "status": "file",
+        "sha256": "1ee49779f3ff7a0be9b18446132993c028f355f1c81bf612c828544fc51c2d7b"
+      },
+      {
+        "path": "results/tables/scorecard_e21.csv",
+        "status": "file",
+        "sha256": "7f5dc9345fd6baf576432603e08d5a19190cde37e73c3c117e437790e3f58c81"
+      },
+      {
+        "path": "results/tables/scorecard_e22.csv",
+        "status": "file",
+        "sha256": "1b55923fd381cd91f5e2af83f555621ad0ea4cce6b6e9e95fb92f5ee4513b4ad"
+      },
+      {
+        "path": "results/tables/scorecard_e23.csv",
+        "status": "file",
+        "sha256": "181bd1c016573ade1c5e1aedf52a6bece4b572fade91e2cd940787dc76b889cf"
+      },
+      {
+        "path": "results/tables/scorecard_e24.csv",
+        "status": "file",
+        "sha256": "08075eea7dfe85a24fde7e59fdc11dfd9805f8ba000400f4ffd81fc93e51671e"
+      },
+      {
+        "path": "results/tables/scorecard_e20r.csv",
+        "status": "file",
+        "sha256": "230e4b0094f07d9225abf32fd0d03e13a1b6688f6c682b495687322eee92c9c6"
+      },
+      {
+        "path": "results/tables/scorecard_e25.csv",
+        "status": "file",
+        "sha256": "122a41bce2caee608c318bf3f9846b7ffb841414f81c5adefd6fd8c04fcba262"
+      },
+      {
+        "path": "results/tables/e26_ablation_*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e26-ship-decision/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "5591c6b414cbae8ef99d82d1f235e89f7eb60ab84b09777a17a82ea133f51eda"
+      },
+      {
+        "path": "results/tables/e18_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e18_*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e25b_ctu13_scenarios.csv",
+        "status": "file",
+        "sha256": "72f49bebf1739566f99fcb076c2ada4c22575fb8d21f8584fe4f66c069a61101"
+      },
+      {
+        "path": "results/runs/e25b-ctu13-matrix/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "9967f117e606607bec9660f98ff0e1502135bb8201c6af79ced5d5ccdbeeb048"
+      },
+      {
+        "path": "results/tables/e27_pcap_route.csv",
+        "status": "file",
+        "sha256": "a086bb16d66aeffbdda781d91e59259a38b35c959abb9012e6b28fe361d10f83"
+      },
+      {
+        "path": "results/runs/e27-pcap-route/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "e03198943718e1724fe107a982810c90cc2ea75656f24caff2b159d31dc4ffcd"
+      },
+      {
+        "path": "results/tables/n6_ctu13_inversion_summary.csv",
+        "status": "file",
+        "sha256": "da152b6f69a702d9d14bd01633b80aa67ecb44ea9d1e88cb70ceb0fa9372b1e8"
+      },
+      {
+        "path": "results/runs/n6-ctu13-inversion/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "0266f5c699754a9f4c5ba1706542d7c16f1daa239b714aa702fc1d5d45a7729b"
+      },
+      {
+        "path": "results/tables/n8_ctu13_positional_length.csv",
+        "status": "file",
+        "sha256": "25635f2791d6d6eb485ecf0269a7681b5a62d9a891135b75d7213bf9fc65563c"
+      },
+      {
+        "path": "results/tables/n6b_ctu13_perhost.csv",
+        "status": "file",
+        "sha256": "1c897a6d5bfa8a477c954e61cd650729140deeb40a1f4ac3562e6382e030a9cc"
+      },
+      {
+        "path": "results/runs/n6b-ctu13-perhost/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "4002968b54c1b4f06632b87d58c6b04e2785a2023c752b957ff0821c38d6e90e"
+      },
+      {
+        "path": "results/tables/n6_ctu13_inversion_s42_summary.csv",
+        "status": "file",
+        "sha256": "e3d488f8ae45637610d3bd72f26ad36b03721ea8bcdb5f7e44c21eb815080066"
+      },
+      {
+        "path": "results/runs/n8-logs/run_chain_d041.sh",
+        "status": "file",
+        "sha256": "2e902e4f00ab73e689a063541bb4c4c2b25c5b0417c905a858a00b89e84eebf3"
+      },
+      {
+        "path": "results/tables/n8_fix_eval.csv",
+        "status": "file",
+        "sha256": "ad138d353d48cb5ae52b2adfea6d56291d43e59e41d58b0c3a094b74a3cf254a"
+      },
+      {
+        "path": "results/runs/n8-fix-eval/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "f12ab12b25ad3c3179a069c85aea269d3b5ee475763d32cc2ae9e2379b3efff8"
+      },
+      {
+        "path": "results/tables/ctu_ci_e25b.csv",
+        "status": "file",
+        "sha256": "b43eb053a00de807cbb44c4b0a3e41e07c8079dca8c1d0c8a6ff742f6adab67a"
+      },
+      {
+        "path": "results/runs/ctu-ci-e25b/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "e18348c78460bc09d3b3c4feafd78d786ebfb65ff8b3c9e92d9e4af1ed3ca135"
+      },
+      {
+        "path": "results/runs/n8-logs/run_chain_d042_par.sh",
+        "status": "file",
+        "sha256": "4671faa8ec6d0f70f5f0aed1e9fec242b7891378b6dd20c85e8f4f9874b7a1f5"
+      },
+      {
+        "path": "results/tables/d042_scenario_matrix.csv",
+        "status": "file",
+        "sha256": "523a90d75d9800ef6c5338735efa271696c5588ffb9d1eb21dcc4a3f3ed18743"
+      },
+      {
+        "path": "results/runs/d042-compare/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "1c4aaa80821e624e70b84715fb84a751a028b2ab0921c0a0f0c4a4960a13ce49"
+      },
+      {
+        "path": "results/runs/m3-build/",
+        "status": "folder",
+        "files": 5,
+        "sha256": "18a3e78a8448c0f273c2139a32860bf345c6d349cea78ea7bb221e5b50c263d2"
+      },
+      {
+        "path": "results/runs/m3-inspect/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "7d1058b10001b901bc0495929221b915d63035e61c40cea5ea6814abf0c4d770"
+      },
+      {
+        "path": "results/tables/e28_m3_days.csv",
+        "status": "file",
+        "sha256": "ba39f0af679de65fb7586f40db55647932c5d7faba4dc668d101ef2d6c91cee3"
+      },
+      {
+        "path": "results/runs/e28-m3-matrix/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "17925dcc5b6f40e37961eb23dc5e1afeaf1e8c73d097d64d4adc9d78415703ba"
+      },
+      {
+        "path": "results/runs/f8-final-e2e/",
+        "status": "folder",
+        "files": 3,
+        "sha256": "f041cc8f9f9c047e6d0ee3fa81d0cf8085fb9ad5e678610805bd319a84516f8b"
+      },
+      {
+        "path": "results/figures/f8_dashboard_thursday_demo.jpg",
+        "status": "file",
+        "sha256": "334c0ad2a5739e216816df07deb6c0674a7f9074889c90fe4526b3a6253ae2af"
+      },
+      {
+        "path": "results/runs/demo-r2w-figures/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "ca38f6b3cd67d86de3b26482a9b7c443851c6b8d9fee63488fb45b06825ba323"
+      },
+      {
+        "path": "results/tables/demo_r2w_alarm_runs.csv",
+        "status": "file",
+        "sha256": "21400f46970a6fd9422d75de9fec36e93ace338242088d50bebb6a0e16b0cbfa"
+      },
+      {
+        "path": "results/runs/check4-flow-match/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "69fd817b1f5e9c88dc4c3410914d6cb8c02eb0e2503174c5b204fea28201dc4f"
+      },
+      {
+        "path": "results/runs/e27-step8-decompose-served-d043/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "4b828dbd1170303492cedb4d128ebc265638c94e7a350f74190270b9edcf3ac3"
+      },
+      {
+        "path": "results/tables/e1_window_stats.csv",
+        "status": "file",
+        "sha256": "2dab8ea7f2c2fca0ff0a16737d5b81d656f0bd2277e7efc742256bb676e204aa"
+      },
+      {
+        "path": "results/tables/e1_label_counts.csv",
+        "status": "file",
+        "sha256": "3c6aa2217a33b203b4321e9118e5bfa1fe1dad6a536c4b67a14eeaa8c62a81bb"
+      },
+      {
+        "path": "results/tables/e1_attack_timeline.csv",
+        "status": "file",
+        "sha256": "8838ff79fb03297e6e627f71a7fa3b197226b285a7c6bd143905a050d94610b6"
+      },
+      {
+        "path": "results/figures/e1_monday_timeline.png",
+        "status": "file",
+        "sha256": "8b6e4cb882289548b3b9f1c35603f78213f55b8c5a645032e327104f3db6096a"
+      },
+      {
+        "path": "results/figures/e1_tuesday_timeline.png",
+        "status": "file",
+        "sha256": "16f7d39c18f417ddd48ce76858a98ad52234d61fa7509cc266b9663bbe03ec2d"
+      },
+      {
+        "path": "results/figures/e1_wednesday_timeline.png",
+        "status": "file",
+        "sha256": "b83149365aa69b81515ffca41971f3ffb1b2b02234d1f621892b0c2b36357054"
+      },
+      {
+        "path": "results/figures/e1_thursday_timeline.png",
+        "status": "file",
+        "sha256": "53bb98b617978502777a5c98c3323bbefe9e52ac97bee1b6735cac5787d9b27a"
+      },
+      {
+        "path": "results/figures/e1_friday_timeline.png",
+        "status": "file",
+        "sha256": "767e19e3c52d2fc45fad04b41e886cd0ceab6969a712fcaa6d2a0367e060d9c4"
+      },
+      {
+        "path": "results/runs/f1-v1-recheck/build.log",
+        "status": "file",
+        "sha256": "70a89407e47d72935160597233f314ec41dca91ca095749ee710113b4e4ad4bc"
+      },
+      {
+        "path": "results/runs/f2-trend-build/build.log",
+        "status": "file",
+        "sha256": "874feaa6ad9b4ade6cd797bb3fef3c44a38cbb5e6bc980aabd8a2f9129ff650d"
+      },
+      {
+        "path": "results/tables/f2_zscore_clip_rates.csv",
+        "status": "file",
+        "sha256": "7c1996b0ed7f0d963f243e2df8d3afa6d814e6db8a347649785bd77e72b1b14e"
+      },
+      {
+        "path": "results/runs/f3-hosts-build/build.log",
+        "status": "file",
+        "sha256": "de2f5b244207d57d7c4524bd0372921269d6fe9e7114e311efab6669c9597124"
+      },
+      {
+        "path": "results/runs/e2e3-baselines-lags0/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "52b37bf053c58886a54fc8b4f1755698c8844fac208fa78c7d9a1aea6588af64"
+      },
+      {
+        "path": "results/figures/e3_thursday_logreg_forecast.png",
+        "status": "file",
+        "sha256": "e8a50f4ea0d1502467cf10e72ef90221835cffeb5a023c2dce57d2fae03b15cc"
+      },
+      {
+        "path": "results/runs/e4e7-worldmodel/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "172c9485738983801ca405dd27f1190047f114d311c2d4b5ed699d67a9b94e5d"
+      },
+      {
+        "path": "results/runs/e4e7-worldmodel/metrics.json",
+        "status": "file",
+        "sha256": "ec0b6d461e34a00831df3d2920f565fb7bc3edb46bdc8768da05f6b5ecad6d17"
+      },
+      {
+        "path": "results/figures/e5_thursday_rollout_fidelity.png",
+        "status": "file",
+        "sha256": "fb1c8af6e70698d20239a50c3913721e2ea7341fe02470359dfa084a34c5abad"
+      },
+      {
+        "path": "results/runs/e12-precursor-analysis/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "74d0bd005558f2cbc660c0c2ea67d2f8ebd1ec66d7c870620397a8744c08c825"
+      },
+      {
+        "path": "results/runs/e4e7-worldmodel-r2/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "aaf16679ffb1428c3ff324ab24cbaf5fa3a1362c05393a69c114dae11aa51fbc"
+      },
+      {
+        "path": "results/runs/e14-pmax-rescore-e4e7-worldmodel-r2/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "206ff3d79585aeb600a7c1e83ae65097a723721067b2f1fbef0b8ad1482ffc28"
+      },
+      {
+        "path": "results/figures/e14_thursday_pmax.png",
+        "status": "file",
+        "sha256": "ee784e0c3327f5911da49adfd935b06294fde21ddaa8f1f86186291639c194ca"
+      },
+      {
+        "path": "results/figures/e14_friday_pmax.png",
+        "status": "file",
+        "sha256": "c5461d53cb85e44e73ebde351daddebf1dbfc8d20f47348599fc7ece5eee76cf"
+      },
+      {
+        "path": "results/runs/e15a-null-calibration-e14-pmax-rescore-e4e7-worldmodel-r2/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "37e969f181afeb0133f64270051d4b505f25b0dd8a2ef1dae3008025e6e79175"
+      },
+      {
+        "path": "results/tables/e15a-null-calibration-e14-pmax-rescore-e4e7-worldmodel-r2.csv",
+        "status": "file",
+        "sha256": "150b3bf1ed971e7e1b60e3b835f2195de3a9bb98aa667532130f1b2c0b4ab0a9"
+      },
+      {
+        "path": "results/runs/e15-precursor-r3-precursor-3seeds/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "2101e7332ed0fb47c81947d4abb6328012da36178ad81ed992c227bd9b94e7ee"
+      },
+      {
+        "path": "results/tables/e15-precursor-r3-precursor-3seeds.csv",
+        "status": "file",
+        "sha256": "ee73b100174b1634e0744ff1df3b554603f079b9b32bab17a5f7c7729608cf27"
+      },
+      {
+        "path": "results/tables/r3-precursor-s4*_training_curves.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/figures/e6_r3-precursor-s4*_*.png",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e16-precursor-r4-rank-3seeds/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "247aac672a693bfde260f744e80803f7bae54db657e698e081caabee2c961520"
+      },
+      {
+        "path": "results/tables/e16-precursor-r4-rank-3seeds_per_onset.csv",
+        "status": "file",
+        "sha256": "5ee735b7a27717e62be6d82635950d48cc0947fffd4abffd576b3c3da6ce4486"
+      },
+      {
+        "path": "results/tables/s8_thursday_onset602_windows.csv",
+        "status": "file",
+        "sha256": "2d1f3cd185bb98d5d30d2a6ae5206826e9d2779f0e2e684747662107fb53809b"
+      },
+      {
+        "path": "results/tables/s8_thursday_onset602_hosts.csv",
+        "status": "file",
+        "sha256": "7b3d11536f3b8e5036753ab9395b763ebfb07c5b1ca0eaaf84439718aee7b93a"
+      },
+      {
+        "path": "results/tables/e16d-precursor-r4-rank-whole-s42.csv",
+        "status": "file",
+        "sha256": "4406dd4de1c5a78c3117e2254983b9368fec998483d0ca5f8371b1fea59e6c1f"
+      },
+      {
+        "path": "results/tables/e16-precursor-r4-rank-3seeds.csv",
+        "status": "file",
+        "sha256": "13927415b4b24c2ead6d77646d67f689c30dd622cdf6c5ca5e098a83a0f2c760"
+      },
+      {
+        "path": "results/tables/e16-precursor-r4-rank-3seeds_combined.csv",
+        "status": "file",
+        "sha256": "34b90ac86eb97246b91d27662ddd9af0b7d24bfbf70b748c06afe3e2683a17e7"
+      },
+      {
+        "path": "results/tables/e16d-precursor-r4-rank-whole-s42_combined.csv",
+        "status": "file",
+        "sha256": "3eb0bf5c748a05926a6911114a0c452b9e2481d661669ac1c57da765ebf40fb1"
+      },
+      {
+        "path": "results/tables/e16d-precursor-r4-rank-whole-s42_per_onset.csv",
+        "status": "file",
+        "sha256": "589d4072014abd4911a9986388db3c9db6485a10865ff5986b03ea6034ca83c9"
+      },
+      {
+        "path": "results/tables/r4-rank-s4*_training_curves.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/r4-rank-*/train.log",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e10-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e14_pmax_rescore_e10-*.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/e14-pmax-rescore-e10-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/e18_window_scores_e4e7-worldmodel-r2_thursday.csv",
+        "status": "file",
+        "sha256": "31ae7e25adda5ca33daab837482382514a06b93bcd28e347f6fcb0cf4c6843b0"
+      },
+      {
+        "path": "results/tables/e18_window_scores_e4e7-worldmodel-r2_friday.csv",
+        "status": "file",
+        "sha256": "89a59a96487d91e0ac5ae8e133611e456495243a637fe821eee69adb1f928ab5"
+      },
+      {
+        "path": "results/tables/e18_score_distributions.csv",
+        "status": "file",
+        "sha256": "62bbe0003355b68c8eb31730e29a1344f9c97743a63098c51a078b6a541230fc"
+      },
+      {
+        "path": "results/tables/e18_policy_summary.csv",
+        "status": "file",
+        "sha256": "782e98e95fa0d0961ec1157e27b6dc47e6ab445c254b3f278444b2e85d6c3277"
+      },
+      {
+        "path": "results/figures/e18_thursday_thresholds.png",
+        "status": "file",
+        "sha256": "e400dda43d2c8f4feb8f6ece368c6a0edb44476b831c617a8c1887ce461337ee"
+      },
+      {
+        "path": "results/figures/e18_friday_thresholds.png",
+        "status": "file",
+        "sha256": "3e56f821c6940b73e17f5b4c715d14fddc48c01865e974921b96947e0f6ce66e"
+      },
+      {
+        "path": "results/figures/e18_score_distributions.png",
+        "status": "file",
+        "sha256": "5fc60bdc7f92b7c67d6b09dcdd64aa2c90849fc99356e2e08e0990a12a20c15f"
+      },
+      {
+        "path": "results/tables/e9_e4e7-worldmodel-r2_confusion.csv",
+        "status": "file",
+        "sha256": "664b3a10d9118f6d886f19675e69531f8db145822761e878943d00ac70761efc"
+      },
+      {
+        "path": "results/tables/e9_e4e7-worldmodel-r2_per_stage.csv",
+        "status": "file",
+        "sha256": "42b8820ffef1507b5b6d4021a0a01627e7307e9343456de3576c4d9e023d5b38"
+      },
+      {
+        "path": "results/figures/e9_e4e7-worldmodel-r2.png",
+        "status": "file",
+        "sha256": "78308ba3ce50a8451e1d1e29d9e097da6db39a4bb131f6463455bf170f02868a"
+      },
+      {
+        "path": "results/runs/e9-e4e7-worldmodel-r2/metrics.json",
+        "status": "file",
+        "sha256": "1b07a277ea4682d6969889c0fbbb02fbd20927cf6ef359daf0a381d3e522e588"
+      },
+      {
+        "path": "results/tables/e11_e4e7-worldmodel-r2_episodes.csv",
+        "status": "file",
+        "sha256": "d3ed3f3aa44c19c05f279b09456b28c79f8959942d1ac786997a8494bf1f7fca"
+      },
+      {
+        "path": "results/tables/e11_e4e7-worldmodel-r2_rankings.csv",
+        "status": "file",
+        "sha256": "d8da8e49568e762807d2877a227feb91fd39a9956321e37446d5d7f11bb4f668"
+      },
+      {
+        "path": "results/figures/e11_e4e7-worldmodel-r2.png",
+        "status": "file",
+        "sha256": "0a55934f4c4f97d1df1ee40a35365fadf080529634e8d9e53ae9c53b29b251b8"
+      },
+      {
+        "path": "results/runs/e11-e4e7-worldmodel-r2/metrics.json",
+        "status": "file",
+        "sha256": "ccd23a8cbeb0629ee9e630f5fe0401517313b5dbeedf1a8634e3d5945d94dbda"
+      },
+      {
+        "path": "results/runs/scorecard-*/metrics.json",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/m1v2-e*-s*/",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/m1v2-sweep-logs/",
+        "status": "folder",
+        "files": 37,
+        "sha256": "6fcdcd28dabd1a55f386c7756cd65d6a072c0a85ff4a3e5034cc5756c5134857"
+      },
+      {
+        "path": "results/runs/scorecard-e25/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "9e977babbade3321bbb386631319513c76f47899e84fcf5a1f411bc41166f820"
+      },
+      {
+        "path": "results/runs/e25-ctu13-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "9168061af28fd97baeba0250988b760dbc368aad92a2cbb387734cc950fc6215"
+      },
+      {
+        "path": "results/runs/m1v2-sweep-logs/e25-ctu13-s42.log",
+        "status": "file",
+        "sha256": "4d48b7c0e932b40cfb86d4146d14814a38454b54023b95a2bf58d28ff1785019"
+      },
+      {
+        "path": "results/runs/m1v2-sweep-logs/e25-ctu13-s42.interrupted.log",
+        "status": "file",
+        "sha256": "c47e48d5ce700b4a9d2eaf2eaf5ceed4832fbaec47448746342a2f4cf3cd85d5"
+      },
+      {
+        "path": "results/runs/f6-ctu13-build/build.log",
+        "status": "file",
+        "sha256": "ef735b4659953deac77bbf3aec74138e491ba68e3d36175d695bf530fe7fd6af"
+      },
+      {
+        "path": "results/runs/reference-m1-2026-09-28/manifest.json",
+        "status": "file",
+        "sha256": "e72caa87a1e8d81b43a17cca28e12980d54cbfd51a879055c07c5b3a3dc17f59"
+      },
+      {
+        "path": "results/runs/parity-thursday/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "a8669312c8af175d81b63a4da3870a7e12a05214b2214a988c24583c9acba668"
+      },
+      {
+        "path": "results/tables/e26_ablation_matrix.csv",
+        "status": "file",
+        "sha256": "0eae7528d62a635aed72fad6226c1b67c9ff04728ffab19244196144d7977692"
+      },
+      {
+        "path": "results/runs/e26-ship-decision/metrics.json",
+        "status": "file",
+        "sha256": "a620a4f8f814f0e4eb0743f431ed89f572d85eb410379a82f4a88e8c4c6f02ab"
+      },
+      {
+        "path": "results/runs/m1v2-e26-s4*/",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/m1v2-e26-s4*-csvmode/",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/lr-flow-s42/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "c596443c5d2dd7b14103a02873e45d8c7a88a845454eb0141555795af8c1c0c6"
+      },
+      {
+        "path": "results/runs/e25-ctu13-s43/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "5767dea1073c1a7d8188d14aad3e233d6b3271ca88e456b680dab7ca6be31d95"
+      },
+      {
+        "path": "results/runs/e25-ctu13-s44/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "4fd64898028cc7c295360d9521f86f1ed0fef6f814791d0264b825f02e66f6e5"
+      },
+      {
+        "path": "results/runs/lr-ctu13-s42/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "ff9da8fa706b2628fceef0922bc7b758e4f70d05e61c7419d9fe2fe062400fff"
+      },
+      {
+        "path": "results/tables/e25-ctu13-s43_forecast.csv",
+        "status": "file",
+        "sha256": "cced0ee240a1982dc4c46ff3bdbfd3cb0bd23f66085ec389780e11d9354c9d35"
+      },
+      {
+        "path": "results/tables/e25-ctu13-s43_training_curves.csv",
+        "status": "file",
+        "sha256": "d94a9848d590036e4917fdd4a57ba297667f4c26db6037a015c8802f70297c48"
+      },
+      {
+        "path": "results/tables/e25-ctu13-s44_forecast.csv",
+        "status": "file",
+        "sha256": "e15b68942168449b07439d0c82081ab02bf841ffc3ee3a59d8f520ceaf044fd9"
+      },
+      {
+        "path": "results/tables/e25-ctu13-s44_training_curves.csv",
+        "status": "file",
+        "sha256": "46e3660f6abf5a6c48c5e75513174ce2dcda7b6127000dbeb1fbdf7adcba4fa9"
+      },
+      {
+        "path": "results/runs/m1v2-sweep-logs/e25-ctu13-s43.log",
+        "status": "file",
+        "sha256": "788df57a27419d6d3c8b5148dc23e3a9ffa85ac59186242ea1c5ab0f478671a0"
+      },
+      {
+        "path": "results/runs/m1v2-sweep-logs/e25-ctu13-s44.log",
+        "status": "file",
+        "sha256": "249ac8a7c3c165814c087a717f15304c47d805136f1c480b434849b7d8bbb67f"
+      },
+      {
+        "path": "results/runs/e27-parity/",
+        "status": "folder",
+        "files": 4,
+        "sha256": "f935070c9ce90d37bf10c2aecbe1660e85b464b8e984c074f4227f2189d9e1fe"
+      },
+      {
+        "path": "results/tables/e27_parity.csv",
+        "status": "file",
+        "sha256": "4d4351eaac5470aa9c44dfb957c5ea2a994ae5b67b6ac30b302c002b6511a343"
+      },
+      {
+        "path": "results/runs/e27-parity/parity-live-tuesday.log",
+        "status": "file",
+        "sha256": "5bc5ce389fbc3080a6b51fcd442b9c45d9324e054fc4e767343e76af9039f4b2"
+      },
+      {
+        "path": "results/tables/e27_parity_live_pcap.csv",
+        "status": "file",
+        "sha256": "00772fd9bff6e44dc1ba17f0827a4b88c540e3e782f64c8ec1d730678fbca05e"
+      },
+      {
+        "path": "results/runs/e27-parity/parity-live-tuesday-d040.log",
+        "status": "file",
+        "sha256": "f95a682ccbe256b35f2bd64ef047603911b320514191497d305c935a6b9a771e"
+      },
+      {
+        "path": "results/runs/e27-same-traffic/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "73818e884c51b2f79c825b9c38fa8ca63a432ac96712c48eeb4e08838a4b1107"
+      },
+      {
+        "path": "results/runs/e27-step8-decompose/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "49100b2b1eeeb2cdd17d2e745248d1ef4143ee474a3700a774d1e585d186f625"
+      },
+      {
+        "path": "results/tables/e27_step8_decompose.csv",
+        "status": "file",
+        "sha256": "f218ebcd84de8004070e61ab8aecbc9bcf7321d78cd14489e2d8e00c3748e8da"
+      },
+      {
+        "path": "results/runs/e27-parity-thursday-1640/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "2d25a5dfe1ba609faabf6107925f80079fe6b313d263174aadd26d1be4c873f2"
+      },
+      {
+        "path": "results/tables/e27_parity_live_pcap_thursday-1640.csv",
+        "status": "file",
+        "sha256": "f5ba2ff06513e21a2a95ad0653b71f98837c6f5126753940cb0d197d169edb54"
+      },
+      {
+        "path": "results/runs/e27-e20r-mean/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "cd698d9f057e6777bf019c4016fbc74b4bed66a81806a2664ce357f19838b389"
+      },
+      {
+        "path": "results/runs/e27-check4-dedupe-ab/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "ec2ac149a3e5f39902f2b8167b392811fade4ff3a1b9a6225673c17eb0e97102"
+      },
+      {
+        "path": "results/tables/e27_pcap_route.md",
+        "status": "file",
+        "sha256": "e6f44df2097c1e780d0be7f45860fabd514a385eef5801c8205328cd4528fb66"
+      },
+      {
+        "path": "results/tables/n6_ctu13_inversion_features.csv",
+        "status": "file",
+        "sha256": "39431301387c3706dbef5c115964cbd5006dab98d6958f6b854d4034c6fb2d08"
+      },
+      {
+        "path": "results/runs/n8-ctu13-positional-length/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "71889071d2538ea6ee6b9566461becfab3dbd02235e935937082bb399a96a48a"
+      },
+      {
+        "path": "results/tables/n6b_ctu13_perhost_hostlevel.csv",
+        "status": "file",
+        "sha256": "b8cbaef2411c5e80cc8962e81701bd330ba6b6c0825ff8bb6dd124e0d5ad2ab4"
+      },
+      {
+        "path": "results/tables/n6_ctu13_inversion_s42_features.csv",
+        "status": "file",
+        "sha256": "fa087eb5df7cae5e94640d83069e23237c1e77cadb98ab684ca55a2a137f4804"
+      },
+      {
+        "path": "results/runs/n6-ctu13-inversion-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "7bf0f5924c1a05cc7290ef075df86d8e16d381676d470cd6ea5874822356b6a1"
+      },
+      {
+        "path": "results/runs/n8-logs/stopped-*",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/n8-e20rw-mean/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "bc45efdbd4b8b48715e62d28d5c6675790c20cb25a4e7062fb7a0e4a0bdafce1"
+      },
+      {
+        "path": "results/runs/m1v2-n8-e20rw-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "2cb8ca363f48954a1e074946b775cbb12497572e87c065749ec86206d8a79d64"
+      },
+      {
+        "path": "results/runs/m1v2-n8-e20rw-s43/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "790bc04bed47d6478f3a94faf5d049ff2ef18ef7a28e79663282d1307b851792"
+      },
+      {
+        "path": "results/runs/m1v2-n8-e20rw-s44/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "3164fff3666b7cfd7ce7b396d49f470674ca603d98e0605fa0c161b32dd330bd"
+      },
+      {
+        "path": "results/tables/<run>_forecast.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/<run>_training_curves.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/n8-logs/",
+        "status": "folder",
+        "files": 41,
+        "sha256": "8bf3128f41be0509ad5f159e859ee3bb128320fdde7fc3954f439c5b60aacb72"
+      },
+      {
+        "path": "results/tables/d042_scenarios.csv",
+        "status": "file",
+        "sha256": "1c1bde1965f3b1351280b83d9c1a460cedc9564df13010b9832cb6b9f8b5a616"
+      },
+      {
+        "path": "results/tables/ctu_ci_d042-g.csv",
+        "status": "file",
+        "sha256": "e25967bfa70de753bd49f517e86806508bd2be0a7db3780ffed006cb5839f4e0"
+      },
+      {
+        "path": "results/tables/ctu_ci_d042-h.csv",
+        "status": "file",
+        "sha256": "42141877e0dc524cfd8429fdc48197d630bd33c57f336c2a3d20f5178e4ef713"
+      },
+      {
+        "path": "results/runs/ctu-ci-d042-g/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "ae37dc061b781f9c0495a8d68f4651b01dda36cea7983a0c8bb458133d3eb9f8"
+      },
+      {
+        "path": "results/runs/ctu-ci-d042-h/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "9b681d0d80fab2663feb1b76c97733cc5391a4a25c2c3ce3afb3fbd2af441343"
+      },
+      {
+        "path": "results/runs/d042-g-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "c262aeede554de427036e84454cfb1ddf5281c4abc953fe88045346ad94fc15c"
+      },
+      {
+        "path": "results/runs/d042-g-s43/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "dd149d0cdc4acc9677f7cc20c57e0060a0ff911b70fabf7936dd5f888cf53877"
+      },
+      {
+        "path": "results/runs/d042-g-s44/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "438e21a321c1b6fc69bd29c9ecf27c61b4faef9bb6473d31b97ec685442ffb9f"
+      },
+      {
+        "path": "results/runs/d042-h-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "74b801404f39e6583b57f2a59867d674bbf3b00fd53c7b7555ebd353650a77a2"
+      },
+      {
+        "path": "results/runs/d042-h-s43/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "75f3917a5a268e2f173bd28154be0cc53de2e6d4e1503a5d39b747e100782966"
+      },
+      {
+        "path": "results/runs/d042-h-s44/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "a53c3e85b3a37f403ef79310f09c90bd4c3c6c83d9575365ec19e87c47e96918"
+      },
+      {
+        "path": "results/runs/lr-d042-g/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "0c47d0425a635e787325efb7139ed404d81761ded112f58a1aa9015fa6f20221"
+      },
+      {
+        "path": "results/runs/lr-d042-h/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "1da8ac0cbb7fedb441ce2d819369f7554861066341c66cb7e52944c9e16850e2"
+      },
+      {
+        "path": "results/tables/d042-*-s*_forecast.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/d042-*-s*_training_curves.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/m3-logs/compare-builds.log",
+        "status": "file",
+        "sha256": "8f58675436c2b786f8baa801a216e24beda575c11e38677e7d69a3250321246d"
+      },
+      {
+        "path": "results/runs/m3-s42/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "40f1fa5a342731d957f537adc0bb734e3d27f927da1313fe32d3ef44883cda13"
+      },
+      {
+        "path": "results/runs/m3-s43/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "f1256e9c24d84fae6bee194e013776abe9945e58d8075e6e4b38e842ffa69a54"
+      },
+      {
+        "path": "results/runs/m3-s44/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "96f1bee1ba87e5ad321de924ff0938fcf57fb91bd1b260db673cd8110d6c2090"
+      },
+      {
+        "path": "results/runs/lr-m3/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "c41408b5d6c2d488302462d1865f840143d3aeb99e435435d1377030a4e89ece"
+      },
+      {
+        "path": "results/tables/m3-s*_forecast.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/tables/m3-s*_training_curves.csv",
+        "status": "pattern (not checked)"
+      },
+      {
+        "path": "results/runs/m3-logs/",
+        "status": "folder",
+        "files": 14,
+        "sha256": "a145c8c5721bb58a6c05dc73af7fb409737ce45563244515b5f1b71744a18bff"
+      },
+      {
+        "path": "results/runs/f8-final-e2e/metrics.json",
+        "status": "file",
+        "sha256": "0db2c195a9170271ff3e95fa5d7ab3d975bcb38863a43e683e2bd2f6cedfa6be"
+      },
+      {
+        "path": "results/runs/f8-fresh-clone/",
+        "status": "folder",
+        "files": 3,
+        "sha256": "c9927d5c76176991dfdb55149817886f45cf5b9584db9ee147f85385664245d3"
+      },
+      {
+        "path": "results/runs/f8-final-e2e-d043/",
+        "status": "folder",
+        "files": 3,
+        "sha256": "20e44adcf513846fa0022af688c0746705dd4d0e162ffe15dcd1f7d6eec777a2"
+      },
+      {
+        "path": "results/runs/check4-flow-match-pre-d043/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "785bcfe9031f5e3cabbde34f0a4c4e759a0096587f6e78b8da586bffe73f5fe4"
+      },
+      {
+        "path": "results/tables/check4_flow_match_columns_pre-d043.csv",
+        "status": "file",
+        "sha256": "fbaa0f81625ca7f634fdb0e4b4bf9fcbc4c75c7f9f0ffd5e16370e3058becf0d"
+      },
+      {
+        "path": "results/tables/check4_flow_match_columns.csv",
+        "status": "file",
+        "sha256": "a39993512a6f87a89c7d0a1a7769d29ff790a2d1d95e9444771f89ef9d882f0d"
+      },
+      {
+        "path": "results/tables/check4_flow_match_unmatched_pre-d043.csv",
+        "status": "file",
+        "sha256": "00ed2dd56214da1d0443e5fcacdbd4febb24861a6a76997614ad9119c7855ab9"
+      },
+      {
+        "path": "results/tables/check4_flow_match_unmatched.csv",
+        "status": "file",
+        "sha256": "0587384e1195ab1fa970f85fa0fe27898d7dd474cf1e1f2647428a0659e4065b"
+      },
+      {
+        "path": "results/runs/e27-parity-thursday-1640-d043/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "4213a495c7d869af7da0663ee833503b20fca091347650be6ddbf408833ba7d6"
+      },
+      {
+        "path": "results/runs/e27-parity-tuesday-d043/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "7e0ae09b639f203b6120ef6b2cbb704f020196ef6410e48ed2f0a43d5232598a"
+      },
+      {
+        "path": "results/tables/e27_parity_thursday-1640-d043.csv",
+        "status": "file",
+        "sha256": "4d4351eaac5470aa9c44dfb957c5ea2a994ae5b67b6ac30b302c002b6511a343"
+      },
+      {
+        "path": "results/tables/e27_parity_tuesday-d043.csv",
+        "status": "file",
+        "sha256": "4d4351eaac5470aa9c44dfb957c5ea2a994ae5b67b6ac30b302c002b6511a343"
+      },
+      {
+        "path": "results/tables/e27_parity_live_pcap_thursday-1640-d043.csv",
+        "status": "file",
+        "sha256": "aeaa76e852b3079d9f4192b5a3d597688426ac9c47647e9aca51bc505f1fe0ae"
+      },
+      {
+        "path": "results/tables/e27_parity_live_pcap_tuesday-d043.csv",
+        "status": "file",
+        "sha256": "07c201085739aa6492183f200f3f307324e29296d84293d2f37affd7a7e7506b"
+      },
+      {
+        "path": "results/runs/e27-step8-decompose-served-pre-d043/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "15b153649790554eb3a40155cedda15a026ba77835c968408400e75f89e2890b"
+      },
+      {
+        "path": "results/tables/e27_step8_decompose_served-pre-d043.csv",
+        "status": "file",
+        "sha256": "a1b2e02b7b68c5dd120cb7edabfc49841ab1f91734c9e710342e0c31c8aeffa7"
+      },
+      {
+        "path": "results/tables/e27_step8_decompose_served-d043.csv",
+        "status": "file",
+        "sha256": "ecb3af0b7e47e10fcfc6719220790544069bdd921a884b55328a11ff7d90f802"
+      },
+      {
+        "path": "results/runs/pcap-converter-cost-pre-d043/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "b95820796e0f4a2c597839ac2c712846d90a833459cc24e4c7766bb18958b0d2"
+      },
+      {
+        "path": "results/runs/pcap-converter-cost-d043/",
+        "status": "folder",
+        "files": 2,
+        "sha256": "e894680f74032b869b1043a154b741dfb6ac6008bda92578595b79da2d3b062c"
+      },
+      {
+        "path": "results/runs/pcap-converter-cost-scratch-d043-dict/",
+        "status": "folder",
+        "files": 1,
+        "sha256": "e9077bf7c4f4ba7498b0fe1cf399aa56bd8154a8be44961bfdaa66e71e8cefcf"
+      }
+    ]
+  },
+  "problems": [],
+  "n9_after_m1_m3": {
+    "decisions": [
+      "D-040",
+      "D-043",
+      "D-046"
+    ],
+    "code_at_head": {
+      "src/netwm/features/flow_aggregator.py": "bfe2e695e8b1982f561b5b1d7bd27cd24e9360213a4d1b0f9a829d1e01b01945",
+      "src/netwm/features/packet_windows.py": "aa0517b6a4391630498858ad6dfbdb0609ac881d93f405c08512c37ef5cbd934",
+      "tests/test_pcap_ingest.py": "014fa8c5999ae84ae449be7d7276a0306654efb838d7435c7b9c8758ef0df5c6",
+      "scripts/check4_flow_match.py": "3ae53a47586dc8a09b01f33ea354e279c31f77b33f3f56b4cae3d53c4fee877e",
+      "scripts/pcap_route_parity.py": "00c969d2c45590f3a9838d59c8d5fee4c22d0c5ec3262686da32baf302139d35",
+      "scripts/step8_decompose.py": "0cc23735ac1a45f88a2e58efd12f81bae834bb12f7e3b0eb8af21886b4f1dc53",
+      "scripts/pcap_converter_cost.py": "df3c020ed34e1c70934ee9886159d11e846c2ba87b551494618484288fa771c0",
+      "scripts/final_e2e_demo.py": "5940f2d9eff5014fc354236c054f0928653fa0d5b4ef0db2867b343547148f43"
+    },
+    "tables": {
+      "check4_flow_match_columns.csv": "a39993512a6f87a89c7d0a1a7769d29ff790a2d1d95e9444771f89ef9d882f0d",
+      "check4_flow_match_columns_pre-d043.csv": "fbaa0f81625ca7f634fdb0e4b4bf9fcbc4c75c7f9f0ffd5e16370e3058becf0d",
+      "check4_flow_match_pairs.csv.gz": "97cea351d1ccaa19aa1f47178f9e6b709de4c95ccaa52511e9263dfe17fd70bd",
+      "check4_flow_match_pairs_pre-d043.csv.gz": "be203b443c299c24955f54c23d38d02193153f746c729b96706196a977f8feff",
+      "check4_flow_match_unmatched.csv": "0587384e1195ab1fa970f85fa0fe27898d7dd474cf1e1f2647428a0659e4065b",
+      "check4_flow_match_unmatched_pre-d043.csv": "00ed2dd56214da1d0443e5fcacdbd4febb24861a6a76997614ad9119c7855ab9",
+      "e27_parity_live_pcap_thursday-1640-d043.csv": "aeaa76e852b3079d9f4192b5a3d597688426ac9c47647e9aca51bc505f1fe0ae",
+      "e27_parity_live_pcap_tuesday-d043.csv": "07c201085739aa6492183f200f3f307324e29296d84293d2f37affd7a7e7506b",
+      "e27_step8_decompose_served-pre-d043.csv": "a1b2e02b7b68c5dd120cb7edabfc49841ab1f91734c9e710342e0c31c8aeffa7",
+      "e27_step8_decompose_served-d043.csv": "ecb3af0b7e47e10fcfc6719220790544069bdd921a884b55328a11ff7d90f802"
+    },
+    "run_folders": {
+      "check4-flow-match-pre-d043": {
+        "metrics.json": "fb4dbf7cc2e8f913dca1a9c5a17197cae1404f2978414e4904bd0663ac1a5594",
+        "run.log": "890d9e3318ac0ab2f2526a23a61a440985f699e5ebc9a281599126264c321011"
+      },
+      "check4-flow-match": {
+        "metrics.json": "559855f74c026778ebbfbaf664d49571170a5df23ac3f080a495f7c0c7a6c880",
+        "run.log": "acdb5addcf34bad969932d920e05c9d7045fb4533469c533cb7b18f08c915b78"
+      },
+      "e27-parity-thursday-1640-d043": {
+        "metrics.json": "31c80f3db169e1ed287cc05c97c013b128e0516e28f52270a6d8ff6f265997aa",
+        "parity.log": "1e4ce0c5ec6de2386692b8861e52be9d53640957a67a0df58269f693a91761fe"
+      },
+      "e27-parity-tuesday-d043": {
+        "metrics.json": "ff71b5e8cc6d98f7462891fdaa05cabac8bbc7272471e6147af7dc4723a934a9",
+        "parity.log": "a5cf1e85861db808a1660bce39fb1064fb0daf640254b277f755771029bca8d7"
+      },
+      "e27-step8-decompose-served-pre-d043": {
+        "metrics.json": "29bd6b112d90411e9fe604f9e8a4c9823504d10103355280365b4282754cb678"
+      },
+      "e27-step8-decompose-served-d043": {
+        "metrics.json": "23a989f13615f7cc505e80a01deb43012f9561ea6e389469695e3b259a2fe4a6"
+      },
+      "pcap-converter-cost-pre-d043": {
+        "metrics.json": "aa7f83eecd3f81d0c4647546501f01a09f483315e18a39693a2b275180729daa",
+        "run.log": "c2a9071003243d870dcb47e61e7b506bedc50a41c22f743304d21063ce951314"
+      },
+      "pcap-converter-cost-d043": {
+        "metrics.json": "02eeecfd19557028e5f943a38f4e9d0c90238c71dfd9ce0388458a76e96f1ce0",
+        "run.log": "0adee3d91dbd6dc2a98efe097f03926d12a08276b018b1de7a8bca1c2c9853a4"
+      },
+      "pcap-converter-cost-scratch-d043-dict": {
+        "metrics.json": "2c868b49f3c58f184646a4e8983209d03178ba49765485edc9e9a9df3270179f"
+      },
+      "f8-final-e2e-d043": {
+        "e2e.log": "4f9dfe5e386187b11ece9541e0f112fb7699bc1c8da548b0763786e4292260a8",
+        "metrics.json": "3763f795ded485b7db8a52aa66017ed10bad92f8f053c70a373ef53a34f4a53d",
+        "pytest.log": "272c635bee026e82ac8ba7a1575757b45bcab2fba604029092b21b343d51b157"
+      },
+      "f8-fresh-clone": {
+        "e2e.log": "4f9dfe5e386187b11ece9541e0f112fb7699bc1c8da548b0763786e4292260a8",
+        "metrics.json": "dffd64417801220a44e516932287a5e278fe74add288ea5d924f70d8c759cc90",
+        "pytest.log": "15a4ae4a15e060391332999c3345208d1b090b657bf2e7cd7d8c2358c1972adf"
+      }
+    },
+    "served_weights_tracked_and_equal_to_manifest": {
+      "models/n8-r2w-s42/friday.pt": true,
+      "models/n8-r2w-s42/thursday.pt": true,
+      "models/m1v2-n8-e20rw-s42/friday.pt": true,
+      "models/m1v2-n8-e20rw-s42/monday.pt": true,
+      "models/m1v2-n8-e20rw-s42/thursday.pt": true,
+      "models/m1v2-n8-e20rw-s42/tuesday.pt": true,
+      "models/m1v2-n8-e20rw-s42/wednesday.pt": true,
+      "models/m1v2-n8-e20rw-s43/friday.pt": true,
+      "models/m1v2-n8-e20rw-s43/monday.pt": true,
+      "models/m1v2-n8-e20rw-s43/thursday.pt": true,
+      "models/m1v2-n8-e20rw-s43/tuesday.pt": true,
+      "models/m1v2-n8-e20rw-s43/wednesday.pt": true,
+      "models/m1v2-n8-e20rw-s44/friday.pt": true,
+      "models/m1v2-n8-e20rw-s44/monday.pt": true,
+      "models/m1v2-n8-e20rw-s44/thursday.pt": true,
+      "models/m1v2-n8-e20rw-s44/tuesday.pt": true,
+      "models/m1v2-n8-e20rw-s44/wednesday.pt": true
+    },
+    "step8_pcap_route_live_vs_training_state": {
+      "before_d043": 0.1035,
+      "after_d043": 0.9909
+    },
+    "full_tuesday_flows": {
+      "before_d043": 349575,
+      "after_d043": 321644,
+      "session_cap_drops_after": 0
+    },
+    "full_tuesday_converter_peak_memory_mb": {
+      "before_d043": 2727.4,
+      "after_d043": [
+        3153.9,
+        3137.2
+      ]
+    },
+    "committed_converter_equals_the_one_the_runs_used": true,
+    "f8_after_d043": {
+      "clean_worktree": true,
+      "fresh_clone_no_weights_copied": true
+    }
+  },
+  "includes_commits": {
+    "a4bd3e8": {
+      "what": "F8 serving fix (causal policy for checkpoints that name none)",
+      "included": true
+    },
+    "c14355b": {
+      "what": "D-043, the PCAP converter",
+      "included": true
+    },
+    "6a466ef": {
+      "what": "F8 re-run after D-043",
+      "included": true
+    },
+    "e81cac6": {
+      "what": "D-046, the served weights tracked",
+      "included": true
+    }
+  },
+  "tracked_results_files": {
+    "count": 653,
+    "list": "results/runs/submission-freeze/files.csv",
+    "list_sha256": "74bbf6612d0ae569b2cb848894b9c0e79a586349be05db70b8effaee9f070eeb"
+  },
+  "ready_to_tag": true
+}
