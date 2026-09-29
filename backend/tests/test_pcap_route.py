@@ -161,6 +161,20 @@ def test_csv_upload_is_served_by_r2_and_builds_no_packet_inputs(tmp_path, monkey
     AnalysisResultPayload.model_validate(payload)
 
 
+def test_a_csv_checkpoint_that_names_no_policy_alarms_on_the_causal_budget(tmp_path, route_to, r2_like):
+    # r2_like stores only a train-tuned 0.9, like the served window-position checkpoints (D-041)
+    assert "threshold_policy" not in predict.load_checkpoint(r2_like)
+    payload = _run(_flow_csv(tmp_path / "up.csv"), "csv")
+    assert payload["threshold_policy"] == inference.SERVED_POLICY == predict.ENSEMBLE_POLICY == "expanding-10pct"
+    score = np.array([w["p_max"] for w in payload["timeline"]])
+    served = np.array([w["threshold"] for w in payload["timeline"]], dtype=float)
+    want = causal_threshold(score, 0.90)
+    live = np.isfinite(want)
+    # the payload rounds p_max, so the series is recomputed from rounded scores
+    np.testing.assert_allclose(served[live], want[live], atol=1e-4)
+    assert not np.any(served[live] == 0.9)
+
+
 def test_pcap_upload_is_served_by_all_three_members_with_packet_features(monkeypatch, route_to, pcap, e20r_like):
     calls = []
     real_read = predict.read_packets
@@ -327,6 +341,17 @@ def test_the_served_csv_checkpoint_is_prefix_invariant(tmp_path):
     cut = len(x) // 2
     full = predict._forecast(ckpt, x, 10, 1, True)["p_max"]
     np.testing.assert_allclose(predict._forecast(ckpt, x[:cut], 10, 1, True)["p_max"], full[:cut], rtol=1e-5, atol=1e-7)
+
+
+@pytest.mark.skipif(not REAL_CSV.exists(), reason="CSV-route checkpoint not in models/")
+def test_the_served_csv_route_alarms_on_the_causal_budget(tmp_path):
+    # the real registry and checkpoint: n8-r2w-s42 stores no policy, and must not be served as "fixed"
+    inference._cached_ckpt = None
+    ckpt = inference.get_checkpoint()
+    assert Path(ckpt["path"]).parent.name == inference.CSV_ROUTE_RUN
+    payload = _run(_flow_csv(tmp_path / "up.csv"), "csv")
+    assert payload["threshold_policy"] == "expanding-10pct"
+    assert payload["inference"]["checkpoints"] == [str(ckpt["path"])]
 
 
 @needs_e20r

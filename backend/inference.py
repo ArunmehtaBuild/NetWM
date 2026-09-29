@@ -34,6 +34,11 @@ _active_model_name: Optional[str] = None
 PCAP_ENSEMBLE_RUNS = ("m1v2-n8-e20rw-s42", "m1v2-n8-e20rw-s43", "m1v2-n8-e20rw-s44")
 CSV_ROUTE_RUN = "n8-r2w-s42"
 PCAP_SUFFIXES = {".pcap", ".pcapng"}
+# D-034 / G-9: both routes alarm on the causal expanding 10 % budget - the policy D-041's gates scored
+# (scripts/n8_eval.py) and the one the PCAP ensemble names (predict.ENSEMBLE_POLICY). The window-position
+# checkpoints store only their train-tuned threshold, which does not transfer to a held-out day (E14):
+# read as a "fixed" policy it raised no alarm on held-out Thursday. r2's checkpoints named their policy.
+SERVED_POLICY = "expanding-10pct"
 _E20R_FOLDS = {"monday", "tuesday", "wednesday", "thursday", "friday"}
 _ensemble_cache: dict[str, dict[str, Any]] = {}
 
@@ -264,6 +269,14 @@ def _load_fallback_fixture(day_or_name: str = "thursday") -> dict[str, Any]:
     return data
 
 
+def _served_policy(ckpt: dict[str, Any]) -> dict[str, Any]:
+    """A checkpoint that names no threshold policy is served on the deployable one, never on its stored
+    train-tuned scalar."""
+    if not ckpt.get("threshold_policy"):
+        ckpt["threshold_policy"] = SERVED_POLICY
+    return ckpt
+
+
 def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Path:
     """Execute analysis for a job and persist the result payload to disk."""
     progress_cb(0.1, "Initializing inference")
@@ -280,6 +293,7 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
             ckpt = get_checkpoint(day)
         if ckpt is None:
             raise APIError("no_model", f"No checkpoint available for demo day '{day}'")
+        ckpt = _served_policy(ckpt)
 
         progress_cb(0.3, f"Running model inference on {demo_csv_path.name}")
         from netwm.engine.predict import analyze_file
@@ -329,6 +343,7 @@ def run_job_inference(job: Job, progress_cb: Callable[[float, str], None]) -> Pa
         return result_file
 
     # Real model execution
+    ckpt = _served_policy(ckpt)
     from netwm.engine.predict import analyze_file
 
     progress_cb(0.3, "Executing world model forecast")
