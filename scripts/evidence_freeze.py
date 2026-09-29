@@ -197,6 +197,29 @@ def run_record(run: str, problems: list[str]) -> dict:
     return rec
 
 
+def same_build(a: Path, b: Path, out: dict) -> bool:
+    """An independent second build must give byte-identical day matrices. Its meta.json differs only in
+    bookkeeping - where it was written, the SHA it was built at and how long each day took - so those
+    fields are set aside and the rest (features, per-day flows and windows, config) must match."""
+    fa, fb = hash_tree(a)["files"], hash_tree(b)["files"]
+    matrices = {k: v for k, v in fa.items() if k != "meta.json"} == {k: v for k, v in fb.items() if k != "meta.json"}
+
+    def content(d: Path) -> dict:
+        m = json.loads((d / "meta.json").read_text(encoding="utf-8"))
+        m.pop("git_sha", None)
+        for k in ("interim_dir", "processed_dir"):
+            m.get("config", {}).pop(k, None)
+        for s in m.get("splits", []):
+            s.pop("build_s", None)
+        return m
+
+    meta = content(a) == content(b)
+    out["builds_compared"] = {"day_matrices_byte_identical": matrices, "meta_identical_but_bookkeeping": meta,
+                              "bookkeeping_set_aside": ["git_sha", "config.interim_dir", "config.processed_dir",
+                                                        "splits[].build_s"]}
+    return matrices and meta
+
+
 def group(spec: dict, problems: list[str]) -> dict:
     out = {k: v for k, v in spec.items() if k not in ("runs", "lr", "configs", "data", "verify_data", "tables",
                                                       "run_folders")}
@@ -206,9 +229,8 @@ def group(spec: dict, problems: list[str]) -> dict:
     if spec.get("data"):
         out["data"] = hash_tree(Path(spec["data"]))
     if spec.get("verify_data"):
-        # an independent second build: every file must hash the same as the first
         out["verify_data"] = hash_tree(Path(spec["verify_data"]))
-        out["builds_identical"] = out["verify_data"]["files"] == out["data"]["files"]
+        out["builds_identical"] = same_build(Path(spec["data"]), Path(spec["verify_data"]), out)
         if not out["builds_identical"]:
             problems.append(f"{spec['data']} and {spec['verify_data']} differ")
     out["tables"] = {t: sha256_file(Path("results/tables") / t) for t in spec.get("tables", [])}
