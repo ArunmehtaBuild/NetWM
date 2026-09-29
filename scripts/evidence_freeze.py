@@ -3,6 +3,7 @@
     python scripts/checkpoint_hashes.py --runs <every local run below>     # on this machine
     python scripts/checkpoint_hashes.py --runs e25-ctu13-s43 e25-ctu13-s44 # on the RTX 4060 (the only copy)
     python scripts/evidence_freeze.py                                      # then tag m1-m3-evidence-freeze
+    python scripts/evidence_freeze.py --tag submission-freeze              # then tag submission-freeze
 
 This is the final *evidence* freeze. D-045 (N-7) keeps the architecture and starts no further training
 run, so nothing after this tag adds evidence; the documentation and submission artefacts that follow cite
@@ -26,13 +27,20 @@ machine that holds the weights (``scripts/checkpoint_hashes.py``). Nothing is co
 A checkpoint counts as the run's only if it was trained at the run's recorded start SHA; the stray
 seed-43/44 ``neris.pt`` on the GTX 1650 (an earlier run, see results.md "N-8 x E25b") fails that check.
 
-Writes ``results/runs/m1-m3-evidence-freeze/manifest.json`` and ``files.csv``; prints whether it is
-ready to tag.
+``--tag submission-freeze`` builds the submission freeze on top: the same M1-M3 record from the current
+tree, plus N-9's converter work after the M1-M3 tag - D-043 (the PCAP converter traced flow by flow) and
+D-046 (the served weights tracked) - with their run folders, the converter's code at HEAD, the tracked
+served weights checked against their manifests, and N-9's status kept in its parts (converter
+correctness, the exact-parity criterion, PCAP model quality), each read from stored results. The
+M1-M3 tag and its manifest are left as they are.
+
+Writes ``results/runs/<tag>/manifest.json`` and ``files.csv``; prints whether it is ready to tag.
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 import subprocess
@@ -46,7 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from netwm.freeze import check_references, machine_info, sha256_file
 from netwm.utils import RUNS, git_sha
 
-TAG = "m1-m3-evidence-freeze"
+TAG = "m1-m3-evidence-freeze"  # the default profile; --tag picks another
 SEEDS = (42, 43, 44)
 E20RW = [f"m1v2-n8-e20rw-s{s}" for s in SEEDS]
 E20R = [f"m1v2-e20r-s{s}" for s in SEEDS]
@@ -127,6 +135,110 @@ OPEN_ITEMS = {
     "N-9": "live-PCAP parity: the upload converter's state still differs from the training matrix on a full "
            "capture (D-040), so no live-PCAP detection number is quoted (teamtasks.md N-9)",
 }
+
+#: N-9's converter work after the M1-M3 tag (D-043, D-046): what the submission freeze adds
+N9_RUNS = ["check4-flow-match-pre-d043", "check4-flow-match", "e27-parity-thursday-1640-d043", "e27-parity-tuesday-d043",
+           "e27-step8-decompose-served-pre-d043", "e27-step8-decompose-served-d043", "pcap-converter-cost-pre-d043",
+           "pcap-converter-cost-d043", "pcap-converter-cost-scratch-d043-dict", "f8-final-e2e-d043", "f8-fresh-clone"]
+N9_TABLES = ["check4_flow_match_columns.csv", "check4_flow_match_columns_pre-d043.csv", "check4_flow_match_pairs.csv.gz",
+             "check4_flow_match_pairs_pre-d043.csv.gz", "check4_flow_match_unmatched.csv",
+             "check4_flow_match_unmatched_pre-d043.csv", "e27_parity_live_pcap_thursday-1640-d043.csv",
+             "e27_parity_live_pcap_tuesday-d043.csv", "e27_step8_decompose_served-pre-d043.csv",
+             "e27_step8_decompose_served-d043.csv"]
+N9_CODE = ["src/netwm/features/flow_aggregator.py", "src/netwm/features/packet_windows.py", "tests/test_pcap_ingest.py",
+           "scripts/check4_flow_match.py", "scripts/pcap_route_parity.py", "scripts/step8_decompose.py",
+           "scripts/pcap_converter_cost.py", "scripts/final_e2e_demo.py"]
+#: commits the submission freeze must contain: the serving fix, the converter, and the F8 re-runs
+SUBMISSION_COMMITS = {"a4bd3e8": "F8 serving fix (causal policy for checkpoints that name none)",
+                      "c14355b": "D-043, the PCAP converter", "6a466ef": "F8 re-run after D-043",
+                      "e81cac6": "D-046, the served weights tracked"}
+LIVE_STATE = "pcap_route_live_vs_training_state (live-state effect)"
+PROFILES = {
+    "m1-m3-evidence-freeze": {
+        "scope": "M1-M3 evidence freeze - the final evidence freeze. D-045 keeps the architecture and starts no "
+                 "further training run; the documentation and submission artefacts that follow cite this tag. "
+                 "The M1/M2 freeze is the tag m1-m2-evidence-freeze",
+        "decisions": DECISIONS, "n9": False},
+    "submission-freeze": {
+        "scope": "The submission freeze: the M1-M3 evidence, rebuilt from the current tree, plus N-9's converter "
+                 "work after tag m1-m3-evidence-freeze (left as it was): D-043, the PCAP converter traced flow by "
+                 "flow against the corrected CSVs, and D-046, the served weights tracked. No model or checkpoint "
+                 "changed after the M1-M3 tag; the code, weights and evidence the submission is judged on",
+        "decisions": DECISIONS + ("D-043", "D-046"), "n9": True},
+}
+
+
+def load_metrics(run: str) -> dict:
+    m = json.loads((RUNS / run / "metrics.json").read_text(encoding="utf-8"))
+    return m.get("metrics", m)
+
+
+def n9_record(problems: list[str]) -> tuple[dict, dict]:
+    """N-9's evidence and status, every figure read from its stored run: (evidence, open-item entries)."""
+    pre, post = load_metrics("e27-step8-decompose-served-pre-d043"), load_metrics("e27-step8-decompose-served-d043")
+    cost_pre, cost = load_metrics("pcap-converter-cost-pre-d043"), load_metrics("pcap-converter-cost-d043")
+    dict_variant = load_metrics("pcap-converter-cost-scratch-d043-dict")
+    f8, fresh = load_metrics("f8-final-e2e-d043"), load_metrics("f8-fresh-clone")
+    with open("results/tables/e27_parity_live_pcap_tuesday-d043.csv", encoding="utf-8") as f:
+        rows = [r for r in csv.DictReader(f) if r["block"] != "pcap"]
+    residual = {r["feature"]: round(float(r["mean_rel_diff"]), 4) for r in rows if float(r["mean_rel_diff"]) >= 0.05}
+    within5 = sum(float(r["mean_rel_diff"]) < 0.05 for r in rows if r["block"] == "flow")
+    exact = sum(float(r["max_rel_diff"]) <= 1e-6 for r in rows if r["block"] == "flow")
+    n_flow = sum(r["block"] == "flow" for r in rows)
+    live_pre, live_post = pre["score_corr"][LIVE_STATE], post["score_corr"][LIVE_STATE]
+
+    weights = {}
+    for route in ("csv_route", "pcap_route"):
+        for run in M1["served"][route]["runs"]:
+            man = json.loads((RUNS / run / "checkpoints_manifest.json").read_text(encoding="utf-8"))
+            for c in man["checkpoints"]:
+                path = f"models/{run}/{Path(c['file']).name}"
+                try:
+                    ok = head_sha256(path) == c["sha256"]
+                except subprocess.CalledProcessError:
+                    ok = False
+                weights[path] = ok
+                if not ok:
+                    problems.append(f"{path}: not tracked at HEAD, or not its manifest's hash")
+    if not (f8.get("passed") and fresh.get("passed")):
+        problems.append("an F8 run recorded after D-043 did not pass")
+    if dict_variant.get("flows_sha256") != cost.get("flows_sha256"):
+        problems.append("the committed converter's full-day flow table differs from the one the N-9 runs used")
+
+    evidence = {
+        "decisions": ["D-040", "D-043", "D-046"],
+        "code_at_head": {c: head_sha256(c) for c in N9_CODE},
+        "tables": {t: sha256_file(Path("results/tables") / t) for t in N9_TABLES},
+        "run_folders": {r: hash_tree(RUNS / r)["files"] for r in N9_RUNS},
+        "served_weights_tracked_and_equal_to_manifest": weights,
+        "step8_pcap_route_live_vs_training_state": {"before_d043": live_pre, "after_d043": live_post},
+        "full_tuesday_flows": {"before_d043": cost_pre["flows"], "after_d043": cost["flows"],
+                               "session_cap_drops_after": cost["dropped_packets_session_cap"]},
+        "full_tuesday_converter_peak_memory_mb": {"before_d043": cost_pre["peak_memory_mb"],
+                                                  "after_d043": [dict_variant["peak_memory_mb"], cost["peak_memory_mb"]]},
+        "committed_converter_equals_the_one_the_runs_used": dict_variant.get("flows_sha256") == cost.get("flows_sha256"),
+        "f8_after_d043": {"clean_worktree": f8.get("passed"), "fresh_clone_no_weights_copied": fresh.get("passed")},
+    }
+    items = {
+        "N-9": {
+            "status": "open",
+            "converter_correctness": f"substantially validated (D-043): the served PCAP route's live scores follow its "
+                                     f"training-state scores at {live_post} (were {live_pre}, Thursday 16:40 slice); full "
+                                     f"Tuesday gives {cost['flows']:,} flows, the corrected CSV's count; one regression "
+                                     f"test per converter rule",
+            "exact_parity_criterion": f"not met: check 4's flow block is not exact on full Tuesday ({exact} of {n_flow} flow "
+                                      f"features exact, {within5} within 5 %); still at 5 % or more: {residual}",
+            "pcap_model_quality_validation": "not performed: no live-PCAP detection or forecasting number is claimed, from "
+                                             "the demo capture or anywhere",
+        },
+        "N-9(a)": {
+            "status": "resolved (D-046)",
+            "detail": f"the 17 served fold files are tracked and equal their manifests ({sum(weights.values())} of "
+                      f"{len(weights)}); a fresh clone with no weights copied in passes F8 "
+                      f"(results/runs/f8-fresh-clone/: passed = {fresh.get('passed')})",
+        },
+    }
+    return evidence, items
 
 
 def raw_inputs() -> list[str]:
@@ -241,7 +353,9 @@ def group(spec: dict, problems: list[str]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--skip-raw", action="store_true", help="do not hash the raw inputs (tens of GB)")
+    ap.add_argument("--tag", default=TAG, choices=sorted(PROFILES), help="which freeze to build")
     args = ap.parse_args()
+    tag, profile = args.tag, PROFILES[args.tag]
     problems: list[str] = []
     head = git_sha()
     # the evidence must be committed: tracked results, configs and the two ledgers unmodified (another
@@ -258,13 +372,11 @@ def main() -> None:
     if not (gate["G1_chunked_equals_one_pass"] and gate["G2_pcap_route"]["passes"] and gate["G3_csv_route"]["passes"]):
         problems.append("D-041 gates did not all pass - the served models are not licensed")
     manifest = {
-        "tag": TAG,
-        "scope": "M1-M3 evidence freeze - the final evidence freeze. D-045 keeps the architecture and starts no "
-                 "further training run; the documentation and submission artefacts that follow cite this tag. "
-                 "The M1/M2 freeze is the tag m1-m2-evidence-freeze",
+        "tag": tag,
+        "scope": profile["scope"],
         "built_at_git_sha": head, "working_tree_clean_for_evidence": not dirty, "built_on": machine_info(),
         "decisions": {d: next((ln.strip("# ").strip() for ln in decisions_md.splitlines() if ln.startswith(f"### {d} ")), None)
-                      for d in DECISIONS},
+                      for d in profile["decisions"]},
         "decisions_md_sha256": sha256_file("decisions.md"), "results_md_sha256": sha256_file("results.md"),
         "m1_cicids2017": {
             "served": {**served, "d041_gate_verdict": gate},
@@ -272,7 +384,8 @@ def main() -> None:
             "threshold_policy": THRESHOLD_POLICY,
             "serving_code_at_head": {p: head_sha256(p) for p in ("backend/inference.py", "models/registry.json",
                                                                  "src/netwm/engine/predict.py", "src/netwm/models/world_model.py",
-                                                                 "src/netwm/metrics.py")},
+                                                                 "src/netwm/metrics.py")
+                                     + (("src/netwm/features/flow_aggregator.py",) if profile["n9"] else ())},
             "tables": {t: sha256_file(Path("results/tables") / t) for t in M1["tables"]},
             "run_folders": {r: hash_tree(RUNS / r)["files"] for r in M1["run_folders"]},
         },
@@ -280,19 +393,27 @@ def main() -> None:
         "m3_cicids2018": {k: group(v, problems) for k, v in M3.items()},
         "architecture_decision": "D-045 (N-7): stay with the Transformer + RSSM world model on the network-global "
                                  "state; no per-host model and no GNN (deferred, untested); no further training run",
-        "open_items": OPEN_ITEMS,
+        "open_items": OPEN_ITEMS,  # replaced below for a profile that records N-9's work
         "raw_inputs": "skipped" if args.skip_raw else [hash_tree(Path(p)) for p in raw_inputs() if Path(p).exists()],
         "results_md_references": {"checked": len(refs), "missing": missing, "rows": refs},
         "problems": problems,
     }
+    if profile["n9"]:
+        manifest["n9_after_m1_m3"], manifest["open_items"] = n9_record(problems)
+        manifest["includes_commits"] = {}
+        for sha, what in SUBMISSION_COMMITS.items():
+            inside = subprocess.run(["git", "merge-base", "--is-ancestor", sha, "HEAD"]).returncode == 0
+            manifest["includes_commits"][sha] = {"what": what, "included": inside}
+            if not inside:
+                problems.append(f"{sha} ({what}) is not in HEAD's history")
     if missing:
         problems.append(f"{len(missing)} artefact path(s) quoted in results.md do not exist")
     tracked = subprocess.run(["git", "ls-files", "results"], capture_output=True, text=True).stdout.split()
-    out = RUNS / TAG
+    out = RUNS / tag
     out.mkdir(parents=True, exist_ok=True)
-    lines = ["path,sha256"] + [f"{p},{sha256_file(p)}" for p in tracked if Path(p).is_file() and not p.startswith(f"results/runs/{TAG}/")]
+    lines = ["path,sha256"] + [f"{p},{sha256_file(p)}" for p in tracked if Path(p).is_file() and not p.startswith(f"results/runs/{tag}/")]
     (out / "files.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    manifest["tracked_results_files"] = {"count": len(lines) - 1, "list": f"results/runs/{TAG}/files.csv",
+    manifest["tracked_results_files"] = {"count": len(lines) - 1, "list": f"results/runs/{tag}/files.csv",
                                          "list_sha256": sha256_file(out / "files.csv")}
     manifest["ready_to_tag"] = not problems and not dirty
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
@@ -303,7 +424,7 @@ def main() -> None:
     print(f"working tree clean for evidence paths: {not dirty}")
     for p in problems:
         print(f"PROBLEM: {p}")
-    print(f"ready to tag {TAG}: {manifest['ready_to_tag']}")
+    print(f"ready to tag {tag}: {manifest['ready_to_tag']}")
 
 
 if __name__ == "__main__":

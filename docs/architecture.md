@@ -37,7 +37,10 @@ attached, not a flow classifier with a time axis bolted on.
   `results/runs/<run>/checkpoints_manifest.json`.
 - **Frozen evidence.** The M1-M3 evidence behind this document is frozen by
   `scripts/evidence_freeze.py`: tag `m1-m3-evidence-freeze`, manifest
-  `results/runs/m1-m3-evidence-freeze/manifest.json`.
+  `results/runs/m1-m3-evidence-freeze/manifest.json`. The submission is frozen on top of it:
+  tag `submission-freeze`, manifest `results/runs/submission-freeze/manifest.json`. That adds N-9's
+  converter work (D-043, D-046) and records N-9 as open: converter correctness substantially
+  validated, exact parity not met, PCAP model quality not validated.
   - It holds the served checkpoints and their gate verdicts, both benchmarks' runs, tables and
     intervals, the data and raw-input hashes, and the architecture decision (D-045).
   - No training run follows it. The earlier M1/M2 freeze is the tag `m1-m2-evidence-freeze`.
